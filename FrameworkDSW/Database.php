@@ -2,7 +2,7 @@
 /**
  * Database.php
  * @author	许子健
- * @version	$Id: Database.php 10 2010-05-19 03:47:02Z exsystemchina@gmail.com $
+ * @version	$Id$
  * @since	separate file since reversion 1
  */
 

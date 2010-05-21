@@ -2,8 +2,8 @@
 /**
  * Containers
  * @author  ExSystem
- * @version $Id: Containers.php 10 2010-05-19 03:47:02Z exsystemchina@gmail.com $
- * @since   separate file since reversion 16
+ * @version $Id$
+ * @since   separate file since reversion 1
  */
 require_once 'FrameworkDSW/System.php';
 

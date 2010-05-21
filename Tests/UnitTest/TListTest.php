@@ -2,8 +2,8 @@
 /**
  * TListTest
  * @author	ExSystem
- * @version	$Id: TListTest.php 12 2010-05-20 02:54:05Z exsystemchina@gmail.com $
- * @since	separate file since reversion 23
+ * @version	$Id$
+ * @since	separate file since reversion 1
  */
 
 require_once 'FrameworkDSW\Containers.php';

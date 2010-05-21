@@ -2,7 +2,7 @@
 /**
  * Framework
  * @author  ExSystem
- * @version $Id: Framework.php 10 2010-05-19 03:47:02Z exsystemchina@gmail.com $
+ * @version $Id$
  * @since   separate file since reversion 1
  */
 require_once 'FrameworkDSW/Boot.php'; //must be the first line.
