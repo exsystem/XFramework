@@ -512,19 +512,21 @@ class TStdListIterator extends TObject implements IIterator {
 }
 
 /**
- *
+ * TStdListListIterator
+ * extends	TStdListIterator<T>, IListIterator<T>
+ * @param	<T>
  * @author  ExSystem
  */
 class TStdListListIterator extends TStdListIterator implements IListIterator {
 
     /**
      *
-     * @param  TAbstractList   $List
-     * @param  integer         $StartAt
+     * @param  TAbstractList<T>	$List
+     * @param  integer			$StartAt
      * @see FrameworkDSW/TStdListIterator#Create($List)
      */
     public function __construct($List, $StartAt) {
-        TType::Object($List, 'TAbstractList');
+        TType::Type($List, array ('TAbstractList' => array ('T' => $this->GenericArg('T'))));
         TType::Int($StartAt);
         
         parent::__construct($List);
@@ -542,10 +544,11 @@ class TStdListListIterator extends TStdListIterator implements IListIterator {
 
     /**
      *
-     * @param   mixed   $Element
+     * @param   T   $Element
      * @see     FrameworkDSW/IListIterator#Add($Element)
      */
     public function Add($Element) {
+        TType::Type($Element, $this->GenericArg('T'));
         try {
             $this->FList->Insert($this->FCursor, $Element);
             $this->FLastAt = -1;
@@ -576,10 +579,11 @@ class TStdListListIterator extends TStdListIterator implements IListIterator {
 
     /**
      *
-     * @param   mixed   $Element
+     * @param   T   $Element
      * @see FrameworkDSW/IListIterator#Set($Element)
      */
     public function Set($Element) {
+        TType::Type($Element, $this->GenericArg('T'));
         if ($this->FLastAt < 0) {
             throw new EIllegalState();
         }
@@ -594,7 +598,9 @@ class TStdListListIterator extends TStdListIterator implements IListIterator {
 }
 
 /**
- *
+ * TAbstractCollection
+ * extends	ICollection<T>
+ * @param	<T>
  * @author ExSystem
  */
 abstract class TAbstractCollection extends TObject implements ICollection {
@@ -604,6 +610,9 @@ abstract class TAbstractCollection extends TObject implements ICollection {
      */
     private $FReadOnly = false;
 
+    /**
+     * 
+     */
     protected function CheckReadOnly() {
         if ($this->FReadOnly) {
             throw new ECollectionIsReadOnly();
@@ -612,10 +621,10 @@ abstract class TAbstractCollection extends TObject implements ICollection {
 
     /**
      *
-     * @param   ICollection $Collection
+     * @param   ICollection<T>	$Collection
      */
     public function AddAll($Collection) {
-        TType::Object($Collection, 'ICollection');
+        TType::Type($Collection, $this->GenericArg('T'));
         $this->CheckReadOnly();
         
         foreach ($Collection as $mElement) {
@@ -639,10 +648,11 @@ abstract class TAbstractCollection extends TObject implements ICollection {
 
     /**
      *
-     * @param  mixed   $Element
+     * @param  T		$Element
      * @return boolean
      */
     public function Contains($Element) {
+        TType::Type($Element, $this->GenericArg('T'));
         $mItr = $this->Iterator();
         if ($Element instanceof TObject && $mItr->current() instanceof TObject) {
             while ($mItr->valid()) {
@@ -666,11 +676,11 @@ abstract class TAbstractCollection extends TObject implements ICollection {
 
     /**
      *
-     * @param   ICollection $Collection
+     * @param   ICollection<T>	$Collection
      * @return  boolean
      */
     public function ContainsAll($Collection) {
-        TType::Object($Collection, 'ICollection');
+        TType::Type($Collection, array ('ICollection' => array ('T' => $this->GenericArg('T'))));
         
         foreach ($Collection as $mElement) {
             if (!$this->Contains($mElement)) {
@@ -690,9 +700,10 @@ abstract class TAbstractCollection extends TObject implements ICollection {
 
     /**
      *
-     * @param  mixed   $Element
+     * @param  T	$Element
      */
     public function Remove($Element) {
+        TType::Type($Element, $this->GenericArg('T'));
         $this->CheckReadOnly();
         $mItr = $this->Iterator();
         
@@ -720,10 +731,10 @@ abstract class TAbstractCollection extends TObject implements ICollection {
 
     /**
      *
-     * @param   ICollection $Collection
+     * @param   ICollection<T>	$Collection
      */
     public function RemoveAll($Collection) {
-        TType::Object($Collection, 'ICollection');
+        TType::Type($Collection, array ('ICollection' => array ('T' => $this->GenericArg('T'))));
         
         $this->CheckReadOnly();
         $mItr = $this->Iterator();
@@ -743,11 +754,11 @@ abstract class TAbstractCollection extends TObject implements ICollection {
 
     /**
      *
-     * @param  ICollection $Collection
+     * @param  ICollection<T>	$Collection
      * @return boolean
      */
     public function RetainAll($Collection) {
-        TType::Object($Collection, 'ICollection');
+        TType::Type($Collection, array ('ICollection' => array ('T' => $this->GenericArg('T'))));
         
         $mModified = false;
         $mItr = $this->Iterator();
@@ -764,7 +775,7 @@ abstract class TAbstractCollection extends TObject implements ICollection {
 
     /**
      *
-     * @return  array
+     * @return  T[]
      */
     public function ToArray() {
         $mResult = array ();
@@ -775,7 +786,7 @@ abstract class TAbstractCollection extends TObject implements ICollection {
     }
 
     /**
-     * @return  IIterator
+     * @return  IIterator<T>
      */
     public function getIterator() {
         return $this->Iterator();
@@ -800,6 +811,12 @@ abstract class TAbstractCollection extends TObject implements ICollection {
     }
 }
 
+/**
+ * TAbstractList
+ * extends	TAbstractCollection<T>, IList<T>, IArrayAccess<T>
+ * @param	<T>
+ * @author 许子健
+ */
 abstract class TAbstractList extends TAbstractCollection implements IList, IArrayAccess {
     /**
      *
@@ -829,22 +846,22 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
 
     /**
      *
-     * @param  integer $Index
-     * @param  mixed   $Element
+     * @param  integer	$Index
+     * @param  T		$Element
      */
     protected abstract function DoInsert($Index, $Element);
 
     /**
      *
      * @param  integer $Index
-     * @return mixed
+     * @return T
      */
     protected abstract function DoGet($Index);
 
     /**
      *
-     * @param  integer     $Index
-     * @param  ICollection $Collection
+     * @param  integer			$Index
+     * @param  ICollection<T>	$Collection
      * @return integer
      */
     protected function DoInsertAll($Index, $Collection) {
@@ -892,35 +909,37 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
 
     /**
      *
-     * @param  integer $Index
-     * @param  mixed   $Element
+     * @param  integer	$Index
+     * @param  T		$Element
      */
     protected abstract function DoSet($Index, $Element);
 
     /**
      *
-     * @param  integer $FromIndex
-     * @param  integer $ToIndex
-     * @return IList
+     * @param  integer	$FromIndex
+     * @param  integer	$ToIndex
+     * @return IList<T>
      */
     protected abstract function DoSubList($FromIndex, $ToIndex);
 
     /**
      * (non-PHPdoc)
-     * @param   mixed   $Element
+     * @param   T   $Element
      * @see     FrameworkDSW/AbstractCollection#Add($Element)
      */
     public final function Add($Element) {
+        TType::Type($Element, $this->GenericArg('T'));
         $this->Insert($this->Size(), $Element);
     }
 
     /**
      *
-     * @param  integer $Index
-     * @param  mixed   $Element
+     * @param  integer	$Index
+     * @param  T		$Element
      */
     public final function Insert($Index, $Element) {
         TType::Int($Index);
+        TType::Type($Element, $this->GenericArg('T'));
         
         $this->CheckReadOnly();
         $this->CheckIndexForAdd($Index);
@@ -930,12 +949,12 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
 
     /**
      *
-     * @param  integer     $Index
-     * @param  ICollection $Collection
+     * @param  integer			$Index
+     * @param  ICollection<T>	$Collection
      */
     public final function InsertAll($Index, $Collection) {
         TType::Int($Index);
-        TType::Object($Collection, 'ICollection');
+        TType::Type($Collection, array ('ICollection' => array ('T' => $this->GenericArg('T'))));
         
         $this->CheckReadOnly();
         $this->CheckIndexForAdd($Index);
@@ -951,7 +970,7 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
     /**
      *
      * @param  integer $Index
-     * @return mixed
+     * @return T
      */
     public final function Get($Index) {
         TType::Int($Index);
@@ -962,10 +981,11 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
 
     /**
      *
-     * @param  mixed   $Element
+     * @param  T		$Element
      * @return integer
      */
     public final function IndexOf($Element) {
+        TType::Type($Element, $this->GenericArg('T'));
         $mItr = $this->ListIterator();
         
         if ($Element instanceof TObject && $mItr->current() instanceof TObject) {
@@ -990,19 +1010,21 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
 
     /**
      *
-     * @return  IIterator
+     * @return  IIterator<T>
      * @see FrameworkDSW/TAbstractCollection#Iterator()
      */
     public function Iterator() {
+        TStdListIterator::PrepareGeneric(array ('T' => $this->GenericArg('T')));
         return new TStdListIterator($this);
     }
 
     /**
      *
-     * @param  mixed   $Element
+     * @param  T		$Element
      * @return integer
      */
     public final function LastIndexOf($Element) {
+        TType::Type($Element, $this->GenericArg('T'));
         $mItr = $this->ListIterator($this->FSize);
         
         if ($Element instanceof TObject && $mItr->current() instanceof TObject) {
@@ -1027,13 +1049,14 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
 
     /**
      *
-     * @param  integer         $Index
-     * @return IListIterator
+     * @param  integer         	$Index
+     * @return IListIterator<T>
      */
     public function ListIterator($Index = 0) {
         TType::Int($Index);
         
         $this->CheckIndexForAdd($Index);
+        TStdListListIterator::PrepareGeneric(array ('T' => $this->GenericArg('T')));
         return new TStdListListIterator($this, $Index);
     }
 
@@ -1079,12 +1102,13 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
 
     /**
      *
-     * @param  integer $Index
-     * @param  mixed   $Element
-     * @return mixed
+     * @param  integer	$Index
+     * @param  T		$Element
+     * @return T
      */
     public final function Set($Index, $Element) {
         TType::Int($Index);
+        TType::Type($Element, $this->GenericArg('T'));
         
         $this->CheckReadOnly();
         $this->CheckIndexForGet($Index);
@@ -1101,9 +1125,9 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
     }
 
     /**
-     * @param	integer	$FromIndex
-     * @param	integer	$ToIndex
-     * @return	IList
+     * @param	integer		$FromIndex
+     * @param	integer		$ToIndex
+     * @return	IList<T>
      */
     public final function SubList($FromIndex, $ToIndex) {
         TType::Int($FromIndex);
@@ -1131,7 +1155,7 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
 
     /**
      * @param   integer $offset
-     * @return  mixed
+     * @return  T
      */
     public final function offsetGet($offset) {
         return $this->Get($offset);
@@ -1139,7 +1163,7 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
 
     /**
      * @param   integer $offset
-     * @param   mixed   $value
+     * @param   T		$value
      */
     public final function offsetSet($offset, $value) {
         $this->Set($offset, $value);
@@ -1154,7 +1178,8 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
 }
 
 /**
- *
+ * TList
+ * extends	TAbstractList<T>
  * @author  ExSystem
  */
 final class TList extends TAbstractList {
@@ -1170,7 +1195,7 @@ final class TList extends TAbstractList {
     /**
      *
      * @param	integer	$Capacity
-     * @param	array	$FromArray
+     * @param	T[]		$FromArray
      * @param	boolean	$KeepOrder
      * @see		FrameworkDSW/TObject#Create()
      */
@@ -1193,7 +1218,7 @@ final class TList extends TAbstractList {
     /**
      *
      * @param	integer	$Index
-     * @return	mixed
+     * @return	T
      * @see		FrameworkDSW/TAbstractList#DoGet($Index)
      */
     protected function DoGet($Index) {
@@ -1202,11 +1227,12 @@ final class TList extends TAbstractList {
 
     /**
      *
-     * @param  integer $Index
-     * @param  mixed   $Element
+     * @param  integer	$Index
+     * @param  T		$Element
      * @see    FrameworkDSW/TAbstractList#DoInsert($Index, $Element)
      */
     protected function DoInsert($Index, $Element) {
+        TType::Type($Element, $this->GenericArg('T'));
         $mNewSize = $this->FSize;
         if ($mNewSize >= $this->FCapacity) {
             $mCapacity = $mNewSize + 11;
@@ -1223,8 +1249,8 @@ final class TList extends TAbstractList {
 
     /**
      *
-     * @param  integer     $Index
-     * @param  ICollection $Collection
+     * @param  integer			$Index
+     * @param  ICollection 		$Collection <T>
      * @return integer
      * @see    FrameworkDSW/TAbstractList#DoInsertAll($Index, $Collection)
      */
@@ -1303,8 +1329,8 @@ final class TList extends TAbstractList {
 
     /**
      *
-     * @param  integer $Index
-     * @param  mixed   $Element
+     * @param  integer	$Index
+     * @param  T		$Element
      * @see FrameworkDSW/TAbstractList#DoSet($Index, $Element)
      */
     protected function DoSet($Index, $Element) {
@@ -1338,9 +1364,9 @@ final class TList extends TAbstractList {
 
     /**
      *
-     * @param  array   $Array
-     * @param  boolean $KeepOrder
-     * @return TList
+     * @param  T[]		$Array
+     * @param  boolean	$KeepOrder
+     * @return TList<T>
      */
     public static function FromArray($Array, $KeepOrder = true) {
         TType::Arr($Array);
@@ -1351,7 +1377,7 @@ final class TList extends TAbstractList {
 
     /**
      *
-     * @return array
+     * @return T[]
      * @see FrameworkDSW/TAbstractCollection#ToArray()
      */
     public function ToArray() {
@@ -1363,7 +1389,7 @@ final class TList extends TAbstractList {
 
     /**
      *
-     * @return mixed
+     * @return T
      */
     public function First() {
         return $this->FList[0];
@@ -1371,7 +1397,7 @@ final class TList extends TAbstractList {
 
     /**
      *
-     * @return mixed
+     * @return T
      */
     public function Last() {
         return $this->FList[$this->FSize - 1];
@@ -1401,5 +1427,3 @@ final class TList extends TAbstractList {
         }
     }
 }
-
-echo 'containers end<br/>';
