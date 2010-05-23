@@ -10,19 +10,19 @@ require_once 'FrameworkDSW/Utilities.php';
 
 /**
  * The ultimate base class of all exception classes inside FrameworkDSW.
- * @author  ExSystem
+ * @author  许子健
  */
 class EException extends Exception {}
 /**
  * System exception.
- * @author  ExSystem
+ * @author  许子健
  */
 class ESysException extends EException {}
 /**
  * Runtime Exception.
  * Never catch ERuntimeException, since it will thrown for wrong code. Fix your
  * code instead.
- * @author  ExSystem
+ * @author  许子健
  */
 class ERuntimeException extends ESysException {}
 /**
@@ -34,38 +34,38 @@ class EIsNotNullable extends ESysException {}
 /**
  * Field not existed exception.
  * It will be thrown for visiting object's field that is not existed.
- * @author  ExSystem
+ * @author  许子健
  */
 class EFieldNotExisted extends ERuntimeException {}
 /**
  * Method not existed exception.
  * It will be thrown for calling object's method that is not existed.
- * @author  ExSystem
+ * @author  许子健
  */
 class EMethodNotExisted extends ERuntimeException {}
 /**
  *
- * @author	ExSystem
+ * @author	许子健
  */
 class ENoSuchEnumElement extends ERuntimeException {}
 /**
  *
- * @author	ExSystem
+ * @author	许子健
  */
 class ENoSuchSetElement extends ERuntimeException {}
 /**
  *
- * @author	ExSystem
+ * @author	许子健
  */
 class EUnableToConnect extends ERuntimeException {}
 /**
  *
- * @author	ExSystem
+ * @author	许子健
  */
 class EUnableToDisconnect extends ERuntimeException {}
 /**
  *
- * @author	ExSystem
+ * @author	许子健
  */
 class EUnableToDispatch extends ERuntimeException {}
 
@@ -88,7 +88,7 @@ class EBadGenericArgsStructure extends EGenericException {}
 /**
  * TObject class.
  * This is the base class of all framework classes.
- * @author  ExSystem
+ * @author  许子健
  */
 class TObject {
     /**
@@ -540,13 +540,13 @@ class TObject {
 /**
  * IInterface
  * The ultimate base interface for all interfaces inside FrameworkDSW.
- * @author  ExSystem
+ * @author  许子健
  */
 interface IInterface {}
 
 /**
  * TRecord
- * @author  ExSystem
+ * @author  许子健
  */
 abstract class TRecord extends TObject {
 
@@ -593,7 +593,7 @@ abstract class TRecord extends TObject {
  * echo "The code of red is {$mColor1->Value()}.";
  * </code>
  * never comapre TEnum by using '===' operator.
- * @author	ExSystem
+ * @author	许子健
  */
 abstract class TEnum extends TObject {
     /**
@@ -637,7 +637,7 @@ abstract class TEnum extends TObject {
  * var_dump($myset->IsIn('eGreen')); //true
  * var_dump($myset->IsIn('eYellow')); //true
  * </code>
- * @author	ExSystem
+ * @author	许子健
  */
 abstract class TSet extends TObject {
     /**
@@ -767,7 +767,7 @@ abstract class TSet extends TObject {
 
 /**
  * IDelegate
- * @author	ExSystem
+ * @author	许子健
  */
 interface IDelegate extends IInterface {/* public funciton Invoke(...); */}
 
@@ -779,7 +779,7 @@ interface IDelegate extends IInterface {/* public funciton Invoke(...); */}
  * $mDelegate->setDelegate(function($Param1, $Param2, ...) {...});
  * $mResult = $mDelegate($Param1, $Param2, ...);
  * </code>
- * @author	ExSystem
+ * @author	许子健
  */
 final class TDelegate {
     /**
@@ -859,8 +859,8 @@ final class TDelegate {
 
 /**
  * IPrimitive
+ * param	T
  * @author	许子健
- * @param	<T>
  */
 interface IPrimitive extends IInterface {
 
@@ -916,14 +916,14 @@ interface IPrimitive extends IInterface {
 
 /**
  * IComparable
+ * param	T
  * @author	许子健
- * @param	<T>
  */
 interface IComparable extends IInterface {
 
     /**
      * descHere
-     * @param	T	$Value
+     * @param	T		$Value
      * @return	integer
      */
     public function CompareTo($Value);
@@ -931,9 +931,8 @@ interface IComparable extends IInterface {
 
 /**
  * TBoolean
+ * extends IPrimitive<T: boolean>, IComparable<T: TBoolean>
  * @author	许子健
- * @param	IPrimitive<T: boolean>
- * @param	IComparable<T: TBoolean>
  */
 final class TBoolean extends TObject implements IPrimitive, IComparable {
     /**
@@ -1044,8 +1043,7 @@ final class TBoolean extends TObject implements IPrimitive, IComparable {
 
 /**
  * TInteger
- * @param	IComparable<T: TInteger>
- * @param	IPrimitive<T: integer>
+ * extends IComparable<T: TInteger>, IPrimitive<T: integer>
  * @author	许子健
  */
 final class TInteger extends TObject implements IComparable, IPrimitive {
@@ -1078,7 +1076,7 @@ final class TInteger extends TObject implements IComparable, IPrimitive {
      * @return	integer
      */
     public function CompareTo($Value) {
-       TType::Object($Value, 'TInteger');
+        TType::Object($Value, 'TInteger');
         return $this->FValue - $Value->Unbox();
     }
 
@@ -1134,8 +1132,7 @@ final class TInteger extends TObject implements IComparable, IPrimitive {
 
 /**
  * TFloat
- * @param	IPrimitive<T: float>
- * @param	IComparable<T: TFloat>
+ * extends	IPrimitive<T: float>, IComparable<T: TFloat>
  * @author	许子健
  */
 final class TFloat extends TObject implements IPrimitive, IComparable {
@@ -1224,8 +1221,7 @@ final class TFloat extends TObject implements IPrimitive, IComparable {
 
 /**
  * TString
- * @param	IComparable<T: TString>
- * @param	IPrimitive<T: string>
+ * extends	IComparable<T: TString>, IPrimitive<T: string>
  * @author	许子健
  */
 final class TString extends TObject implements IComparable, IPrimitive {
@@ -1310,5 +1306,3 @@ final class TString extends TObject implements IComparable, IPrimitive {
         return $this->FValue;
     }
 }
-
-echo 'system end<br>';

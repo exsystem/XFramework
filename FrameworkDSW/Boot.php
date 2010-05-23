@@ -1,14 +1,14 @@
 <?php
 /**
  * Boot
- * @author	ExSystem
+ * @author	许子健
  * @version	$Id$
  * @since	separate file since reversion 1
  */
 
 /**
  * Boot
- * @author  ExSystem
+ * @author  许子健
  */
 final class Boot {
     /**

@@ -1,7 +1,7 @@
 <?php
 /**
  * CoreClasses
- * @author	ExSystem
+ * @author	许子健
  * @version	$Id$
  * @since	separate file since reversion 1
  */
@@ -14,7 +14,7 @@ class ENoOwnerComponent extends EComponentErr {}
 
 /**
  * TOperation
- * @author	ExSystem
+ * @author	许子健
  */
 final class TOperation extends TEnum {
     const eInsert = 0, eRemove = 1;
@@ -22,7 +22,7 @@ final class TOperation extends TEnum {
 
 /**
  * TCursor
- * @author	ExSystem
+ * @author	许子健
  */
 final class TCursor extends TEnum {
     const eDefault = 0;
@@ -52,7 +52,7 @@ final class TCursor extends TEnum {
 
 /**
  * TDragState
- * @author	ExSystem
+ * @author	许子健
  */
 final class TDragState extends TEnum {
     const eDragEnter = 0, eDragLeave = 1, eDragMove = 2;
@@ -60,14 +60,14 @@ final class TDragState extends TEnum {
 
 /**
  * TDragDropObject
- * @author	ExSystem
+ * @author	许子健
  */
 class TDragDropObject extends TObject {//TODO: impl TDragDropObject.
 }
 
 /**
  * TShiftState
- * @author	ExSystem
+ * @author	许子健
  */
 final class TShiftState extends TSet {
     const eShift = 0, eAlt = 1, eCtrl = 2;
@@ -77,7 +77,7 @@ final class TShiftState extends TSet {
 
 /**
  * TMouseButton
- * @author	ExSystem
+ * @author	许子健
  */
 final class TMouseButton extends TSet {
     const eLeft = 0, eRight = 1, eMiddle = 2;
@@ -85,7 +85,7 @@ final class TMouseButton extends TSet {
 
 /**
  *
- * @author	ExSystem
+ * @author	许子健
  */
 final class TAlign extends TEnum {
     const eNone = 0;
@@ -98,7 +98,7 @@ final class TAlign extends TEnum {
 
 /**
  * TNotifyEvent
- * @author	ExSystem
+ * @author	许子健
  */
 interface TNotifyEvent extends IDelegate {
 
@@ -111,7 +111,7 @@ interface TNotifyEvent extends IDelegate {
 
 /**
  * TMouseEvent
- * @author	ExSystem
+ * @author	许子健
  */
 interface TMouseEvent extends IDelegate {
 
@@ -128,7 +128,7 @@ interface TMouseEvent extends IDelegate {
 
 /**
  * TContextPopupEvent
- * @author	ExSystem
+ * @author	许子健
  */
 interface TContextPopupEvent extends IDelegate {
 
@@ -144,7 +144,7 @@ interface TContextPopupEvent extends IDelegate {
 
 /**
  * TDragOverEvent
- * @author ExSystem
+ * @author 许子健
  */
 interface TDragOverEvent extends IDelegate {
 
@@ -162,7 +162,7 @@ interface TDragOverEvent extends IDelegate {
 
 /**
  * TDragDropEvent
- * @author	ExSystem
+ * @author	许子健
  */
 interface TDragDropEvent extends IDelegate {
 
@@ -178,7 +178,7 @@ interface TDragDropEvent extends IDelegate {
 
 /**
  *
- * @author	ExSystem
+ * @author	许子健
  */
 interface TStartDragEvent extends IDelegate {
 
@@ -192,7 +192,7 @@ interface TStartDragEvent extends IDelegate {
 
 /**
  * TEndDragEvent
- * @author	ExSystem
+ * @author	许子健
  */
 interface TEndDragEvent extends IDelegate {
 
@@ -208,7 +208,7 @@ interface TEndDragEvent extends IDelegate {
 
 /**
  * TMouseWheelEvent
- * @author	ExSystem
+ * @author	许子健
  */
 interface TMouseWheelEvent extends IDelegate {
 
@@ -226,7 +226,7 @@ interface TMouseWheelEvent extends IDelegate {
 
 /**
  * TMouseWheelUpDownEvent
- * @author	ExSystem
+ * @author	许子健
  */
 interface TMouseWheelUpDownEvent extends IDelegate {
 
@@ -243,7 +243,7 @@ interface TMouseWheelUpDownEvent extends IDelegate {
 
 /**
  * IComponent
- * @author	ExSystem
+ * @author	许子健
  */
 interface IComponent extends IInterface {
 
@@ -299,7 +299,7 @@ interface IComponent extends IInterface {
 
 /**
  * TComponent class
- * @author  ExSystem
+ * @author  许子健
  */
 abstract class TComponent extends TObject implements IComponent {
     /**
@@ -549,7 +549,7 @@ abstract class TComponent extends TObject implements IComponent {
 
 /**
  * IControl
- * @author	ExSystem
+ * @author	许子健
  */
 interface IControl extends IInterface {
 
@@ -996,7 +996,7 @@ interface IControl extends IInterface {
 
 /**
  *
- * @author	ExSystem
+ * @author	许子健
  */
 abstract class TControl extends TComponent implements IControl {
     /**
@@ -1764,14 +1764,14 @@ abstract class TControl extends TComponent implements IControl {
 
 /**
  * IPopupMenu
- * @author	ExSystem
+ * @author	许子健
  */
 interface IPopupMenu extends IControl {//TODO: impl IPopupMenu.
 }
 
 /**
  * ILayoutManager
- * @author	ExSystem
+ * @author	许子健
  */
 interface ILayoutManager extends IInterface {
 

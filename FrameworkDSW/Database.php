@@ -200,7 +200,7 @@ final class TTransactionIsolationLevel extends TEnum {
 
 /**
  * IParam
- * @param	<T>
+ * param	<T>
  * @author	许子健
  */
 interface IParam extends IInterface {
@@ -443,13 +443,13 @@ interface IStatement extends IInterface {
     public function Execute($Command = '');
 
     /**
-     * @return	IParam<T: ?>
+     * @return	IParam <T: ?>
      */
     public function FetchAsScalar();
 
     /**
      * descHere
-     * @return	TList<T: string>
+     * @return	TList <T: string>
      */
     public function getCommands();
 
@@ -501,7 +501,7 @@ interface IPreparedStatement extends IStatement {
     /**
      * descHere
      * @param	string	$Name
-     * @param	IParam<T: mixed>	$Param
+     * @param	IParam	$Param <T: ?>
      */
     public function BindParam($Name, $Param);
 
@@ -516,7 +516,7 @@ interface ICallableStatement extends IPreparedStatement {
     /**
      * 
      * @param	string			$Name
-     * @return	IParam<T: ?>
+     * @return	IParam <T: ?>
      */
     public function GetParam($Name);
 }
@@ -627,7 +627,7 @@ interface IResultSet extends IArrayAccess {
 
 /**
  * IRow
- * extends IArrayAccess<T: IParam<T: ?>>
+ * extends IArrayAccess <T: IParam<T: ?>>
  * @author	许子健
  */
 interface IRow extends IArrayAccess {
@@ -692,7 +692,7 @@ interface IRow extends IArrayAccess {
 
 /**
  * TAbstractParam
- * @param	<T>
+ * param	<T>
  * @author	许子健
  */
 abstract class TAbstractParam extends TObject {
@@ -726,7 +726,7 @@ abstract class TAbstractParam extends TObject {
 
 /**
  * TPrimativeParam
- * @param	<T>
+ * param	<T>
  * @author	许子健
  */
 final class TPrimativeParam extends TAbstractParam implements IParam {

@@ -1,7 +1,7 @@
 <?php
 /**
  * Utilities
- * @author	ExSystem
+ * @author	许子健
  * @version	$Id$
  * @since	separate file since reversion 1
  */
@@ -9,63 +9,63 @@ require_once 'FrameworkDSW/System.php';
 
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class EInvalidTypeCasting extends ERuntimeException {}
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class EInvalidBoolCasting extends EInvalidTypeCasting {}
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class EInvalidIntCasting extends EInvalidTypeCasting {}
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class EInvalidFloatCasting extends EInvalidTypeCasting {}
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class EInvalidStringCasting extends EInvalidTypeCasting {}
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class EInvalidArrayCasting extends EInvalidTypeCasting {}
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class EInvalidRecordCasting extends EInvalidTypeCasting {}
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class EInvalidObjectCasting extends EInvalidTypeCasting {}
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class EInvalidClassCasting extends EInvalidTypeCasting {}
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class EInvalidInterfaceCasting extends EInvalidTypeCasting {}
 /**
  *
- * @author	ExSystem
+ * @author	许子健
  */
 class EInvalidDelegateCasting extends EInvalidTypeCasting {}
 
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 final class TType extends TObject {
 
@@ -214,11 +214,20 @@ final class TType extends TObject {
                 break;
         }
     }
+
+    /**
+     * 
+     * @param	mixed	$Type
+     * @return	boolean
+     */
+    public static function IsTypePrimitive(&$Type) {
+        return ($Type === 'boolean' || $Type === 'integer' || $Type === 'float' || $Type === 'string' || $Type === 'array');
+    }
 }
 
 /**
  * TSize
- * @author	ExSystem
+ * @author	许子健
  */
 final class TSize extends TRecord {
     /**
@@ -235,7 +244,7 @@ final class TSize extends TRecord {
 
 /**
  * TPoint
- * @author	ExSystem
+ * @author	许子健
  */
 final class TPoint extends TRecord {
     /**
@@ -252,14 +261,14 @@ final class TPoint extends TRecord {
 
 /**
  * TFont
- * @author	ExSystem
+ * @author	许子健
  */
 final class TFont extends TObject {//TODO: impl TFont.
 }
 
 /**
  * TColor
- * @author	ExSystem
+ * @author	许子健
  */
 final class TColor extends TObject {//TODO: impl TColor.
 }

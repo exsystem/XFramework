@@ -97,7 +97,7 @@ class ECollectionNotExisted extends EContainerException {}
 
 /**
  * IIterator
- * @param	<T>
+ * param	<T>
  */
 interface IIterator extends IInterface, Iterator {
 
@@ -109,20 +109,20 @@ interface IIterator extends IInterface, Iterator {
 
 /**
  * IIteratorAggregate
- * @param	<T>
+ * param	<T>
  */
 interface IIteratorAggregate extends IInterface, IteratorAggregate {
 
     /**
      *
-     * @return IIterator<T>
+     * @return IIterator <T>
      */
     public function Iterator();
 }
 
 /**
  * IArrayAccess
- * @param	<T>
+ * param	<T>
  */
 interface IArrayAccess extends IInterface, ArrayAccess {}
 
@@ -131,8 +131,8 @@ interface IArrayAccess extends IInterface, ArrayAccess {}
 
 /**
  * IListIterator
- * extends IIterator<T>
- * @param	<T>
+ * extends	IIterator<T>
+ * param	<T>
  */
 interface IListIterator extends IIterator {
 
@@ -163,8 +163,8 @@ interface IListIterator extends IIterator {
 
 /**
  * ICollection
- * extends IIteratorAggregate<T>
- * @param	<T>
+ * extends	IIteratorAggregate<T>
+ * param	<T>
  */
 interface ICollection extends IIteratorAggregate {
 
@@ -176,7 +176,7 @@ interface ICollection extends IIteratorAggregate {
 
     /**
      *
-     * @param   ICollection<T>	$Collection
+     * @param   ICollection	$Collection	<T>
      */
     public function AddAll($Collection);
 
@@ -195,7 +195,7 @@ interface ICollection extends IIteratorAggregate {
 
     /**
      *
-     * @param   ICollection<T>	$Collection
+     * @param   ICollection	$Collection	<T>
      * @return  boolean
      */
     public function ContainsAll($Collection);
@@ -220,13 +220,13 @@ interface ICollection extends IIteratorAggregate {
 
     /**
      *
-     * @param   ICollection<T>	$Collection
+     * @param   ICollection	$Collection	<T>
      */
     public function RemoveAll($Collection);
 
     /**
      *
-     * @param  ICollection<T>	$Collection
+     * @param  ICollection	$Collection	<T>
      * @return boolean
      */
     public function RetainAll($Collection);
@@ -240,8 +240,8 @@ interface ICollection extends IIteratorAggregate {
 
 /**
  * IList
- * extends ICollection<T>
- * @param	<T>
+ * extends	ICollection<T>
+ * param	<T>
  */
 interface IList extends ICollection {
 
@@ -255,7 +255,7 @@ interface IList extends ICollection {
     /**
      *
      * @param  integer			$Index
-     * @param  ICollection<T>	$Collection
+     * @param  ICollection		$Collection <T>
      */
     public function InsertAll($Index, $Collection);
 
@@ -283,7 +283,7 @@ interface IList extends ICollection {
     /**
      *
      * @param  integer			$Index
-     * @return IListIterator<T>
+     * @return IListIterator <T>
      */
     public function ListIterator($Index = 0);
 
@@ -305,7 +305,7 @@ interface IList extends ICollection {
      *
      * @param  integer	$FromIndex
      * @param  integer 	$ToIndex
-     * @return IList<T>
+     * @return IList <T>
      */
     public function SubList($FromIndex, $ToIndex);
 }
@@ -313,14 +313,14 @@ interface IList extends ICollection {
 /**
  * ISet
  * extends ICollection<T>
- * @param	<T>
+ * param	<T>
  */
 interface ISet extends ICollection {}
 
 /**
  * IQueue
  * extends	ICollection<T>
- * @param	<T>
+ * param	<T>
  */
 interface IQueue extends ICollection {
 
@@ -345,7 +345,7 @@ interface IQueue extends ICollection {
 
 /**
  * IMap
- * @param	<K, V>
+ * param	<K, V>
  */
 interface IMap extends IInterface {
 
@@ -365,13 +365,13 @@ interface IMap extends IInterface {
 
     /**
      *
-     * @return ISet<TPair<K, V>>
+     * @return ISet <TPair<K, V>>
      */
     public function PairSet();
 
     /**
      *
-     * @return ISet<K>
+     * @return ISet <K>
      */
     public function KeySet();
 
@@ -384,20 +384,20 @@ interface IMap extends IInterface {
 
     /**
      *
-     * @param  IMap<K, V>    $Map
+     * @param  IMap	$Map <K, V>
      */
     public function PutAll($Map);
 
     /**
      *
-     * @return ICollection<V>
+     * @return ICollection <V>
      */
     public function Values();
 }
 
 /**
  * TPair
- * @param	<K, V>
+ * param	<K, V>
  */
 final class TPair extends TRecord {
     /**
@@ -416,13 +416,13 @@ final class TPair extends TRecord {
 /**
  * The default iterator for TAbstractList.
  * extends IIterator<T>
- * @param	<T>
+ * param	<T>
  * @author  ExSystem
  */
 class TStdListIterator extends TObject implements IIterator {
     /**
      *
-     * @var    TAbstractList<T>
+     * @var    TAbstractList <T>
      */
     protected $FList = null;
     /**
@@ -437,7 +437,7 @@ class TStdListIterator extends TObject implements IIterator {
     protected $FLastAt = -1;
 
     /**
-     * @param  TAbstractList<T>		$List
+     * @param  TAbstractList	$List <T>
      * @see    FrameworkDSW/TObject#Create()
      */
     public function __construct($List) {
@@ -514,14 +514,14 @@ class TStdListIterator extends TObject implements IIterator {
 /**
  * TStdListListIterator
  * extends	TStdListIterator<T>, IListIterator<T>
- * @param	<T>
+ * param	<T>
  * @author  ExSystem
  */
 class TStdListListIterator extends TStdListIterator implements IListIterator {
 
     /**
      *
-     * @param  TAbstractList<T>	$List
+     * @param  TAbstractList	$List <T>
      * @param  integer			$StartAt
      * @see FrameworkDSW/TStdListIterator#Create($List)
      */
@@ -600,7 +600,7 @@ class TStdListListIterator extends TStdListIterator implements IListIterator {
 /**
  * TAbstractCollection
  * extends	ICollection<T>
- * @param	<T>
+ * param	<T>
  * @author ExSystem
  */
 abstract class TAbstractCollection extends TObject implements ICollection {
@@ -621,7 +621,7 @@ abstract class TAbstractCollection extends TObject implements ICollection {
 
     /**
      *
-     * @param   ICollection<T>	$Collection
+     * @param   ICollection	$Collection <T>
      */
     public function AddAll($Collection) {
         TType::Type($Collection, $this->GenericArg('T'));
@@ -654,9 +654,10 @@ abstract class TAbstractCollection extends TObject implements ICollection {
     public function Contains($Element) {
         TType::Type($Element, $this->GenericArg('T'));
         $mItr = $this->Iterator();
-        if ($Element instanceof TObject && $mItr->current() instanceof TObject) {
+        
+        if (TType::IsTypePrimitive($this->GenericArg('T'))) {
             while ($mItr->valid()) {
-                if ($Element->Equals($mItr->current())) {
+                if ($Element === $mItr->current()) {
                     return true;
                 }
                 $mItr->next();
@@ -664,7 +665,7 @@ abstract class TAbstractCollection extends TObject implements ICollection {
         }
         else {
             while ($mItr->valid()) {
-                if ($Element === $mItr->current()) {
+                if ($Element->Equals($mItr->current())) {
                     return true;
                 }
                 $mItr->next();
@@ -676,7 +677,7 @@ abstract class TAbstractCollection extends TObject implements ICollection {
 
     /**
      *
-     * @param   ICollection<T>	$Collection
+     * @param   ICollection	$Collection <T>
      * @return  boolean
      */
     public function ContainsAll($Collection) {
@@ -707,9 +708,9 @@ abstract class TAbstractCollection extends TObject implements ICollection {
         $this->CheckReadOnly();
         $mItr = $this->Iterator();
         
-        if ($Element instanceof TObject && $mItr->current() instanceof TObject) {
-            while ($mItr->Valid()) {
-                if ($Element->Equals($mItr->current())) {
+        if (TType::IsTypePrimitive($this->GenericArg('T'))) {
+            while ($mItr->valid()) {
+                if ($Element === $mItr->current()) {
                     $mItr->Remove();
                     return;
                 }
@@ -717,8 +718,8 @@ abstract class TAbstractCollection extends TObject implements ICollection {
             }
         }
         else {
-            while ($mItr->valid()) {
-                if ($Element === $mItr->current()) {
+            while ($mItr->Valid()) {
+                if ($Element->Equals($mItr->current())) {
                     $mItr->Remove();
                     return;
                 }
@@ -731,7 +732,7 @@ abstract class TAbstractCollection extends TObject implements ICollection {
 
     /**
      *
-     * @param   ICollection<T>	$Collection
+     * @param   ICollection	$Collection <T>
      */
     public function RemoveAll($Collection) {
         TType::Type($Collection, array ('ICollection' => array ('T' => $this->GenericArg('T'))));
@@ -754,7 +755,7 @@ abstract class TAbstractCollection extends TObject implements ICollection {
 
     /**
      *
-     * @param  ICollection<T>	$Collection
+     * @param  ICollection	$Collection <T>
      * @return boolean
      */
     public function RetainAll($Collection) {
@@ -786,7 +787,7 @@ abstract class TAbstractCollection extends TObject implements ICollection {
     }
 
     /**
-     * @return  IIterator<T>
+     * @return  IIterator <T>
      */
     public function getIterator() {
         return $this->Iterator();
@@ -814,7 +815,7 @@ abstract class TAbstractCollection extends TObject implements ICollection {
 /**
  * TAbstractList
  * extends	TAbstractCollection<T>, IList<T>, IArrayAccess<T>
- * @param	<T>
+ * param	<T>
  * @author 许子健
  */
 abstract class TAbstractList extends TAbstractCollection implements IList, IArrayAccess {
@@ -860,8 +861,8 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
 
     /**
      *
-     * @param  integer			$Index
-     * @param  ICollection<T>	$Collection
+     * @param  integer		$Index
+     * @param  ICollection	$Collection <T>
      * @return integer
      */
     protected function DoInsertAll($Index, $Collection) {
@@ -916,9 +917,9 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
 
     /**
      *
-     * @param  integer	$FromIndex
-     * @param  integer	$ToIndex
-     * @return IList<T>
+     * @param  integer		$FromIndex
+     * @param  integer		$ToIndex
+     * @return IList <T>
      */
     protected abstract function DoSubList($FromIndex, $ToIndex);
 
@@ -949,8 +950,8 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
 
     /**
      *
-     * @param  integer			$Index
-     * @param  ICollection<T>	$Collection
+     * @param  integer		$Index
+     * @param  ICollection	$Collection <T>
      */
     public final function InsertAll($Index, $Collection) {
         TType::Int($Index);
@@ -988,9 +989,9 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
         TType::Type($Element, $this->GenericArg('T'));
         $mItr = $this->ListIterator();
         
-        if ($Element instanceof TObject && $mItr->current() instanceof TObject) {
+        if (TType::IsTypePrimitive($this->GenericArg('T'))) {
             while ($mItr->valid()) {
-                if ($Element->Equals($mItr->current())) {
+                if ($Element === $mItr->current()) {
                     return $mItr->key();
                 }
                 $mItr->next();
@@ -998,7 +999,7 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
         }
         else {
             while ($mItr->valid()) {
-                if ($Element === $mItr->current()) {
+                if ($Element->Equals($mItr->current())) {
                     return $mItr->key();
                 }
                 $mItr->next();
@@ -1010,7 +1011,7 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
 
     /**
      *
-     * @return  IIterator<T>
+     * @return  IIterator <T>
      * @see FrameworkDSW/TAbstractCollection#Iterator()
      */
     public function Iterator() {
@@ -1027,10 +1028,10 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
         TType::Type($Element, $this->GenericArg('T'));
         $mItr = $this->ListIterator($this->FSize);
         
-        if ($Element instanceof TObject && $mItr->current() instanceof TObject) {
+        if (TType::IsTypePrimitive($this->GenericArg('T'))) {
             while ($mItr->HasPrevious()) {
                 $mItr->Previous();
-                if ($Element->Equals($mItr->current())) {
+                if ($Element === $mItr->current()) {
                     return $mItr->key();
                 }
             }
@@ -1038,7 +1039,7 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
         else {
             while ($mItr->HasPrevious()) {
                 $mItr->Previous();
-                if ($Element === $mItr->current()) {
+                if ($Element->Equals($mItr->current())) {
                     return $mItr->key();
                 }
             }
@@ -1049,8 +1050,8 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
 
     /**
      *
-     * @param  integer         	$Index
-     * @return IListIterator<T>
+     * @param  integer         		$Index
+     * @return IListIterator <T>
      */
     public function ListIterator($Index = 0) {
         TType::Int($Index);
@@ -1127,7 +1128,7 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
     /**
      * @param	integer		$FromIndex
      * @param	integer		$ToIndex
-     * @return	IList<T>
+     * @return	IList <T>
      */
     public final function SubList($FromIndex, $ToIndex) {
         TType::Int($FromIndex);
@@ -1204,6 +1205,8 @@ final class TList extends TAbstractList {
         TType::Arr($FromArray);
         TType::Bool($KeepOrder);
         
+        parent::__construct();
+        
         if (is_null($FromArray)) {
             $this->FList = new SplFixedArray($Capacity);
             $this->FCapacity = $Capacity;
@@ -1232,7 +1235,6 @@ final class TList extends TAbstractList {
      * @see    FrameworkDSW/TAbstractList#DoInsert($Index, $Element)
      */
     protected function DoInsert($Index, $Element) {
-        TType::Type($Element, $this->GenericArg('T'));
         $mNewSize = $this->FSize;
         if ($mNewSize >= $this->FCapacity) {
             $mCapacity = $mNewSize + 11;
@@ -1339,9 +1341,9 @@ final class TList extends TAbstractList {
 
     /**
      *
-     * @param  integer $FromIndex
-     * @param  integer $ToIndex
-     * @return IList
+     * @param  integer		$FromIndex
+     * @param  integer		$ToIndex
+     * @return IList <T>
      * @see    FrameworkDSW/TAbstractList#DoSubList($FromIndex, $ToIndex)
      */
     protected function DoSubList($FromIndex, $ToIndex) {
@@ -1364,9 +1366,9 @@ final class TList extends TAbstractList {
 
     /**
      *
-     * @param  T[]		$Array
-     * @param  boolean	$KeepOrder
-     * @return TList<T>
+     * @param  T[]			$Array
+     * @param  boolean		$KeepOrder
+     * @return TList <T>
      */
     public static function FromArray($Array, $KeepOrder = true) {
         TType::Arr($Array);
@@ -1426,4 +1428,253 @@ final class TList extends TAbstractList {
             $this->FCapacity = $Value;
         }
     }
+}
+
+/**
+ * TLinkedList
+ * param	<T>
+ * extends	TAbstractList<T>
+ * @author	许子健
+ */
+final class TLinkedList extends TAbstractList {
+    /**
+     * 
+     * @var	integer
+     */
+    const CPrev = 0;
+    /**
+     * 
+     * @var	integer
+     */
+    const CData = 1;
+    /**
+     * 
+     * @var	integer
+     */
+    const CNext = 2;
+    
+    /**
+     * @var	SplFixedArray
+     */
+    private $FList = null;
+    /**
+     * 
+     * @var	integer
+     */
+    private $FHead = -1;
+    /**
+     * 
+     * @var	integer
+     */
+    private $FTail = -1;
+    /**
+     * 
+     * @var	integer
+     */
+    private $FCurrIndex = -1;
+    /**
+     * 
+     * @var	integer
+     */
+    private $FCurrAddr = -1;
+
+    /**
+     * 
+     * @param	integer	$Index
+     * @return	array
+     */
+    private function GetNodeAddr($Index) {
+        $mFrom = $this->FSize - 1; //from tail
+        $mSteps = $this->FSize - 1 - $Index;
+        $mIsForward = false;
+        if ($Index < $mSteps) {
+            $mSteps = $Index;
+            $mFrom = $this->FHead; //from head
+            $mIsForward = true;
+        }
+        $mDelta = $Index - $this->FCurrIndex;
+        $mIsForward = true;
+        if ($mDelta < 0) {
+            $mDelta = -$mDelta;
+            $mIsForward = false;
+        }
+        if ($mDelta < $mSteps) {
+            $mSteps = $mDelta;
+            $mFrom = $this->FCurrAddr; //from current
+        }
+        
+        $mCurrAddr = $mFrom;
+        ++$mSteps;
+        if ($mIsForward) {
+            while (--$mSteps) {
+                $mCurrAddr = $this->FList[$mCurrAddr][self::CNext];
+            }
+        
+        }
+        else {
+            while (--$mSteps) {
+                $mCurrAddr = $this->FList[$mCurrAddr][self::CPrev];
+            }
+        }
+        $this->FCurrAddr = $mCurrAddr;
+        $this->FCurrIndex = $Index;
+        return $mCurrAddr;
+    }
+
+    /**
+     * descHere
+     * @param	T[]		$FromArray
+     * @param	boolean	$KeepOder
+     */
+    public function __construct($FromArray = null, $KeepOder = true) {
+        TType::Arr($FromArray);
+        TType::Bool($KeepOder);
+        
+        parent::__construct();
+        if (is_null($FromArray) || count($FromArray) == 0) {
+            $this->FSize = 0;
+            $this->FList = new SplFixedArray();
+            return;
+        }
+        $this->FList = SplFixedArray::fromArray($FromArray, $KeepOder);
+        $this->FSize = count($this->FList);
+        $this->FHead = 0;
+        $this->FTail = $this->FSize - 1;
+        $this->FCurrAddr = ($this->FSize - 1) >> 1;
+        $this->FCurrIndex = $this->FCurrAddr;
+        
+        $mIndex = 0;
+        while ($mIndex < $this->FSize) {
+            $this->FList[$mIndex] = array ($mIndex - 1, $this->FList[$mIndex], ++$mIndex);
+        }
+        $this->FList[$mIndex - 1][self::CNext] = -1;
+    }
+
+    /**
+     * descHere
+     * @param	integer	$Index
+     * @return	T
+     */
+    protected function DoGet($Index) {
+        $mNode = $this->GetNodeAddr($Index);
+        return $this->FList[$mNode][self::CData];
+    }
+
+    /**
+     * descHere
+     * @param	integer	$Index
+     * @param	T	$Element
+     */
+    protected function DoInsert($Index, $Element) {
+        $mNewHigh = count($this->FList);
+        $this->FList->setSize($mNewHigh + 1);
+        $this->FList[$mNewHigh] = array (-1, $Element, -1);
+        
+        if ($this->FSize == 0) { //if empty before insertion.
+            $this->FCurrAddr = $mNewHigh;
+            $this->FCurrIndex = 0;
+            $this->FHead = $mNewHigh;
+            $this->FTail = $mNewHigh;
+            return;
+        } //else do the switch...
+        $mNode = $this->GetNodeAddr(0);
+        switch ($Index) {
+            case 0 : //unshift               
+                $this->FList[$mNode][self::CPrev] = $mNewHigh;
+                $this->FList[$mNewHigh][self::CNext] = $mNode;
+                $this->FHead = $mNewHigh;
+                $this->FCurrAddr = $mNewHigh;
+                $this->FCurrIndex = 0;
+                break;
+            case $this->FSize : //push
+                $this->FList[$mNode][self::CNext] = $mNewHigh;
+                $this->FList[$mNewHigh][self::CPrev] = $mNode;
+                $this->FTail = $mNewHigh;
+                $this->FCurrAddr = $mNewHigh;
+                $this->FCurrIndex = $Index;
+                break;
+            default : //insert
+                $mPrevNode = $this->FList[$mNode][self::CPrev];
+                $this->FList[$mNode][self::CPrev] = $mNewHigh;
+                $this->FList[$mNewHigh][self::CNext] = $mNode;
+                $this->FList[$mPrevNode][self::CNext] = $mNewHigh;
+                $this->FList[$mNewHigh][self::CPrev] = $mPrevNode;
+                $this->FCurrAddr = $mNewHigh;
+                $this->FCurrIndex = $Index;
+                break;
+        }
+    }
+
+    /**
+     * descHere
+     * @param	integer		$Index
+     * @param	ICollection	$Collection <T>
+     * @return	integer
+     */
+    protected function DoInsertAll($Index, $Collection) {
+    }
+
+    /**
+     * descHere
+     * @param	integer	$Index
+     */
+    protected function DoRemoveAt($Index) {
+    }
+
+    /**
+     * descHere
+     * @param	integer	$FromIndex
+     * @param	integer	$ToIndex
+     * @return	integer
+     */
+    protected function DoRemoveRange($FromIndex, $ToIndex) {
+    }
+
+    /**
+     * descHere
+     * @param	integer	$Index
+     * @param	T	$Element
+     */
+    protected function DoSet($Index, $Element) {
+    }
+
+    /**
+     * descHere
+     * @param	integer		$FromIndex
+     * @param	integer		$ToIndex
+     * @return	IList <T>
+     */
+    protected function DoSubList($FromIndex, $ToIndex) {
+    }
+
+    /**
+     * descHere
+     * @return	T
+     */
+    public function First() {
+    }
+
+    /**
+     * descHere
+     * @param	T[]				$Array
+     * @param	boolean			$KeepOrder
+     * @return	TLinkedList	<T>
+     */
+    public static function FromArray($Array, $KeepOrder) {
+    }
+
+    /**
+     * descHere
+     * @return	T
+     */
+    public function Last() {
+    }
+
+    /**
+     * descHere
+     * @return	T[]
+     */
+    public function ToArray() {
+    }
+
 }

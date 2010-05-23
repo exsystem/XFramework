@@ -1,7 +1,7 @@
 <?php
 /**
  * Framework
- * @author  ExSystem
+ * @author  许子健
  * @version $Id$
  * @since   separate file since reversion 1
  */
@@ -10,22 +10,22 @@ require_once 'FrameworkDSW/System.php';
 
 /**
  * Serialization exception.
- * @author  ExSystem
+ * @author  许子健
  */
 class ESerializationException extends ESysException {}
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class ESerializeResource extends ESerializationException {}
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class EBadSerializedData extends ESerializationException {}
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class EIllegalClass extends ESerializationException {}
 
@@ -33,7 +33,7 @@ class EIllegalClass extends ESerializationException {}
  * Framework class
  *
  * The Framework implements some static methods for framework objects to use.
- * @author  ExSystem
+ * @author  许子健
  */
 class Framework extends TObject {
     /**
