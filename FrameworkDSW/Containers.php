@@ -236,6 +236,7 @@ interface ICollection extends IIteratorAggregate {
      * @return  T[]
      */
     public function ToArray();
+
 }
 
 /**
@@ -308,6 +309,16 @@ interface IList extends ICollection {
      * @return IList <T>
      */
     public function SubList($FromIndex, $ToIndex);
+
+    /**
+     * @return	T
+     */
+    public function First();
+
+    /**
+     * @return	T 
+     */
+    public function Last();
 }
 
 /**
@@ -609,6 +620,11 @@ abstract class TAbstractCollection extends TObject implements ICollection {
      * @var    boolean
      */
     private $FReadOnly = false;
+    /**
+     * 
+     * @var	boolean
+     */
+    private $FElementsOwned = false;
 
     /**
      * 
@@ -617,6 +633,16 @@ abstract class TAbstractCollection extends TObject implements ICollection {
         if ($this->FReadOnly) {
             throw new ECollectionIsReadOnly();
         }
+    }
+
+    /**
+     * 
+     * @param	boolean	$ElementsOwned
+     */
+    public function __construct($ElementsOwned) {
+        TType::Bool($ElementsOwned);
+        parent::__construct();
+        $this->FElementsOwned = $ElementsOwned && !TType::IsTypePrimitive($this->GenericArg('T'));
     }
 
     /**
@@ -810,6 +836,13 @@ abstract class TAbstractCollection extends TObject implements ICollection {
         
         $this->FReadOnly = $Value;
     }
+
+    /**
+     * @return	boolean
+     */
+    public function getElementsOwned() {
+        return $this->FElementsOwned;
+    }
 }
 
 /**
@@ -924,6 +957,21 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
     protected abstract function DoSubList($FromIndex, $ToIndex);
 
     /**
+     * @return	T
+     */
+    protected abstract function DoFirst();
+
+    /**
+     * @return	T
+     */
+    protected abstract function DoLast();
+
+    /**
+     * 
+     */
+    protected abstract function DoClear();
+
+    /**
      * (non-PHPdoc)
      * @param   T   $Element
      * @see     FrameworkDSW/AbstractCollection#Add($Element)
@@ -931,6 +979,17 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
     public final function Add($Element) {
         TType::Type($Element, $this->GenericArg('T'));
         $this->Insert($this->Size(), $Element);
+    }
+
+    /**
+     * 
+     */
+    public final function Clear() {
+        if ($this->FSize == 0) {
+            $this->CheckReadOnly();
+            $this->DoClear();
+            $this->FSize = 0;
+        }
     }
 
     /**
@@ -1136,6 +1195,28 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
         
         $this->CheckIndexForGet($FromIndex);
         $this->CheckIndexForGet($ToIndex);
+        
+        return $this->DoSubList($FromIndex, $ToIndex);
+    }
+
+    /**
+     * @return	T
+     */
+    public final function First() {
+        if ($this->FSize == 0) {
+            throw new EIndexOutOfBounds();
+        }
+        return $this->DoFirst();
+    }
+
+    /**
+     * @return	T
+     */
+    public final function Last() {
+        if ($this->FSize == 0) {
+            throw new EIndexOutOfBounds();
+        }
+        return $this->DoLast();
     }
 
     /**
@@ -1185,11 +1266,11 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
  */
 final class TList extends TAbstractList {
     /**
-     * @var    SplFixedArray
+     * @var SplFixedArray
      */
     private $FList = null;
     /**
-     * @var    integer
+     * @var	integer
      */
     private $FCapacity = 10;
 
@@ -1200,12 +1281,13 @@ final class TList extends TAbstractList {
      * @param	boolean	$KeepOrder
      * @see		FrameworkDSW/TObject#Create()
      */
-    public function __construct($Capacity = 10, $FromArray = null, $KeepOrder = true) {
+    public function __construct($Capacity = 10, $ElementsOwned = false, $FromArray = null, $KeepOrder = true) {
         TType::Int($Capacity);
+        TType::Bool($ElementsOwned);
         TType::Arr($FromArray);
         TType::Bool($KeepOrder);
         
-        parent::__construct();
+        parent::__construct($ElementsOwned);
         
         if (is_null($FromArray)) {
             $this->FList = new SplFixedArray($Capacity);
@@ -1306,6 +1388,10 @@ final class TList extends TAbstractList {
      * @see    FrameworkDSW/TAbstractList#DoRemoveAt($Index)
      */
     protected function DoRemoveAt($Index) {
+        if ($this->FElementsOwned) {
+            Framework::Free($this->FList[$Index]);
+        }
+        
         $mTail = $this->FSize;
         --$mTail;
         while ($Index < $mTail) {
@@ -1323,6 +1409,12 @@ final class TList extends TAbstractList {
      */
     protected function DoRemoveRange($FromIndex, $ToIndex) {
         $mDelta = $ToIndex - $FromIndex;
+        if ($this->FElementsOwned) {
+            $mIndex = $FromIndex - 1;
+            while (++$mIndex < $ToIndex) {
+                Framework::Free($this->FList[$mIndex]);
+            }
+        }
         while ($ToIndex < $this->FSize) {
             $this->FList[($ToIndex++) - $mDelta] = $this->FList[$ToIndex];
         }
@@ -1365,6 +1457,60 @@ final class TList extends TAbstractList {
     }
 
     /**
+     * 
+     */
+    protected function DoClear() {
+        if ($this->FElementsOwned) {
+            foreach ($this->FList as &$mElement) {
+                Framework::Free($mElement);
+            }
+        }
+        
+        Framework::Free($this->FList);
+        $this->FList = new SplFixedArray($this->FCapacity);
+    }
+
+    /**
+     * @return	T
+     */
+    protected function DoFirst() {
+        return $this->FList[0];
+    }
+
+    /**
+     * @return	T
+     */
+    protected function DoLast() {
+        return $this->FList[$this->FSize - 1];
+    }
+
+    /**
+     * 
+     * @param	TList	$List <T>
+     */
+    public function Swap($List) {
+        TType::Object($List, array ('TList' => array ('T' => $this->GenericArg('T'))));
+        
+        $mTempList = $this->FList;
+        $mTempCapacity = $this->FCapacity;
+        $mTempOwned = $this->FElementsOwned;
+        $mReadOnly = $this->FReadOnly;
+        $mSize = $this->FSize;
+        
+        $this->FList = $List->FList;
+        $this->FCapacity = $List->FCapacity;
+        $this->FElementsOwned = $List->FElementsOwned;
+        $this->FReadOnly = $List->FReadOnly;
+        $this->FSize = $List->FSize;
+        
+        $List->FList = $mTempList;
+        $List->FCapacity = $mTempCapacity;
+        $List->FElementsOwned = $mTempOwned;
+        $List->FReadOnly = $mReadOnly;
+        $List->FSize = $mSize;
+    }
+
+    /**
      *
      * @param  T[]			$Array
      * @param  boolean		$KeepOrder
@@ -1387,22 +1533,6 @@ final class TList extends TAbstractList {
         $mArr = $this->FList->toArray();
         $this->FList->setSize($this->FCapacity);
         return $mArr;
-    }
-
-    /**
-     *
-     * @return T
-     */
-    public function First() {
-        return $this->FList[0];
-    }
-
-    /**
-     *
-     * @return T
-     */
-    public function Last() {
-        return $this->FList[$this->FSize - 1];
     }
 
     /**
@@ -1509,7 +1639,6 @@ final class TLinkedList extends TAbstractList {
             while (--$mSteps) {
                 $mCurrAddr = $this->FList[$mCurrAddr][self::CNext];
             }
-        
         }
         else {
             while (--$mSteps) {
@@ -1526,11 +1655,13 @@ final class TLinkedList extends TAbstractList {
      * @param	T[]		$FromArray
      * @param	boolean	$KeepOder
      */
-    public function __construct($FromArray = null, $KeepOder = true) {
+    public function __construct($ElementsOwned = false, $FromArray = null, $KeepOder = true) {
+        TType::Bool($ElementsOwned);
         TType::Arr($FromArray);
         TType::Bool($KeepOder);
         
-        parent::__construct();
+        parent::__construct($ElementsOwned);
+        
         if (is_null($FromArray) || count($FromArray) == 0) {
             $this->FSize = 0;
             $this->FList = new SplFixedArray();
@@ -1577,7 +1708,7 @@ final class TLinkedList extends TAbstractList {
             $this->FTail = $mNewHigh;
             return;
         } //else do the switch...
-        $mNode = $this->GetNodeAddr(0);
+        $mNode = $this->GetNodeAddr($Index);
         switch ($Index) {
             case 0 : //unshift               
                 $this->FList[$mNode][self::CPrev] = $mNewHigh;
@@ -1585,7 +1716,6 @@ final class TLinkedList extends TAbstractList {
                 $this->FHead = $mNewHigh;
                 $this->FCurrAddr = $mNewHigh;
                 $this->FCurrIndex = 0;
-                break;
             case $this->FSize : //push
                 $this->FList[$mNode][self::CNext] = $mNewHigh;
                 $this->FList[$mNewHigh][self::CPrev] = $mNode;
@@ -1612,6 +1742,18 @@ final class TLinkedList extends TAbstractList {
      * @return	integer
      */
     protected function DoInsertAll($Index, $Collection) {
+        if ($Collection->IsEmpty()) {
+            return 0;
+        }
+        
+        //TODO: 一个一个插入没有效率，应该先把$Collection拼接成链表，然后整体的一次插入
+        --$Index;
+        $mResult = 0;
+        foreach ($Collection as $mElement) {
+            $this->DoInsert(++$Index, $mElement);
+            ++$mResult;
+        }
+        return $mResult;
     }
 
     /**
@@ -1619,6 +1761,42 @@ final class TLinkedList extends TAbstractList {
      * @param	integer	$Index
      */
     protected function DoRemoveAt($Index) {
+        $mNode = $this->GetNodeAddr($Index);
+        if ($this->FElementsOwned) {
+            Framework::Free($this->FList[$mNode][self::CData]);
+        }
+        
+        switch ($Index) {
+            case 0 : //shift               
+                $this->FHead = $this->FList[$mNode][self::CNext];
+                $this->FList[$this->FHead][self::CPrev] = -1;
+                $this->FList[$mNode][self::CPrev] = -1;
+                $this->FList[$mNode][self::CNext] = -1;
+            case $this->FSize - 1 : //pop
+                $this->FTail = $this->FList[$mNode][self::CPrev];
+                $this->FList[$this->FTail][self::CNext] = -1;
+                $this->FList[$mNode][self::CPrev] = -1;
+                $this->FList[$mNode][self::CNext] = -1;
+                break;
+            default : //remove
+                $mPrevNode = $this->FList[$mNode][self::CPrev];
+                $mNextNode = $this->FList[$mNode][self::CNext];
+                $this->FList[$mPrevNode][self::CNext] = $mNextNode;
+                $this->FList[$mNextNode][self::CPrev] = $mPrevNode;
+                $this->FList[$mNode][self::CPrev] = -1;
+                $this->FList[$mNode][self::CNext] = -1;
+                $this->FCurrAddr = $mNextNode;
+                $this->FCurrIndex = $Index;
+                return;
+        }
+        
+        if ($this->FSize == 1) {
+            $this->FCurrAddr = -1;
+            $this->FCurrIndex = -1;
+            return;
+        }
+        $this->FCurrAddr = $this->FHead;
+        $this->FCurrIndex = 0;
     }
 
     /**
@@ -1636,6 +1814,7 @@ final class TLinkedList extends TAbstractList {
      * @param	T	$Element
      */
     protected function DoSet($Index, $Element) {
+        $this->FList[$this->GetNodeAddr($Index)][self::CData] = $Element;
     }
 
     /**
@@ -1648,26 +1827,88 @@ final class TLinkedList extends TAbstractList {
     }
 
     /**
-     * descHere
-     * @return	T
+     * 
      */
-    public function First() {
+    protected function DoClear() {
+        if ($this->FElementsOwned) {
+            foreach ($this->FList as &$mElement) {
+                Framework::Free($mElement);
+            }
+        }
+        
+        Framework::Free($this->FList);
+        $this->FList = new SplFixedArray(0);
+        $this->FHead = -1;
+        $this->FTail = -1;
+        $this->FCurrAddr = -1;
+        $this->FCurrIndex = -1;
     }
 
     /**
      * descHere
+     * @return	T
+     */
+    protected function DoFirst() {
+        return $this->FList[$this->FHead][self::CData];
+    }
+
+    /**
+     * descHere
+     * @return	T
+     */
+    protected function DoLast() {
+        return $this->FList[$this->FTail][self::CData];
+    }
+
+    /**
+     * descHere
+     * @param	boolean			$ElementsOwned
      * @param	T[]				$Array
      * @param	boolean			$KeepOrder
      * @return	TLinkedList	<T>
      */
-    public static function FromArray($Array, $KeepOrder) {
+    public static function FromArray($ElementsOwned = false, $Array, $KeepOrder) {
+        TType::Bool($ElementsOwned);
+        TType::Arr($Array);
+        TType::Bool($KeepOrder);
+        
+        self::PrepareGeneric(array ('T' => self::StaticGenericArg('T')));
+        return new TLinkedList($ElementsOwned, $Array, $KeepOrder);
     }
 
     /**
-     * descHere
-     * @return	T
+     * 
+     * @param	TLinkedList	$LinkedList <T>
      */
-    public function Last() {
+    public function Swap($LinkedList) {
+        TType::Object($LinkedList, array ('TLinkedList' => array ('T' => $this->GenericArg('T'))));
+        
+        $mTempList = $this->FList;
+        $mTempHead = $this->FHead;
+        $mTempTail = $this->FTail;
+        $mTempTail = $this->FCurrAddr;
+        $mTempTail = $this->FCurrIndex;
+        $mTempReadOnly = $this->FReadOnly;
+        $mTempSize = $this->FSize;
+        $mTempOwned = $this->FElementsOwned;
+        
+        $this->FList = $LinkedList->FList;
+        $this->FHead = $LinkedList->FHead;
+        $this->FTail = $LinkedList->FTail;
+        $this->FCurrAddr = $LinkedList->FCurrAddr;
+        $this->FCurrIndex = $LinkedList->FCurrIndex;
+        $this->FReadOnly = $LinkedList->FReadOnly;
+        $this->FSize = $LinkedList->FSize;
+        $this->FElementsOwned = $LinkedList->FElementsOwned;
+        
+        $LinkedList->FList = $mTempList;
+        $LinkedList->FHead = $mTempHead;
+        $LinkedList->FTail = $mTempTail;
+        $LinkedList->FCurrAddr = $mTempTail;
+        $LinkedList->FCurrIndex = $mTempTail;
+        $LinkedList->FReadOnly = $mTempReadOnly;
+        $LinkedList->FSize = $mTempSize;
+        $LinkedList->FElementsOwned = $mTempOwned;
     }
 
     /**
@@ -1675,6 +1916,6 @@ final class TLinkedList extends TAbstractList {
      * @return	T[]
      */
     public function ToArray() {
+        //把链表导出成array。
     }
-
 }
