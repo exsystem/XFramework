@@ -1,7 +1,7 @@
 <?php
 /**
  * Containers
- * @author  ExSystem
+ * @author  许子健
  * @version $Id$
  * @since   separate file since reversion 1
  */
@@ -9,27 +9,27 @@ require_once 'FrameworkDSW/System.php';
 
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class EIndexOutOfBounds extends ERuntimeException {}
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class ENoKeyDefined extends ERuntimeException {}
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class EIllegalState extends ERuntimeException {}
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class EConcurrentModification extends ERuntimeException {}
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class EContainerDataOprErr extends ERuntimeException {
     /**
@@ -60,38 +60,38 @@ class EContainerDataOprErr extends ERuntimeException {
 }
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class EFailedToInsert extends EContainerDataOprErr {}
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class EFailedToRemove extends EContainerDataOprErr {}
 
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class EContainerException extends EException {}
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class ECollectionIsReadOnly extends EContainerException {}
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class EInvalidCapacity extends EContainerException {}
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class ENoSuchElement extends EContainerException {}
 /**
  *
- * @author  ExSystem
+ * @author  许子健
  */
 class ECollectionNotExisted extends EContainerException {}
 
@@ -329,6 +329,31 @@ interface IList extends ICollection {
 interface ISet extends ICollection {}
 
 /**
+ * IStack
+ * param	<T>
+ * extends	ICollection<T>
+ * @author	许子健
+ */
+interface IStack extends ICollection {
+
+    /**
+     * 
+     * @param	T	$Element
+     */
+    public function Push($Element);
+
+    /**
+     * @return	T
+     */
+    public function Pop();
+
+    /**
+     * @return	T
+     */
+    public function Peek();
+}
+
+/**
  * IQueue
  * extends	ICollection<T>
  * param	<T>
@@ -428,7 +453,7 @@ final class TPair extends TRecord {
  * The default iterator for TAbstractList.
  * extends IIterator<T>
  * param	<T>
- * @author  ExSystem
+ * @author  许子健
  */
 class TStdListIterator extends TObject implements IIterator {
     /**
@@ -526,7 +551,7 @@ class TStdListIterator extends TObject implements IIterator {
  * TStdListListIterator
  * extends	TStdListIterator<T>, IListIterator<T>
  * param	<T>
- * @author  ExSystem
+ * @author  许子健
  */
 class TStdListListIterator extends TStdListIterator implements IListIterator {
 
@@ -612,7 +637,7 @@ class TStdListListIterator extends TStdListIterator implements IListIterator {
  * TAbstractCollection
  * extends	ICollection<T>
  * param	<T>
- * @author ExSystem
+ * @author 许子健
  */
 abstract class TAbstractCollection extends TObject implements ICollection {
     /**
@@ -1260,9 +1285,128 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
 }
 
 /**
+ * TAbstractStack
+ * param	<T>
+ * extends	TAbstractCollection<T> 
+ * @author	许子健
+ */
+abstract class TAbstractStack extends TAbstractCollection {
+
+    /**
+     * 
+     * @param	T	$Element
+     */
+    protected abstract function DoPush($Element);
+
+    /**
+     * @return	T
+     */
+    protected abstract function DoPop();
+
+    /**
+     * @return	T
+     */
+    protected abstract function DoPeek();
+
+    /**
+     * 
+     */
+    protected abstract function DoClear();
+
+    /**
+     * 
+     * @param	T	$Element
+     */
+    public final function Push($Element) {
+        TType::Type($Element, $this->GenericArg('T'));
+        $this->CheckReadOnly();
+        
+        $this->DoPush($Element);
+    }
+
+    /**
+     * 
+     * @param	T	$Element
+     */
+    public final function Add($Element) {
+        $this->Push($Element);
+    }
+
+    /**
+     * 
+     * @param	ICollection	$Collection <T>
+     */
+    public final function AddAll($Collection) {
+        TType::Object($Collection, array ('ICollection' => array ('T' => $this->GenericArg('T'))));
+        $this->CheckReadOnly();
+        
+        foreach ($Collection as $Element) {
+            $this->Push($Element);
+        }
+    }
+
+    /**
+     * 
+     */
+    public final function Clear() {
+        if (!$this->IsEmpty()) {
+            $this->DoClear();
+        }
+    }
+
+    /**
+     * 
+     * @param	T	$Element
+     */
+    public final function Remove($Element) {
+        TType::Type($Element, $this->GenericArg('T'));
+        throw new EFailedToRemove();
+    }
+
+    /**
+     * 
+     * @param	ICollection	$Collection <T>
+     */
+    public final function RemoveAll($Collection) {
+        TType::Object('ICollection', array ('T' => $this->GenericArg('T')));
+        throw new EFailedToRemove();
+    }
+
+    /**
+     * @return	T
+     */
+    public final function Peek() {
+        if ($this->IsEmpty()) {
+            throw new ENoSuchElement();
+        }
+        
+        return $this->DoPeek();
+    }
+
+    /**
+     * @return	T
+     */
+    public final function Pop() {
+        $this->CheckReadOnly();
+        if ($this->IsEmpty()) {
+            throw new ENoSuchElement();
+        }
+        
+        return $this->DoPop();
+    }
+
+    /**
+     * @return	IIterator <T>
+     */
+    public function Iterator() {
+        //TODO: iterator
+    }
+}
+
+/**
  * TList
  * extends	TAbstractList<T>
- * @author  ExSystem
+ * @author  许子健
  */
 final class TList extends TAbstractList {
     /**
@@ -1917,5 +2061,85 @@ final class TLinkedList extends TAbstractList {
      */
     public function ToArray() {
         //把链表导出成array。
+    }
+}
+
+/**
+ * TStack
+ * params	<T>
+ * extends	TAbstractStack<T>, IStack<T>
+ * @author	许子健
+ */
+final class TStack extends TAbstractStack implements IStack {
+    /**
+     * 
+     * @var	SplStack
+     */
+    private $FStack = null;
+
+    /**
+     * 
+     */
+    protected function DoClear() {
+        if ($this->FElementsOwned) {
+            foreach ($this->FStack as $mElement) {
+                Framework::Free($mElement);
+            }
+        }
+        Framework::Free($this->FStack);
+        $this->FStack = new TStack();
+    }
+
+    /**
+     * @return	T
+     */
+    protected function DoPeek() {
+        return $this->FStack->top();
+    }
+
+    /**
+     * @return	T
+     */
+    protected function DoPop() {
+        return $this->FStack->pop();
+    }
+
+    protected function DoPush($Element) {
+        $this->FStack->push($Element);
+    }
+
+    /**
+     * 
+     * @param	boolean	$ElementsOwned
+     */
+    public function __construct($ElementsOwned = false) {
+        TType::Bool($ElementsOwned);
+        parent::__construct($ElementsOwned);
+        $this->FStack = new SplStack();
+    }
+
+    /**
+     * @return	integer
+     */
+    public function Size() {
+        return count($this->FStack);
+    }
+
+    /**
+     * @return	boolean
+     */
+    public function IsEmpty() {
+        return (count($this->FStack) == 0);
+    }
+
+    /**
+     * @return	T[]
+     */
+    public function ToArray() {
+        $mResult = array ();
+        foreach ($this->FStack as $mElement) {
+            $mResult[] = $mElement;
+        }
+        return $mResult;
     }
 }
