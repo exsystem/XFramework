@@ -220,7 +220,7 @@ final class TType extends TObject {
      * @param	mixed	$Type
      * @return	boolean
      */
-    public static function IsTypePrimitive(&$Type) {
+    public static function IsTypePrimitive($Type) {
         return ($Type === 'boolean' || $Type === 'integer' || $Type === 'float' || $Type === 'string' || $Type === 'array');
     }
 }

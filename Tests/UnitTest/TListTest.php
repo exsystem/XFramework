@@ -24,6 +24,7 @@ class TListTest extends PHPUnit_Framework_TestCase {
 	 */
 	protected function setUp() {
 		parent::setUp();
+		TList::PrepareGeneric(array ('T'=>'integer'));
 		$this->FList = new TList(15);	
 	}
 
@@ -46,7 +47,8 @@ class TListTest extends PHPUnit_Framework_TestCase {
 	 */
 	public function testFromArray() {
 		$arr = array(1, 2, 3, 4, 5, 6, 7, 8);
-		$list = TList::FromArray($arr, true);
+		TList::PrepareGeneric(array ('T'=>'integer'));
+		$list = TList::FromArray(true, $arr, true);
 		for ($index = 0; $index < $list->Size(); $index++) {
 			$this->assertEquals($arr[$index], $list[$index]);
 		}
@@ -68,13 +70,13 @@ class TListTest extends PHPUnit_Framework_TestCase {
 	 * Tests TList->First()
 	 */
 	public function testFirst() {
-		$this->FList->Add('string');
-		$this->FList->Add('0001');
-		$this->FList->Add('0002');
-		$this->FList->Add('0003');
-		$this->FList->Add('0004');
+		$this->FList->Add(0);
+		$this->FList->Add(1);
+		$this->FList->Add(2);
+		$this->FList->Add(3);
+		$this->FList->Add(4);
 		
-		$this->assertEquals('string', $this->FList->First());
+		$this->assertEquals(0, $this->FList->First());
 	}
 
 	/**

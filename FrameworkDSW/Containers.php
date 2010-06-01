@@ -1656,15 +1656,17 @@ final class TList extends TAbstractList {
 
     /**
      *
-     * @param  T[]			$Array
-     * @param  boolean		$KeepOrder
-     * @return TList <T>
+     * @param	boolean		$ElementsOwned
+     * @param	T[]			$Array
+     * @param	boolean		$KeepOrder
+     * @return	TList <T>
      */
-    public static function FromArray($Array, $KeepOrder = true) {
+    public static function FromArray($ElementsOwned, $Array, $KeepOrder = true) {
+        TType::Bool($ElementsOwned);
         TType::Arr($Array);
         TType::Bool($KeepOrder);
         
-        return new TList(10, $Array, $KeepOrder);
+        return new TList(10, $ElementsOwned, $Array, $KeepOrder);
     }
 
     /**
@@ -1758,26 +1760,30 @@ final class TLinkedList extends TAbstractList {
      * @return	array
      */
     private function GetNodeAddr($Index) {
-        $mFrom = $this->FSize - 1; //from tail
+        //decide from tail or from head.
+        $mCurrAddr = $this->FSize - 1; //from tail
         $mSteps = $this->FSize - 1 - $Index;
         $mIsForward = false;
         if ($Index < $mSteps) {
             $mSteps = $Index;
-            $mFrom = $this->FHead; //from head
+            $mCurrAddr = $this->FHead; //from head
             $mIsForward = true;
         }
+        
+        //decide if should move from the current index.
+        $mIsForward2 = true;
         $mDelta = $Index - $this->FCurrIndex;
-        $mIsForward = true;
         if ($mDelta < 0) {
             $mDelta = -$mDelta;
-            $mIsForward = false;
+            $mIsForward2 = false;
         }
         if ($mDelta < $mSteps) {
             $mSteps = $mDelta;
-            $mFrom = $this->FCurrAddr; //from current
+            $mCurrAddr = $this->FCurrAddr; //from current
+            $mIsForward = $mIsForward2;
         }
         
-        $mCurrAddr = $mFrom;
+        //iterating.
         ++$mSteps;
         if ($mIsForward) {
             while (--$mSteps) {
@@ -1818,11 +1824,15 @@ final class TLinkedList extends TAbstractList {
         $this->FCurrAddr = ($this->FSize - 1) >> 1;
         $this->FCurrIndex = $this->FCurrAddr;
         
-        $mIndex = 0;
-        while ($mIndex < $this->FSize) {
-            $this->FList[$mIndex] = array ($mIndex - 1, $this->FList[$mIndex], ++$mIndex);
+        for ($mIndex = 0; $mIndex < $this->FSize; ++$mIndex) {
+            $this->FList[$mIndex] = new ArrayObject(array ($mIndex - 1, $this->FList[$mIndex], $mIndex + 1));
         }
+        //        $mTemp = $this->FList[$mIndex - 1];
+        //        $mTemp[self::CNext] = -1;
+        //        $this->FList[$mIndex - 1] = $mTemp;
         $this->FList[$mIndex - 1][self::CNext] = -1;
+        //This will not work since the [] operators in SPL are function calls and returns a copy of the value,
+    //not the refernce.
     }
 
     /**
@@ -1843,7 +1853,7 @@ final class TLinkedList extends TAbstractList {
     protected function DoInsert($Index, $Element) {
         $mNewHigh = count($this->FList);
         $this->FList->setSize($mNewHigh + 1);
-        $this->FList[$mNewHigh] = array (-1, $Element, -1);
+        $this->FList[$mNewHigh] = new ArrayObject(array (-1, $Element, -1));
         
         if ($this->FSize == 0) { //if empty before insertion.
             $this->FCurrAddr = $mNewHigh;
