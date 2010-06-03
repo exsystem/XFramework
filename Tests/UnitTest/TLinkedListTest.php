@@ -26,7 +26,7 @@ class TLinkedListTest extends PHPUnit_Framework_TestCase {
      * Cleans up the environment after running a test.
      */
     protected function tearDown() {
-        Framework::Free($this->TLinkedList);
+        //Framework::Free($this->TLinkedList);
         parent::tearDown();
     }
 
@@ -40,7 +40,6 @@ class TLinkedListTest extends PHPUnit_Framework_TestCase {
      * Tests TLinkedList->__construct()
      */
     public function test__construct() {
-        // TODO Auto-generated TLinkedListTest->test__construct()
         $this->markTestIncomplete("__construct test not implemented");
         
         $this->TLinkedList->__construct(/* parameters */);
@@ -64,10 +63,24 @@ class TLinkedListTest extends PHPUnit_Framework_TestCase {
      * Tests TLinkedList->Swap()
      */
     public function testSwap() {
-        // TODO Auto-generated TLinkedListTest->testSwap()
-        $this->markTestIncomplete("Swap test not implemented");
-        
-        $this->TLinkedList->Swap(/* parameters */);
+        TLinkedList::PrepareGeneric(array ('T' => 'integer'));
+        $L = new TLinkedList(true, array ('11', '22', '33'));
+        $this->TLinkedList->Add(10);
+        $this->TLinkedList->Add(20);
+        $this->TLinkedList->Add(30);
+        $this->TLinkedList->Add(40);
+        $this->TLinkedList->Add(50);
+        $this->TLinkedList->Swap($L);
+        $str = '';
+        foreach ($this->TLinkedList as $value) {
+            $str .= $value;
+        }
+        $this->assertEquals('112233', $str);
+        $str = '';
+        foreach ($L as $value) {
+            $str .= $value;
+        }
+        $this->assertEquals('1020304050', $str);
     
     }
 
@@ -75,11 +88,24 @@ class TLinkedListTest extends PHPUnit_Framework_TestCase {
      * Tests TLinkedList->ToArray()
      */
     public function testToArray() {
-        // TODO Auto-generated TLinkedListTest->testToArray()
         $this->markTestIncomplete("ToArray test not implemented");
         
         $this->TLinkedList->ToArray(/* parameters */);
     
+    }
+
+    /**
+     * 
+     */
+    public function testInsertion() {
+        echo (float) memory_get_usage(true) / (1024.0 * 1024.0), "<br/>\n";
+        $t = microtime(true);
+        for ($i = 0; $i < 4000; ++$i) {
+            $this->TLinkedList->Add($i);
+        }
+        $t = microtime(true) - $t;
+        echo 'TIME=', $t, "<br/>\n";
+        echo (float) memory_get_peak_usage(true) / (1024.0 * 1024.0), "<br/>\n";
     }
 
 }

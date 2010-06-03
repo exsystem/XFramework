@@ -644,12 +644,12 @@ abstract class TAbstractCollection extends TObject implements ICollection {
      *
      * @var    boolean
      */
-    private $FReadOnly = false;
+    protected $FReadOnly = false;
     /**
      * 
      * @var	boolean
      */
-    private $FElementsOwned = false;
+    protected $FElementsOwned = false;
 
     /**
      * 
@@ -1753,6 +1753,11 @@ final class TLinkedList extends TAbstractList {
      * @var	integer
      */
     private $FCurrAddr = -1;
+    /**
+     * 
+     * @var	integer
+     */
+    private $FAddrSize = 0;
 
     /**
      * 
@@ -1814,7 +1819,8 @@ final class TLinkedList extends TAbstractList {
         
         if (is_null($FromArray) || count($FromArray) == 0) {
             $this->FSize = 0;
-            $this->FList = new SplFixedArray();
+            $this->FList = new SplFixedArray(10);
+            $this->FAddrSize = 0;
             return;
         }
         $this->FList = SplFixedArray::fromArray($FromArray, $KeepOder);
@@ -1823,6 +1829,7 @@ final class TLinkedList extends TAbstractList {
         $this->FTail = $this->FSize - 1;
         $this->FCurrAddr = ($this->FSize - 1) >> 1;
         $this->FCurrIndex = $this->FCurrAddr;
+        $this->FAddrSize = $this->FSize;
         
         for ($mIndex = 0; $mIndex < $this->FSize; ++$mIndex) {
             $this->FList[$mIndex] = new ArrayObject(array ($mIndex - 1, $this->FList[$mIndex], $mIndex + 1));
@@ -1851,8 +1858,10 @@ final class TLinkedList extends TAbstractList {
      * @param	T	$Element
      */
     protected function DoInsert($Index, $Element) {
-        $mNewHigh = count($this->FList);
-        $this->FList->setSize($mNewHigh + 1);
+        $mNewHigh = $this->FAddrSize++;
+        if (count($this->FList) < $this->FAddrSize) {
+            $this->FList->setSize($this->FAddrSize + 100);
+        }
         $this->FList[$mNewHigh] = new ArrayObject(array (-1, $Element, -1));
         
         if ($this->FSize == 0) { //if empty before insertion.
@@ -1862,9 +1871,14 @@ final class TLinkedList extends TAbstractList {
             $this->FTail = $mNewHigh;
             return;
         } //else do the switch...
-        $mNode = $this->GetNodeAddr($Index);
+        if ($Index != $this->FSize) {
+            $mNode = $this->GetNodeAddr($Index);
+        }
+        else {
+            $mNode = $this->GetNodeAddr($Index - 1);
+        }
         switch ($Index) {
-            case 0 : //unshift               
+            case 0 : //unshift                
                 $this->FList[$mNode][self::CPrev] = $mNewHigh;
                 $this->FList[$mNewHigh][self::CNext] = $mNode;
                 $this->FHead = $mNewHigh;
@@ -2036,6 +2050,8 @@ final class TLinkedList extends TAbstractList {
      */
     public function Swap($LinkedList) {
         TType::Object($LinkedList, array ('TLinkedList' => array ('T' => $this->GenericArg('T'))));
+        $this->CheckReadOnly();
+        $LinkedList->CheckReadOnly();
         
         $mTempList = $this->FList;
         $mTempHead = $this->FHead;
@@ -2070,7 +2086,11 @@ final class TLinkedList extends TAbstractList {
      * @return	T[]
      */
     public function ToArray() {
-        //把链表导出成array。
+        $mResult = array ();
+        foreach ($this as $mElement) {
+            $mResult[] = $mElement;
+        }
+        return $mResult;
     }
 }
 
