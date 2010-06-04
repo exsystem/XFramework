@@ -562,7 +562,7 @@ class TStdListListIterator extends TStdListIterator implements IListIterator {
      * @see FrameworkDSW/TStdListIterator#Create($List)
      */
     public function __construct($List, $StartAt) {
-        TType::Type($List, array ('TAbstractList' => array ('T' => $this->GenericArg('T'))));
+        TType::Type($List, array ('TAbstractList' => array ('T' => self::StaticGenericArg('T'))));
         TType::Int($StartAt);
         
         parent::__construct($List);
@@ -1917,10 +1917,13 @@ final class TLinkedList extends TAbstractList {
         //TODO: 一个一个插入没有效率，应该先把$Collection拼接成链表，然后整体的一次插入
         --$Index;
         $mResult = 0;
+        $mOldSize = $this->FSize;
         foreach ($Collection as $mElement) {
             $this->DoInsert(++$Index, $mElement);
             ++$mResult;
+            ++$this->FSize;
         }
+        $this->FSize = $mOldSize;
         return $mResult;
     }
 
@@ -1937,12 +1940,16 @@ final class TLinkedList extends TAbstractList {
         switch ($Index) {
             case 0 : //shift               
                 $this->FHead = $this->FList[$mNode][self::CNext];
-                $this->FList[$this->FHead][self::CPrev] = -1;
+                if ($this->FHead != -1) {
+                    $this->FList[$this->FHead][self::CPrev] = -1;
+                }
                 $this->FList[$mNode][self::CPrev] = -1;
                 $this->FList[$mNode][self::CNext] = -1;
             case $this->FSize - 1 : //pop
                 $this->FTail = $this->FList[$mNode][self::CPrev];
-                $this->FList[$this->FTail][self::CNext] = -1;
+                if ($this->FTail != -1) {
+                    $this->FList[$this->FTail][self::CNext] = -1;
+                }
                 $this->FList[$mNode][self::CPrev] = -1;
                 $this->FList[$mNode][self::CNext] = -1;
                 break;

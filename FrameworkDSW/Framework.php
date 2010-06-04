@@ -210,7 +210,7 @@ class Framework extends TObject {
      * @param	TObject	$Object
      */
     public static final function Free(&$Object) {
-        unset($Object);
+        $Object = null;
         gc_collect_cycles();
     }
 }
