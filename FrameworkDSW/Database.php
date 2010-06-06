@@ -523,7 +523,7 @@ interface ICallableStatement extends IPreparedStatement {
 
 /**
  * IResultSet
- * extends IArrayAccess<T: IRow>, IIterator<T: IRow>
+ * extends IArrayAccess<K: integer, V: IRow>, IIterator<T: IRow>
  * @author	许子健
  */
 interface IResultSet extends IArrayAccess {
@@ -627,7 +627,7 @@ interface IResultSet extends IArrayAccess {
 
 /**
  * IRow
- * extends IArrayAccess <T: IParam<T: ?>>
+ * extends IArrayAccess <K: integer, V: IParam<T: ?>>
  * @author	许子健
  */
 interface IRow extends IArrayAccess {

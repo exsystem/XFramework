@@ -122,7 +122,7 @@ interface IIteratorAggregate extends IInterface, IteratorAggregate {
 
 /**
  * IArrayAccess
- * param	<T>
+ * param	<K, V>
  */
 interface IArrayAccess extends IInterface, ArrayAccess {}
 
@@ -378,57 +378,72 @@ interface IQueue extends ICollection {
      */
     public function Poll();
 }
-
 /**
  * IMap
- * param	<K, V>
+ * params	<K, V>
+ * extends	IArrayAccess<K, V>, ICollection<T: TPair<K, V>>
+ * @author	许子健
  */
-interface IMap extends IInterface {
+interface IMap extends IArrayAccess, ICollection, IInterface {
 
     /**
-     *
-     * @param  K		$Key
-     * @return boolean
+     * descHere
+     * @param	K	$Key
+     * @return	boolean
      */
     public function ContainsKey($Key);
 
     /**
-     *
-     * @param  V	   $Value
-     * @return boolean
+     * descHere
+     * @param	V	$Value
+     * @return	boolean
      */
     public function ContainsValue($Value);
 
     /**
-     *
-     * @return ISet <TPair<K, V>>
+     * descHere
+     * @param	K	$Key
      */
-    public function PairSet();
+    public function Delete($Key);
 
     /**
-     *
-     * @return ISet <K>
+     * descHere
+     * @param	K	$Key
+     * @return	V
+     */
+    public function Get($Key);
+
+    /**
+     * descHere
+     * @return	ISet <K>
      */
     public function KeySet();
 
     /**
-     *
-     * @param  K   $Key
-     * @param  V   $Value
+     * descHere
+     * @return	ISet <TPair<K, V>>
+     */
+    public function PairSet();
+
+    /**
+     * descHere
+     * @param	K	$Key
+     * @param	V	$Value
      */
     public function Put($Key, $Value);
 
     /**
-     *
-     * @param  IMap	$Map <K, V>
+     * descHere
+     * @param	IMap<K, V>	$Map
      */
     public function PutAll($Map);
 
     /**
-     *
-     * @return ICollection <V>
+     * descHere
+     * @return	ICollection <V>
      */
     public function Values();
+
 }
 
 /**
@@ -675,7 +690,7 @@ abstract class TAbstractCollection extends TObject implements ICollection {
      * @param   ICollection	$Collection <T>
      */
     public function AddAll($Collection) {
-        TType::Type($Collection, $this->GenericArg('T'));
+        TType::Type($Collection, array ('ICollection' => array ('T' => $this->GenericArg('T'))));
         $this->CheckReadOnly();
         
         foreach ($Collection as $mElement) {
@@ -872,7 +887,7 @@ abstract class TAbstractCollection extends TObject implements ICollection {
 
 /**
  * TAbstractList
- * extends	TAbstractCollection<T>, IList<T>, IArrayAccess<T>
+ * extends	TAbstractCollection<T>, IList<T>, IArrayAccess<K:integer, V = T>
  * param	<T>
  * @author 许子健
  */
@@ -1401,6 +1416,204 @@ abstract class TAbstractStack extends TAbstractCollection {
     public function Iterator() {
         //TODO: iterator
     }
+}
+
+/**
+ * TAbstractMap
+ * params	<K, V, T: TPair<K, V>>
+ * extends	IMap<K, V>
+ * @author	许子健
+ */
+abstract class TAbstractMap extends TAbstractCollection implements IMap {
+
+    /**
+     * descHere
+     * @param	T	$Element
+     */
+    public function Add($Element) {
+    }
+
+    /**
+     * descHere
+     * @param	K	$Key
+     * @return	boolean
+     */
+    public function ContainsKey($Key) {
+    }
+
+    /**
+     * descHere
+     * @param	V	$Value
+     * @return	boolean
+     */
+    public function ContainsValue($Value) {
+    }
+
+    /**
+     * descHere
+     * @param	K	$Key
+     */
+    public function Delete($Key) {
+    }
+
+    /**
+     * descHere
+     */
+    protected abstract function DoClear();
+
+    /**
+     * descHere
+     * @param	K	$Key
+     * @return	boolean
+     */
+    protected function DoContainsKey($Key) {
+    }
+
+    /**
+     * descHere
+     * @param	V	$Value
+     * @return	boolean
+     */
+    protected function DoContainsValue($Value) {
+    }
+
+    /**
+     * descHere
+     * @param	K	$Key
+     */
+    protected abstract function DoDelete($Key);
+
+    /**
+     * descHere
+     * @param	K	$Key
+     * @return	V
+     */
+    protected abstract function DoGet($Key);
+
+    /**
+     * descHere
+     * @return	ISet<K>
+     */
+    protected function DoKeySet() {
+    }
+
+    /**
+     * descHere
+     * @return	ISet<TPair<K, V>>
+     */
+    protected function DoPairSet() {
+    }
+
+    /**
+     * descHere
+     * @param	K	$Key
+     * @param	V	$Value
+     */
+    protected abstract function DoPut($Key, $Value);
+
+    /**
+     * descHere
+     * @param	IMap<K, V>	$Map
+     */
+    protected function DoPutAll($Map) {
+    }
+
+    /**
+     * descHere
+     * @return	ICollection<V>
+     */
+    protected function DoValues() {
+    }
+
+    /**
+     * descHere
+     * @param	K	$Key
+     * @return	V
+     */
+    public function Get($Key) {
+    }
+
+    /**
+     * descHere
+     * @return	IIterator<T>
+     */
+    public function Iterator() {
+    }
+
+    /**
+     * descHere
+     * @return	ISet<K>
+     */
+    public function KeySet() {
+    }
+
+    /**
+     * descHere
+     * @param	K	$offset
+     * @return	boolean
+     */
+    public final function offsetExists($offset) {
+    }
+
+    /**
+     * descHere
+     * @param	K	$offset
+     * @return	V
+     */
+    public final function offsetGet($offset) {
+    }
+
+    /**
+     * descHere
+     * @param	K	$offset
+     * @param	V	$value
+     */
+    public final function offsetSet($offset, $value) {
+    }
+
+    /**
+     * descHere
+     * @param	K	$offset
+     */
+    public final function offsetUnset($offset) {
+    }
+
+    /**
+     * descHere
+     * @return	ISet<TPair<K, V>>
+     */
+    public function PairSet() {
+    }
+
+    /**
+     * descHere
+     * @param	K	$Key
+     * @param	V	$Value
+     */
+    public function Put($Key, $Value) {
+    }
+
+    /**
+     * descHere
+     * @param	IMap<K, V>	$Map
+     */
+    public function PutAll($Map) {
+    }
+
+    /**
+     * descHere
+     * @return	int
+     */
+    public function Size() {
+    }
+
+    /**
+     * descHere
+     * @return	ICollection<V>
+     */
+    public function Values() {
+    }
+
 }
 
 /**
@@ -2179,4 +2392,108 @@ final class TStack extends TAbstractStack implements IStack {
         }
         return $mResult;
     }
+}
+
+/**
+ * THashMap
+ * params	<K, V>
+ * extends	TAbstractMap<K, V>
+ * @author	许子健
+ */
+final class THashMap extends TAbstractMap {
+
+    /**
+     * descHere
+     * @param	boolean	$ElementsOwned
+     */
+    public function __construct($ElementsOwned = false) {
+    }
+
+    /**
+     * descHere
+     */
+    protected function DoClear() {
+    }
+
+    /**
+     * descHere
+     * @param	K	$Key
+     * @return	boolean
+     */
+    protected function DoContainsKey($Key) {
+    }
+
+    /**
+     * descHere
+     * @param	V	$Value
+     * @return	boolean
+     */
+    protected function DoContainsValue($Value) {
+    }
+
+    /**
+     * descHere
+     * @param	K	$Key
+     */
+    protected function DoDelete($Key) {
+    }
+
+    /**
+     * descHere
+     * @param	K	$Key
+     * @return	V
+     */
+    protected function DoGet($Key) {
+    }
+
+    /**
+     * descHere
+     * @return	ISet<K>
+     */
+    protected function DoKeySet() {
+    }
+
+    /**
+     * descHere
+     * @return	ISet<TPair<K, V>>
+     */
+    protected function DoPairSet() {
+    }
+
+    /**
+     * descHere
+     * @param	K	$Key
+     * @param	V	$Value
+     */
+    protected function DoPut($Key, $Value) {
+    }
+
+    /**
+     * descHere
+     * @param	IMap<K, V>	$Map
+     */
+    protected function DoPutAll($Map) {
+    }
+
+    /**
+     * descHere
+     * @return	ICollection<V>
+     */
+    protected function DoValues() {
+    }
+
+    /**
+     * descHere
+     * @return	boolean
+     */
+    public function getElementsOwned() {
+    }
+
+    /**
+     * descHere
+     * @return	int
+     */
+    public function Size() {
+    }
+
 }
