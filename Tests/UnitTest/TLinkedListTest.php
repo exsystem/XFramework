@@ -103,17 +103,19 @@ class TLinkedListTest extends PHPUnit_Framework_TestCase {
      */
     public function testInsertion() {
         logStart('Insertion');
-        //下列代码已经通过测试，注释掉因为debug时候执行这个测试时间缓慢。
-    /*
+        $this->markTestSkipped('skipped');
+        //下列代码已经通过测试，注释掉因为debug时候执行这个测试时间缓慢。        
+        
+
         log((float) memory_get_usage(true) / (1024.0 * 1024.0));
         $t = microtime(true);
-        for ($i = 0; $i < 4000; ++$i) {
+        for ($i = 0; $i < 200000; ++$i) {
             $this->TLinkedList->Add($i);
         }
         $t = microtime(true) - $t;
         logging("TIME = {$t}");
         logging((float) memory_get_peak_usage(true) / (1024.0 * 1024.0));
-    */
+    
     }
 
     /**
@@ -121,8 +123,10 @@ class TLinkedListTest extends PHPUnit_Framework_TestCase {
      */
     public function testDeletion() {
         logStart('Deletion');
-        //下列代码已经通过测试，注释掉因为debug时候执行这个测试时间缓慢。
-    /*
+        $this->markTestSkipped('skipped');
+        //下列代码已经通过测试，注释掉因为debug时候执行这个测试时间缓慢。        
+        
+
         for ($i = 0; $i < 1000; ++$i) {
             $this->TLinkedList->Add($i);
         }
@@ -131,7 +135,7 @@ class TLinkedListTest extends PHPUnit_Framework_TestCase {
             $this->TLinkedList->RemoveAt($i);
         }
         $this->assertEquals(0, $this->TLinkedList->Size(), 'not empty!');
-    */
+    
     }
 
     /**

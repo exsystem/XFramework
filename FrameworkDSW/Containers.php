@@ -384,7 +384,7 @@ interface IQueue extends ICollection {
  * extends	IArrayAccess<K, V>, ICollection<T: TPair<K, V>>
  * @author	许子健
  */
-interface IMap extends IArrayAccess, ICollection, IInterface {
+interface IMap extends IArrayAccess, ICollection {
 
     /**
      * descHere
@@ -434,7 +434,7 @@ interface IMap extends IArrayAccess, ICollection, IInterface {
 
     /**
      * descHere
-     * @param	IMap<K, V>	$Map
+     * @param	IMap	$Map <K, V>
      */
     public function PutAll($Map);
 
@@ -1421,16 +1421,19 @@ abstract class TAbstractStack extends TAbstractCollection {
 /**
  * TAbstractMap
  * params	<K, V, T: TPair<K, V>>
- * extends	IMap<K, V>
+ * extends	IMap<K, V>, TAbstractCollection<T: TPair<K, V>>
  * @author	许子健
  */
 abstract class TAbstractMap extends TAbstractCollection implements IMap {
 
     /**
      * descHere
-     * @param	T	$Element
+     * @param	TPair	$Element <K, V>
      */
     public function Add($Element) {
+        TType::Type($Element, array ('TPair' => array ('K' => $this->GenericArg('K'), 'V' => $this->GenericArg('V'))));
+        $this->CheckReadOnly();
+        $this->DoPut($Element->Key, $Element->Value);
     }
 
     /**
@@ -1439,6 +1442,8 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      * @return	boolean
      */
     public function ContainsKey($Key) {
+        TType::Type($Key, $this->GenericArg('K'));
+        return $this->DoContainsKey($Key);
     }
 
     /**
@@ -1447,6 +1452,8 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      * @return	boolean
      */
     public function ContainsValue($Value) {
+        TType::Type($Value, $this->GenericArg('V'));
+        return $this->DoContainsValue($Value);
     }
 
     /**
@@ -1454,6 +1461,14 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      * @param	K	$Key
      */
     public function Delete($Key) {
+        TType::Type($Key, $this->GenericArg('K'));
+        $this->CheckReadOnly();
+        if ($this->DoContainsKey($Key)) {
+            $this->DoDelete($Key);
+        }
+        else {
+            throw new EIndexOutOfBounds(); //TODO: define a new exception class.
+        }
     }
 
     /**
@@ -1467,6 +1482,24 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      * @return	boolean
      */
     protected function DoContainsKey($Key) {
+        $mItr = $this->Iterator();
+        if (TType::IsTypePrimitive($this->GenericArg('K'))) {
+            while ($mItr->valid()) {
+                if ($mItr->current()->Key === $Key) {
+                    return true;
+                }
+                $mItr->next();
+            }
+            return false;
+        }
+        else {
+            while ($mItr->valid()) {
+                if ($Key->Equals($mItr->current()->Key)) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     /**
@@ -1475,6 +1508,24 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      * @return	boolean
      */
     protected function DoContainsValue($Value) {
+        $mItr = $this->Iterator();
+        if (TType::IsTypePrimitive($this->GenericArg('V'))) {
+            while ($mItr->valid()) {
+                if ($mItr->current()->Value === $Value) {
+                    return true;
+                }
+                $mItr->next();
+            }
+            return false;
+        }
+        else {
+            while ($mItr->valid()) {
+                if ($Value->Equals($mItr->current()->Value)) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     /**
@@ -1492,16 +1543,18 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
 
     /**
      * descHere
-     * @return	ISet<K>
+     * @return	ISet <K>
      */
     protected function DoKeySet() {
+        //TODO: DoKeySet.
     }
 
     /**
      * descHere
-     * @return	ISet<TPair<K, V>>
+     * @return	ISet <TPair<K, V>>
      */
     protected function DoPairSet() {
+        //TODO: DoPairSet.
     }
 
     /**
@@ -1513,16 +1566,28 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
 
     /**
      * descHere
-     * @param	IMap<K, V>	$Map
+     * @param	IMap	$Map <K, V>
      */
     protected function DoPutAll($Map) {
+        $mItr = $Map->Iterator();
+        while ($mItr->valid()) {
+            $this->DoPut($mItr->current()->Key, $mItr->current()->Pair);
+            $mItr->next();
+        }
     }
 
     /**
      * descHere
-     * @return	ICollection<V>
+     * @return	ICollection <V>
      */
     protected function DoValues() {
+        $mItr = $this->Iterator();
+        $mResult = new TList($this->Size());
+        while ($mItr->valid()) {
+            $mResult->Add($mItr->current()->Value);
+            $mItr->next();
+        }
+        return $mResult;
     }
 
     /**
@@ -1531,20 +1596,27 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      * @return	V
      */
     public function Get($Key) {
+        TType::Type($Key, $this->GenericArg('K'));
+        if (!$this->DoContainsKey($Key)) {
+            throw new EIndexOutOfBounds();
+        }
+        return $this->DoGet($Key);
     }
 
     /**
      * descHere
-     * @return	IIterator<T>
+     * @return	IIterator <TPair<K, V>>
      */
     public function Iterator() {
+        //TODO: Iterator.
     }
 
     /**
      * descHere
-     * @return	ISet<K>
+     * @return	ISet <K>
      */
     public function KeySet() {
+        //TODO: KeySet.
     }
 
     /**
@@ -1553,6 +1625,8 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      * @return	boolean
      */
     public final function offsetExists($offset) {
+        TType::Type($offset, $this->GenericArg('K'));
+        return $this->DoContainsKey($offset);
     }
 
     /**
@@ -1561,6 +1635,11 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      * @return	V
      */
     public final function offsetGet($offset) {
+        TType::Type($offset, $this->GenericArg('K'));
+        if (!$this->DoContainsKey($offset)) {
+            throw new EIndexOutOfBounds();
+        }
+        return $this->DoGet($offset);
     }
 
     /**
@@ -1569,6 +1648,10 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      * @param	V	$value
      */
     public final function offsetSet($offset, $value) {
+        TType::Type($offset, $this->GenericArg('K'));
+        TType::Type($value, $this->GenericArg('V'));
+        $this->CheckReadOnly();
+        $this->DoPut($offset, $value);
     }
 
     /**
@@ -1576,13 +1659,20 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      * @param	K	$offset
      */
     public final function offsetUnset($offset) {
+        TType::Type($offset, $this->GenericArg('K'));
+        $this->CheckReadOnly();
+        if (!$this->DoContainsKey($offset)) {
+            throw new EIndexOutOfBounds();
+        }
+        $this->DoDelete($offset);
     }
 
     /**
      * descHere
-     * @return	ISet<TPair<K, V>>
+     * @return	ISet <TPair<K, V>>
      */
     public function PairSet() {
+        return $this->DoPairSet();
     }
 
     /**
@@ -1591,13 +1681,20 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      * @param	V	$Value
      */
     public function Put($Key, $Value) {
+        TType::Type($Key, $this->GenericArg('K'));
+        TType::Type($Value, $this->GenericArg('V'));
+        $this->CheckReadOnly();
+        $this->DoPut($Key, $Value);
     }
 
     /**
      * descHere
-     * @param	IMap<K, V>	$Map
+     * @param	IMap	$Map <K, V>
      */
     public function PutAll($Map) {
+        TType::Type($Map, array ('IMap' => array ('K' => $this->GenericArg('K'), 'V' => $this->GenericArg('V'))));
+        $this->CheckReadOnly();
+        $this->DoPutAll($Map);
     }
 
     /**
@@ -1605,13 +1702,18 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      * @return	int
      */
     public function Size() {
+        throw new ENotImplemented();
     }
 
     /**
      * descHere
-     * @return	ICollection<V>
+     * @return	ICollection <V>
      */
     public function Values() {
+        if ($this->Size() == 0) {
+            return null;
+        }
+        return $this->DoValues();
     }
 
 }
@@ -2005,12 +2107,12 @@ final class TLinkedList extends TAbstractList {
         ++$mSteps;
         if ($mIsForward) {
             while (--$mSteps) {
-                $mCurrAddr = $this->FList[$mCurrAddr][self::CNext];
+                $mCurrAddr = $this->FList[3 * $mCurrAddr + self::CNext];
             }
         }
         else {
             while (--$mSteps) {
-                $mCurrAddr = $this->FList[$mCurrAddr][self::CPrev];
+                $mCurrAddr = $this->FList[3 * $mCurrAddr + self::CPrev];
             }
         }
         $this->FCurrAddr = $mCurrAddr;
@@ -2032,12 +2134,16 @@ final class TLinkedList extends TAbstractList {
         
         if (is_null($FromArray) || count($FromArray) == 0) {
             $this->FSize = 0;
-            $this->FList = new SplFixedArray(10);
+            $this->FList = new SplFixedArray(30);
             $this->FAddrSize = 0;
             return;
         }
         $this->FList = SplFixedArray::fromArray($FromArray, $KeepOder);
         $this->FSize = count($this->FList);
+        $this->FList->setSize(3 * $this->FSize);
+        for ($mCurr = $this->FSize - 1; $mCurr >= 0; --$mCurr) {
+            $this->FList[3 * $mCurr + self::CData] = $this->FList[$mCurr];
+        }
         $this->FHead = 0;
         $this->FTail = $this->FSize - 1;
         $this->FCurrAddr = ($this->FSize - 1) >> 1;
@@ -2045,12 +2151,13 @@ final class TLinkedList extends TAbstractList {
         $this->FAddrSize = $this->FSize;
         
         for ($mIndex = 0; $mIndex < $this->FSize; ++$mIndex) {
-            $this->FList[$mIndex] = new ArrayObject(array ($mIndex - 1, $this->FList[$mIndex], $mIndex + 1));
+            $this->FList[3 * $mIndex + self::CPrev] = $mIndex - 1;
+            $this->FList[3 * $mIndex + self::CNext] = $mIndex + 1;
         }
         //        $mTemp = $this->FList[$mIndex - 1];
         //        $mTemp[self::CNext] = -1;
         //        $this->FList[$mIndex - 1] = $mTemp;
-        $this->FList[$mIndex - 1][self::CNext] = -1;
+        $this->FList[3 * ($mIndex - 1) + self::CNext] = -1;
         //This will not work since the [] operators in SPL are function calls and returns a copy of the value,
     //not the refernce.
     }
@@ -2062,7 +2169,7 @@ final class TLinkedList extends TAbstractList {
      */
     protected function DoGet($Index) {
         $mNode = $this->GetNodeAddr($Index);
-        return $this->FList[$mNode][self::CData];
+        return $this->FList[3 * $mNode + self::CData];
     }
 
     /**
@@ -2072,10 +2179,12 @@ final class TLinkedList extends TAbstractList {
      */
     protected function DoInsert($Index, $Element) {
         $mNewHigh = $this->FAddrSize++;
-        if (count($this->FList) < $this->FAddrSize) {
-            $this->FList->setSize($this->FAddrSize + 100);
+        if (count($this->FList) < 3 * $this->FAddrSize) {
+            $this->FList->setSize(3 * ($this->FAddrSize + 10));
         }
-        $this->FList[$mNewHigh] = new ArrayObject(array (-1, $Element, -1));
+        $this->FList[3 * $mNewHigh + self::CPrev] = -1;
+        $this->FList[3 * $mNewHigh + self::CData] = $Element;
+        $this->FList[3 * $mNewHigh + self::CNext] = -1;
         
         if ($this->FSize == 0) { //if empty before insertion.
             $this->FCurrAddr = $mNewHigh;
@@ -2092,24 +2201,24 @@ final class TLinkedList extends TAbstractList {
         }
         switch ($Index) {
             case 0 : //unshift                
-                $this->FList[$mNode][self::CPrev] = $mNewHigh;
-                $this->FList[$mNewHigh][self::CNext] = $mNode;
+                $this->FList[3 * $mNode + self::CPrev] = $mNewHigh;
+                $this->FList[3 * $mNewHigh + self::CNext] = $mNode;
                 $this->FHead = $mNewHigh;
                 $this->FCurrAddr = $mNewHigh;
                 $this->FCurrIndex = 0;
             case $this->FSize : //push
-                $this->FList[$mNode][self::CNext] = $mNewHigh;
-                $this->FList[$mNewHigh][self::CPrev] = $mNode;
+                $this->FList[3 * $mNode + self::CNext] = $mNewHigh;
+                $this->FList[3 * $mNewHigh + self::CPrev] = $mNode;
                 $this->FTail = $mNewHigh;
                 $this->FCurrAddr = $mNewHigh;
                 $this->FCurrIndex = $Index;
                 break;
             default : //insert
-                $mPrevNode = $this->FList[$mNode][self::CPrev];
-                $this->FList[$mNode][self::CPrev] = $mNewHigh;
-                $this->FList[$mNewHigh][self::CNext] = $mNode;
-                $this->FList[$mPrevNode][self::CNext] = $mNewHigh;
-                $this->FList[$mNewHigh][self::CPrev] = $mPrevNode;
+                $mPrevNode = $this->FList[3 * $mNode + self::CPrev];
+                $this->FList[3 * $mNode + self::CPrev] = $mNewHigh;
+                $this->FList[3 * $mNewHigh + self::CNext] = $mNode;
+                $this->FList[3 * $mPrevNode + self::CNext] = $mNewHigh;
+                $this->FList[3 * $mNewHigh + self::CPrev] = $mPrevNode;
                 $this->FCurrAddr = $mNewHigh;
                 $this->FCurrIndex = $Index;
                 break;
@@ -2147,32 +2256,32 @@ final class TLinkedList extends TAbstractList {
     protected function DoRemoveAt($Index) {
         $mNode = $this->GetNodeAddr($Index);
         if ($this->FElementsOwned) {
-            Framework::Free($this->FList[$mNode][self::CData]);
+            Framework::Free($this->FList[3 * $mNode + self::CData]);
         }
         
         switch ($Index) {
             case 0 : //shift               
-                $this->FHead = $this->FList[$mNode][self::CNext];
+                $this->FHead = $this->FList[3 * $mNode + self::CNext];
                 if ($this->FHead != -1) {
-                    $this->FList[$this->FHead][self::CPrev] = -1;
+                    $this->FList[3 * $this->FHead + self::CPrev] = -1;
                 }
-                $this->FList[$mNode][self::CPrev] = -1;
-                $this->FList[$mNode][self::CNext] = -1;
+                $this->FList[3 * $mNode + self::CPrev] = -1;
+                $this->FList[3 * $mNode + self::CNext] = -1;
             case $this->FSize - 1 : //pop
-                $this->FTail = $this->FList[$mNode][self::CPrev];
+                $this->FTail = $this->FList[3 * $mNode + self::CPrev];
                 if ($this->FTail != -1) {
-                    $this->FList[$this->FTail][self::CNext] = -1;
+                    $this->FList[3 * $this->FTail + self::CNext] = -1;
                 }
-                $this->FList[$mNode][self::CPrev] = -1;
-                $this->FList[$mNode][self::CNext] = -1;
+                $this->FList[3 * $mNode + self::CPrev] = -1;
+                $this->FList[3 * $mNode + self::CNext] = -1;
                 break;
             default : //remove
-                $mPrevNode = $this->FList[$mNode][self::CPrev];
-                $mNextNode = $this->FList[$mNode][self::CNext];
-                $this->FList[$mPrevNode][self::CNext] = $mNextNode;
-                $this->FList[$mNextNode][self::CPrev] = $mPrevNode;
-                $this->FList[$mNode][self::CPrev] = -1;
-                $this->FList[$mNode][self::CNext] = -1;
+                $mPrevNode = $this->FList[3 * $mNode + self::CPrev];
+                $mNextNode = $this->FList[3 * $mNode + self::CNext];
+                $this->FList[3 * $mPrevNode + self::CNext] = $mNextNode;
+                $this->FList[3 * $mNextNode + self::CPrev] = $mPrevNode;
+                $this->FList[3 * $mNode + self::CPrev] = -1;
+                $this->FList[3 * $mNode + self::CNext] = -1;
                 $this->FCurrAddr = $mNextNode;
                 $this->FCurrIndex = $Index;
                 return;
@@ -2202,7 +2311,7 @@ final class TLinkedList extends TAbstractList {
      * @param	T	$Element
      */
     protected function DoSet($Index, $Element) {
-        $this->FList[$this->GetNodeAddr($Index)][self::CData] = $Element;
+        $this->FList[3 * $this->GetNodeAddr($Index) + self::CData] = $Element;
     }
 
     /**
@@ -2237,7 +2346,7 @@ final class TLinkedList extends TAbstractList {
      * @return	T
      */
     protected function DoFirst() {
-        return $this->FList[$this->FHead][self::CData];
+        return $this->FList[3 * $this->FHead + self::CData];
     }
 
     /**
@@ -2245,7 +2354,7 @@ final class TLinkedList extends TAbstractList {
      * @return	T
      */
     protected function DoLast() {
-        return $this->FList[$this->FTail][self::CData];
+        return $this->FList[3 * $this->FTail + self::CData];
     }
 
     /**
@@ -2394,25 +2503,105 @@ final class TStack extends TAbstractStack implements IStack {
     }
 }
 
+final class TMapKeyType extends TEnum {
+    const eDirectKey = -1;
+    const eFloat = 0;
+    const eArray = 1;
+    const eObject = 2;
+    const eBoolean = 3;
+}
+
 /**
- * THashMap
+ * TMap
  * params	<K, V>
  * extends	TAbstractMap<K, V>
  * @author	许子健
  */
-final class THashMap extends TAbstractMap {
+final class TMap extends TAbstractMap {
+    /**
+     * 
+     * @var	array
+     */
+    private $FMap = array ();
+    /**
+     * 
+     * @var	boolean
+     */
+    private $FDirectKey = false;
+    /**
+     * 0: float, 1: array, 2: an object, -1: not related
+     * @var	TMapKeyType
+     */
+    private $FKeyType = null;
+
+    /**
+     * 
+     * @param	K	$Key
+     * @return	string
+     */
+    private function HashKey($Key) {
+        switch ($this->FKeyType) {
+            case TMapKeyType::eObject() :
+                return spl_object_hash($Key);
+                break;
+            case TMapKeyType::eFloat() :
+                return (string) $Key;
+                break;
+            case TMapKeyType::eArray() :
+                return sha1(serialize($Key), true);
+                break;
+            case TMapKeyType::eBoolean() :
+                return $Key ? '1' : '0';
+                break;
+        }
+    }
 
     /**
      * descHere
      * @param	boolean	$ElementsOwned
      */
     public function __construct($ElementsOwned = false) {
+        TType::Bool($ElementsOwned);
+        parent::__construct($ElementsOwned);
+        $this->FDirectKey = ($this->GenericArg('K') == 'integer' || $this->GenericArg('K') == 'string');
+        if ($this->FDirectKey) {
+            $this->FKeyType = TMapKeyType::eDirectKey();
+            return;
+        }
+        switch ($this->GenericArg('K')) {
+            case 'float' :
+                $this->FKeyType = TMapKeyType::eFloat();
+                break;
+            case 'array' :
+                $this->FKeyType = TMapKeyType::eArray();
+                break;
+            case 'boolean' :
+                $this->FKeyType = TMapKeyType::eBoolean();
+                break;
+            default :
+                $this->FKeyType = TMapKeyType::eObject();
+                break;
+        }
     }
 
     /**
      * descHere
      */
     protected function DoClear() {
+        if ($this->FElementsOwned) {
+            if ($this->FKeyType == TMapKeyType::eObject() && TType::IsTypePrimitive($this->GenericArg('V'))) {
+                foreach ($this->FMap as &$mValue) {
+                    Framework::Free($mValue->Key);
+                    Framework::Free($mValue->Value);
+                }
+            }
+            elseif ($this->FKeyType != TMapKeyType::eObject() && TType::IsTypePrimitive($this->GenericArg('V'))) {
+                foreach ($this->FMap as &$mValue) {
+                    Framework::Free($mValue);
+                }
+            }
+        }
+        $this->FMap = array ();
     }
 
     /**
@@ -2421,6 +2610,10 @@ final class THashMap extends TAbstractMap {
      * @return	boolean
      */
     protected function DoContainsKey($Key) {
+        if ($this->FKeyType == TMapKeyType::eDirectKey()) {
+            return array_key_exists($Key, $this->FMap);
+        }
+        return array_key_exists($this->HashKey($Key), $this->FMap);
     }
 
     /**
@@ -2429,6 +2622,24 @@ final class THashMap extends TAbstractMap {
      * @return	boolean
      */
     protected function DoContainsValue($Value) {
+        if ($this->FKeyType == TMapKeyType::eObject()) {
+            if (TType::IsTypePrimitive($this->GenericArg('V'))) {
+                foreach ($this->FMap as $mPair) {
+                    if ($mPair->Value === $Value) {
+                        return true;
+                    }
+                }
+            }
+            else {
+                foreach ($this->FMap as $mPair) {
+                    if ($mPair->Value->Equals($Value)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        return in_array($Value, $this->FMap, true);
     }
 
     /**
@@ -2436,6 +2647,15 @@ final class THashMap extends TAbstractMap {
      * @param	K	$Key
      */
     protected function DoDelete($Key) {
+        if (!TType::IsTypePrimitive($this->GenericArg('V'))) {
+            Framework::Free($this->DoGet($Key));
+        }
+        if ($this->FDirectKey) {
+            unset($this->FMap[$Key]);
+        }
+        else {
+            unset($this->FMap[$this->HashKey($Key)]);
+        }
     }
 
     /**
@@ -2444,6 +2664,11 @@ final class THashMap extends TAbstractMap {
      * @return	V
      */
     protected function DoGet($Key) {
+        if ($this->FDirectKey) {
+            return $this->FMap[$Key];
+        }
+        $mPair = $this->FMap[$this->HashKey($Key)];
+        return $mPair->Value;
     }
 
     /**
@@ -2466,13 +2691,41 @@ final class THashMap extends TAbstractMap {
      * @param	V	$Value
      */
     protected function DoPut($Key, $Value) {
+        if ($this->FDirectKey) {
+            $this->FMap[$Key] = $Value;
+        }
+        elseif ($this->FKeyType == TMapKeyType::eObject()) {
+            $mPair = new TPair();
+            $mPair->Key = $Key;
+            $mPair->Value = $Value;
+            $this->FMap[$this->HashKey($Key)] = $mPair;
+        }
+        else {
+            $this->FMap[$this->HashKey($Key)] = $Value;
+        }
     }
 
     /**
      * descHere
-     * @param	IMap<K, V>	$Map
+     * @param	IMap	$Map <K, V>
      */
     protected function DoPutAll($Map) {
+        if ($this->FDirectKey) {
+            foreach ($Map as $mPair) {
+                $this->FMap[$mPair->Key] = $mPair->Value;
+            }
+        
+        }
+        elseif ($this->FKeyType == TMapKeyType::eObject()) {
+            foreach ($Map as $mPair) {
+                $this->FMap[$this->HashKey($mPair->Key)] = $mPair;
+            }
+        }
+        else {
+            foreach ($Map as $mPair) {
+                $this->FMap[$this->HashKey($mPair->Key)] = $mPair->Value;
+            }
+        }
     }
 
     /**
@@ -2480,6 +2733,18 @@ final class THashMap extends TAbstractMap {
      * @return	ICollection<V>
      */
     protected function DoValues() {
+        if (empty($this->FMap)) {
+            return null;
+        }
+        TList::PrepareGeneric(array ('T' => $this->GenericArg('V')));
+        if ($this->FKeyType == TMapKeyType::eObject()) {
+            $mResult = new TList(count($this->FMap), $this->FElementsOwned);
+            foreach ($this->FMap as $mPair) {
+                $mResult->Add($mPair->Value);
+            }
+            return $mResult;
+        } //else ...
+        return TList::FromArray($this->FElementsOwned, array_values($this->FMap));
     }
 
     /**
@@ -2487,6 +2752,7 @@ final class THashMap extends TAbstractMap {
      * @return	boolean
      */
     public function getElementsOwned() {
+        return $this->FElementsOwned;
     }
 
     /**
@@ -2494,6 +2760,6 @@ final class THashMap extends TAbstractMap {
      * @return	int
      */
     public function Size() {
+        return count($this->FMap);
     }
-
 }

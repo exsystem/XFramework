@@ -32,6 +32,12 @@ class ERuntimeException extends ESysException {}
 class EIsNotNullable extends ESysException {}
 
 /**
+ * ENotImplemented
+ * @author 许子健
+ */
+class ENotImplemented extends ERuntimeException {}
+
+/**
  * Field not existed exception.
  * It will be thrown for visiting object's field that is not existed.
  * @author  许子健
