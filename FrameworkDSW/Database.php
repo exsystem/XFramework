@@ -50,12 +50,72 @@ class EUnsupportedDbFeature extends EDatabaseException {}
  * EDatabaseWarning
  * @author	许子健
  */
-class EDatabaseWarning extends EDatabaseException {}
+class EDatabaseWarning extends EDatabaseException {
+    /**
+     * 
+     * @var	PDOException
+     */
+    private $FException = null;
+    /**
+     * 
+     * @var	EDatabaseWarning
+     */
+    private $FNextWarning = null;
+
+    /**
+     * 
+     * @param	PDOException	$PdoException
+     */
+    public function __construct($PdoException) {
+        $this->FException = $PdoException;
+    }
+
+    /**
+     * @return	string
+     */
+    public function getSqlState() {
+        return $this->FException->errorInfo[0];
+    }
+
+    /**
+     * @return	string
+     */
+    public function getErrorCode() {
+        return $this->FException->errorInfo[1];
+    }
+
+    /**
+     * @return	EDatabaseWarning
+     */
+    public function getNextWarning() {
+        return $this->FNextWarning;
+    }
+
+    /**
+     * 
+     * @param	EDatabaseWarning	$Value
+     */
+    public function setNextWarning($Value) {
+        TType::Object($Value, 'EDatabaseWarning');
+        $this->FNextWarning = $Value;
+    }
+
+}
 /**
  * 
  * @author 许子健
  */
 class EUnableToCommit extends EDatabaseWarning {}
+/**
+ * 
+ * @author 许子健
+ */
+class EUnableToRollback extends EDatabaseWarning {}
+/**
+ * 
+ * @author 许子健
+ */
+class EUnableToExecute extends EDatabaseWarning {}
 
 /**
  * TConcurrencyType
@@ -299,10 +359,9 @@ interface IConnection extends IInterface {
      * descHere
      * @param	TResultSetType	$ResultSetType
      * @param	TConcurrencyType	$ConcurrencyType
-     * @param	THoldability	$Holdability
      * @return	IStatement
      */
-    public function CreateStatement($ResultSetType, $ConcurrencyType, $Holdability);
+    public function CreateStatement($ResultSetType, $ConcurrencyType);
 
     /**
      * descHere
@@ -327,6 +386,11 @@ interface IConnection extends IInterface {
      * @return	THoldability
      */
     public function getHoldability();
+
+    /**
+     * @return	string
+     */
+    public function getCatalog();
 
     /**
      * descHere
@@ -362,10 +426,9 @@ interface IConnection extends IInterface {
      * descHere
      * @param	TResultSetType	$ResultSetType
      * @param	TConcurrencyType	$ConcurrencyType
-     * @param	THoldability	$Holdability
      * @return	IPreparedStatement
      */
-    public function PrepareStatement($ResultSetType, $ConcurrencyType, $Holdability);
+    public function PrepareStatement($ResultSetType, $ConcurrencyType);
 
     /**
      * descHere
@@ -885,7 +948,8 @@ abstract class TAbstractPdoDriver extends TObject {
     }
 
     /**
-     * descHere
+     * the format of the url: Protocol://Server/DbName
+     * example: mysql://localhost/Test
      * @param	string	$Url
      * @return	boolean
      */
@@ -921,7 +985,6 @@ abstract class TAbstractPdoConnection extends TObject {
      * @var	IDriver
      */
     protected $FDriver = null;
-    
     /**
      * @var	PDO
      */
@@ -933,9 +996,21 @@ abstract class TAbstractPdoConnection extends TObject {
     protected $FIsConnected = false;
     /**
      * 
-     * @var	boolean
+     * @var	EDatabaseWarning
      */
-    protected $FIsAutoCommit = false;
+    protected $FWarnings = null;
+
+    /**
+     * @param	string			$WarningType
+     * @param	PDOException	$PdoException 
+     */
+    private function PushWarning($WarningType, $PdoException) {
+        //$WarningType::InheritsFrom('EDatabaseWarning');
+        $mWarning = new $WarningType($PdoException);
+        $mWarning->setNextWarning($this->FWarnings);
+        $this->FWarnings = $mWarning;
+        throw $mWarning;
+    }
 
     /**
      * 
@@ -944,6 +1019,94 @@ abstract class TAbstractPdoConnection extends TObject {
         if (!$this->FIsConnected) {
             throw new EDisconnected();
         }
+    }
+
+    /**
+     * 
+     */
+    protected function DoCommit() {
+        $this->FPdo->commit();
+    }
+
+    /**
+     * 
+     * @param	TResultSetType		$ResultSetType
+     * @param 	TConcurrencyType	$ConcurrencyType
+     * @return	IStatement
+     */
+    protected abstract function DoCreateStatement($ResultSetType, $ConcurrencyType);
+
+    /**
+     * 
+     * @param	TResultSetType		$ResultSetType
+     * @param	TConcurrencyType	$ConcurrencyType
+     * @return	IPreparedStatement
+     */
+    protected abstract function DoPrepareStatement($ResultSetType, $ConcurrencyType);
+
+    /**
+     * 
+     * @param	string	$Name
+     * @return	ISavepoint
+     */
+    protected function DoCreateSavepoint($Name) {
+        throw new EUnsupportedDbFeature();
+    }
+
+    /**
+     * @return	THoldability
+     */
+    protected function DoGetHoldability() {
+        return THoldability::eHoldCursorsOverCommit();
+    }
+
+    /**
+     * 
+     * @param	ISavepoint	$Savepoint
+     */
+    protected function DoRemoveSavepoint($Savepoint) {
+        throw new EUnsupportedDbFeature();
+    }
+
+    /**
+     * 
+     * @param	ISavepoint	$Savepoint
+     */
+    protected function DoRollback($Savepoint = null) {
+        if ($Savepoint === null) {
+            throw new EUnsupportedDbFeature();
+        }
+        
+        try {
+            $this->FPdo->rollBack();
+        }
+        catch (PDOException $Ex) {
+            $this->PushWarning(EUnableToRollback::ClassType(), $Ex);
+        }
+    }
+
+    /**
+     * 
+     * @param	THoldability	$Value
+     */
+    protected function DoSetHoldability($Value) {
+        throw new EUnsupportedDbFeature();
+    }
+
+    /**
+     * 
+     * @param	boolean	$Value
+     */
+    protected function DoSetReadOnly($Value) {
+        throw new EUnsupportedDbFeature();
+    }
+
+    /**
+     * 
+     * @param	TTransactionIsolation	$Value
+     */
+    protected function DoSetTransactionIsolation($Value) {
+        throw new EUnsupportedDbFeature();
     }
 
     /**
@@ -958,8 +1121,8 @@ abstract class TAbstractPdoConnection extends TObject {
         if ($Driver !== null && $Pdo !== null) {
             $this->FDriver = $Driver;
             $this->FPdo = $Pdo;
+            $this->FPdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $this->FIsConnected = true;
-            $this->FIsAutoCommit = true;
         }
         else {
             $this->FIsConnected = false;
@@ -972,6 +1135,11 @@ abstract class TAbstractPdoConnection extends TObject {
      */
     public function ClearWarnings() {
         $this->EnsureConnected();
+        while ($this->FWarnings !== null) {
+            $mCurr = $this->FWarnings->getNextWarning();
+            Framework::Free($this->FWarnings);
+            $this->FWarnings = $mCurr;
+        }
     }
 
     /**
@@ -979,10 +1147,12 @@ abstract class TAbstractPdoConnection extends TObject {
      */
     public function Commit() {
         $this->EnsureConnected();
-        if ($this->FIsAutoCommit || !$this->FPdo->commit()) {
-            //PUSHBACK EUnableToCommit;  
+        try {
+            $this->DoCommit();
         }
-        $this->FIsAutoCommit = true;
+        catch (PDOException $Ex) {
+            $this->PushWarning(EUnableToCommit::ClassType(), $Ex);
+        }
     }
 
     /**
@@ -991,18 +1161,23 @@ abstract class TAbstractPdoConnection extends TObject {
      * @return	ISavepoint
      */
     public function CreateSavepoint($Name = '') {
-        throw new EUnsupportedDbFeature();
+        TType::String($Name);
+        return $this->DoCreateSavepoint($Name);
     }
 
     /**
      * descHere
-     * @param	TResultSetType	$ResultSetType
+     * @param	TResultSetType		$ResultSetType
      * @param	TConcurrencyType	$ConcurrencyType
-     * @param	THoldability	$Holdability
      * @return	IStatement
      */
-    public function CreateStatement($ResultSetType, $ConcurrencyType, $Holdability) {
+    public function CreateStatement($ResultSetType, $ConcurrencyType) {
+        TType::Object($ResultSetType, 'TResultSetType');
+        TType::Object($ConcurrencyType, 'TConcurrencyType');
+        
         $this->EnsureConnected();
+        //TODO: check if params are supported first.
+        return $this->DoCreateStatement($ResultSetType, $ConcurrencyType);
     }
 
     /**
@@ -1022,9 +1197,11 @@ abstract class TAbstractPdoConnection extends TObject {
     public function Execute($SqlStatement) {
         TType::String($SqlStatement);
         $this->EnsureConnected();
-        $mResult = $this->FPdo->exec($SqlStatement);
-        if (is_bool($mResult)) {
-            //PUSHBACK EDatabaseWarning;
+        try {
+            $mResult = $this->FPdo->exec($SqlStatement);
+        }
+        catch (PDOException $Ex) {
+            $this->PushWarning(EUnableToExecute::ClassType(), $Ex);
         }
         return $mResult;
     }
@@ -1035,7 +1212,15 @@ abstract class TAbstractPdoConnection extends TObject {
      */
     public function getAutoCommit() {
         $this->EnsureConnected();
-        return $this->FIsAutoCommit;
+        return (boolean) $this->FPdo->getAttribute(PDO::ATTR_AUTOCOMMIT);
+    }
+
+    /**
+     * @return	string
+     */
+    public function getCatalog() {
+        return '';
+        //override this in subclasses if capable.
     }
 
     /**
@@ -1043,6 +1228,8 @@ abstract class TAbstractPdoConnection extends TObject {
      * @return	THoldability
      */
     public function getHoldability() {
+        $this->EnsureConnected();
+        return $this->DoGetHoldability();
     }
 
     /**
@@ -1058,6 +1245,8 @@ abstract class TAbstractPdoConnection extends TObject {
      * @return	TDatabaseMetaData
      */
     public function getMetaData() {
+        throw new EUnsupportedDbFeature();
+        //TODO: metadata
     }
 
     /**
@@ -1065,6 +1254,8 @@ abstract class TAbstractPdoConnection extends TObject {
      * @return	boolean
      */
     public function getReadOnly() {
+        return false;
+        //override this if capable.
     }
 
     /**
@@ -1072,6 +1263,8 @@ abstract class TAbstractPdoConnection extends TObject {
      * @return	TTransactionIsolationLevel
      */
     public function getTransactionIsolation() {
+        return TTransactionIsolationLevel::eNone();
+        //override this if capable.
     }
 
     /**
@@ -1079,16 +1272,23 @@ abstract class TAbstractPdoConnection extends TObject {
      * @return	EDatabaseWarning
      */
     public function getWarnings() {
+        $this->EnsureConnected();
+        return $this->FWarnings;
     }
 
     /**
      * descHere
      * @param	TResultSetType	$ResultSetType
      * @param	TConcurrencyType	$ConcurrencyType
-     * @param	THoldability	$Holdability
      * @return	IPreparedStatement
      */
-    public function PrepareStatement($ResultSetType, $ConcurrencyType, $Holdability) {
+    public function PrepareStatement($ResultSetType, $ConcurrencyType) {
+        TType::Object($ResultSetType, 'TResultSetType');
+        TType::Object($ConcurrencyType, 'TConcurrencyType');
+        
+        $this->EnsureConnected();
+        //TODO: check if the params are supported first. 
+        return $this->DoPrepareStatement($ResultSetType, $ConcurrencyType);
     }
 
     /**
@@ -1096,6 +1296,8 @@ abstract class TAbstractPdoConnection extends TObject {
      * @param	ISavepoint	$Savepoint
      */
     public function RemoveSavepoint($Savepoint) {
+        TType::Object($Savepoint, 'ISavepoint');
+        $this->DoRemoveSavepoint($Savepoint);
     }
 
     /**
@@ -1103,6 +1305,9 @@ abstract class TAbstractPdoConnection extends TObject {
      * @param	ISavepoint	$Savepoint
      */
     public function Rollback($Savepoint = null) {
+        TType::Object($Savepoint, 'ISavepoint');
+        $this->EnsureConnected();
+        $this->DoRollback($Savepoint);
     }
 
     /**
@@ -1110,6 +1315,9 @@ abstract class TAbstractPdoConnection extends TObject {
      * @param	boolean	$Value
      */
     public function setAutoCommit($Value) {
+        TType::Bool($Value);
+        $this->EnsureConnected();
+        $this->FPdo->setAttribute(PDO::ATTR_AUTOCOMMIT, $Value);
     }
 
     /**
@@ -1117,6 +1325,8 @@ abstract class TAbstractPdoConnection extends TObject {
      * @param	string	$Value
      */
     public function setCatalog($Value) {
+        TType::String($Value);
+        throw new EUnsupportedDbFeature();
     }
 
     /**
@@ -1124,6 +1334,8 @@ abstract class TAbstractPdoConnection extends TObject {
      * @param	THoldability	$Value
      */
     public function setHoldability($Value) {
+        TType::Object($Value, 'THoldability');
+        $this->DoSetHoldability($Value);
     }
 
     /**
@@ -1131,6 +1343,8 @@ abstract class TAbstractPdoConnection extends TObject {
      * @param	boolean	$Value
      */
     public function setReadOnly($Value) {
+        TType::Bool($Value);
+        $this->DoSetReadOnly($Value);
     }
 
     /**
@@ -1138,6 +1352,8 @@ abstract class TAbstractPdoConnection extends TObject {
      * @param	TTransactionIsolation	$Value
      */
     public function setTransactionIsolation($Value) {
+        TType::Object($Value, 'TTransactionIsolationLevel');
+        $this->DoSetTransactionIsolation($Value);
     }
 
 }

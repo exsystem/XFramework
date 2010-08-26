@@ -12,7 +12,15 @@ require_once 'FrameworkDSW/Utilities.php';
  * The ultimate base class of all exception classes inside FrameworkDSW.
  * @author  许子健
  */
-class EException extends Exception {}
+class EException extends Exception {
+
+    /**
+     * @return	string
+     */
+    final static function ClassType() {
+        return get_called_class();
+    }
+}
 /**
  * System exception.
  * @author  许子健
