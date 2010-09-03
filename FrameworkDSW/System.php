@@ -350,7 +350,7 @@ class TObject {
      * @param	array	$Signal
      * @param	array	$Slot
      */
-    public final static function Connect($Signal, $Slot) {
+    public final static function Link($Signal, $Slot) {
         TType::Arr($Signal);
         TType::Arr($Slot);
         
@@ -375,7 +375,7 @@ class TObject {
      * @param	array	$Signal
      * @param	array	$Slot
      */
-    public final static function Disconnect($Signal, $Slot) {
+    public final static function Unlink($Signal, $Slot) {
         TType::Arr($Signal);
         
         if (!method_exists($Signal[0], 'signal' . $Signal[1]) || !method_exists($Slot[0], 'slot' . $Slot[1])) {

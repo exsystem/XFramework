@@ -25,25 +25,25 @@ class TChild extends TTest {
 $obj = new TTest();
 $obj2 = new TChild();
 
-TObject::Connect(array ($obj, 'Protected'), array ($obj, 'Protected'));
-TObject::Disconnect(array ($obj, 'Protected'), array ($obj, 'Protected'));
+TObject::Link(array ($obj, 'Protected'), array ($obj, 'Protected'));
+TObject::Unlink(array ($obj, 'Protected'), array ($obj, 'Protected'));
 
-TObject::Connect(array ($obj, 'Protected'), array ($obj, 'Protected'));
-TObject::Connect(array ($obj, 'Protected'), array ($obj, 'Public'));
+TObject::Link(array ($obj, 'Protected'), array ($obj, 'Protected'));
+TObject::Link(array ($obj, 'Protected'), array ($obj, 'Public'));
 TObject::Dispatch(array ($obj, 'Protected'), array (10, 'text', $obj));
 
-TObject::Connect(array ($obj2, 'Public'), array ($obj, 'Protected'));
+TObject::Link(array ($obj2, 'Public'), array ($obj, 'Protected'));
 TObject::Dispatch(array ($obj2, 'Public'), array (1, 2, 3));
 
-TObject::Disconnect(array ($obj, 'Protected'), array ($obj, 'Protected'));
-TObject::Connect(array ($obj, 'Protected'), array ($obj, 'Protected'));
-TObject::Disconnect(array ($obj, 'Protected'), array ($obj, 'Protected'));
-TObject::Connect(array ($obj, 'Protected'), array ($obj, 'Protected'));
-TObject::Connect(array ($obj, 'Protected'), array ($obj, 'Protected'));
-TObject::Connect(array ($obj, 'Protected'), array ($obj, 'Protected'));
-TObject::Connect(array ($obj, 'Protected'), array ($obj, 'Protected'));
-TObject::Connect(array ($obj, 'Protected'), array ($obj, 'Public'));
+TObject::Unlink(array ($obj, 'Protected'), array ($obj, 'Protected'));
+TObject::Link(array ($obj, 'Protected'), array ($obj, 'Protected'));
+TObject::Unlink(array ($obj, 'Protected'), array ($obj, 'Protected'));
+TObject::Link(array ($obj, 'Protected'), array ($obj, 'Protected'));
+TObject::Link(array ($obj, 'Protected'), array ($obj, 'Protected'));
+TObject::Link(array ($obj, 'Protected'), array ($obj, 'Protected'));
+TObject::Link(array ($obj, 'Protected'), array ($obj, 'Protected'));
+TObject::Link(array ($obj, 'Protected'), array ($obj, 'Public'));
 TObject::Dispatch(array ($obj, 'Protected'), array (10, 'text', $obj));
 
-TObject::Connect(array ($obj2, 'Public'), array ($obj, 'Protected'));
+TObject::Link(array ($obj2, 'Public'), array ($obj, 'Protected'));
 TObject::Dispatch(array ($obj2, 'Public'), array (1, 2, 3));
