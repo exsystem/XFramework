@@ -1,11 +1,6 @@
 <?php
 include 'FrameworkDSW/System.php';
 
-use System\TObject;
-use System\Utilities\TType;
-use System\Utilities\EInvalidTypeCasting;
-use System\Utilities\EInvalidObjectCasting;
-
 class TChild extends TObject {
     /**
      * @param	T	$p
@@ -47,7 +42,7 @@ $obj->Func(true); //不出错，因为true是可以转换成1的，根据PHP的�
 $obj->Func('string'); //不出错，因为可以转换成0，根据PHP的规则
 
 echo '<p>TEST 2</p>';
-TChild::PrepareGeneric(array ('T' => 'integer', 'P' => 'System\TObject'));
+TChild::PrepareGeneric(array ('T' => 'integer', 'P' => 'TObject'));
 $obj = new TChild();
 $obj->FuncTwo(0, new TObject());
 $obj->FuncTwo(new TObject(), 0); //出错，TObject不是integer，0不是TObject

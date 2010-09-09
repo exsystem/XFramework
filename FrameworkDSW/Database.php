@@ -775,13 +775,13 @@ interface IDatabaseMetaData extends IInterface {
      * descHere
      * @return	boolean
      */
-    public function DataDefinitionCausesTransationCommit();
+    public function DataDefinitionCausesTransactionCommit();
 
     /**
      * descHere
      * @return	boolean
      */
-    public function DataDefinitionIgnoredInTransations();
+    public function DataDefinitionIgnoredInTransactions();
 
     /**
      * descHere
@@ -804,7 +804,7 @@ interface IDatabaseMetaData extends IInterface {
      * @param	string	$AttributeNamePattern
      * @return	IResultSet
      */
-    public function getAttributes($Catalog, $SchemaPattern, $TypeNamePattern, $AttributeNamePattern);
+    public function GetAttributes($Catalog, $SchemaPattern, $TypeNamePattern, $AttributeNamePattern);
 
     /**
      * descHere
@@ -815,7 +815,7 @@ interface IDatabaseMetaData extends IInterface {
      * @param	boolean	$Nullable
      * @return	IResultSet
      */
-    public function getBestRowIdentifier($Catalog, $Schema, $Table, $Scope, $Nullable);
+    public function GetBestRowIdentifier($Catalog, $Schema, $Table, $Scope, $Nullable);
 
     /**
      * descHere
@@ -837,7 +837,7 @@ interface IDatabaseMetaData extends IInterface {
      * @param	string	$ColumnNamePattern
      * @return	IResultSet
      */
-    public function getColumnPrivileges($Catalog, $Schema, $Table, $ColumnNamePattern);
+    public function GetColumnPrivileges($Catalog, $Schema, $Table, $ColumnNamePattern);
 
     /**
      * descHere
@@ -847,7 +847,7 @@ interface IDatabaseMetaData extends IInterface {
      * @param	string	$ColumnNamePattern
      * @return	IResultSet
      */
-    public function getColumns($Catalog, $SchemaPattern, $TableNamePattern, $ColumnNamePattern);
+    public function GetColumns($Catalog, $SchemaPattern, $TableNamePattern, $ColumnNamePattern);
 
     /**
      * descHere
@@ -865,7 +865,7 @@ interface IDatabaseMetaData extends IInterface {
      * @param	string	$ForeignTable
      * @return	IResultSet
      */
-    public function getCrossReference($PrimaryCatalog, $PrimarySchema, $PrimaryTable, $ForeignCatalog, $ForeignSchema, $ForeignTable);
+    public function GetCrossReference($PrimaryCatalog, $PrimarySchema, $PrimaryTable, $ForeignCatalog, $ForeignSchema, $ForeignTable);
 
     /**
      * descHere
@@ -916,7 +916,7 @@ interface IDatabaseMetaData extends IInterface {
      * @param	string	$Table
      * @return	IResultSet
      */
-    public function getExportedKeys($Catalog, $Schema, $Table);
+    public function GetExportedKeys($Catalog, $Schema, $Table);
 
     /**
      * descHere
@@ -937,7 +937,7 @@ interface IDatabaseMetaData extends IInterface {
      * @param	string	$Table
      * @return	IResultSet
      */
-    public function getImportedKeys($Catalog, $Schema, $Table);
+    public function GetImportedKeys($Catalog, $Schema, $Table);
 
     /**
      * descHere
@@ -948,7 +948,7 @@ interface IDatabaseMetaData extends IInterface {
      * @param	boolean	$Approximate
      * @return	IResultSet
      */
-    public function getIndexInfo($Catalog, $Schema, $Table, $Unique, $Approximate);
+    public function GetIndexInfo($Catalog, $Schema, $Table, $Unique, $Approximate);
 
     /**
      * descHere
@@ -1083,7 +1083,7 @@ interface IDatabaseMetaData extends IInterface {
      * @param	string	$Table
      * @return	IResultSet
      */
-    public function getPrimaryKeys($Catalog, $Schema, $Table);
+    public function GetPrimaryKeys($Catalog, $Schema, $Table);
 
     /**
      * descHere
@@ -1093,7 +1093,7 @@ interface IDatabaseMetaData extends IInterface {
      * @param	string	$ColumnNamePattern
      * @return	IResultSet
      */
-    public function getProcedureColumns($Catalog, $SchemaPattern, $ProcedureNamePattern, $ColumnNamePattern);
+    public function GetProcedureColumns($Catalog, $SchemaPattern, $ProcedureNamePattern, $ColumnNamePattern);
 
     /**
      * descHere
@@ -1102,7 +1102,7 @@ interface IDatabaseMetaData extends IInterface {
      * @param	string	$ProcedureNamePattern
      * @return	IResultSet
      */
-    public function getProcedures($Catalog, $SchemaPattern, $ProcedureNamePattern);
+    public function GetProcedures($Catalog, $SchemaPattern, $ProcedureNamePattern);
 
     /**
      * descHere
@@ -1165,7 +1165,7 @@ interface IDatabaseMetaData extends IInterface {
      * @param	string	$TableNameSchema
      * @return	IResultSet
      */
-    public function getSuperTables($Catalog, $SchemaPattern, $TableNameSchema);
+    public function GetSuperTables($Catalog, $SchemaPattern, $TableNameSchema);
 
     /**
      * descHere
@@ -1174,7 +1174,7 @@ interface IDatabaseMetaData extends IInterface {
      * @param	string	$TypeNamePattern
      * @return	IResultSet
      */
-    public function getSuperTypes($Catalog, $SchemaPattern, $TypeNamePattern);
+    public function GetSuperTypes($Catalog, $SchemaPattern, $TypeNamePattern);
 
     /**
      * descHere
@@ -1183,7 +1183,7 @@ interface IDatabaseMetaData extends IInterface {
      * @param	string	$TableNamePatttern
      * @return	IResultSet
      */
-    public function getTablePrivileges($Catalog, $SchemaPattern, $TableNamePatttern);
+    public function GetTablePrivileges($Catalog, $SchemaPattern, $TableNamePatttern);
 
     /**
      * descHere
@@ -1193,7 +1193,7 @@ interface IDatabaseMetaData extends IInterface {
      * @param	string[]	$Types
      * @return	IResultSet
      */
-    public function getTables($Catalog, $SchemaPattern, $TableNamePattern, $Types);
+    public function GetTables($Catalog, $SchemaPattern, $TableNamePattern, $Types);
 
     /**
      * descHere
@@ -1214,7 +1214,7 @@ interface IDatabaseMetaData extends IInterface {
      * @param	string	$TypeNamePattern
      * @return	IResultSet
      */
-    public function getUdts($Catalog, $SchemaPattern, $TypeNamePattern);
+    public function GetUdts($Catalog, $SchemaPattern, $TypeNamePattern);
 
     /**
      * descHere
@@ -1235,7 +1235,7 @@ interface IDatabaseMetaData extends IInterface {
      * @param	string	$Table
      * @return	IResultSet
      */
-    public function getVersionColumns($Catalog, $Schema, $Table);
+    public function GetVersionColumns($Catalog, $Schema, $Table);
 
     /**
      * descHere
@@ -1719,7 +1719,7 @@ interface IDatabaseMetaData extends IInterface {
      * descHere
      * @return	boolean
      */
-    public function supportsTableCorrelationNames();
+    public function SupportsTableCorrelationNames();
 
     /**
      * descHere
