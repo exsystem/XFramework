@@ -64,6 +64,18 @@ class EInvalidInterfaceCasting extends EInvalidTypeCasting {}
 class EInvalidDelegateCasting extends EInvalidTypeCasting {}
 
 /**
+ * 
+ * @author 许子健
+ */
+class EBadProperties extends EException {}
+
+/**
+ * 
+ * @author 许子健
+ */
+class EInvalidFileName extends EException {}
+
+/**
  *
  * @author  许子健
  */
@@ -263,14 +275,14 @@ final class TPoint extends TRecord {
  * TFont
  * @author	许子健
  */
-final class TFont extends TObject {//TODO: impl TFont.
+final class TFont extends TObject { //TODO: impl TFont.
 }
 
 /**
  * TColor
  * @author	许子健
  */
-final class TColor extends TObject {//TODO: impl TColor.
+final class TColor extends TObject { //TODO: impl TColor.
 }
 
 /**

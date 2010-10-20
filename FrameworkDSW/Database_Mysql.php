@@ -7,12 +7,97 @@
  */
 
 require_once 'FrameworkDSW/Database.php';
+require_once 'FrameworkDSW/Containers.php';
 
 /**
- * TPdoConnection
+ * TMysqlDriver
+ * @author	许子健
+ */
+class TMysqlDriver extends TAbstractPdoDriver implements IDriver {
+    /**
+     * 
+     * Enter description here ...
+     * @var	string
+     */
+    const CInvalidServer = 'Bad form of the server string.';
+    
+    /**
+     * 
+     * Enter description here ...
+     * @var	PDO
+     */
+    private $FPdo = null;
+
+    /**
+     * (non-PHPdoc)
+     * @see TAbstractPdoDriver::ConvertProperties()
+     */
+    protected function ConvertProperties() {
+        parent::ConvertProperties();
+        
+        if ($this->FProperties->ContainsKey('MaxBufferSize')) {
+            $this->FPdoOptions[PDO::MYSQL_ATTR_MAX_BUFFER_SIZE] = (integer) $this->FProperties['MaxBufferSize'];
+        }
+        //TODO: observe and add other MySQL specific available options. 
+        $this->FPdoOptions[PDO::MYSQL_ATTR_INIT_COMMAND] = 'SET NAMES UTF8';
+    }
+
+    /**
+     * descHere
+     * @return	IConnection
+     */
+    protected function DoConnect() {
+        list ($mHost, $mPort) = explode(':', $this->FServer, 2);
+        $mPort = (string) $mPort;
+        if ("{$mHost}:{$mPort}" != $this->FServer) {
+            throw new EFailedToConnectDb(self::CInvalidServer);
+        }
+        $this->ConvertProperties();
+        $this->FPdo = new TMysqlConnection($this, new PDO("mysql:dbname={$this->FDbName};host={$this->FServer}", $this->FProperties['Username'], $this->FProperties['Password'], $this->FPdoOptions));
+        return $this->FPdo;
+    }
+
+    /**
+     * descHere
+     * @return	TDriverPropertyInfo
+     */
+    protected function DoGetPropertyInfo() {
+    }
+
+    /**
+     * descHere
+     * @return	TVersion
+     */
+    protected function DoGetVersion() {
+        $mVer = new TVersion();
+        $mDummy = '';
+        sscanf($this->FPdo->getAttribute(PDO::ATTR_CLIENT_VERSION), 'mysqlnd %d.%d.%d-dev - %s - $Revision: %d $', $mVer->MajorVersion, $mVer->MinorVersion, $mVer->Build, $mDummy, $mVer->Revision);
+        return $mVer;
+    }
+
+    /**
+     * descHere
+     * @return	boolean
+     */
+    protected function DoValidateUrl() {
+        if ($this->FProtocol != 'MySQL') {
+            return false;
+        }
+        return true;
+    }
+}
+
+/**
+ * TMysqlConnection
  * @author	许子健
  */
 class TMysqlConnection extends TAbstractPdoConnection implements IConnection {
+    /**
+     * 
+     * Enter description here ...
+     * @var	TMysqlDatabaseMetaData
+     */
+    private $FMetaData = null;
 
     /**
      * descHere
@@ -20,7 +105,8 @@ class TMysqlConnection extends TAbstractPdoConnection implements IConnection {
      * @param	TConcurrencyType	$ConcurrencyType
      * @return	IStatement
      */
-    protected function DoCreateStatement($ResultSetType, $ConcurrencyType) {
+    protected function DoCreateStatement($ResultSetType, $ConcurrencyType) { //add extra mysqllink here.
+        return new TPdoStatement($this, $this->FPdo, $ResultSetType, $ConcurrencyType);
     }
 
     /**
@@ -50,7 +136,7 @@ class TMysqlConnection extends TAbstractPdoConnection implements IConnection {
             $this->FPdo->exec("RELEASE SAVEPOINT {$mId}");
         }
         catch (PDOException $Ex) {
-            $this->PushWarning(EUnableToExecute::ClassType(), $Ex);
+            self::PushWarning(EExecuteFailed::ClassType(), $Ex, $this);
         }
     }
 
@@ -69,7 +155,7 @@ class TMysqlConnection extends TAbstractPdoConnection implements IConnection {
             }
         }
         catch (PDOException $Ex) {
-            $this->PushWarning(EUnableToRollback::ClassType(), $Ex);
+            self::PushWarning(ERollbackFailed::ClassType(), $Ex, $this);
         }
     }
 
@@ -110,9 +196,13 @@ class TMysqlConnection extends TAbstractPdoConnection implements IConnection {
 
     /**
      * descHere
-     * @return	TDatabaseMetaData
+     * @return	IDatabaseMetaData
      */
     public function getMetaData() {
+        if ($this->FMetaData === null) {
+            $this->FMetaData = new TMysqlDatabaseMetaData($this);
+        }
+        return $this->FMetaData;
     }
 
     /**
@@ -139,7 +229,7 @@ class TMysqlConnection extends TAbstractPdoConnection implements IConnection {
  * TMysqlDatabaseMetaData
  * @author	许子健
  */
-final class TMysqlDatabaseMetaData implements IDatabaseMetaData {
+final class TMysqlDatabaseMetaData implements IDatabaseMetaData { //TODO: pending...
     /**
      * 
      * @var TMysqlConnection
@@ -1324,6 +1414,233 @@ final class TMysqlDatabaseMetaData implements IDatabaseMetaData {
      * @return	string
      */
     public function UsesLocalFilesPerTable() {
+    }
+
+}
+/**
+ * TPdoStatement
+ * @author	许子健
+ */
+class TPdoStatement implements IStatement {
+    /**
+     * 
+     * Enter description here ...
+     * @var	TAbstractPdoConnection
+     */
+    private $FConnection = null;
+    /**
+     * 
+     * Enter description here ...
+     * @var PDO
+     */
+    private $FPdo = null;
+    /**
+     * 
+     * Enter description here ...
+     * @var	TResultSetType
+     */
+    private $FResultSetType = null;
+    /**
+     * 
+     * Enter description here ...
+     * @var	TConcurrencyType
+     */
+    private $FConcurrencyType = null;
+    /**
+     * 
+     * Enter description here ...
+     * @var	PDOStatement
+     */
+    private $FPdoStatement = null;
+    /**
+     * 
+     * Enter description here ...
+     * @var string
+     */
+    private $FCommand = '';
+    /**
+     * 
+     * Enter description here ...
+     * @var	IList <T: string>
+     */
+    private $FCommands = null;
+
+    /**
+     * 
+     * Enter description here ...
+     */
+    private function EnsurePdoStatement() {
+        if ($this->FPdoStatement === null) {
+            throw new EEmptyCommand();
+        }
+    }
+
+    /**
+     * 
+     * Enter description here ...
+     * @param TAbstractPdoConnection	$Connection
+     * @param PDO						$Pdo
+     * @param TResultSetType			$ResultSetType
+     * @param TConcurrencyType			$ConcurrencyType
+     */
+    public function __construct($Connection, $Pdo, $ResultSetType, $ConcurrencyType) {
+        TType::Object($Connection, 'TAbstractPdoConnection');
+        TType::Object($Pdo, 'PDO');
+        TType::Object($ResultSetType, 'TResultSetType');
+        TType::Object($ConcurrencyType, 'TConcurrencyType');
+        
+        $this->FConnection = $Connection;
+        $this->FPdo = $Pdo;
+        $this->FResultSetType = $ResultSetType;
+        //eForwardOnly 只能向前滚动row
+        //eScrollInsensitive 对其他对象作出的数据修改不敏感
+        //eScrollSensitive   ----------------------敏感
+        $this->FConcurrencyType = $ConcurrencyType;
+    
+     //eReadOnly 不能修改数据
+    //eUpdatable 可以修改数据 
+    }
+
+    /**
+     * descHere
+     * @param	string	$Command
+     * @return	integer
+     */
+    public function Execute($Command = '') {
+        TType::String($Command);
+        
+        if ($Command != '') {
+            $this->FCommand = $Command;
+        }
+        try {
+            $mStmt = $this->FPdo->query($this->FCommand);
+            return $mStmt->rowCount();
+        }
+        catch (PDOException $Ex) {
+            TAbstractPdoConnection::PushWarning(EExecuteFailed::ClassType(), $Ex, $this->FConnection);
+        }
+    }
+
+    /**
+     * (non-PHPdoc)
+     * @see IStatement::ExecuteCommands()
+     * @return	integer[]
+     */
+    public function ExecuteCommands() {
+        if ($this->FCommands === null || $this->FCommands->IsEmpty()) {
+            throw new EEmptyCommand();
+        }
+        $mRows = array ();
+        try {
+            $this->FConnection->setAutoCommit(false);
+            foreach ($this->FCommands as $mCmd) {
+                $mStmt = $this->FPdo->query($mCmd);
+                $mRows[] = $mStmt->rowCount();
+            }
+            $this->FConnection->Commit();
+        }
+        catch (PDOException $Ex) {
+            $this->FConnection->Rollback();
+            TAbstractPdoConnection::PushWarning(EExecuteFailed::ClassType(), $Ex, $this->FConnection);
+        }
+        return $mRows;
+    }
+
+    /**
+     * descHere
+     * @return	IParam <T: ?>
+     */
+    public function FetchAsScalar() {
+        try {
+            $mData = $this->FPdoStatement->fetch(PDO::FETCH_COLUMN, PDO::FETCH_ORI_ABS, 0);
+            if ($mData === false) {
+                return null;
+            }
+            // $this->FPdoStatement->getColumnMeta(0); is not used because of:
+            // http://bugs.php.net/bug.php?id=46508
+            TPrimativeParam::PrepareGeneric(array ('T' => 'string'));
+            return new TPrimativeParam($mData);
+        }
+        catch (PDOException $Ex) {
+            TAbstractPdoConnection::PushWarning(EFetchAsScalarFailed::ClassType(), $Ex, $this->FConnection);
+        }
+    }
+
+    /**
+     * descHere
+     * @return	IList <T: string>
+     */
+    public function getCommands() {
+        if ($this->FCommands === null) {
+            TList::PrepareGeneric(array ('T' => 'string'));
+            $this->FCommands = new TList();
+        }
+        return $this->FCommands;
+    }
+
+    /**
+     * descHere
+     * @return	IConnection
+     */
+    public function getConnection() {
+        return $this->FConnection;
+    }
+
+    /**
+     * descHere
+     * @return	IResultSet
+     */
+    public function GetCurrentResult() {
+    }
+
+    /**
+     * descHere
+     * @param	integer	$Index
+     * @return	IResultSet
+     */
+    public function getResult($Index) {
+    }
+
+    /**
+     * descHere
+     * @param	TCurrentResultOption	$Options
+     */
+    public function NextResult($Options) {
+    }
+
+    /**
+     * descHere
+     * @param	string	$Command
+     * @return	IResultSet
+     */
+    public function Query($Command = '') {
+        TType::String($Command);
+        if ($Command != '') {
+            $this->setCommand($Command);
+        }
+    
+     //TODO: ...
+    }
+
+    /**
+     * descHere
+     * @param	string	$Value
+     */
+    public function setCommand($Value) {
+        TType::String($Value);
+        
+        $this->FCommand = $Value;
+        //TODO: to deal with insensitive. maybe to write back to db after updating result sets.
+        $mAttr = array (PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL);
+        if ($this->FResultSetType == TResultSetType::eForwardOnly()) {
+            $mAttr[PDO::ATTR_CURSOR] = PDO::CURSOR_FWDONLY;
+        }
+        try {
+            $this->FPdoStatement = $this->FPdo->prepare($this->FCommand, $mAttr);
+        }
+        catch (PDOException $Ex) {
+            TAbstractPdoConnection::PushWarning(ESetCommandFailed::ClassType(), $Ex, $this->FConnection);
+        }
     }
 
 }

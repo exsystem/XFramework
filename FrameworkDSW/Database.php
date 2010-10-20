@@ -31,6 +31,12 @@ class EFailedToConnectDb extends EDatabaseException {
  */
 class EDisconnected extends EDatabaseException {}
 /**
+ * 
+ * Enter description here ...
+ * @author 许子健
+ */
+class EEmptyCommand extends EDatabaseException {}
+/**
  * EFailedToGetDbPropertyInfo
  * @author	许子健
  */
@@ -105,17 +111,29 @@ class EDatabaseWarning extends EDatabaseException {
  * 
  * @author 许子健
  */
-class EUnableToCommit extends EDatabaseWarning {}
+class ECommitFailed extends EDatabaseWarning {}
 /**
  * 
  * @author 许子健
  */
-class EUnableToRollback extends EDatabaseWarning {}
+class ERollbackFailed extends EDatabaseWarning {}
 /**
  * 
  * @author 许子健
  */
-class EUnableToExecute extends EDatabaseWarning {}
+class EExecuteFailed extends EDatabaseWarning {}
+/**
+ * 
+ * Enter description here ...
+ * @author 许子健
+ */
+class EFetchAsScalarFailed extends EDatabaseWarning {}
+/**
+ * 
+ * Enter description here ...
+ * @author 许子健
+ */
+class ESetCommandFailed extends EDatabaseWarning {}
 
 /**
  * TConcurrencyType
@@ -506,13 +524,19 @@ interface IStatement extends IInterface {
     public function Execute($Command = '');
 
     /**
+     * 
+     * @return	integer[]
+     */
+    public function ExecuteCommands();
+
+    /**
      * @return	IParam <T: ?>
      */
     public function FetchAsScalar();
 
     /**
      * descHere
-     * @return	TList <T: string>
+     * @return	IList <T: string>
      */
     public function getCommands();
 
@@ -1886,9 +1910,15 @@ final class TPrimativeParam extends TAbstractParam implements IParam {
 abstract class TAbstractPdoDriver extends TObject {
     
     /**
-     * @var	TProperties
+     * @var	IMap <K: string, V: string>
      */
     protected $FProperties = null;
+    /**
+     * 
+     * Enter description here ...
+     * @var	array
+     */
+    protected $FPdoOptions = null;
     /**
      * @var	string
      */
@@ -1905,15 +1935,49 @@ abstract class TAbstractPdoDriver extends TObject {
     protected $FDbName = '';
 
     /**
+     * 
+     * Enter description here ...
+     */
+    protected function ConvertProperties() {
+        if ($this->FProperties->ContainsKey('AutoCommit')) {
+            $this->FPdoOptions[PDO::ATTR_AUTOCOMMIT] = (boolean) $this->FProperties['AutoCommit'];
+        }
+        if ($this->FProperties->ContainsKey('Timeout')) {
+            $this->FPdoOptions[PDO::ATTR_TIMEOUT] = (integer) $this->FProperties['Timeout'];
+        }
+        if ($this->FProperties->ContainsKey('Prefetch')) {
+            $this->FPdoOptions[PDO::ATTR_PREFETCH] = (integer) $this->FProperties['Prefetch'];
+        }
+        if ($this->FProperties->ContainsKey('Case')) {
+            switch ($this->FProperties['Case']) {
+                case 'Natrual' :
+                    $this->FPdoOptions[PDO::ATTR_CASE] = PDO::CASE_NATURAL;
+                    break;
+                case 'Upper' :
+                    $this->FPdoOptions[PDO::ATTR_CASE] = PDO::CASE_UPPER;
+                    break;
+                case 'Lower' :
+                    $this->FPdoOptions[PDO::ATTR_CASE] = PDO::CASE_LOWER;
+                    break;
+                default :
+                    break;
+            }
+        }
+    
+     //TODO: observe and add other PDO common available options.
+    }
+
+    /**
      * descHere
      * @param	string		$Url
-     * @param	TProperties	$Properties
+     * @param	IMap		$Properties <K: string, V: string>
      * @return	IConnection
      */
     public function Connect($Url, $Properties) {
         TType::String($Url);
-        TType::Object($Properties, 'TProperties');
+        TType::Type($Properties, array ('IMap' => array ('K' => 'string', 'V' => 'string')));
         
+        $this->FProperties = $Properties;
         if ($this->ValidateUrl($Url)) {
             return $this->DoConnect();
         }
@@ -1947,12 +2011,12 @@ abstract class TAbstractPdoDriver extends TObject {
     /**
      * descHere
      * @param	string		$Url
-     * @param	TProperties	$Properties
+     * @param	IMap		$Properties <K: string, V: string>
      * @return	TDriverPropertyInfo[]
      */
     public function GetPropertyInfo($Url, $Properties) {
         TType::String($Url);
-        TType::Object($Properties, 'TProperties');
+        TType::Type($Properties, array ('IMap' => array ('K' => 'string', 'V' => 'string')));
         
         if ($this->ValidateUrl($Url)) {
             $this->FProperties = $Properties;
@@ -1981,6 +2045,13 @@ abstract class TAbstractPdoDriver extends TObject {
         return false;
     }
 
+    /**
+     * descHere
+     * @return	TVersion
+     */
+    public function getVersion() {
+        return $this->DoGetVersion();
+    }
 }
 
 /**
@@ -2032,18 +2103,6 @@ abstract class TAbstractPdoConnection extends TObject {
      * @var	EDatabaseWarning
      */
     protected $FWarnings = null;
-
-    /**
-     * @param	string			$WarningType
-     * @param	PDOException	$PdoException 
-     */
-    private function PushWarning($WarningType, $PdoException) {
-        //$WarningType::InheritsFrom('EDatabaseWarning');
-        $mWarning = new $WarningType($PdoException);
-        $mWarning->setNextWarning($this->FWarnings);
-        $this->FWarnings = $mWarning;
-        throw $mWarning;
-    }
 
     /**
      * 
@@ -2114,7 +2173,7 @@ abstract class TAbstractPdoConnection extends TObject {
             $this->FPdo->rollBack();
         }
         catch (PDOException $Ex) {
-            $this->PushWarning(EUnableToRollback::ClassType(), $Ex);
+            self::PushWarning(ERollbackFailed::ClassType(), $Ex, $this);
         }
     }
 
@@ -2164,6 +2223,23 @@ abstract class TAbstractPdoConnection extends TObject {
     }
 
     /**
+     * @param	string			$WarningType
+     * @param	PDOException	$PdoException 
+     * @param	TAbstractPdoConnection	$Connection
+     */
+    public static function PushWarning($WarningType, $PdoException, $Connection) {
+        TType::String($WarningType);
+        TType::Object($PdoException, 'PDOException');
+        TType::Object($Connection->FWarnings, 'EDatabaseWarning');
+        
+        //$WarningType::InheritsFrom('EDatabaseWarning');
+        $mWarning = new $WarningType($PdoException);
+        $mWarning->setNextWarning($Connection->FWarnings);
+        $Connection->FWarnings = $mWarning;
+        throw $mWarning;
+    }
+
+    /**
      * descHere
      */
     public function ClearWarnings() {
@@ -2184,7 +2260,7 @@ abstract class TAbstractPdoConnection extends TObject {
             $this->DoCommit();
         }
         catch (PDOException $Ex) {
-            $this->PushWarning(EUnableToCommit::ClassType(), $Ex);
+            self::PushWarning(ECommitFailed::ClassType(), $Ex, $this);
         }
     }
 
@@ -2234,7 +2310,7 @@ abstract class TAbstractPdoConnection extends TObject {
             $mResult = $this->FPdo->exec($SqlStatement);
         }
         catch (PDOException $Ex) {
-            $this->PushWarning(EUnableToExecute::ClassType(), $Ex);
+            self::PushWarning(EExecuteFailed::ClassType(), $Ex, $this);
         }
         return $mResult;
     }
@@ -2253,7 +2329,8 @@ abstract class TAbstractPdoConnection extends TObject {
      */
     public function getCatalog() {
         return '';
-        //override this in subclasses if capable.
+    
+     //override this in subclasses if capable.
     }
 
     /**
@@ -2279,7 +2356,8 @@ abstract class TAbstractPdoConnection extends TObject {
      */
     public function getMetaData() {
         throw new EUnsupportedDbFeature();
-        //TODO: metadata
+    
+     //TODO: metadata
     }
 
     /**
@@ -2288,7 +2366,8 @@ abstract class TAbstractPdoConnection extends TObject {
      */
     public function getReadOnly() {
         return false;
-        //override this if capable.
+    
+     //override this if capable.
     }
 
     /**
@@ -2297,7 +2376,8 @@ abstract class TAbstractPdoConnection extends TObject {
      */
     public function getTransactionIsolation() {
         return TTransactionIsolationLevel::eNone();
-        //override this if capable.
+    
+     //override this if capable.
     }
 
     /**

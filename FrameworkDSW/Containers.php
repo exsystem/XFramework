@@ -2158,8 +2158,8 @@ final class TLinkedList extends TAbstractList {
         //        $mTemp[self::CNext] = -1;
         //        $this->FList[$mIndex - 1] = $mTemp;
         $this->FList[3 * ($mIndex - 1) + self::CNext] = -1;
-        //This will not work since the [] operators in SPL are function calls and returns a copy of the value,
-    //not the refernce.
+    
+     //This will not work since the [] operators in SPL are function calls and returns a copy of the value, not the refernce.
     }
 
     /**
