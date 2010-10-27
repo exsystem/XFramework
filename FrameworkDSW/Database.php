@@ -1939,6 +1939,9 @@ abstract class TAbstractPdoDriver extends TObject {
      * Enter description here ...
      */
     protected function ConvertProperties() {
+        if ($this->FProperties === null) {
+            return;
+        }
         if ($this->FProperties->ContainsKey('AutoCommit')) {
             $this->FPdoOptions[PDO::ATTR_AUTOCOMMIT] = (boolean) $this->FProperties['AutoCommit'];
         }
@@ -2034,8 +2037,16 @@ abstract class TAbstractPdoDriver extends TObject {
     public function ValidateUrl($Url) {
         TType::String($Url);
         
-        list ($mProtocol, $mServer) = explode('://', $Url, 2);
-        list ($mServer, $mDbName) = explode('/', $mServer, 2);
+        $mTemp = explode('://', $Url, 2);
+        if (count($mTemp) != 2) {
+            return false;
+        }
+        list ($mProtocol, $mServer) = $mTemp;
+        $mTemp = explode('/', $mServer, 2);
+        if (count($mTemp) != 2) {
+            return false;
+        }
+        list ($mServer, $mDbName) = $mTemp;
         if ($mProtocol != '' && $mServer != '' && $mDbName != '') {
             $this->FProtocol = $mProtocol;
             $this->FServer = $mServer;

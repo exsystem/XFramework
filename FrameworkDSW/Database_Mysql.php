@@ -13,7 +13,7 @@ require_once 'FrameworkDSW/Containers.php';
  * TMysqlDriver
  * @author	许子健
  */
-class TMysqlDriver extends TAbstractPdoDriver implements IDriver {
+final class TMysqlDriver extends TAbstractPdoDriver implements IDriver {
     /**
      * 
      * Enter description here ...
@@ -47,14 +47,25 @@ class TMysqlDriver extends TAbstractPdoDriver implements IDriver {
      * @return	IConnection
      */
     protected function DoConnect() {
-        list ($mHost, $mPort) = explode(':', $this->FServer, 2);
-        $mPort = (string) $mPort;
-        if ("{$mHost}:{$mPort}" != $this->FServer) {
-            throw new EFailedToConnectDb(self::CInvalidServer);
+        $mTemp = explode(':', $this->FServer, 2);
+        if (count($mTemp) != 2) {
+            $mHost = $this->FServer;
+        }
+        else {
+            list ($mHost, $mPort) = $mTemp;
+            $mPort = (string) $mPort;
+            if ("{$mHost}:{$mPort}" != $this->FServer) {
+                throw new EFailedToConnectDb(self::CInvalidServer);
+            }
         }
         $this->ConvertProperties();
-        $this->FPdo = new TMysqlConnection($this, new PDO("mysql:dbname={$this->FDbName};host={$this->FServer}", $this->FProperties['Username'], $this->FProperties['Password'], $this->FPdoOptions));
-        return $this->FPdo;
+        try {
+            $this->FPdo = new PDO("mysql:dbname={$this->FDbName};host={$this->FServer}", $this->FProperties['Username'], $this->FProperties['Password'], $this->FPdoOptions);
+        }
+        catch (PDOException $Ex) {
+            throw new EFailedToConnectDb(self::CInvalidServer);
+        }
+        return new TMysqlConnection($this, $this->FPdo);
     }
 
     /**
@@ -69,6 +80,9 @@ class TMysqlDriver extends TAbstractPdoDriver implements IDriver {
      * @return	TVersion
      */
     protected function DoGetVersion() {
+        if ($this->FPdo === null) {
+            throw new EDisconnected();
+        }
         $mVer = new TVersion();
         $mDummy = '';
         sscanf($this->FPdo->getAttribute(PDO::ATTR_CLIENT_VERSION), 'mysqlnd %d.%d.%d-dev - %s - $Revision: %d $', $mVer->MajorVersion, $mVer->MinorVersion, $mVer->Build, $mDummy, $mVer->Revision);
@@ -91,7 +105,7 @@ class TMysqlDriver extends TAbstractPdoDriver implements IDriver {
  * TMysqlConnection
  * @author	许子健
  */
-class TMysqlConnection extends TAbstractPdoConnection implements IConnection {
+final class TMysqlConnection extends TAbstractPdoConnection implements IConnection {
     /**
      * 
      * Enter description here ...
@@ -1421,7 +1435,7 @@ final class TMysqlDatabaseMetaData implements IDatabaseMetaData { //TODO: pendin
  * TPdoStatement
  * @author	许子健
  */
-class TPdoStatement implements IStatement {
+final class TPdoStatement implements IStatement {
     /**
      * 
      * Enter description here ...
