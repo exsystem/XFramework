@@ -65,14 +65,95 @@ final class TMysqlDriver extends TAbstractPdoDriver implements IDriver {
         catch (PDOException $Ex) {
             throw new EFailedToConnectDb(self::CInvalidServer);
         }
+        catch (EIndexOutOfBounds $Ex) {
+            throw new EInsufficientProperties(EInsufficientProperties::CMsg . 'Username, Password.');
+        }
         return new TMysqlConnection($this, $this->FPdo);
     }
 
     /**
      * descHere
-     * @return	TDriverPropertyInfo
+     * @return	TDriverPropertyInfo[]
      */
     protected function DoGetPropertyInfo() {
+        $mInfo = array ();
+        
+        $mInfo[0] = new TDriverPropertyInfo();
+        $mInfo[0]->Choices = array ();
+        $mInfo[0]->Description = 'Specify which user to connect the database.';
+        $mInfo[0]->Name = 'Username';
+        $mInfo[0]->Required = true;
+        $mInfo[0]->Value = $this->FProperties['Username'];
+        
+        $mInfo[1] = new TDriverPropertyInfo();
+        $mInfo[1]->Choices = array ();
+        $mInfo[1]->Description = 'The password of the user. Use an empty string for empty password.';
+        $mInfo[1]->Name = 'Password';
+        $mInfo[1]->Required = true;
+        $mInfo[1]->Value = $this->FProperties['Password'];
+        
+        $mInfo[2] = new TDriverPropertyInfo();
+        $mInfo[2]->Choices = array ('True', 'False');
+        $mInfo[2]->Description = 'If this value is false, the MySQL connection attempts to disable autocommit so that the connection begins a transaction.';
+        $mInfo[2]->Name = 'AutoCommit';
+        $mInfo[2]->Required = false;
+        if ($this->FProperties->ContainsKey('AutoCommit')) {
+            $mInfo[2]->Value = $this->FProperties['AutoCommit'];
+        }
+        else {
+            $mInfo[2]->Value = 'True';
+        }
+        
+        $mInfo[3] = new TDriverPropertyInfo();
+        $mInfo[3]->Choices = array ();
+        $mInfo[3]->Description = 'Sets the timeout value in seconds for communications with the database.';
+        $mInfo[3]->Name = 'Timeout';
+        $mInfo[3]->Required = false;
+        if ($this->FProperties->ContainsKey('Timeout')) {
+            $mInfo[3]->Value = $this->FProperties['Timeout'];
+        }
+        else {
+            $mInfo[3]->Value = '0';
+        }
+        $mInfo[3]->Value = '0';
+        
+        $mInfo[4] = new TDriverPropertyInfo();
+        $mInfo[4]->Choices = array ();
+        $mInfo[4]->Description = 'Setting the prefetch size allows you to balance speed against memory usage for your application. Not all database/driver combinations support setting of the prefetch size. A larger prefetch size results in increased performance at the cost of higher memory usage.';
+        $mInfo[4]->Name = 'Prefetch';
+        $mInfo[4]->Required = false;
+        if ($this->FProperties->ContainsKey('Prefetch')) {
+            $mInfo[4]->Value = $this->FProperties['Prefetch'];
+        }
+        else {
+            $mInfo[4]->Value = '0';
+        }
+        
+        $mInfo[5] = new TDriverPropertyInfo();
+        $mInfo[5]->Choices = array ('Natrual', 'Upper', 'Lower');
+        $mInfo[5]->Description = 'Force column names to a specific case specified.';
+        $mInfo[5]->Name = 'Case';
+        $mInfo[5]->Required = false;
+        if ($this->FProperties->ContainsKey('Case')) {
+            $mInfo[5]->Value = $this->FProperties['Case'];
+        }
+        else {
+            $mInfo[5]->Value = 'Natrual';
+        }
+        
+        $mInfo[6] = new TDriverPropertyInfo();
+        $mInfo[6]->Choices = array ();
+        $mInfo[6]->Description = 'Maximum buffer size, in bytes. Defaults to 1 MiB.';
+        $mInfo[6]->Name = 'MaxBufferSize';
+        $mInfo[6]->Required = false;
+        if ($this->FProperties->ContainsKey('MaxBufferSize')) {
+            $mInfo[6]->Value = $this->FProperties['MaxBufferSize'];
+        }
+        else {
+            $mInfo[6]->Value = '1048576';
+        }
+        
+        return $mInfo;
     }
 
     /**
@@ -1655,6 +1736,44 @@ final class TPdoStatement implements IStatement {
         catch (PDOException $Ex) {
             TAbstractPdoConnection::PushWarning(ESetCommandFailed::ClassType(), $Ex, $this->FConnection);
         }
+    }
+
+}
+
+/**
+ * TPdoPreparedStatement
+ * @author	许子健
+ */
+class TPdoPreparedStatement extends TPdoStatement implements IPreparedStatement {
+
+    /**
+     * descHere
+     * @param	string	$Name
+     * @param	IParam	$Param <T: ?>
+     */
+    public function BindParam($Name, $Param) {
+    }
+
+    /**
+     * descHere
+     */
+    public function ClearParams() {
+    }
+
+}
+
+/**
+ * TPdoCallableStatement
+ * @author	许子健
+ */
+class TPdoCallableStatement extends TPdoPreparedStatement implements ICallableStatement {
+
+    /**
+     * descHere
+     * @param	string	$Name
+     * @return	IParam <T: ?>
+     */
+    public function GetParam($Name) {
     }
 
 }

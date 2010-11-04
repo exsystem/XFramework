@@ -26,6 +26,15 @@ class EFailedToConnectDb extends EDatabaseException {
     const CMsg = 'Failed to connect the database: ';
 }
 /**
+ * @author 许子健
+ */
+class EInsufficientProperties extends EDatabaseException {
+    /**
+     * @var	string
+     */
+    const CMsg = 'The following fields are required: ';
+}
+/**
  * 
  * @author 许子健
  */

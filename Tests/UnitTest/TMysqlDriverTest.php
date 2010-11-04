@@ -89,8 +89,8 @@ class TMysqlDriverTest extends PHPUnit_Framework_TestCase {
         TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'string'));
         $mProps = new TMap();
         $mProps['Username'] = 'root';
-        //$mProps['Password'] = '';
-        $mConn = $this->TMysqlDriver->Connect('MySQL://localhost/test', $mProps);
+        $mProps['Password'] = '';
+        $mConn = $this->TMysqlDriver->Connect('MySQL://127.0.0.1/test', $mProps);
         $mVersion = $this->TMysqlDriver->getVersion();
         $mConn->Disconnect();
         logging("{$mVersion->MajorVersion}.{$mVersion->MinorVersion}.{$mVersion->Build} Rev.{$mVersion->Revision}");
