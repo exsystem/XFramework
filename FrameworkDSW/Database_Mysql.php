@@ -10,13 +10,66 @@ require_once 'FrameworkDSW/Database.php';
 require_once 'FrameworkDSW/Containers.php';
 
 /**
+ * TMysqlWarningContext
+ * @author	许子健
+ */
+class TMysqlWarningContext extends TObject implements IDatabaseWarningContext {
+    
+    /**
+     * @var	string
+     */
+    private $FErrorMessage = '';
+    /**
+     * @var	string
+     */
+    private $FErrorCode = '';
+    /**
+     * @var	string
+     */
+    private $FSqlState = '';
+
+    /**
+     * descHere
+     * @param	string	$SqlState
+     * @param	string	$ErrorCode
+     * @param	string	$ErrorMessage
+     */
+    public function __construct($SqlState, $ErrorCode, $ErrorMessage) {
+        TType::String($SqlState);
+        TType::String($ErrorCode);
+        TType::String($ErrorMessage);
+        
+        $this->FSqlState = $SqlState;
+        $this->FErrorCode = $ErrorCode;
+        $this->FErrorMessage = $ErrorMessage;
+    }
+
+    /**
+     * descHere
+     * @return	string
+     */
+    public function getErrorCode() {
+        return $this->FErrorCode;
+    }
+
+    /**
+     * descHere
+     * @return	string
+     */
+    public function getSqlState() {
+        return $this->FSqlState;
+    }
+
+    //TODO how to deal with the error message?
+}
+
+/**
  * TMysqlDriver
  * @author	许子健
  */
-final class TMysqlDriver extends TAbstractPdoDriver implements IDriver {
+final class TMysqlDriver extends TObject implements IDriver {
+    
     /**
-     * 
-     * Enter description here ...
      * @var	string
      */
     const CInvalidServer = 'Bad form of the server string.';
@@ -24,161 +77,338 @@ final class TMysqlDriver extends TAbstractPdoDriver implements IDriver {
     /**
      * 
      * Enter description here ...
-     * @var	PDO
+     * @var	string
      */
-    private $FPdo = null;
+    private $FServer = '';
+    
+    /**
+     * 
+     * Enter description here ...
+     * @var	integer
+     */
+    private $FPort = 3306;
+    
+    /**
+     * 
+     * Enter description here ...
+     * @var	string
+     */
+    private $FDbName = '';
+    
+    /**
+     * 
+     * Enter description here ...
+     * @var	string
+     */
+    private $FSocket = '';
+    
+    /**
+     * @var	TMap <K: string, V: string>
+     */
+    private $FProperties = null;
+    
+    /**
+     * 
+     * Enter description here ...
+     * @var array
+     */
+    private $FMysqliOptions = array ();
+    
+    /**
+     * 
+     * Enter description here ...
+     * @var	integer
+     */
+    private $FMysqliFlags = 0;
+    
+    /**
+     * 
+     * Enter description here ...
+     * @var	mysqli
+     */
+    private $FMysqli = null;
 
     /**
-     * (non-PHPdoc)
-     * @see TAbstractPdoDriver::ConvertProperties()
+     * 
+     * Enter description here ...
      */
     protected function ConvertProperties() {
-        parent::ConvertProperties();
-        
-        if ($this->FProperties->ContainsKey('MaxBufferSize')) {
-            $this->FPdoOptions[PDO::MYSQL_ATTR_MAX_BUFFER_SIZE] = (integer) $this->FProperties['MaxBufferSize'];
+        if ($this->FProperties === null) {
+            return;
         }
-        //TODO: observe and add other MySQL specific available options. 
-        $this->FPdoOptions[PDO::MYSQL_ATTR_INIT_COMMAND] = 'SET NAMES UTF8';
+        
+        if ($this->FProperties->ContainsKey('Socket')) {
+            $this->FSocket = $this->FProperties['Socket'];
+        }
+        
+        if ($this->FProperties->ContainsKey('ConnectTimeout')) {
+            $this->$FMysqliOptions[MYSQLI_OPT_CONNECT_TIMEOUT] = (integer) $this->FProperties['ConnectTimeout'];
+        }
+        if ($this->FProperties->ContainsKey('LocalInfileEnabled')) {
+            $this->$FMysqliOptions[MYSQLI_OPT_LOCAL_INFILE] = $this->FProperties['LocalInfileEnabled'] == 'True';
+        }
+        if ($this->FProperties->ContainsKey('ReadDefaultFile')) {
+            $this->$FMysqliOptions[MYSQLI_READ_DEFAULT_FILE] = $this->FProperties['ReadDefaultFile'];
+        }
+        if ($this->FProperties->ContainsKey('ReadDefaultGroup')) {
+            $this->$FMysqliOptions[MYSQLI_READ_DEFAULT_GROUP] = $this->FProperties['ReadDefaultGroup'];
+        }
+        
+        if ($this->FProperties->ContainsKey('ClientCompress') && $this->FProperties['ClientCompress'] == 'True') {
+            $this->FMysqliFlags += MYSQLI_CLIENT_COMPRESS;
+        }
+        if ($this->FProperties->ContainsKey('FoundRows') && $this->FProperties['FoundRows'] == 'True') {
+            $this->FMysqliFlags += MYSQLI_CLIENT_FOUND_ROWS;
+        }
+        if ($this->FProperties->ContainsKey('IgnoreSpace') && $this->FProperties['IgnoreSpace'] == 'True') {
+            $this->FMysqliFlags += MYSQLI_CLIENT_IGNORE_SPACE;
+        }
+        if ($this->FProperties->ContainsKey('Interactive') && $this->FProperties['Interactive'] == 'True') {
+            $this->FMysqliFlags += MYSQLI_CLIENT_INTERACTIVE;
+        }
+        if ($this->FProperties->ContainsKey('Ssl') && $this->FProperties['Ssl'] == 'True') {
+            $this->FMysqliFlags += MYSQLI_CLIENT_SSL;
+        }
+        
+        //TODO: observe and add other PDO common available options.
+        $this->$FMysqliOptions[MYSQLI_INIT_COMMAND] = 'SET NAMES UTF8';
     }
 
     /**
      * descHere
+     * @param	string	$Url
+     * @param	IMap <K: string, V: string>	$Properties
      * @return	IConnection
      */
-    protected function DoConnect() {
-        $mTemp = explode(':', $this->FServer, 2);
-        if (count($mTemp) != 2) {
-            $mHost = $this->FServer;
-        }
-        else {
-            list ($mHost, $mPort) = $mTemp;
-            $mPort = (string) $mPort;
-            if ("{$mHost}:{$mPort}" != $this->FServer) {
-                throw new EFailedToConnectDb(self::CInvalidServer);
+    public function Connect($Url, $Properties) {
+        TType::String($Url);
+        TType::Type($Properties, array ('IMap' => array ('K' => 'string', 'V' => 'string')));
+        
+        $this->FProperties = $Properties;
+        if ($this->ValidateUrl($Url)) {
+            $this->ConvertProperties();
+            try {
+                $this->FMysqli = new mysqli();
+                foreach ($this->FMysqliOptions as $mKey => &$mValue) {
+                    if (!$this->FMysqli->options($mKey, $mValue)) {
+                        throw new EFailedToConnectDb(EFailedToConnectDb::CMsg . $Url);
+                    }
+                }
+                if (!$this->FMysqli->real_connect($this->FServer, $this->FProperties['Username'], $this->FProperties['Password'], $this->FDbName, $this->FPort, $this->FSocket, $this->FMysqliFlags)) {
+                    throw new EFailedToConnectDb(EFailedToConnectDb::CMsg . $Url);
+                }
             }
+            catch (EIndexOutOfBounds $Ex) {
+                throw new EInsufficientProperties(EInsufficientProperties::CMsg . 'Username, Password.');
+            }
+            
+            return new TMysqlConnection($this, $this->FMysqli);
         }
-        $this->ConvertProperties();
-        try {
-            $this->FPdo = new PDO("mysql:dbname={$this->FDbName};host={$this->FServer}", $this->FProperties['Username'], $this->FProperties['Password'], $this->FPdoOptions);
-        }
-        catch (PDOException $Ex) {
-            throw new EFailedToConnectDb(self::CInvalidServer);
-        }
-        catch (EIndexOutOfBounds $Ex) {
-            throw new EInsufficientProperties(EInsufficientProperties::CMsg . 'Username, Password.');
-        }
-        return new TMysqlConnection($this, $this->FPdo);
+        throw new EFailedToConnectDb(EFailedToConnectDb::CMsg . $Url);
     }
 
     /**
      * descHere
+     * @param	string	$Url
+     * @param	IMap <K: string, V: string>	$Properties
      * @return	TDriverPropertyInfo[]
      */
-    protected function DoGetPropertyInfo() {
-        $mInfo = array ();
+    public function GetPropertyInfo($Url, $Properties) {
+        TType::String($Url);
+        TType::Type($Properties, array ('IMap' => array ('K' => 'string', 'V' => 'string')));
         
-        $mInfo[0] = new TDriverPropertyInfo();
-        $mInfo[0]->Choices = array ();
-        $mInfo[0]->Description = 'Specify which user to connect the database.';
-        $mInfo[0]->Name = 'Username';
-        $mInfo[0]->Required = true;
-        $mInfo[0]->Value = $this->FProperties['Username'];
-        
-        $mInfo[1] = new TDriverPropertyInfo();
-        $mInfo[1]->Choices = array ();
-        $mInfo[1]->Description = 'The password of the user. Use an empty string for empty password.';
-        $mInfo[1]->Name = 'Password';
-        $mInfo[1]->Required = true;
-        $mInfo[1]->Value = $this->FProperties['Password'];
-        
-        $mInfo[2] = new TDriverPropertyInfo();
-        $mInfo[2]->Choices = array ('True', 'False');
-        $mInfo[2]->Description = 'If this value is false, the MySQL connection attempts to disable autocommit so that the connection begins a transaction.';
-        $mInfo[2]->Name = 'AutoCommit';
-        $mInfo[2]->Required = false;
-        if ($this->FProperties->ContainsKey('AutoCommit')) {
-            $mInfo[2]->Value = $this->FProperties['AutoCommit'];
-        }
-        else {
-            $mInfo[2]->Value = 'True';
-        }
-        
-        $mInfo[3] = new TDriverPropertyInfo();
-        $mInfo[3]->Choices = array ();
-        $mInfo[3]->Description = 'Sets the timeout value in seconds for communications with the database.';
-        $mInfo[3]->Name = 'Timeout';
-        $mInfo[3]->Required = false;
-        if ($this->FProperties->ContainsKey('Timeout')) {
-            $mInfo[3]->Value = $this->FProperties['Timeout'];
-        }
-        else {
+        if ($this->ValidateUrl($Url)) {
+            $this->FProperties = $Properties;
+            
+            $mInfo = array ();
+            
+            $mInfo[0] = new TDriverPropertyInfo();
+            $mInfo[0]->Choices = array ();
+            $mInfo[0]->Description = 'Specify which user to connect the database.';
+            $mInfo[0]->Name = 'Username';
+            $mInfo[0]->Required = true;
+            $mInfo[0]->Value = $this->FProperties['Username'];
+            
+            $mInfo[1] = new TDriverPropertyInfo();
+            $mInfo[1]->Choices = array ();
+            $mInfo[1]->Description = 'The password of the user. Use an empty string for empty password.';
+            $mInfo[1]->Name = 'Password';
+            $mInfo[1]->Required = true;
+            $mInfo[1]->Value = $this->FProperties['Password'];
+            
+            $mInfo[2] = new TDriverPropertyInfo();
+            $mInfo[2]->Choices = array ();
+            $mInfo[2]->Description = 'Specifies the socket or named pipe that should be used.';
+            $mInfo[2]->Name = 'Socket';
+            $mInfo[2]->Required = false;
+            if ($this->FProperties->ContainsKey('Socket')) {
+                $mInfo[2]->Value = $this->FProperties['Socket'];
+            }
+            else {
+                $mInfo[2]->Value = '';
+            }
+            
+            $mInfo[3] = new TDriverPropertyInfo();
+            $mInfo[3]->Choices = array ();
+            $mInfo[3]->Description = 'Connection timeout in seconds. (supported on Windows with TCP/IP since PHP 5.3.1)';
+            $mInfo[3]->Name = 'ConnectTimeout';
+            $mInfo[3]->Required = false;
+            if ($this->FProperties->ContainsKey('ConnectTimeout')) {
+                $mInfo[3]->Value = $this->FProperties['ConnectTimeout'];
+            }
+            else {
+                $mInfo[3]->Value = '0';
+            }
             $mInfo[3]->Value = '0';
+            
+            $mInfo[4] = new TDriverPropertyInfo();
+            $mInfo[4]->Choices = array ('True', 'False');
+            $mInfo[4]->Description = 'Enable/disable use of LOAD LOCAL INFILE.';
+            $mInfo[4]->Name = 'LocalInfileEnabled';
+            $mInfo[4]->Required = false;
+            if ($this->FProperties->ContainsKey('LocalInfileEnabled')) {
+                $mInfo[4]->Value = $this->FProperties['LocalInfileEnabled'];
+            }
+            else {
+                $mInfo[4]->Value = 'False';
+            }
+            
+            $mInfo[5] = new TDriverPropertyInfo();
+            $mInfo[5]->Choices = array ();
+            $mInfo[5]->Description = 'Read options from named option file instead of my.cnf.';
+            $mInfo[5]->Name = 'ReadDefaultFile';
+            $mInfo[5]->Required = false;
+            if ($this->FProperties->ContainsKey('ReadDefaultFile')) {
+                $mInfo[5]->Value = $this->FProperties['ReadDefaultFile'];
+            }
+            else {
+                $mInfo[5]->Value = '';
+            }
+            
+            $mInfo[6] = new TDriverPropertyInfo();
+            $mInfo[6]->Choices = array ();
+            $mInfo[6]->Description = 'Read options from the named group from my.cnf or the file specified with ReadDefaultFile.';
+            $mInfo[6]->Name = 'ReadDefaultGroup';
+            $mInfo[6]->Required = false;
+            if ($this->FProperties->ContainsKey('ReadDefaultGroup')) {
+                $mInfo[6]->Value = $this->FProperties['ReadDefaultGroup'];
+            }
+            else {
+                $mInfo[6]->Value = '';
+            }
+            
+            $mInfo[7] = new TDriverPropertyInfo();
+            $mInfo[7]->Choices = array ('True', 'False');
+            $mInfo[7]->Description = 'Use compression protocol.';
+            $mInfo[7]->Name = 'ClientCompress';
+            $mInfo[7]->Required = false;
+            if ($this->FProperties->ContainsKey('ClientCompress')) {
+                $mInfo[7]->Value = $this->FProperties['ClientCompress'];
+            }
+            else {
+                $mInfo[7]->Value = 'False';
+            }
+            
+            $mInfo[8] = new TDriverPropertyInfo();
+            $mInfo[8]->Choices = array ('True', 'False');
+            $mInfo[8]->Description = 'Return number of matched rows, not the number of affected rows.';
+            $mInfo[8]->Name = 'FoundRows';
+            $mInfo[8]->Required = false;
+            if ($this->FProperties->ContainsKey('FoundRows')) {
+                $mInfo[8]->Value = $this->FProperties['FoundRows'];
+            }
+            else {
+                $mInfo[8]->Value = 'False';
+            }
+            
+            $mInfo[9] = new TDriverPropertyInfo();
+            $mInfo[9]->Choices = array ('True', 'False');
+            $mInfo[9]->Description = 'Allow spaces after function names. Makes all function names reserved words.';
+            $mInfo[9]->Name = 'IgnoreSpace';
+            $mInfo[9]->Required = false;
+            if ($this->FProperties->ContainsKey('IgnoreSpace')) {
+                $mInfo[9]->Value = $this->FProperties['IgnoreSpace'];
+            }
+            else {
+                $mInfo[9]->Value = 'False';
+            }
+            
+            $mInfo[10] = new TDriverPropertyInfo();
+            $mInfo[10]->Choices = array ('True', 'False');
+            $mInfo[10]->Description = 'Allow interactive_timeout seconds (instead of wait_timeout seconds) of inactivity before closing the connection.';
+            $mInfo[10]->Name = 'Interactive';
+            $mInfo[10]->Required = false;
+            if ($this->FProperties->ContainsKey('Interactive')) {
+                $mInfo[10]->Value = $this->FProperties['Interactive'];
+            }
+            else {
+                $mInfo[10]->Value = 'False';
+            }
+            
+            $mInfo[11] = new TDriverPropertyInfo();
+            $mInfo[11]->Choices = array ('True', 'False');
+            $mInfo[11]->Description = 'Use SSL (encryption).';
+            $mInfo[11]->Name = 'Ssl';
+            $mInfo[11]->Required = false;
+            if ($this->FProperties->ContainsKey('Ssl')) {
+                $mInfo[11]->Value = $this->FProperties['Ssl'];
+            }
+            else {
+                $mInfo[11]->Value = 'False';
+            }
+            
+            return $mInfo;
         }
-        $mInfo[3]->Value = '0';
-        
-        $mInfo[4] = new TDriverPropertyInfo();
-        $mInfo[4]->Choices = array ();
-        $mInfo[4]->Description = 'Setting the prefetch size allows you to balance speed against memory usage for your application. Not all database/driver combinations support setting of the prefetch size. A larger prefetch size results in increased performance at the cost of higher memory usage.';
-        $mInfo[4]->Name = 'Prefetch';
-        $mInfo[4]->Required = false;
-        if ($this->FProperties->ContainsKey('Prefetch')) {
-            $mInfo[4]->Value = $this->FProperties['Prefetch'];
-        }
-        else {
-            $mInfo[4]->Value = '0';
-        }
-        
-        $mInfo[5] = new TDriverPropertyInfo();
-        $mInfo[5]->Choices = array ('Natrual', 'Upper', 'Lower');
-        $mInfo[5]->Description = 'Force column names to a specific case specified.';
-        $mInfo[5]->Name = 'Case';
-        $mInfo[5]->Required = false;
-        if ($this->FProperties->ContainsKey('Case')) {
-            $mInfo[5]->Value = $this->FProperties['Case'];
-        }
-        else {
-            $mInfo[5]->Value = 'Natrual';
-        }
-        
-        $mInfo[6] = new TDriverPropertyInfo();
-        $mInfo[6]->Choices = array ();
-        $mInfo[6]->Description = 'Maximum buffer size, in bytes. Defaults to 1 MiB.';
-        $mInfo[6]->Name = 'MaxBufferSize';
-        $mInfo[6]->Required = false;
-        if ($this->FProperties->ContainsKey('MaxBufferSize')) {
-            $mInfo[6]->Value = $this->FProperties['MaxBufferSize'];
-        }
-        else {
-            $mInfo[6]->Value = '1048576';
-        }
-        
-        return $mInfo;
+        throw new EFailedToGetDbPropertyInfo(EFailedToGetDbPropertyInfo::CMsg);
     }
 
     /**
      * descHere
      * @return	TVersion
      */
-    protected function DoGetVersion() {
-        if ($this->FPdo === null) {
-            throw new EDisconnected();
-        }
+    public function getVersion() {
         $mVer = new TVersion();
         $mDummy = '';
-        sscanf($this->FPdo->getAttribute(PDO::ATTR_CLIENT_VERSION), 'mysqlnd %d.%d.%d-dev - %s - $Revision: %d $', $mVer->MajorVersion, $mVer->MinorVersion, $mVer->Build, $mDummy, $mVer->Revision);
+        sscanf(mysqli_get_client_info(), 'mysqlnd %d.%d.%d-dev - %s - $Revision: %d $', $mVer->MajorVersion, $mVer->MinorVersion, $mVer->Build, $mDummy, $mVer->Revision);
         return $mVer;
     }
 
     /**
      * descHere
+     * @param	string	$Url
      * @return	boolean
      */
-    protected function DoValidateUrl() {
-        if ($this->FProtocol != 'MySQL') {
+    public function ValidateUrl($Url) {
+        TType::String($Url);
+        
+        $mTemp = explode('://', $Url, 2);
+        if (count($mTemp) != 2) {
             return false;
         }
-        return true;
+        list ($mProtocol, $mServer) = $mTemp;
+        $mTemp = explode('/', $mServer, 2);
+        if (count($mTemp) != 2) {
+            return false;
+        }
+        list ($mServer, $mDbName) = $mTemp;
+        $mTemp = explode(':', $mServer, 2);
+        if (count($mTemp) == 2) {
+            list ($mServer, $mPort) = $mTemp;
+        }
+        if (count($mTemp) == 1) {
+            list ($mServer) = $mTemp;
+            $mPort = 3306;
+        }
+        else {
+            return false;
+        }
+        if ($mProtocol == 'MySQL' && $mServer != '' && $mDbName != '') {
+            $this->FServer = $mServer;
+            $this->FPort = (integer) $mPort;
+            $this->FDbName = $mDbName;
+            return true;
+        }
+        return false;
     }
 }
 
@@ -186,7 +416,49 @@ final class TMysqlDriver extends TAbstractPdoDriver implements IDriver {
  * TMysqlConnection
  * @author	许子健
  */
-final class TMysqlConnection extends TAbstractPdoConnection implements IConnection {
+final class TMysqlConnection extends TObject implements IConnection {
+    /**
+     * @var	string
+     */
+    const CCatalogUnsupported = 'Catalog is not supported by MySQL driver.';
+    /**
+     * @var	string
+     */
+    const CHoldabilityUnsupported = 'Holdability is not supported by MySQL driver.';
+    /**
+     * @var	string
+     */
+    const CNullDriverOrMysqliObj = 'The driver or/and the mysqli object given is null.';
+    /**
+     * @var	string
+     */
+    const CReadOnlyUnsupported = 'ReadOnly is not supported by MySQL driver.';
+    
+    /**
+     * 
+     * Enter description here ...
+     * @var	TMysqlDriver
+     */
+    private $FDriver = null;
+    /**
+     * 
+     * Enter description here ...
+     * @var	mysqli
+     */
+    private $FMysqli = null;
+    /**
+     * 
+     * Enter description here ...
+     * @var	boolean
+     */
+    private $FIsConnected = false;
+    /**
+     * 
+     * Enter description here ...
+     * @var	EDatabaseWarning
+     */
+    private $FWarnings = null;
+    
     /**
      * 
      * Enter description here ...
@@ -195,81 +467,327 @@ final class TMysqlConnection extends TAbstractPdoConnection implements IConnecti
     private $FMetaData = null;
 
     /**
+     * 
+     * Enter description here ...
+     */
+    private function EnsureConnected() {
+        if (!$this->FIsConnected) {
+            throw new EDisconnected();
+        }
+    }
+
+    /**
+     * 
+     * Enter description here ...
+     * @param	string	$QueryString
+     * @param	string	$ExceptionType
+     */
+    private function EnsureQuery($QueryString, $ExceptionType) {
+        if (!$this->FMysqli->query($QueryString)) {
+            self::PushWarning($ExceptionType, $this->FMysqli->sqlstate, $this->FMysqli->errno, $this->FMysqli->error, $this);
+        }
+    }
+
+    /**
+     * 
+     * Enter description here ...
+     * @param	TMysqlDriver	$Driver
+     * @param	mysqli			$Mysqli
+     */
+    public function __construct($Driver, $Mysqli) {
+        TType::Object($Driver, 'TMysqlDriver');
+        
+        if ($Driver !== null && $Mysqli !== null) {
+            $this->FDriver = $Driver;
+            $this->FMysqli = $Mysqli;
+            $this->FIsConnected = true;
+        }
+        else {
+            $this->FIsConnected = false;
+            throw new EIsNotNullable(self::CNullDriverOrMysqliObj);
+        }
+    }
+
+    /**
+     * 
+     * Enter description here ...
+     * @param	string	$WarningType
+     * @param	string	$SqlState
+     * @param	string	$ErrorCode
+     * @param	string	$ErrorMessage
+     * @param	TMysqlConnection	$Connection
+     */
+    public static function PushWarning($WarningType, $SqlState, $ErrorCode, $ErrorMessage, $Connection) {
+        TType::String($WarningType);
+        TType::String($SqlState);
+        TType::String($ErrorCode);
+        TType::String($ErrorMessage);
+        TType::Object($Connection, 'TMysqlConnection');
+        
+        $mWarning = new $WarningType(new TMysqlWarningContext($SqlState, $ErrorCode, $ErrorMessage));
+        $mWarning->setNextWarning($Connection->FWarnings);
+        $Connection->FWarnings = $mWarning;
+        throw $mWarning;
+    }
+
+    /**
+     * descHere
+     */
+    public function ClearWarnings() {
+        $this->EnsureConnected();
+        while ($this->FWarnings !== null) {
+            $mCurr = $this->FWarnings->getNextWarning();
+            Framework::Free($this->FWarnings);
+            $this->FWarnings = $mCurr;
+        }
+    }
+
+    /**
+     * descHere
+     */
+    public function Commit() {
+        $this->EnsureConnected();
+        if (!$this->FMysqli->commit()) {
+            self::PushWarning(ECommitFailed::ClassType(), '', '', '', $this);
+        }
+    }
+
+    /**
+     * descHere
+     * @param	string	$Name
+     * @return	ISavepoint
+     */
+    public function CreateSavepoint($Name = '') {
+        TType::String($Name);
+        
+        $this->EnsureConnected();
+        $mSavepoint = new TSavepoint($Name);
+        $this->EnsureQuery("SAVEPOINT {$mSavepoint->getProperName()}", ECreateSavepointFailed::ClassType());
+        return $mSavepoint;
+    }
+
+    /**
      * descHere
      * @param	TResultSetType	$ResultSetType
      * @param	TConcurrencyType	$ConcurrencyType
      * @return	IStatement
      */
-    protected function DoCreateStatement($ResultSetType, $ConcurrencyType) { //add extra mysqllink here.
-        return new TPdoStatement($this, $this->FPdo, $ResultSetType, $ConcurrencyType);
+    public function CreateStatement($ResultSetType, $ConcurrencyType) {
+        TType::Object($ResultSetType, 'TResultSetType');
+        TType::Object($ConcurrencyType, 'TConcurrencyType');
+        
+        $this->EnsureConnected();
+    
+     //TODO: check if params are supported first.
+    //TODO: return a statement
+    }
+
+    /**
+     * descHere
+     */
+    public function Disconnect() {
+        $this->FMysqli->close();
+        $this->FMysqli = null;
+        Framework::Free($this->FDriver);
+        $this->FIsConnected = false;
+    }
+
+    /**
+     * descHere
+     * @param	string	$SqlStatement
+     * @return	integer
+     */
+    public function Execute($SqlStatement) {
+        TType::String($SqlStatement);
+        $this->EnsureConnected();
+        
+        $this->EnsureQuery($SqlStatement, EExecuteFailed::ClassType());
+        return $this->FMysqli->affected_rows;
+    }
+
+    /**
+     * descHere
+     * @return	boolean
+     */
+    public function getAutoCommit() {
+        $this->EnsureConnected();
+        $mRaw = $this->FMysqli->query('SELECT @@autocommit');
+        if (!$mRaw) {
+            self::PushWarning(EExecuteFailed::ClassType(), $this->FMysqli->sqlstate, $this->FMysqli->errno, $this->FMysqli->error, $this);
+        }
+        $mRaw = $mRaw->fetch_row();
+        return (boolean) $mRaw[0];
+    }
+
+    /**
+     * descHere
+     * @return	string
+     */
+    public function getCatalog() {
+        return '';
     }
 
     /**
      * descHere
      * @return	THoldability
      */
-    protected function DoGetHoldability() {
-        return THoldability::eCloseCursorsAtCommit();
+    public function getHoldability() {
+        $this->EnsureConnected();
+        return THoldability::eCloseCursorsAtCommit(); //TODO: really?
+    }
+
+    /**
+     * descHere
+     * @return	boolean
+     */
+    public function getIsConnected() {
+        return $this->FIsConnected;
+    }
+
+    /**
+     * descHere
+     * @return	IDatabaseMetaData
+     */
+    public function getMetaData() {
+        if ($this->FMetaData === null) {
+            $this->FMetaData = new TMysqlDatabaseMetaData($this);
+        }
+        return $this->FMetaData;
+    }
+
+    /**
+     * descHere
+     * @return	boolean
+     */
+    public function getReadOnly() {
+        return false;
+    }
+
+    /**
+     * descHere
+     * @return	TTransactionIsolationLevel
+     */
+    public function getTransactionIsolation() {
+        $mLevel = $this->FMysqli->query('SELECT @@tx_isolation');
+        if (!$mLevel) {
+            self::PushWarning(EExecuteFailed::ClassType(), $this->FMysqli->sqlstate, $this->FMysqli->errno, $this->FMysqli->error, $this);
+        }
+        $mLevel = $mLevel->fetch_row();
+        $mLevel = (string) $mLevel[0];
+        
+        switch ($mLevel) {
+            case 'READ-UNCOMMITTED' :
+                return TTransactionIsolationLevel::eReadUncommitted();
+            case 'READ-COMMITTED' :
+                return TTransactionIsolationLevel::eReadCommitted();
+            case 'REPEATABLE-READ' :
+                return TTransactionIsolationLevel::eRepeatableRead();
+            case 'SERIALIZABLE' :
+                return TTransactionIsolationLevel::eSerializable();
+        }
+    }
+
+    /**
+     * descHere
+     * @return	EDatabaseWarning
+     */
+    public function getWarnings() {
+        $this->EnsureConnected();
+        return $this->FWarnings;
     }
 
     /**
      * descHere
      * @param	TResultSetType	$ResultSetType
      * @param	TConcurrencyType	$ConcurrencyType
-     * @return	IStatement
+     * @param	THoldability	$Holdability
+     * @return	IPreparedStatement
      */
-    protected function DoPrepareStatement($ResultSetType, $ConcurrencyType) {
+    public function PrepareStatement($ResultSetType, $ConcurrencyType) {
+        TType::Object($ResultSetType, 'TResultSetType');
+        TType::Object($ConcurrencyType, 'TConcurrencyType');
+        
+        $this->EnsureConnected();
+    
+     //TODO: check if the params are supported first. 
+    //TODO: return a statement
     }
 
     /**
      * descHere
      * @param	ISavepoint	$Savepoint
      */
-    protected function DoRemoveSavepoint($Savepoint) {
-        $mId = $Savepoint->getId();
-        try {
-            $this->FPdo->exec("RELEASE SAVEPOINT {$mId}");
-        }
-        catch (PDOException $Ex) {
-            self::PushWarning(EExecuteFailed::ClassType(), $Ex, $this);
-        }
+    public function RemoveSavepoint($Savepoint) {
+        TType::Object($Savepoint, 'TSavepoint');
+        $mName = $Savepoint->getProperName();
+        $this->EnsureQuery("RELEASE SAVEPOINT {$mName}", EExecuteFailed::ClassType());
     }
 
     /**
      * descHere
      * @param	ISavepoint	$Savepoint
      */
-    protected function DoRollback($Savepoint = null) {
-        try {
-            if ($Savepoint !== null) {
-                $mId = $Savepoint->getId();
-                $this->FPdo->exec("ROLLBACK {$mId}");
-            }
-            else {
-                $this->FPdo->exec('ROLLBACK');
-            }
+    public function Rollback($Savepoint = null) {
+        TType::Object($Savepoint, 'TSavepoint');
+        $this->EnsureConnected();
+        if ($Savepoint !== null) {
+            $mName = $Savepoint->getProperName();
+            $mQueryString = "ROLLBACK {$mName}";
         }
-        catch (PDOException $Ex) {
-            self::PushWarning(ERollbackFailed::ClassType(), $Ex, $this);
+        else {
+            $mQueryString = 'ROLLBACK';
         }
+        $this->EnsureQuery($mQueryString, EExecuteFailed::ClassType());
+    
+    }
+
+    /**
+     * descHere
+     * @param	boolean	$Value
+     */
+    public function setAutoCommit($Value) {
+        TType::Bool($Value);
+        $this->EnsureConnected();
+        if (!$this->FMysqli->autocommit($Value)) {
+            self::PushWarning(EExecuteFailed::ClassType(), $this->FMysqli->sqlstate, $this->FMysqli->errno, $this->FMysqli->error, $this);
+        }
+    }
+
+    /**
+     * descHere
+     * @param	string	$Value
+     */
+    public function setCatalog($Value) {
+        TType::String($Value);
+        throw new EUnsupportedDbFeature(self::CCatalogUnsupported);
     }
 
     /**
      * descHere
      * @param	THoldability	$Value
      */
-    protected function DoSetHoldability($Value) {
+    public function setHoldability($Value) {
         TType::Object($Value, 'THoldability');
         if ($Value == THoldability::eHoldCursorsOverCommit()) {
-            throw new EUnsupportedDbFeature(TAbstractPdoConnection::CHoldabilityUnsupported);
+            throw new EUnsupportedDbFeature(self::CHoldabilityUnsupported);
         }
+    }
+
+    /**
+     * descHere
+     * @param	boolean	$Value
+     */
+    public function setReadOnly($Value) {
+        TType::Bool($Value);
+        throw new EUnsupportedDbFeature(self::CReadOnlyUnsupported);
     }
 
     /**
      * descHere
      * @param	TTransactionIsolation	$Value
      */
-    protected function DoSetTransactionIsolation($Value) {
+    public function setTransactionIsolation($Value) {
+        TType::Object($Value, 'TTransactionIsolationLevel');
         switch ($Value) {
             case TTransactionIsolationLevel::eReadCommitted() :
                 $mSql = 'SET TRANSACTION ISOLATION LEVEL READ COMMITTED';
@@ -286,44 +804,91 @@ final class TMysqlConnection extends TAbstractPdoConnection implements IConnecti
             case TTransactionIsolationLevel::eNone() :
                 throw new EUnsupportedDbFeature(TAbstractPdoConnection::CTransactionIsolationUnsupported);
         }
-        $this->FPdo->exec($mSql);
+        $this->EnsureQuery($mSql, EExecuteFailed::ClassType());
+    }
+}
+
+/**
+ * TMysqlStatement
+ * @author	许子健
+ */
+class TMysqlStatement extends TObject implements IStatement {
+
+    /**
+     * descHere
+     * @param	string	$Command
+     * @return	integer
+     */
+    public function Execute($Command = '') {
     }
 
     /**
      * descHere
-     * @return	IDatabaseMetaData
+     * @return	integer[]
      */
-    public function getMetaData() {
-        if ($this->FMetaData === null) {
-            $this->FMetaData = new TMysqlDatabaseMetaData($this);
-        }
-        return $this->FMetaData;
+    public function ExecuteCommands() {
     }
 
     /**
      * descHere
-     * @return	TTransactionIsolationLevel
+     * @return	IParam <T: ?>
      */
-    public function getTransactionIsolation() {
-        $mLevel = (string) $this->FPdo->query('SELECT @@tx_isolation')->fetchColumn(0);
-        switch ($mLevel) {
-            case 'READ-UNCOMMITTED' :
-                return TTransactionIsolationLevel::eReadUncommitted();
-            case 'READ-COMMITTED' :
-                return TTransactionIsolationLevel::eReadCommitted();
-            case 'REPEATABLE-READ' :
-                return TTransactionIsolationLevel::eRepeatableRead();
-            case 'SERIALIZABLE' :
-                return TTransactionIsolationLevel::eSerializable();
-        }
+    public function FetchAsScalar() {
+    }
+
+    /**
+     * descHere
+     * @return	IList <T: string>
+     */
+    public function getCommands() {
+    }
+
+    /**
+     * descHere
+     * @return	IConnection
+     */
+    public function getConnection() {
+    }
+
+    /**
+     * descHere
+     * @return	IResultSet
+     */
+    public function GetCurrentResult() {
+    }
+
+    /**
+     * descHere
+     * @param	integer	$Index
+     * @return	IResultSet
+     */
+    public function getResult($Index) {
+    }
+
+    /**
+     * descHere
+     * @param	TCurrentResultOption	$Options
+     */
+    public function NextResult($Options) {
+    }
+
+    /**
+     * descHere
+     * @param	string	$Command
+     * @return	IResultSet
+     */
+    public function Query($Command = '') {
+    }
+
+    /**
+     * descHere
+     * @param	string	$Value
+     */
+    public function setCommand($Value) {
     }
 
 }
 
-/**
- * TMysqlDatabaseMetaData
- * @author	许子健
- */
 final class TMysqlDatabaseMetaData implements IDatabaseMetaData { //TODO: pending...
     /**
      * 
@@ -1509,271 +2074,6 @@ final class TMysqlDatabaseMetaData implements IDatabaseMetaData { //TODO: pendin
      * @return	string
      */
     public function UsesLocalFilesPerTable() {
-    }
-
-}
-/**
- * TPdoStatement
- * @author	许子健
- */
-final class TPdoStatement implements IStatement {
-    /**
-     * 
-     * Enter description here ...
-     * @var	TAbstractPdoConnection
-     */
-    private $FConnection = null;
-    /**
-     * 
-     * Enter description here ...
-     * @var PDO
-     */
-    private $FPdo = null;
-    /**
-     * 
-     * Enter description here ...
-     * @var	TResultSetType
-     */
-    private $FResultSetType = null;
-    /**
-     * 
-     * Enter description here ...
-     * @var	TConcurrencyType
-     */
-    private $FConcurrencyType = null;
-    /**
-     * 
-     * Enter description here ...
-     * @var	PDOStatement
-     */
-    private $FPdoStatement = null;
-    /**
-     * 
-     * Enter description here ...
-     * @var string
-     */
-    private $FCommand = '';
-    /**
-     * 
-     * Enter description here ...
-     * @var	IList <T: string>
-     */
-    private $FCommands = null;
-
-    /**
-     * 
-     * Enter description here ...
-     */
-    private function EnsurePdoStatement() {
-        if ($this->FPdoStatement === null) {
-            throw new EEmptyCommand();
-        }
-    }
-
-    /**
-     * 
-     * Enter description here ...
-     * @param TAbstractPdoConnection	$Connection
-     * @param PDO						$Pdo
-     * @param TResultSetType			$ResultSetType
-     * @param TConcurrencyType			$ConcurrencyType
-     */
-    public function __construct($Connection, $Pdo, $ResultSetType, $ConcurrencyType) {
-        TType::Object($Connection, 'TAbstractPdoConnection');
-        TType::Object($Pdo, 'PDO');
-        TType::Object($ResultSetType, 'TResultSetType');
-        TType::Object($ConcurrencyType, 'TConcurrencyType');
-        
-        $this->FConnection = $Connection;
-        $this->FPdo = $Pdo;
-        $this->FResultSetType = $ResultSetType;
-        //eForwardOnly 只能向前滚动row
-        //eScrollInsensitive 对其他对象作出的数据修改不敏感
-        //eScrollSensitive   ----------------------敏感
-        $this->FConcurrencyType = $ConcurrencyType;
-    
-     //eReadOnly 不能修改数据
-    //eUpdatable 可以修改数据 
-    }
-
-    /**
-     * descHere
-     * @param	string	$Command
-     * @return	integer
-     */
-    public function Execute($Command = '') {
-        TType::String($Command);
-        
-        if ($Command != '') {
-            $this->FCommand = $Command;
-        }
-        try {
-            $mStmt = $this->FPdo->query($this->FCommand);
-            return $mStmt->rowCount();
-        }
-        catch (PDOException $Ex) {
-            TAbstractPdoConnection::PushWarning(EExecuteFailed::ClassType(), $Ex, $this->FConnection);
-        }
-    }
-
-    /**
-     * (non-PHPdoc)
-     * @see IStatement::ExecuteCommands()
-     * @return	integer[]
-     */
-    public function ExecuteCommands() {
-        if ($this->FCommands === null || $this->FCommands->IsEmpty()) {
-            throw new EEmptyCommand();
-        }
-        $mRows = array ();
-        try {
-            $this->FConnection->setAutoCommit(false);
-            foreach ($this->FCommands as $mCmd) {
-                $mStmt = $this->FPdo->query($mCmd);
-                $mRows[] = $mStmt->rowCount();
-            }
-            $this->FConnection->Commit();
-        }
-        catch (PDOException $Ex) {
-            $this->FConnection->Rollback();
-            TAbstractPdoConnection::PushWarning(EExecuteFailed::ClassType(), $Ex, $this->FConnection);
-        }
-        return $mRows;
-    }
-
-    /**
-     * descHere
-     * @return	IParam <T: ?>
-     */
-    public function FetchAsScalar() {
-        try {
-            $mData = $this->FPdoStatement->fetch(PDO::FETCH_COLUMN, PDO::FETCH_ORI_ABS, 0);
-            if ($mData === false) {
-                return null;
-            }
-            // $this->FPdoStatement->getColumnMeta(0); is not used because of:
-            // http://bugs.php.net/bug.php?id=46508
-            TPrimativeParam::PrepareGeneric(array ('T' => 'string'));
-            return new TPrimativeParam($mData);
-        }
-        catch (PDOException $Ex) {
-            TAbstractPdoConnection::PushWarning(EFetchAsScalarFailed::ClassType(), $Ex, $this->FConnection);
-        }
-    }
-
-    /**
-     * descHere
-     * @return	IList <T: string>
-     */
-    public function getCommands() {
-        if ($this->FCommands === null) {
-            TList::PrepareGeneric(array ('T' => 'string'));
-            $this->FCommands = new TList();
-        }
-        return $this->FCommands;
-    }
-
-    /**
-     * descHere
-     * @return	IConnection
-     */
-    public function getConnection() {
-        return $this->FConnection;
-    }
-
-    /**
-     * descHere
-     * @return	IResultSet
-     */
-    public function GetCurrentResult() {
-    }
-
-    /**
-     * descHere
-     * @param	integer	$Index
-     * @return	IResultSet
-     */
-    public function getResult($Index) {
-    }
-
-    /**
-     * descHere
-     * @param	TCurrentResultOption	$Options
-     */
-    public function NextResult($Options) {
-    }
-
-    /**
-     * descHere
-     * @param	string	$Command
-     * @return	IResultSet
-     */
-    public function Query($Command = '') {
-        TType::String($Command);
-        if ($Command != '') {
-            $this->setCommand($Command);
-        }
-    
-     //TODO: ...
-    }
-
-    /**
-     * descHere
-     * @param	string	$Value
-     */
-    public function setCommand($Value) {
-        TType::String($Value);
-        
-        $this->FCommand = $Value;
-        //TODO: to deal with insensitive. maybe to write back to db after updating result sets.
-        $mAttr = array (PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL);
-        if ($this->FResultSetType == TResultSetType::eForwardOnly()) {
-            $mAttr[PDO::ATTR_CURSOR] = PDO::CURSOR_FWDONLY;
-        }
-        try {
-            $this->FPdoStatement = $this->FPdo->prepare($this->FCommand, $mAttr);
-        }
-        catch (PDOException $Ex) {
-            TAbstractPdoConnection::PushWarning(ESetCommandFailed::ClassType(), $Ex, $this->FConnection);
-        }
-    }
-
-}
-
-/**
- * TPdoPreparedStatement
- * @author	许子健
- */
-class TPdoPreparedStatement extends TPdoStatement implements IPreparedStatement {
-
-    /**
-     * descHere
-     * @param	string	$Name
-     * @param	IParam	$Param <T: ?>
-     */
-    public function BindParam($Name, $Param) {
-    }
-
-    /**
-     * descHere
-     */
-    public function ClearParams() {
-    }
-
-}
-
-/**
- * TPdoCallableStatement
- * @author	许子健
- */
-class TPdoCallableStatement extends TPdoPreparedStatement implements ICallableStatement {
-
-    /**
-     * descHere
-     * @param	string	$Name
-     * @return	IParam <T: ?>
-     */
-    public function GetParam($Name) {
     }
 
 }

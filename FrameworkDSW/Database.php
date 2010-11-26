@@ -60,6 +60,12 @@ class EFailedToGetDbPropertyInfo extends EDatabaseException {
  * @author 许子健
  */
 class EUnsupportedDbFeature extends EDatabaseException {}
+/**
+ * 
+ * Enter description here ...
+ * @author	许子健
+ */
+class EIllegalSavepointIdentifier extends EDatabaseException {}
 
 /**
  * EDatabaseWarning
@@ -68,9 +74,9 @@ class EUnsupportedDbFeature extends EDatabaseException {}
 class EDatabaseWarning extends EDatabaseException {
     /**
      * 
-     * @var	PDOException
+     * @var	IDatabaseWarningContext
      */
-    private $FException = null;
+    private $FContext = null;
     /**
      * 
      * @var	EDatabaseWarning
@@ -79,24 +85,26 @@ class EDatabaseWarning extends EDatabaseException {
 
     /**
      * 
-     * @param	PDOException	$PdoException
+     * @param	IDatabaseWarningContext	$Context
      */
-    public function __construct($PdoException) {
-        $this->FException = $PdoException;
+    public function __construct($Context) {
+        TType::Object($Context, 'IDatabaseWarningContext');
+        
+        $this->FContext = $Context;
     }
 
     /**
      * @return	string
      */
     public function getSqlState() {
-        return $this->FException->errorInfo[0];
+        return $this->FContext->getSqlState();
     }
 
     /**
      * @return	string
      */
     public function getErrorCode() {
-        return $this->FException->errorInfo[1];
+        return $this->FContext->getErrorCode();
     }
 
     /**
@@ -115,12 +123,26 @@ class EDatabaseWarning extends EDatabaseException {
         $this->FNextWarning = $Value;
     }
 
+    /**
+     * 
+     * Enter description here ...
+     * @return	IDatabaseWarningContext
+     */
+    public function getWarningContext() {
+        return $this->FContext;
+    }
+
 }
 /**
  * 
  * @author 许子健
  */
 class ECommitFailed extends EDatabaseWarning {}
+/**
+ * 
+ * @author 许子健
+ */
+class ECreateSavepointFailed extends EDatabaseWarning {}
 /**
  * 
  * @author 许子健
@@ -143,6 +165,13 @@ class EFetchAsScalarFailed extends EDatabaseWarning {}
  * @author 许子健
  */
 class ESetCommandFailed extends EDatabaseWarning {}
+
+/**
+ * 
+ * Enter description here ...
+ * @author 许子健
+ */
+class EFetchRowFailed extends EDatabaseWarning {}
 
 /**
  * TConcurrencyType
@@ -283,6 +312,26 @@ final class TTransactionIsolationLevel extends TEnum {
      * @var	integer
      */
     const eSerializable = 4;
+}
+
+/**
+ * IDatabaseWarningContext
+ * @author	许子健
+ */
+interface IDatabaseWarningContext extends IInterface {
+
+    /**
+     * descHere
+     * @return	string
+     */
+    public function getErrorCode();
+
+    /**
+     * descHere
+     * @return	string
+     */
+    public function getSqlState();
+
 }
 
 /**
@@ -627,11 +676,6 @@ interface IResultSet extends IArrayAccess {
     /**
      * descHere
      */
-    public function ClearWarnings();
-
-    /**
-     * descHere
-     */
     public function Close();
 
     /**
@@ -701,12 +745,6 @@ interface IResultSet extends IArrayAccess {
      * @return	IStatement
      */
     public function getStatement();
-
-    /**
-     * descHere
-     * @return	EDatabaseWarning
-     */
-    public function getWarnings();
 
     /**
      * descHere
@@ -1801,6 +1839,119 @@ interface IDatabaseMetaData extends IInterface {
 }
 
 /**
+ * TPdoWarningContext
+ * @author	许子健
+ */
+class TPdoWarningContext extends TObject implements IDatabaseWarningContext {
+    
+    /**
+     * @var	PDOException
+     */
+    private $FPdoException;
+
+    /**
+     * descHere
+     * @param	PDOException	$PdoException
+     */
+    public function __construct($PdoException) {
+        $this->FPdoException = $PdoException;
+    }
+
+    /**
+     * (non-PHPdoc)
+     * @see TObject::__destruct()
+     */
+    public function __destruct() {
+        $this->FPdoException = null;
+        parent::__destruct();
+    }
+
+    /**
+     * @return	string
+     */
+    public function getSqlState() {
+        return $this->FException->errorInfo[0];
+    }
+
+    /**
+     * @return	string
+     */
+    public function getErrorCode() {
+        return $this->FException->errorInfo[1];
+    }
+
+}
+
+/**
+ * TSavepoint
+ * @author	许子健
+ */
+class TSavepoint extends TObject implements ISavepoint {
+    
+    /**
+     * @var	integer
+     */
+    private $FId = -1;
+    /**
+     * @var	string
+     */
+    private $FName = '';
+    /**
+     * @var	integer
+     */
+    private static $FNextId = 0;
+
+    /**
+     * descHere
+     * @param	string	$Name
+     */
+    public function __construct($Name = '') {
+        TType::String($Name);
+        if ($Name != '') {
+            $this->FName = $Name;
+        }
+        else {
+            $this->FId = self::$FNextId++;
+        }
+    }
+
+    /**
+     * descHere
+     * @return	integer
+     */
+    public function getId() {
+        if ($this->FId != -1) {
+            return $this->FId;
+        }
+        else {
+            throw new EIllegalSavepointIdentifier();
+        }
+    }
+
+    /**
+     * descHere
+     * @return	string
+     */
+    public function getName() {
+        if ($this->FId == -1) {
+            return $this->FName;
+        }
+        else {
+            throw new EIllegalSavepointIdentifier();
+        }
+    }
+
+    public function getProperName() {
+        if ($this->FId == -1) {
+            return $this->FName;
+        }
+        else {
+            return 'Svpt' . (string) $this->FId;
+        }
+    }
+}
+
+/**
  * TAbstractParam
  * param	<T>
  * @author	许子健
@@ -2228,7 +2379,6 @@ abstract class TAbstractPdoConnection extends TObject {
      */
     public function __construct($Driver, $Pdo) {
         TType::Object($Driver, 'IDriver');
-        TType::Object($Pdo, 'PDO');
         
         if ($Driver !== null && $Pdo !== null) {
             $this->FDriver = $Driver;
@@ -2250,10 +2400,10 @@ abstract class TAbstractPdoConnection extends TObject {
     public static function PushWarning($WarningType, $PdoException, $Connection) {
         TType::String($WarningType);
         TType::Object($PdoException, 'PDOException');
-        TType::Object($Connection->FWarnings, 'EDatabaseWarning');
+        TType::Object($Connection, 'TAbstractPdoConnection');
         
         //$WarningType::InheritsFrom('EDatabaseWarning');
-        $mWarning = new $WarningType($PdoException);
+        $mWarning = new $WarningType(new TPdoWarningContext($PdoException));
         $mWarning->setNextWarning($Connection->FWarnings);
         $Connection->FWarnings = $mWarning;
         throw $mWarning;
@@ -2313,7 +2463,7 @@ abstract class TAbstractPdoConnection extends TObject {
      * descHere
      */
     public function Disconnect() {
-        Framework::Free($this->FPdo);
+        $this->FPdo = null;
         Framework::Free($this->FDriver);
         $this->FIsConnected = false;
     }
@@ -2487,6 +2637,599 @@ abstract class TAbstractPdoConnection extends TObject {
     public function setTransactionIsolation($Value) {
         TType::Object($Value, 'TTransactionIsolationLevel');
         $this->DoSetTransactionIsolation($Value);
+    }
+
+}
+
+/**
+ * TAbstractPdoStatement
+ * @author	许子健
+ */
+abstract class TAbstractPdoStatement implements IStatement {
+    /**
+     * 
+     * Enter description here ...
+     * @var	TAbstractPdoConnection
+     */
+    protected $FConnection = null;
+    /**
+     * 
+     * Enter description here ...
+     * @var PDO
+     */
+    protected $FPdo = null;
+    /**
+     * 
+     * Enter description here ...
+     * @var	TResultSetType
+     */
+    protected $FResultSetType = null;
+    /**
+     * 
+     * Enter description here ...
+     * @var	TConcurrencyType
+     */
+    protected $FConcurrencyType = null;
+    /**
+     * 
+     * Enter description here ...
+     * @var	PDOStatement
+     */
+    protected $FPdoStatement = null;
+    /**
+     * 
+     * Enter description here ...
+     * @var string
+     */
+    protected $FCommand = '';
+    /**
+     * 
+     * Enter description here ...
+     * @var	IList <T: string>
+     */
+    private $FCommands = null;
+
+    /**
+     * 
+     * Enter description here ...
+     */
+    private function EnsurePdoStatement() {
+        if ($this->FPdoStatement === null) {
+            throw new EEmptyCommand();
+        }
+    }
+
+    /**
+     * 
+     * Enter description here ...
+     * @return	IParam <T: ?>
+     */
+    protected abstract function DoFetchAsScalar();
+
+    /**
+     * 
+     * Enter description here ...
+     * @param TAbstractPdoConnection	$Connection
+     * @param PDO						$Pdo
+     * @param TResultSetType			$ResultSetType
+     * @param TConcurrencyType			$ConcurrencyType
+     */
+    public function __construct($Connection, $Pdo, $ResultSetType, $ConcurrencyType) {
+        TType::Object($Connection, 'TAbstractPdoConnection');
+        TType::Object($Pdo, 'PDO');
+        TType::Object($ResultSetType, 'TResultSetType');
+        TType::Object($ConcurrencyType, 'TConcurrencyType');
+        
+        $this->FConnection = $Connection;
+        $this->FPdo = $Pdo;
+        $this->FResultSetType = $ResultSetType;
+        //eForwardOnly 只能向前滚动row
+        //eScrollInsensitive 对其他对象作出的数据修改不敏感，直接装入全部数据到内存
+        //eScrollSensitive   ----------------------敏感，每次调用数据库某一行
+        $this->FConcurrencyType = $ConcurrencyType;
+    
+     //eReadOnly 不能修改数据
+    //eUpdatable 可以修改数据 
+    }
+
+    /**
+     * descHere
+     * @param	string	$Command
+     * @return	integer
+     */
+    public function Execute($Command = '') {
+        TType::String($Command);
+        
+        if ($Command != '') {
+            $this->FCommand = $Command;
+        }
+        try {
+            $mStmt = $this->FPdo->query($this->FCommand);
+            return $mStmt->rowCount();
+        }
+        catch (PDOException $Ex) {
+            TAbstractPdoConnection::PushWarning(EExecuteFailed::ClassType(), $Ex, $this->FConnection);
+        }
+    }
+
+    /**
+     * (non-PHPdoc)
+     * @see IStatement::ExecuteCommands()
+     * @return	integer[]
+     */
+    public function ExecuteCommands() {
+        if ($this->FCommands === null || $this->FCommands->IsEmpty()) {
+            throw new EEmptyCommand();
+        }
+        $mRows = array ();
+        try {
+            $this->FConnection->setAutoCommit(false);
+            foreach ($this->FCommands as $mCmd) {
+                $mStmt = $this->FPdo->query($mCmd);
+                $mRows[] = $mStmt->rowCount();
+            }
+            $this->FConnection->Commit();
+        }
+        catch (PDOException $Ex) {
+            $this->FConnection->Rollback();
+            TAbstractPdoConnection::PushWarning(EExecuteFailed::ClassType(), $Ex, $this->FConnection);
+        }
+        return $mRows;
+    }
+
+    /**
+     * descHere
+     * @return	IParam <T: ?>
+     */
+    public function FetchAsScalar() {
+        try {
+            return $this->DoFetchAsScalar();
+        }
+        catch (PDOException $Ex) {
+            TAbstractPdoConnection::PushWarning(EFetchAsScalarFailed::ClassType(), $Ex, $this->FConnection);
+        }
+    }
+
+    /**
+     * descHere
+     * @return	IList <T: string>
+     */
+    public function getCommands() {
+        if ($this->FCommands === null) {
+            TList::PrepareGeneric(array ('T' => 'string'));
+            $this->FCommands = new TList();
+        }
+        return $this->FCommands;
+    }
+
+    /**
+     * descHere
+     * @return	IConnection
+     */
+    public function getConnection() {
+        return $this->FConnection;
+    }
+
+    /**
+     * descHere
+     * @return	IResultSet
+     */
+    public function GetCurrentResult() {
+    }
+
+    /**
+     * descHere
+     * @param	integer	$Index
+     * @return	IResultSet
+     */
+    public function getResult($Index) {
+    }
+
+    /**
+     * descHere
+     * @param	TCurrentResultOption	$Options
+     */
+    public function NextResult($Options) {
+    }
+
+    /**
+     * descHere
+     * @param	string	$Command
+     * @return	IResultSet
+     */
+    public function Query($Command = '') {
+        TType::String($Command);
+        if ($Command != '') {
+            $this->setCommand($Command);
+        }
+    
+     //TODO: ...
+    }
+
+    /**
+     * descHere
+     * @param	string	$Value
+     */
+    public function setCommand($Value) {
+        TType::String($Value);
+        
+        $this->FCommand = $Value;
+        //TODO: to deal with insensitive. maybe to write back to db after updating result sets.
+        $mAttr = array (PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL);
+        if ($this->FResultSetType == TResultSetType::eForwardOnly()) {
+            $mAttr[PDO::ATTR_CURSOR] = PDO::CURSOR_FWDONLY;
+        }
+        try {
+            $this->FPdoStatement = $this->FPdo->prepare($this->FCommand, $mAttr);
+        }
+        catch (PDOException $Ex) {
+            TAbstractPdoConnection::PushWarning(ESetCommandFailed::ClassType(), $Ex, $this->FConnection);
+        }
+    }
+
+}
+
+/**
+ * TAbstractPdoResultSet
+ * @author	许子健
+ */
+abstract class TAbstractPdoResultSet extends TObject {
+    
+    /**
+     * 
+     * Enter description here ...
+     * @var	TAbstractPdoStatement
+     */
+    protected $FStatement = null;
+    
+    /**
+     * 
+     * Enter description here ...
+     * @var	PDO
+     */
+    protected $FPdo = null;
+    
+    /**
+     * 
+     * Enter description here ...
+     * @var	PDOStatement
+     */
+    protected $FPdoStatement = null;
+    
+    /**
+     * 
+     * Enter description here ...
+     * @var	TResultSetType
+     */
+    protected $FResultSetType = null;
+    
+    /**
+     * 
+     * Enter description here ...
+     * @var	TConcurrencyType
+     */
+    protected $FConcurrencyType = null;
+    
+    /**
+     * 
+     * Enter description here ...
+     * @var	TFetchDirection
+     */
+    protected $FFetchDirection = null;
+    
+    /**
+     * 
+     * Enter description here ...
+     * @var	string
+     */
+    protected $FCommand = '';
+    
+    /**
+     * 
+     * Enter description here ...
+     * @var	boolean
+     */
+    protected $FIsClosed = false;
+    
+    /**
+     * [0 .. n]:
+     * Indicates current row number, scroll insensitive result sets only.
+     * [-1]:
+     * indicates the pending row to be inserted.
+     * [-2]:
+     * empty result set.
+     * @var	integer
+     */
+    protected $FCurrentRow = -2;
+    
+    /**
+     * 
+     * Enter description here ...
+     * @var	mixed
+     */
+    protected $FRawData = null;
+
+    /**
+     * 
+     * Enter description here ...
+     * @param	TAbstractPdoStatement	$Statement
+     * @param	string					$Command
+     * @param	PDO						$Pdo
+     * @param	PDOStatement			$PdoStatement
+     * @param	TResultSetType			$ResultSetType
+     * @param	TConcurrencyType		$ConcurrencyType
+     */
+    public function __construct($Statement, $Command, $Pdo, $PdoStatement, $ResultSetType, $ConcurrencyType) {
+        TType::Object($Statement, 'TAbstractPdoStatement');
+        TType::String($Command);
+        TType::Object($Pdo, 'PDO');
+        TType::Object($PdoStatement, 'PDOStatement');
+        TType::Object($ResultSetType, 'TResultSetType');
+        TType::Object($ConcurrencyType, 'TConcurrencyType');
+        
+        $this->FStatement = $Statement;
+        $this->FCommand = $Command;
+        $this->FPdo = $Pdo;
+        
+        $PdoStatement->execute(); //TODO invoke prepare() with proper PDO::ATTR_CURSOR value.
+        if ($this->FResultSetType == TResultSetType::eScrollInsensitive()) {
+            $this->FRawData = $PdoStatement->fetchAll();
+            $PdoStatement = null;
+        }
+        $this->FPdoStatement = $PdoStatement;
+        
+        $this->FResultSetType = $ResultSetType;
+        $this->FConcurrencyType = $ConcurrencyType;
+        
+        $this->FFetchDirection = TFetchDirection::eUnkown();
+    }
+
+    /**
+     * descHere
+     */
+    public function Close() {
+        if ($this->FIsClosed) {
+            return;
+        }
+        if ($this->FResultSetType == TResultSetType::eScrollInsensitive()) {
+            $this->FRawData = null;
+        }
+        $this->FPdoStatement = null;
+        $this->FIsClosed = true;
+        $this->FCurrentRow = -2;
+        $this->FFetchDirection = TFetchDirection::eUnkown();
+    }
+
+    /**
+     * descHere
+     * @return	IRow
+     */
+    public function current() {
+    }
+
+    /**
+     * descHere
+     * @param	integer	$RowId
+     * @return	IRow
+     */
+    public function FetchAbsolute($RowId) {
+        TType::Int($RowId);
+        
+        switch ($this->FResultSetType) {
+            case TResultSetType::eScrollInsensitive() :
+                //TODO return raw data.
+                $this->FCurrentRow = $RowId;
+                break;
+            case TResultSetType::eScrollSensitive() :
+                $RawRow = $this->FPdoStatement->fetch(PDO::FETCH_BOTH, PDO::FETCH_ORI_ABS, $RowId);
+                //TODO generate the IRow instance.
+                break;
+            default : //not supported. eg. forward only mode
+                TAbstractPdoConnection::PushWarning(EFetchRowFailed::ClassType(), null, $this->FStatement->getConnection());
+                break;
+        }
+    }
+
+    /**
+     * descHere
+     * @param	integer	$Offset
+     * @return	IRow
+     */
+    public function FetchRelative($Offset) {
+        TType::Int($Offset);
+        if ($Offset == 0) {
+            //TODO: throw an exception.
+        }
+        switch ($this->FResultSetType) {
+            case TResultSetType::eScrollInsensitive() :
+                //TODO generate the IRow instance based on the appropriate row inside rawdata.
+                $this->FCurrentRow += $Offset;
+                break;
+            case TResultSetType::eScrollSensitive() :
+                switch ($this->FFetchDirection) {
+                    case TFetchDirection::eForward() :
+                        $RawRow = $this->FPdoStatement->fetch(PDO::FETCH_BOTH, PDO::FETCH_ORI_REL, $Offset);
+                        //TODO generate the IRow instance based on $RawRow.
+                        break;
+                    case TFetchDirection::eReverse() :
+                        if ($this->FCurrentRow == -2) {
+                            $RawRow = $this->FPdoStatement->fetch(PDO::FETCH_BOTH, PDO::FETCH_ORI_LAST);
+                            $this->FCurrentRow = 0;
+                            --$Offset;
+                        }
+                        if ($Offset > 0) {
+                            while ($Offset > 1) {
+                                $this->FPdoStatement->fetch(PDO::FETCH_BOTH, PDO::FETCH_ORI_PRIOR);
+                            }
+                            $RawRow = $this->FPdoStatement->fetch(PDO::FETCH_BOTH, PDO::FETCH_ORI_PRIOR);
+                        }
+                        else {
+                            while ($Offset < -1) {
+                                $this->FPdoStatement->fetch(PDO::FETCH_BOTH, PDO::FETCH_ORI_NEXT);
+                            }
+                            $RawRow = $this->FPdoStatement->fetch(PDO::FETCH_BOTH, PDO::FETCH_ORI_NEXT);
+                        }
+                        //TODO generate the IRow instance based on $RawRow.
+                        break;
+                }
+                break;
+            default : //not supported. eg. forward only mode
+                TAbstractPdoConnection::PushWarning(EFetchRowFailed::ClassType(), null, $this->FStatement->getConnection());
+                break;
+        }
+    }
+
+    /**
+     * descHere
+     * @return	integer
+     */
+    public function getCount() {
+        if ($this->FResultSetType == TResultSetType::eScrollInsensitive()) {
+            return count($this->FRawData);
+        }
+    
+     //TODO unsupported, throw an exception. 
+    }
+
+    /**
+     * descHere
+     * @return	string
+     */
+    public function getCursorName() {
+    }
+
+    /**
+     * descHere
+     * @return	TFetchDirection
+     */
+    public function getFetchDirection() {
+        if ($this->FResultSetType == TResultSetType::eForwardOnly()) {
+            return TFetchDirection::eForward();
+        }
+        return $this->FFetchDirection;
+    }
+
+    /**
+     * descHere
+     * @return	integer
+     */
+    public function getFetchSize() {
+    }
+
+    /**
+     * descHere
+     * @return	IRow
+     */
+    public function getInsertRow() {
+    }
+
+    /**
+     * descHere
+     * @return	boolean
+     */
+    public function getIsClosed() {
+    }
+
+    /**
+     * descHere
+     * @return	boolean
+     */
+    public function getIsEmpty() {
+    }
+
+    /**
+     * descHere
+     * @return	IReusltMetaData
+     */
+    public function getMetaData() {
+    }
+
+    /**
+     * descHere
+     * @return	IStatement
+     */
+    public function getStatement() {
+    }
+
+    /**
+     * descHere
+     * @return	string
+     */
+    public function key() {
+    }
+
+    /**
+     * descHere
+     */
+    public function next() {
+    }
+
+    /**
+     * descHere
+     * @param	string	$offset
+     * @return	boolean
+     */
+    public function offsetExists($offset) {
+    }
+
+    /**
+     * descHere
+     * @param	string	$offset
+     * @return	IRow
+     */
+    public function offsetGet($offset) {
+    }
+
+    /**
+     * descHere
+     * @param	string	$offset
+     * @param	IRow	$value
+     */
+    public function offsetSet($offset, $value) {
+    }
+
+    /**
+     * descHere
+     * @param	string	$offset
+     */
+    public function offsetUnset($offset) {
+    }
+
+    /**
+     * descHere
+     */
+    public function rewind() {
+    }
+
+    /**
+     * descHere
+     * @param	TFetchDirection	$Value
+     */
+    public function setFetchDirection($Value) {
+        TType::Object($Value, 'TFetchDirection');
+        
+        if ($Value == TFetchDirection::eUnkown()) {
+            //TODO: throw new exception. can not set as unkown.
+        }
+        if ($this->FResultSetType == TResultSetType::eForwardOnly()) {
+            //TODO: unsuppoerted. it must be forward, no need to set. 
+        }
+        
+        $this->FFetchDirection = $Value;
+    }
+
+    /**
+     * descHere
+     * @param	integer	$Value
+     */
+    public function setFetchSize($Value) {
+    }
+
+    /**
+     * descHere
+     * @return	boolean
+     */
+    public function valid() {
     }
 
 }
