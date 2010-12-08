@@ -44,13 +44,25 @@ class EIsNotNullable extends ESysException {}
  * @author 许子健
  */
 class ENotImplemented extends ERuntimeException {}
-
+/**
+ * 
+ * Enter description here ...
+ * @author 许子健
+ */
+class EInvalidParameter extends ERuntimeException {}
 /**
  * Field not existed exception.
  * It will be thrown for visiting object's field that is not existed.
  * @author  许子健
  */
-class EFieldNotExisted extends ERuntimeException {}
+class EFieldNotExisted extends ERuntimeException {
+    /**
+     * 
+     * Enter description here ...
+     * @var string
+     */
+    const CMsg=' is an invalid parameter.';
+}
 /**
  * Method not existed exception.
  * It will be thrown for calling object's method that is not existed.
