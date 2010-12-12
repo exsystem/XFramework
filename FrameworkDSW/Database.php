@@ -88,6 +88,7 @@ class EDatabaseWarning extends EDatabaseException {
      * @param	IDatabaseWarningContext	$Context
      */
     public function __construct($Context) {
+        parent::__construct();
         TType::Object($Context, 'IDatabaseWarningContext');
         
         $this->FContext = $Context;
@@ -1854,6 +1855,8 @@ class TPdoWarningContext extends TObject implements IDatabaseWarningContext {
      * @param	PDOException	$PdoException
      */
     public function __construct($PdoException) {
+        parent::__construct();
+        
         $this->FPdoException = $PdoException;
     }
 
@@ -1906,7 +1909,9 @@ class TSavepoint extends TObject implements ISavepoint {
      * @param	string	$Name
      */
     public function __construct($Name = '') {
+        parent::__construct();
         TType::String($Name);
+        
         if ($Name != '') {
             $this->FName = $Name;
         }
@@ -2002,8 +2007,11 @@ final class TPrimativeParam extends TAbstractParam implements IParam {
      * @param	T	$Value
      */
     public function __construct($Value) {
+        parent::__construct();
         TType::Type($Value, $this->GenericArg('T'));
-        $mMapping = array ('boolean' => 'BIT', 'integer' => 'INTEGER', 'float' => 'FLOAT', 'string' => 'VARCHAR');
+        
+        $mMapping = array ('boolean' => 'BIT', 'integer' => 'INTEGER', 
+            'float' => 'FLOAT', 'string' => 'VARCHAR');
         $this->FType = $mMapping[$this->GenericArg('T')];
         $this->FValue = $Value;
     }
@@ -2138,7 +2146,8 @@ abstract class TAbstractPdoDriver extends TObject {
      */
     public function Connect($Url, $Properties) {
         TType::String($Url);
-        TType::Type($Properties, array ('IMap' => array ('K' => 'string', 'V' => 'string')));
+        TType::Type($Properties, array (
+            'IMap' => array ('K' => 'string', 'V' => 'string')));
         
         $this->FProperties = $Properties;
         if ($this->ValidateUrl($Url)) {
@@ -2179,7 +2188,8 @@ abstract class TAbstractPdoDriver extends TObject {
      */
     public function GetPropertyInfo($Url, $Properties) {
         TType::String($Url);
-        TType::Type($Properties, array ('IMap' => array ('K' => 'string', 'V' => 'string')));
+        TType::Type($Properties, array (
+            'IMap' => array ('K' => 'string', 'V' => 'string')));
         
         if ($this->ValidateUrl($Url)) {
             $this->FProperties = $Properties;
@@ -2378,6 +2388,7 @@ abstract class TAbstractPdoConnection extends TObject {
      * @param	PDO		$Pdo
      */
     public function __construct($Driver, $Pdo) {
+        parent::__construct();
         TType::Object($Driver, 'IDriver');
         
         if ($Driver !== null && $Pdo !== null) {
@@ -2645,7 +2656,7 @@ abstract class TAbstractPdoConnection extends TObject {
  * TAbstractPdoStatement
  * @author	许子健
  */
-abstract class TAbstractPdoStatement implements IStatement {
+abstract class TAbstractPdoStatement extends TObject implements IStatement {
     /**
      * 
      * Enter description here ...
@@ -2715,6 +2726,7 @@ abstract class TAbstractPdoStatement implements IStatement {
      * @param TConcurrencyType			$ConcurrencyType
      */
     public function __construct($Connection, $Pdo, $ResultSetType, $ConcurrencyType) {
+        parent::__construct();
         TType::Object($Connection, 'TAbstractPdoConnection');
         TType::Object($Pdo, 'PDO');
         TType::Object($ResultSetType, 'TResultSetType');
@@ -2966,6 +2978,8 @@ abstract class TAbstractPdoResultSet extends TObject {
         TType::Object($PdoStatement, 'PDOStatement');
         TType::Object($ResultSetType, 'TResultSetType');
         TType::Object($ConcurrencyType, 'TConcurrencyType');
+        
+        parent::__construct();
         
         $this->FStatement = $Statement;
         $this->FCommand = $Command;

@@ -5,8 +5,6 @@
  * @version $Id$
  * @since   separate file since reversion 1
  */
-require_once 'FrameworkDSW/Framework.php';
-require_once 'FrameworkDSW/Utilities.php';
 
 /**
  * The ultimate base class of all exception classes inside FrameworkDSW.
@@ -19,6 +17,13 @@ class EException extends Exception {
      */
     final static function ClassType() {
         return get_called_class();
+    }
+
+    /**
+     * 
+     * Enter description here ...
+     */
+    public function __destruct() {
     }
 }
 /**
@@ -49,7 +54,14 @@ class ENotImplemented extends ERuntimeException {}
  * Enter description here ...
  * @author 许子健
  */
-class EInvalidParameter extends ERuntimeException {}
+class EInvalidParameter extends ERuntimeException {
+    /**
+     * 
+     * Enter description here ...
+     * @var	string
+     */
+    const CMsg = ' is an invalid parameter.';
+}
 /**
  * Field not existed exception.
  * It will be thrown for visiting object's field that is not existed.
@@ -61,7 +73,7 @@ class EFieldNotExisted extends ERuntimeException {
      * Enter description here ...
      * @var string
      */
-    const CMsg=' is an invalid parameter.';
+    const CMsg = ' is an invalid field.';
 }
 /**
  * Method not existed exception.
@@ -112,11 +124,178 @@ class ENoSuchGenericArg extends EGenericException {}
 class EBadGenericArgsStructure extends EGenericException {}
 
 /**
+ * IInterface
+ * The ultimate base interface for all interfaces inside FrameworkDSW.
+ * @author  许子健
+ */
+interface IInterface {
+
+    /**
+     * Compare with another object.
+     *
+     * @param  TObject     $Obj
+     * @return boolean
+     */
+    public function Equals($Obj);
+
+    /**
+     * Tell if the object supports the given interface.
+     *
+     * @param  string  $AInterface The interface name to be tested.
+     * @return boolean             True for supported, false for unsupported.
+     */
+    public function Supports($AInterface);
+
+    /**
+     * Get the object type, with generic infomation.
+     * @return	mixed
+     */
+    public function ObjectType();
+
+    /**
+     * Get the class type.
+     * @return string  The name of the class.
+     */
+    public static function ClassType();
+
+    /**
+     * @return	mixed
+     */
+    public function ObjectParentType();
+
+    /**
+     * Get the parent's class type.
+     * @return string  The name of the parent class.
+     * @see    TObject::InheritsFrom()
+     */
+    public static function ClassParent();
+
+    /**
+     * 
+     * @param	mixed	$Type
+     * @return	boolean
+     */
+    public function IsInstanceOf($Type);
+
+    /**
+     * Tell if this class inherits from the given class.
+     * @param  string  $AClass The given class.
+     * @return boolean         If the object is inherited from
+     * <var>$AClass</var>.
+     * @see    TObject::ClassParent()
+     */
+    public static function InheritsFrom($AClass);
+
+    /**
+     * @return	array
+     */
+    public function GenericArgs();
+
+    /**
+     * 
+     * @param	string	$ArgName
+     * @return	mixed
+     */
+    public function GenericArg($ArgName);
+
+    /**
+     * @return	array
+     */
+    public static function StaticGenericArgs();
+
+    /**
+     * 
+     * @param	string	$ArgName
+     * @return	mixed
+     */
+    public static function StaticGenericArg($ArgName);
+
+    /**
+     * Returns the source file path which defined the class.
+     * @return string  The path of this class.
+     */
+    public static function DeclaredIn();
+
+    /**
+     * Wake up the object.
+     * The method will be invoked when the Framework wants to wake up the
+     * object. Write your own code inside this method for a customized waking up
+     * in the derived class.
+     * @see    TObject::Sleep()
+     * @see    TObject::ClassSleep()
+     * @see    Framework::Serialize()
+     * @see    Framework::Unserialize()
+     */
+    public function WakeUp();
+
+    /**
+     * Make the object to sleep.
+     * The method will be invoked when the Framework wants to make the object to
+     * sleep. Write your own code inside this method for a customized sleeping
+     * in the derived class.
+     * @see    TObject::WakeUp()
+     * @see    TObject::ClassSleep()
+     * @see    Framework::Serialize()
+     * @see    Framework::Unserialize()
+     */
+    public function Sleep();
+
+    /**
+     * Class wake up method.
+     * Defines what to do after the class is waked up.
+     * @see    TObject::ClassSleep()
+     * @see    TObject::WakeUp()
+     * @see    Framework::Serialize()
+     * @see    Framework::Unserialize()
+     */
+    public static function ClassWakeUp();
+
+    /**
+     * Class sleep method.
+     * Defines what to do before the class fall asleep.
+     * @return array
+     * @see    TObject::ClassWakeUp()
+     * @see    TObject::Sleep()
+     * @see    Framework::Serialize()
+     * @see    Framework::Unserialize()
+     */
+    public static function ClassSleep();
+
+    /**
+     *
+     * @param	array	$Signal
+     * @param	array	$Slot
+     */
+    public static function Link($Signal, $Slot);
+
+    /**
+     *
+     * @param	array	$Signal
+     * @param	array	$Slot
+     */
+    public static function Unlink($Signal, $Slot);
+
+    /**
+     *
+     * @param	array	$Signal
+     * @param	array	$Param
+     */
+    public static function Dispatch($Signal, $Param);
+
+    /**
+     * 
+     * @param	array	$Args
+     */
+    public static function PrepareGeneric($Args);
+
+}
+
+/**
  * TObject class.
  * This is the base class of all framework classes.
  * @author  许子健
  */
-class TObject {
+class TObject implements IInterface {
     /**
      *
      * @var	string
@@ -231,14 +410,7 @@ class TObject {
      * @return	boolean
      */
     public final function IsInstanceOf($Type) {
-        if (is_string($Type)) {
-            return $this->InheritsFrom($Type);
-        }
-        
-        $mClass = array_keys($Type);
-        $mClass = (string) $mClass[0];
-        TType::MetaClass($mClass);
-        return is_subclass_of($this, $mClass) && $this->FGenericArgs == $Type[$mClass];
+        return $Type === $this->ObjectType();
     }
 
     /**
@@ -564,13 +736,6 @@ class TObject {
 }
 
 /**
- * IInterface
- * The ultimate base interface for all interfaces inside FrameworkDSW.
- * @author  许子健
- */
-interface IInterface {}
-
-/**
  * TRecord
  * @author  许子健
  */
@@ -786,8 +951,8 @@ abstract class TSet extends TObject {
         }
         return true;
     }
-    
-//TODO: to store fixed length hash codes of each elements instead of an array.
+
+    //TODO: to store fixed length hash codes of each elements instead of an array.
 //TODO: store the set by using bit-mask for efficiency.
 }
 
@@ -795,7 +960,7 @@ abstract class TSet extends TObject {
  * IDelegate
  * @author	许子健
  */
-interface IDelegate extends IInterface {/* public funciton Invoke(...); */}
+interface IDelegate extends IInterface { /* public funciton Invoke(...); */}
 
 /**
  * TDelegate
@@ -1332,3 +1497,6 @@ final class TString extends TObject implements IComparable, IPrimitive {
         return $this->FValue;
     }
 }
+
+require_once 'FrameworkDSW/Framework.php';
+require_once 'FrameworkDSW/Utilities.php';

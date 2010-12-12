@@ -139,8 +139,11 @@ class Framework extends TObject {
         //        [...,
         //        [CLASS_NAME_n => FILE_PATH_OF_CLASS_n]]]]
         //    );
-        $mResult = serialize(array (self::CVar => $Var, self::CStaticTable => self::$FStaticTable));
-        $mResult = serialize(array (array (self::CClassInfo => self::$FClassInfo, self::CContent => $mResult)));
+        $mResult = serialize(array (
+            self::CVar => $Var, self::CStaticTable => self::$FStaticTable));
+        $mResult = serialize(array (
+            array (self::CClassInfo => self::$FClassInfo, 
+                self::CContent => $mResult)));
         
         self::$FStaticTable = array ();
         self::$FClassInfo = array ();
@@ -210,6 +213,9 @@ class Framework extends TObject {
      * @param	TObject	$Object
      */
     public static final function Free(&$Object) {
+        if ($Object !== null) {
+            $Object->__destruct();
+        }
         $Object = null;
         gc_collect_cycles();
     }

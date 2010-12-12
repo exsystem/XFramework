@@ -35,6 +35,7 @@ class TMysqlWarningContext extends TObject implements IDatabaseWarningContext {
      * @param	string	$ErrorMessage
      */
     public function __construct($SqlState, $ErrorCode, $ErrorMessage) {
+        parent::__construct();
         TType::String($SqlState);
         TType::String($ErrorCode);
         TType::String($ErrorMessage);
@@ -149,16 +150,16 @@ final class TMysqlDriver extends TObject implements IDriver {
         }
         
         if ($this->FProperties->ContainsKey('ConnectTimeout')) {
-            $this->$FMysqliOptions[MYSQLI_OPT_CONNECT_TIMEOUT] = (integer) $this->FProperties['ConnectTimeout'];
+            $this->FMysqliOptions[MYSQLI_OPT_CONNECT_TIMEOUT] = (integer) $this->FProperties['ConnectTimeout'];
         }
         if ($this->FProperties->ContainsKey('LocalInfileEnabled')) {
-            $this->$FMysqliOptions[MYSQLI_OPT_LOCAL_INFILE] = $this->FProperties['LocalInfileEnabled'] == 'True';
+            $this->FMysqliOptions[MYSQLI_OPT_LOCAL_INFILE] = $this->FProperties['LocalInfileEnabled'] == 'True';
         }
         if ($this->FProperties->ContainsKey('ReadDefaultFile')) {
-            $this->$FMysqliOptions[MYSQLI_READ_DEFAULT_FILE] = $this->FProperties['ReadDefaultFile'];
+            $this->FMysqliOptions[MYSQLI_READ_DEFAULT_FILE] = $this->FProperties['ReadDefaultFile'];
         }
         if ($this->FProperties->ContainsKey('ReadDefaultGroup')) {
-            $this->$FMysqliOptions[MYSQLI_READ_DEFAULT_GROUP] = $this->FProperties['ReadDefaultGroup'];
+            $this->FMysqliOptions[MYSQLI_READ_DEFAULT_GROUP] = $this->FProperties['ReadDefaultGroup'];
         }
         
         if ($this->FProperties->ContainsKey('ClientCompress') && $this->FProperties['ClientCompress'] == 'True') {
@@ -511,6 +512,7 @@ final class TMysqlConnection extends TObject implements IConnection {
      * @param	mysqli			$Mysqli
      */
     public function __construct($Driver, $Mysqli) {
+        parent::__construct();
         TType::Object($Driver, 'TMysqlDriver');
         
         if ($Driver !== null && $Mysqli !== null) {
@@ -521,6 +523,17 @@ final class TMysqlConnection extends TObject implements IConnection {
         else {
             $this->FIsConnected = false;
             throw new EIsNotNullable(self::CNullDriverOrMysqliObj);
+        }
+    }
+
+    /**
+     * (non-PHPdoc)
+     * @see TObject::__destruct()
+     */
+    public function __destruct() {
+        if ($this->FIsConnected) {
+            $this->ClearWarnings();
+            $this->Disconnect();
         }
     }
 
@@ -593,9 +606,9 @@ final class TMysqlConnection extends TObject implements IConnection {
         TType::Object($ConcurrencyType, 'TConcurrencyType');
         
         $this->EnsureConnected();
-    
-     //TODO: check if params are supported first.
-    //TODO: return a statement
+        
+        //TODO: check if params given by this function are supported first.
+        return new TMysqlStatement($this, $this->FMysqli, $ResultSetType, $ConcurrencyType);
     }
 
     /**
@@ -748,7 +761,7 @@ final class TMysqlConnection extends TObject implements IConnection {
         $this->EnsureConnected();
         if ($Savepoint !== null) {
             $mName = $Savepoint->getProperName();
-            $mQueryString = "ROLLBACK {$mName}";
+            $mQueryString = "ROLLBACK TO {$mName}";
         }
         else {
             $mQueryString = 'ROLLBACK';
@@ -884,18 +897,29 @@ class TMysqlStatement extends TObject implements IStatement {
      * @param	TConcurrencyType	$ConcurrencyType
      */
     public function __construct($Connection, $Mysqli, $ResultSetType, $ConcurrencyType) {
+        parent::__construct();
         TType::Object($Connection, 'TMysqlConnection');
         TType::Object($ResultSetType, 'TResultSetType');
         TType::Object($ConcurrencyType, 'TConcurrencyType');
         
         $this->FConnection = $Connection;
-        if ($Mysqli instanceof mysqli) {
+        if (!$Mysqli instanceof mysqli) {
             throw new EInvalidParameter('$Mysqli' . EInvalidParameter::CMsg);
         }
         $this->FMysqli = $Mysqli;
         $this->FMysqliStmt = $this->FMysqli->stmt_init();
         $this->FResultSetType = $ResultSetType;
         $this->FConcurrencyType = $ConcurrencyType;
+    }
+
+    /**
+     * (non-PHPdoc)
+     * @see TObject::__destruct()
+     */
+    public function __destruct() {
+        $this->FMysqliStmt->close();
+        $this->FMysqliStmt = null;
+        Framework::Free($this->FCommands);
     }
 
     /**
@@ -954,11 +978,14 @@ class TMysqlStatement extends TObject implements IStatement {
         }
         $mMeta = $this->FMysqliStmt->result_metadata();
         if (!$mMeta) {
-            TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FConnection);
+            TMysqlConnection::PushWarning(EFetchAsScalarFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FConnection);
         }
         $mMeta = $mMeta->fetch_field();
         if (!$mMeta) {
-            TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FConnection);
+            TMysqlConnection::PushWarning(EFetchAsScalarFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FConnection);
+        }
+        if (!$this->FMysqliStmt->fetch()) {
+            TMysqlConnection::PushWarning(EFetchAsScalarFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FConnection);
         }
         
         //Type mapping
@@ -969,7 +996,7 @@ class TMysqlStatement extends TObject implements IStatement {
             MYSQLI_TYPE_ENUM => 'integer', MYSQLI_TYPE_FLOAT => 'float', 
             MYSQLI_TYPE_GEOMETRY => 'todo', MYSQLI_TYPE_INT24 => 'integer', 
             MYSQLI_TYPE_INTERVAL => 'integer', MYSQLI_TYPE_LONG => 'integer', 
-            MYSQLI_TYPE_LONG_BLOB => 'string', MYSQLI_TYPE_LONGLONG => 'float', 
+            MYSQLI_TYPE_LONG_BLOB => 'string', MYSQLI_TYPE_LONGLONG => 'integer', 
             MYSQLI_TYPE_MEDIUM_BLOB => 'todo', MYSQLI_TYPE_NEWDATE => 'todo', 
             MYSQLI_TYPE_NEWDECIMAL => 'float', MYSQLI_TYPE_SET => 'integer', 
             MYSQLI_TYPE_SHORT => 'integer', MYSQLI_TYPE_STRING => 'string', 
@@ -993,6 +1020,7 @@ class TMysqlStatement extends TObject implements IStatement {
         else {
             $mGenericParam = array ('T' => 'string');
         }
+        TPrimativeParam::PrepareGeneric($mGenericParam);
         return new TPrimativeParam($mRaw);
     }
 
@@ -1079,7 +1107,184 @@ class TMysqlStatement extends TObject implements IStatement {
 
 }
 
-final class TMysqlDatabaseMetaData implements IDatabaseMetaData { //TODO: pending...
+/**
+ * TMysqlResultSet
+ * @author	ExSystem
+ */
+class TMysqlResultSet extends TObject implements IResultSet {
+
+    /**
+     * descHere
+     */
+    public function Close() {
+    }
+
+    /**
+     * descHere
+     * @return	T
+     */
+    public function current() {
+    }
+
+    /**
+     * descHere
+     * @param	integer	$RowId
+     * @return	IRow
+     */
+    public function FetchAbsolute($RowId) {
+    }
+
+    /**
+     * descHere
+     * @param	integer	$Offset
+     * @return	IRow
+     */
+    public function FetchRelative($Offset) {
+    }
+
+    /**
+     * descHere
+     * @return	integer
+     */
+    public function getCount() {
+    }
+
+    /**
+     * descHere
+     * @return	string
+     */
+    public function getCursorName() {
+    }
+
+    /**
+     * descHere
+     * @return	TFetchDirection
+     */
+    public function getFetchDirection() {
+    }
+
+    /**
+     * descHere
+     * @return	integer
+     */
+    public function getFetchSize() {
+    }
+
+    /**
+     * descHere
+     * @return	IRow
+     */
+    public function getInsertRow() {
+    }
+
+    /**
+     * descHere
+     * @return	boolean
+     */
+    public function getIsClosed() {
+    }
+
+    /**
+     * descHere
+     * @return	boolean
+     */
+    public function getIsEmpty() {
+    }
+
+    /**
+     * descHere
+     * @return	IReusltMetaData
+     */
+    public function getMetaData() {
+    }
+
+    /**
+     * descHere
+     * @return	IStatement
+     */
+    public function getStatement() {
+    }
+
+    /**
+     * descHere
+     * @return	integer|string
+     */
+    public function key() {
+    }
+
+    /**
+     * descHere
+     */
+    public function next() {
+    }
+
+    /**
+     * descHere
+     * @param	K	$offset
+     * @return	boolean
+     */
+    public final function offsetExists($offset) {
+    }
+
+    /**
+     * descHere
+     * @param	K	$offset
+     * @return	V
+     */
+    public final function offsetGet($offset) {
+    }
+
+    /**
+     * descHere
+     * @param	K	$offset
+     * @param	V	$value
+     */
+    public final function offsetSet($offset, $value) {
+    }
+
+    /**
+     * descHere
+     * @param	K	$offset
+     */
+    public final function offsetUnset($offset) {
+    }
+
+    /**
+     * descHere
+     */
+    public function Remove() {
+    }
+
+    /**
+     * descHere
+     */
+    public function rewind() {
+    }
+
+    /**
+     * descHere
+     * @param	TFetchDirection	$Value
+     */
+    public function setFetchDirection($Value) {
+    }
+
+    /**
+     * descHere
+     * @param	integer	$Value
+     */
+    public function setFetchSize($Value) {
+    }
+
+    /**
+     * descHere
+     * @return	boolean
+     */
+    public function valid() {
+    }
+
+}
+
+final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData { //TODO: pending...
     /**
      * 
      * @var TMysqlConnection
@@ -1090,7 +1295,9 @@ final class TMysqlDatabaseMetaData implements IDatabaseMetaData { //TODO: pendin
      * @param	TMysqlConnection	$Connection
      */
     public function __construct($Connection) {
+        parent::__construct();
         TType::Object($Connection, 'TMysqlConnection');
+        
         $this->FConnection = $Connection;
     }
 
