@@ -57,7 +57,6 @@ EOD;
      */
     protected function tearDown() {
         Framework::Free($this->TMysqlConnection);
-        
         parent::tearDown();
     }
 
@@ -144,7 +143,7 @@ EOD;
         $this->TMysqlConnection->Execute("update `tmysqlconnectiontest` set `_vchar`='CHINA' where `id`=10");
         $mSvpt2 = $this->TMysqlConnection->CreateSavepoint('NamedSvpt');
         $this->TMysqlConnection->Rollback($mSvpt);
-        
+
         $mStmt = $this->TMysqlConnection->CreateStatement(TResultSetType::eForwardOnly(), TConcurrencyType::eReadOnly());
         $mStmt->setCommand("select `_vchar` from `tmysqlconnectiontest`");
         $mData = $mStmt->FetchAsScalar();
@@ -301,7 +300,6 @@ EOD;
         $this->markTestIncomplete("Rollback test not implemented");
         
         $this->TMysqlConnection->Rollback(/* parameters */);
-    
     }
 
     /**

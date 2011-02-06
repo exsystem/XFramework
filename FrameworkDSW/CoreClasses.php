@@ -334,6 +334,7 @@ abstract class TComponent extends TObject implements IComponent {
      * @see FrameworkDSW/TObject#Create()
      */
     public function __construct($Owner = null) {
+        parent::__construct();
         TType::Object($Owner, 'TComponent');
         
         if (isset($Owner)) {

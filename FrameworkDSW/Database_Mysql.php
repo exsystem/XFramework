@@ -1,7 +1,7 @@
 <?php
 /**
  * Database_Mysql.php
- * @author	ExSystem
+ * @author	许子健
  * @version	$Id$
  * @since	separate file since reversion 17
  */
@@ -500,7 +500,7 @@ final class TMysqlConnection extends TObject implements IConnection {
      * @param	string	$ExceptionType
      */
     public static function EnsureQuery($Connection, $QueryString, $ExceptionType) {
-        if (!$Connection->FMysqli->query($QueryString)) {
+        if ($Connection->FMysqli->query($QueryString) === false) {
             self::PushWarning($ExceptionType, $Connection->FMysqli->sqlstate, $Connection->FMysqli->errno, $Connection->FMysqli->error, $Connection);
         }
     }
@@ -882,10 +882,27 @@ class TMysqlStatement extends TObject implements IStatement {
      */
     private $FCommands = null;
 
+    /**
+     * 
+     * Enter description here ...
+     */
     private function EnsureMysqliStmt() {
         if ($this->FMysqliStmt === null) {
             throw new EEmptyCommand();
         }
+    }
+
+    /**
+     * 
+     * Enter description here ...
+     * @param	string	$WarningType
+     */
+    private function ResetMysqliStmt($WarningType) {
+        $mState = $this->FMysqliStmt->sqlstate;
+        $mErrno = $this->FMysqliStmt->errno;
+        $mError = $this->FMysqliStmt->error;
+        $this->FMysqliStmt->close();
+        TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $mState, $mErrno, $mError, $this->FConnection);
     }
 
     /**
@@ -917,8 +934,12 @@ class TMysqlStatement extends TObject implements IStatement {
      * @see TObject::__destruct()
      */
     public function __destruct() {
-        $this->FMysqliStmt->close();
-        $this->FMysqliStmt = null;
+        if ($this->FMysqliStmt !== null) {
+            $this->FMysqliStmt->close();
+            $this->FMysqliStmt = null;
+        }
+        //TODO actually it is no need to surround this with the if. for a wired php bug only in Running mode, not in debugging.
+        //mysqlistmt::close() will run again after closed.
         Framework::Free($this->FCommands);
     }
 
@@ -971,21 +992,21 @@ class TMysqlStatement extends TObject implements IStatement {
         $this->EnsureMysqliStmt();
         $mRaw = null;
         if (!$this->FMysqliStmt->bind_result(&$mRaw)) {
-            TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FConnection);
+            $this->ResetMysqliStmt(EExecuteFailed::ClassType());
         }
         if (!$this->FMysqliStmt->execute()) {
-            TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FConnection);
+            $this->ResetMysqliStmt(EExecuteFailed::ClassType());
         }
         $mMeta = $this->FMysqliStmt->result_metadata();
-        if (!$mMeta) {
-            TMysqlConnection::PushWarning(EFetchAsScalarFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FConnection);
+        if ($mMeta === false) {
+            $this->ResetMysqliStmt(EFetchAsScalarFailed::ClassType());
         }
-        $mMeta = $mMeta->fetch_field();
-        if (!$mMeta) {
-            TMysqlConnection::PushWarning(EFetchAsScalarFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FConnection);
+        $mFieldMeta = $mMeta->fetch_field();
+        if ($mFieldMeta === false) {
+            $this->ResetMysqliStmt(EFetchAsScalarFailed::ClassType());
         }
-        if (!$this->FMysqliStmt->fetch()) {
-            TMysqlConnection::PushWarning(EFetchAsScalarFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FConnection);
+        if ($this->FMysqliStmt->fetch() !== true) {
+            $this->ResetMysqliStmt(EFetchAsScalarFailed::ClassType());
         }
         
         //Type mapping
@@ -1003,7 +1024,7 @@ class TMysqlStatement extends TObject implements IStatement {
             MYSQLI_TYPE_TIME => 'todo', MYSQLI_TYPE_TIMESTAMP => 'todo', 
             MYSQLI_TYPE_TINY => 'integer', MYSQLI_TYPE_TINY_BLOB => 'todo', 
             MYSQLI_TYPE_VAR_STRING => 'string', MYSQLI_TYPE_YEAR => 'todo');
-        if ($mMeta->length == 1) {
+        if ($mFieldMeta->length == 1) {
             $mMap[MYSQLI_TYPE_BIT] = 'boolean';
             $mMap[MYSQLI_TYPE_TINY] = 'boolean';
         }
@@ -1011,8 +1032,8 @@ class TMysqlStatement extends TObject implements IStatement {
         //TODO: more mapping to do...
         
 
-        if (call_user_func('is_' . $mMap[$mMeta->type], $mRaw) === true) {
-            $mGenericParam = array ('T' => $mMap[$mMeta->type]);
+        if (call_user_func('is_' . $mMap[$mFieldMeta->type], $mRaw)) {
+            $mGenericParam = array ('T' => $mMap[$mFieldMeta->type]);
         }
         elseif ($mRaw === null) {
             return null;
@@ -1020,6 +1041,7 @@ class TMysqlStatement extends TObject implements IStatement {
         else {
             $mGenericParam = array ('T' => 'string');
         }
+        $mMeta->close();
         TPrimativeParam::PrepareGeneric($mGenericParam);
         return new TPrimativeParam($mRaw);
     }
@@ -1076,8 +1098,12 @@ class TMysqlStatement extends TObject implements IStatement {
         if ($Command != '') {
             $this->setCommand($Command);
         }
-    
-     //TODO: ...
+        if ($this->FCommand[0] == '#') {
+            //TODO: a stored procedure is called.
+        }
+        else {
+            return new TAbstractMysqlResultSet($this, $this->FMysqliStmt);
+        }
     }
 
     /**
@@ -1108,20 +1134,184 @@ class TMysqlStatement extends TObject implements IStatement {
 }
 
 /**
- * TMysqlResultSet
- * @author	ExSystem
+ * TAbstractMysqlResultSet
+ * @author	许子健
  */
-class TMysqlResultSet extends TObject implements IResultSet {
+abstract class TAbstractMysqlResultSet extends TObject {
+    
+    /**
+     * 
+     * Enter description here ...
+     * @var	TMysqlStatement
+     */
+    protected $FStatement = null;
+    /**
+     * 
+     * Enter description here ...
+     * @var TResultSetType
+     */
+    protected $FResultSetType = null;
+    /**
+     * 
+     * Enter description here ...
+     * @var	array
+     */
+    protected $FMeta = array ();
+    /**
+     * 
+     * Enter description here ...
+     * @var	array
+     */
+    protected $FCurrentRow = array ();
+    /**
+     * 
+     * Enter description here ...
+     * @var	integer
+     */
+    private $FCurrentRowId = -1;
+    /**
+     * 
+     * Enter description here ...
+     * @var	TFetchDirection
+     */
+    private $FFetchDirection = null;
 
     /**
-     * descHere
+     * 
+     * Enter description here ...
      */
-    public function Close() {
+    abstract protected function FetchMeta();
+
+    /**
+     * 
+     * Enter description here ...
+     * @return	integer
+     */
+    abstract protected function DoGetCount();
+
+    /**
+     * 
+     * Enter description here ...
+     * @param	integer	$Value
+     */
+    abstract protected function DoSetFetchSize($Value);
+
+    /**
+     * 
+     * Enter description here ...
+     * @param	integer	$RowId
+     */
+    abstract protected function DoSeekAndFetch($RowId);
+
+    /**
+     * 
+     * Enter description here ...
+     */
+    abstract protected function DoReset();
+
+    /**
+     * 
+     * Enter description here ...
+     * @param	integer	$RowId
+     */
+    private function EnsureRowId($RowId) {
+        if ($RowId < 0) {
+            throw new EIndexOutOfBounds(); //TODO exception processing.
+        }
+    }
+
+    /**
+     * 
+     * Enter description here ...
+     * @param	integer	$RowId
+     */
+    private function FetchForward($RowId) {
+        $mFetchFlag = null;
+        $mCurrRowId = $this->FCurrentRowId;
+        while ($mCurrRowId < $RowId) {
+            $mFetchFlag = $this->FMysqliStmt->fetch();
+            if ($mFetchFlag === null) {
+                break;
+            }
+            if ($mFetchFlag === false) {
+                TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FStatement->getConnection());
+            }
+            ++$mCurrRowId;
+        }
+        if ($mCurrRowId !== $RowId) {
+            throw new EIndexOutOfBounds(); //TODO exception processing.
+        }
+        $this->FCurrentRowId = $RowId;
+    }
+
+    /**
+     * 
+     * Enter description here ...
+     * @param	integer	$RowId
+     * @return	IRow
+     */
+    private function FetchTo($RowId) {
+        switch ($this->FResultSetType) {
+            case TResultSetType::eForwardOnly() :
+                if ($RowId < $this->FCurrentRowId) {
+                    throw new EFetchRowFailed(); //TODO exception processing.
+                }
+                if ($RowId > $this->FCurrentRowId) {
+                    $this->FetchForward($RowId);
+                }
+                break;
+            case TResultSetType::eScrollInsensitive() :
+                $mCount = $this->DoGetCount();
+                if ($RowId >= $mCount) {
+                    throw new EIndexOutOfBounds(); //TODO exception processing.
+                }
+                if ($this->FFetchDirection == TFetchDirection::eReverse()) {
+                    $RowId = $mCount - $RowId - 1;
+                }
+                $this->DoSeekAndFetch($RowId);
+                $this->FCurrentRowId = $RowId;
+                break;
+            case TResultSetType::eScrollSensitive() :
+                if ($RowId < $this->FCurrentRowId) {
+                    try {
+                        $this->DoReset();
+                    }
+                    catch (EExecuteFailed $Ex) {
+                        $this->FCurrentRowId = -1;
+                        throw $Ex;
+                    }
+                }
+                $this->FCurrentRowId = -1;
+                $this->FetchForward($RowId);
+                break;
+        }
+    
+     //TODO return the row object.
+    }
+
+    /**
+     * 
+     * @param	TMysqlStatement	$Statement
+     * @param	TResultSetType	$ResultSetType
+     * Enter description here ...
+     */
+    public function __construct($Statement, $ResultSetType) {
+        $this->PrepareGeneric(array ('K' => 'integer', 'V' => 'IRow', 
+            'T' => 'IRow'));
+        parent::__construct();
+        TType::Object($Statement, 'TMysqlStatement');
+        TType::Object($ResultSetType, 'TResultSetType');
+        
+        $this->FStatement = $Statement;
+        $this->FResultSetType = $ResultSetType;
+        $this->FFetchDirection = TFetchDirection::eForward();
+        
+        $this->FetchMeta();
     }
 
     /**
      * descHere
-     * @return	T
+     * @return	IRow
      */
     public function current() {
     }
@@ -1132,6 +1322,10 @@ class TMysqlResultSet extends TObject implements IResultSet {
      * @return	IRow
      */
     public function FetchAbsolute($RowId) {
+        TType::Int($RowId);
+        
+        $this->EnsureRowId($RowId);
+        return $this->FetchTo($RowId);
     }
 
     /**
@@ -1140,6 +1334,11 @@ class TMysqlResultSet extends TObject implements IResultSet {
      * @return	IRow
      */
     public function FetchRelative($Offset) {
+        TType::Int($Offset);
+        
+        $Offset += $this->FCurrentRowId;
+        $this->EnsureRowId($Offset);
+        return $this->FetchTo($Offset);
     }
 
     /**
@@ -1147,6 +1346,17 @@ class TMysqlResultSet extends TObject implements IResultSet {
      * @return	integer
      */
     public function getCount() {
+        switch ($this->FResultSetType) {
+            case TResultSetType::eForwardOnly() :
+                return $this->FCurrentRowId + 1;
+                break;
+            case TResultSetType::eScrollInsensitive() :
+                return $this->DoGetCount();
+                break;
+            case TResultSetType::eScrollSensitive() :
+                return $this->FCurrentRowId + 1;
+                break;
+        }
     }
 
     /**
@@ -1154,6 +1364,7 @@ class TMysqlResultSet extends TObject implements IResultSet {
      * @return	string
      */
     public function getCursorName() {
+        throw new EUnsupportedDbFeature();
     }
 
     /**
@@ -1161,27 +1372,7 @@ class TMysqlResultSet extends TObject implements IResultSet {
      * @return	TFetchDirection
      */
     public function getFetchDirection() {
-    }
-
-    /**
-     * descHere
-     * @return	integer
-     */
-    public function getFetchSize() {
-    }
-
-    /**
-     * descHere
-     * @return	IRow
-     */
-    public function getInsertRow() {
-    }
-
-    /**
-     * descHere
-     * @return	boolean
-     */
-    public function getIsClosed() {
+        return $this->FFetchDirection;
     }
 
     /**
@@ -1189,6 +1380,7 @@ class TMysqlResultSet extends TObject implements IResultSet {
      * @return	boolean
      */
     public function getIsEmpty() {
+        return $this->getCount() == 0;
     }
 
     /**
@@ -1203,11 +1395,12 @@ class TMysqlResultSet extends TObject implements IResultSet {
      * @return	IStatement
      */
     public function getStatement() {
+        return $this->FStatement;
     }
 
     /**
      * descHere
-     * @return	integer|string
+     * @return	integer
      */
     public function key() {
     }
@@ -1228,23 +1421,23 @@ class TMysqlResultSet extends TObject implements IResultSet {
 
     /**
      * descHere
-     * @param	K	$offset
-     * @return	V
+     * @param	integer	$offset
+     * @return	IRow
      */
     public final function offsetGet($offset) {
     }
 
     /**
      * descHere
-     * @param	K	$offset
-     * @param	V	$value
+     * @param	integer	$offset
+     * @param	IRow	$value
      */
     public final function offsetSet($offset, $value) {
     }
 
     /**
      * descHere
-     * @param	K	$offset
+     * @param	integer	$offset
      */
     public final function offsetUnset($offset) {
     }
@@ -1266,6 +1459,14 @@ class TMysqlResultSet extends TObject implements IResultSet {
      * @param	TFetchDirection	$Value
      */
     public function setFetchDirection($Value) {
+        TType::Object($Value, 'TFetchDirection');
+        if ($Value == TFetchDirection::eUnkown()) {
+            throw new EInvalidParameter();
+        }
+        if ($this->FResultSetType != TResultSetType::eScrollInsensitive() && $Value == TFetchDirection::eReverse()) {
+            throw new EUnsupportedDbFeature();
+        }
+        $this->FFetchDirection = $Value;
     }
 
     /**
@@ -1273,6 +1474,12 @@ class TMysqlResultSet extends TObject implements IResultSet {
      * @param	integer	$Value
      */
     public function setFetchSize($Value) {
+        TType::Int($Value);
+        if ($Value < 1) {
+            throw new EInvalidParameter();
+        }
+        
+        $this->DoSetFetchSize($Value);
     }
 
     /**
@@ -1282,6 +1489,135 @@ class TMysqlResultSet extends TObject implements IResultSet {
     public function valid() {
     }
 
+}
+
+/**
+ * TMysqlStmtResultSet
+ * @author	许子健
+ */
+class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet {
+    
+    /**
+     * 
+     * Enter description here ...
+     * @var	mysqli_stmt
+     */
+    private $FMysqliStmt = null;
+
+    /**
+     * (non-PHPdoc)
+     * @see TAbstractMysqlResultSet::FetchMeta()
+     */
+    protected function FetchMeta() {
+        $mRawMeta = $this->FMysqliStmt->result_metadata();
+        
+        if ($mRawMeta instanceof mysqli_result) {
+            $this->FMeta = $mRawMeta->fetch_fields();
+            $mRawMeta->close();
+        }
+        else { //means this SQL does not yield resultsets.
+            TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FStatement->getConnection());
+        }
+    }
+
+    /**
+     * (non-PHPdoc)
+     * @see TAbstractMysqlResultSet::DoSetFetchSize()
+     * @param	integer	$Value
+     */
+    protected function DoSetFetchSize($Value) {
+        $this->FMysqliStmt->attr_set(MYSQLI_STMT_ATTR_PREFETCH_ROWS, $Value);
+    }
+
+    /**
+     * (non-PHPdoc)
+     * @see TAbstractMysqlResultSet::DoGetCount()
+     * @return	integer
+     */
+    protected function DoGetCount() {
+        return $this->FMysqliStmt->num_rows;
+    }
+
+    /**
+     * (non-PHPdoc)
+     * @see TAbstractMysqlResultSet::DoReset()
+     */
+    protected function DoReset() {
+        if (!$this->FMysqliStmt->reset()) {
+            TMysqlConnection::PushWarning(EFetchRowFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FStatement->getConnection());
+        }
+        if (!$this->FMysqliStmt->execute()) {
+            TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FStatement->getConnection());
+        }
+    }
+
+    /**
+     * (non-PHPdoc)
+     * @see TAbstractMysqlResultSet::DoSeekAndFetch()
+     * @param	integer	$RowId
+     */
+    protected function DoSeekAndFetch($RowId) {
+        $this->FMysqliStmt->data_seek($RowId);
+        if ($this->FMysqliStmt->fetch() === false) {
+            TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FStatement->getConnection());
+        }
+    }
+
+    /**
+     * 
+     * @param	TMysqlStatement	$Statement
+     * @param	mysqli_stmt		$MysqliStmt
+     * @param	TResultSetType	$ResultSetType
+     * Enter description here ...
+     */
+    public function __construct($Statement, $MysqliStmt, $ResultSetType) {
+        parent::__construct();
+        TType::Object($Statement, 'TMysqlStatement');
+        TType::Object($ResultSetType, 'TResultSetType');
+        
+        $this->FMysqliStmt = $MysqliStmt;
+        foreach ($this->FMeta as $mItem) {
+            $mParams[] = &$this->FCurrentRow[$mItem['name']];
+        }
+        
+        if (!$this->FMysqliStmt->execute()) {
+            TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FStatement->getConnection());
+        }
+        if ($this->FMysqliStmt->attr_get(MYSQLI_STMT_ATTR_CURSOR_TYPE) === MYSQLI_CURSOR_TYPE_NO_CURSOR) {
+            $this->FMysqliStmt->store_result();
+        }
+        
+        call_user_func_array(array ($this->FMysqliStmt, 'bind_result'), $mParams);
+    }
+
+    /**
+     * (non-PHPdoc)
+     * @see TObject::__destruct()
+     */
+    public function __destruct() {
+        if ($this->FMysqliStmt->attr_get(MYSQLI_STMT_ATTR_CURSOR_TYPE) === MYSQLI_CURSOR_TYPE_NO_CURSOR) {
+            $this->FMysqliStmt->free_result();
+        }
+        $this->FMysqliStmt->close();
+    }
+
+    /**
+     * (non-PHPdoc)
+     * @see IResultSet::getInsertRow()
+     * @return IRow
+     */
+    public function getInsertRow() {
+    
+    }
+
+    /**
+     * (non-PHPdoc)
+     * @see IResultSet::getFetchSize()
+     * @return	integer
+     */
+    public function getFetchSize() {
+    
+    }
 }
 
 final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData { //TODO: pending...

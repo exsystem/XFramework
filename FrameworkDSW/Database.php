@@ -676,11 +676,6 @@ interface IResultSet extends IArrayAccess {
 
     /**
      * descHere
-     */
-    public function Close();
-
-    /**
-     * descHere
      * @param	integer	$RowId
      * @return	IRow
      */
@@ -722,12 +717,6 @@ interface IResultSet extends IArrayAccess {
      * @return	IRow
      */
     public function getInsertRow();
-
-    /**
-     * descHere
-     * @return	boolean
-     */
-    public function getIsClosed();
 
     /**
      * descHere
@@ -1993,6 +1982,7 @@ abstract class TAbstractParam extends TObject {
 /**
  * TPrimativeParam
  * param	<T>
+ * extends	IParam<T>
  * @author	许子健
  */
 final class TPrimativeParam extends TAbstractParam implements IParam {

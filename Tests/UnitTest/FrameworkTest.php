@@ -5,10 +5,11 @@
  * @version	$Id$
  * @since	separate file since reversion 1
  */
- 
+
 require_once 'classForTesting.php';
 
-require_once 'PHPUnit\Framework\TestCase.php';
+require_once 'PHPUnit/Framework/TestCase.php';
+require_once 'Tests/UnitTest/helper.php';
 
 /**
  * Framework test case.
@@ -41,7 +42,7 @@ class FrameworkTest extends PHPUnit_Framework_TestCase {
     }
 
     public function testDeepSerialize() {
-        echo '======TEST DEEP SERIALIZE=====' . "\n";
+        logging('======TEST DEEP SERIALIZE=====');
         
         $obj = new TTest2();
         $obj2 = new TTest();
@@ -53,13 +54,13 @@ class FrameworkTest extends PHPUnit_Framework_TestCase {
         TTest2::$FSPublic1 = $obj;
         
         $str = Framework::Serialize($obj);
-        echo $str;
-        echo "\n" . '======TEST DEEP SERIALIZE====ended=' . "\n";
+        logging($str);
+        logging('======TEST DEEP SERIALIZE====ended=');
     }
 
     public function testComlpexSerialize() {
         //$this->markTestIncomplete("Last test not implemented");
-        echo '======TEST COMPLX SERIALIZE=====' . "\n";
+        logging('======TEST COMPLX SERIALIZE=====');
         
         $obj = new TTest();
         $obj2 = new TTest();
@@ -69,6 +70,7 @@ class FrameworkTest extends PHPUnit_Framework_TestCase {
         $obj->setPrivate(1, $obj);
         $obj->setPrivate(2, $obj2);
         TTest::$FSPublic1 = $obj;
+        TTest::setSPrivate(1, 'helloworld');
         
         $i = 100;
         $a = microtime(true);
@@ -77,7 +79,8 @@ class FrameworkTest extends PHPUnit_Framework_TestCase {
         }
         $b = microtime(true);
         $b = $b - $a;
-        echo "\nTIME_PHP = {$b}\n" . serialize($obj) . "\n\n";
+        logging("TIME_PHP = {$b}");
+        logging(serialize($obj));
         
         $i = 100;
         $a = microtime(true);
@@ -86,13 +89,15 @@ class FrameworkTest extends PHPUnit_Framework_TestCase {
         }
         $b = microtime(true);
         $b = $b - $a;
-        echo "\nTIME_FRAMEWORK = {$b}\n" . Framework::Serialize($obj) . "\n\n";
+        logging("\nTIME_FRAMEWORK = {$b}");
+        logging(Framework::Serialize($obj));
         
-        var_dump(Framework::Unserialize(Framework::Serialize($obj)));
+        $data = Framework::Unserialize(Framework::Serialize($obj));
+        logging(print_r($data, true));
         
-        echo '======TEST COMPLX SERIALIZE====ended=' . "\n";
-        
-    //**"!" is for the "\0" character, this is well-formatted.******************
+        logging('======TEST COMPLX SERIALIZE====ended=');
+    
+     //**"!" is for the "\0" character, this is well-formatted.******************
     //a:1:{
     //    i:0;a:2:{
     //        i:0;a:10:{
@@ -148,16 +153,16 @@ class FrameworkTest extends PHPUnit_Framework_TestCase {
         TTest::setSPrivate(2, 'static_private_2');
         
         $str = Framework::Serialize($obj);
-        echo "\n" . $str . "\n";
+        logging($str);
         
-        var_dump(Framework::Unserialize($str));
+        logging(var_export(Framework::Unserialize($str), 1));
     }
 
     /**
      * Tests Framework::Unserialize()
      */
     public function testUnserialize() {
-        echo '======TEST COMPLX UNSERIALIZE=====' . "\n";
+        logging('======TEST COMPLX UNSERIALIZE=====');
         
         $obj = new TTest();
         $obj2 = new TTest();
@@ -176,7 +181,7 @@ class FrameworkTest extends PHPUnit_Framework_TestCase {
         }
         $b = microtime(true);
         $b = $b - $a;
-        echo "\nTIME_PHP = {$b}\n";
+        logging("TIME_PHP = {$b}");
         
         $i = 100; //10000
         $str = Framework::Serialize($obj);
@@ -186,9 +191,9 @@ class FrameworkTest extends PHPUnit_Framework_TestCase {
         }
         $b = microtime(true);
         $b = $b - $a;
-        echo "\nTIME_FRAMEWORK = {$b}\n";
+        logging("TIME_FRAMEWORK = {$b}");
         
-        echo '======TEST COMPLX UNSERIALIZE====ended=' . "\n";
+        logging('======TEST COMPLX UNSERIALIZE====ended=');
     }
 }
 
