@@ -10,6 +10,63 @@ require_once 'FrameworkDSW/Database.php';
 require_once 'FrameworkDSW/Containers.php';
 
 /**
+ * 
+ * Enter description here ...
+ * @author	许子健
+ *
+ */
+interface IMysqlObject extends IInterface {
+
+    /**
+     * 
+     * Enter description here ...
+     * @return	TMysqlDriver
+     */
+    public function getDriver();
+}
+
+/**
+ * 
+ * Enter description here ...
+ * @author	许子健
+ */
+abstract class TBaseMysqlObject extends TObject implements IMysqlObject {
+    /**
+     * 
+     * Enter description here ...
+     * @var	TMysqlDriver
+     */
+    protected $FDriver = null;
+    /**
+     * 
+     * Enter description here ...
+     * @var	mysqli
+     */
+    protected $FMysqli = null;
+
+    /**
+     * 
+     * Enter description here ...
+     * @param	TMysqlDriver	$Driver
+     */
+    public function __construct($Driver) {
+        TType::Object($Driver, 'TMysqlDriver');
+        parent::__construct();
+        $this->FDriver = $Driver;
+        $this->FMysqli = $Driver->getMysqli($this);
+    }
+
+    /**
+     * 
+     * Enter description here ...
+     * @return	TMysqlDriver
+     */
+    public function getDriver() {
+        return $this->FDriver;
+    }
+}
+
+/**
  * TMysqlWarningContext
  * @author	许子健
  */
@@ -425,13 +482,24 @@ final class TMysqlDriver extends TObject implements IDriver {
         }
         return false;
     }
+
+    /**
+     * 
+     * Enter description here ...
+     * @param	IMysqlObject	$Request
+     * @return	mysqli
+     */
+    public function getMysqli($Request) {
+        TType::Object($Request, 'IMysqlObject');
+        return $this->FMysqli;
+    }
 }
 
 /**
  * TMysqlConnection
  * @author	许子健
  */
-final class TMysqlConnection extends TObject implements IConnection {
+final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
     /**
      * @var	string
      */
@@ -452,18 +520,6 @@ final class TMysqlConnection extends TObject implements IConnection {
     /**
      * 
      * Enter description here ...
-     * @var	TMysqlDriver
-     */
-    private $FDriver = null;
-    /**
-     * 
-     * Enter description here ...
-     * @var	mysqli
-     */
-    private $FMysqli = null;
-    /**
-     * 
-     * Enter description here ...
      * @var	boolean
      */
     private $FIsConnected = false;
@@ -472,8 +528,7 @@ final class TMysqlConnection extends TObject implements IConnection {
      * Enter description here ...
      * @var	EDatabaseWarning
      */
-    private $FWarnings = null;
-    
+    private $FWarnings = null;    
     /**
      * 
      * Enter description here ...
@@ -509,15 +564,13 @@ final class TMysqlConnection extends TObject implements IConnection {
      * 
      * Enter description here ...
      * @param	TMysqlDriver	$Driver
-     * @param	mysqli			$Mysqli
      */
-    public function __construct($Driver, $Mysqli) {
+    public function __construct($Driver) {
         parent::__construct();
         TType::Object($Driver, 'TMysqlDriver');
         
-        if ($Driver !== null && $Mysqli !== null) {
-            $this->FDriver = $Driver;
-            $this->FMysqli = $Mysqli;
+        if ($Driver !== null) {
+            parent::__construct($Driver);
             $this->FIsConnected = true;
         }
         else {
@@ -608,7 +661,7 @@ final class TMysqlConnection extends TObject implements IConnection {
         $this->EnsureConnected();
         
         //TODO: check if params given by this function are supported first.
-        return new TMysqlStatement($this, $this->FMysqli, $ResultSetType, $ConcurrencyType);
+        return new TMysqlStatement($this, $this->FDriver, $ResultSetType, $ConcurrencyType);
     }
 
     /**
@@ -840,17 +893,11 @@ final class TMysqlConnection extends TObject implements IConnection {
  * TMysqlStatement
  * @author	许子健
  */
-class TMysqlStatement extends TObject implements IStatement {
+class TMysqlStatement extends TBaseMysqlObject implements IStatement {
     /**
      * @var	TMysqlConnection
      */
     private $FConnection = null;
-    /**
-     * 
-     * Enter description here ...
-     * @var	mysqli
-     */
-    private $FMysqli = null;
     /**
      * 
      * Enter description here ...
@@ -909,21 +956,17 @@ class TMysqlStatement extends TObject implements IStatement {
      * 
      * Enter description here ...
      * @param	TMysqlConnection	$Connection
-     * @param	mysqli				$Mysqli
      * @param	TResultSetType		$ResultSetType
      * @param	TConcurrencyType	$ConcurrencyType
      */
-    public function __construct($Connection, $Mysqli, $ResultSetType, $ConcurrencyType) {
+    public function __construct($Connection, $ResultSetType, $ConcurrencyType) {
         parent::__construct();
         TType::Object($Connection, 'TMysqlConnection');
         TType::Object($ResultSetType, 'TResultSetType');
         TType::Object($ConcurrencyType, 'TConcurrencyType');
         
         $this->FConnection = $Connection;
-        if (!$Mysqli instanceof mysqli) {
-            throw new EInvalidParameter('$Mysqli' . EInvalidParameter::CMsg);
-        }
-        $this->FMysqli = $Mysqli;
+        parent::__construct($this->FConnection->getDriver());
         $this->FMysqliStmt = $this->FMysqli->stmt_init();
         $this->FResultSetType = $ResultSetType;
         $this->FConcurrencyType = $ConcurrencyType;
@@ -1130,14 +1173,13 @@ class TMysqlStatement extends TObject implements IStatement {
                 break;
         }
     }
-
 }
 
 /**
  * TAbstractMysqlResultSet
  * @author	许子健
  */
-abstract class TAbstractMysqlResultSet extends TObject {
+abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
     
     /**
      * 
@@ -1298,7 +1340,7 @@ abstract class TAbstractMysqlResultSet extends TObject {
     public function __construct($Statement, $ResultSetType) {
         $this->PrepareGeneric(array ('K' => 'integer', 'V' => 'IRow', 
             'T' => 'IRow'));
-        parent::__construct();
+        parent::__construct($Statement->getConnection()->getDriver());
         TType::Object($Statement, 'TMysqlStatement');
         TType::Object($ResultSetType, 'TResultSetType');
         
@@ -1314,6 +1356,7 @@ abstract class TAbstractMysqlResultSet extends TObject {
      * @return	IRow
      */
     public function current() {
+        //TODO todo
     }
 
     /**
@@ -1388,6 +1431,7 @@ abstract class TAbstractMysqlResultSet extends TObject {
      * @return	IReusltMetaData
      */
     public function getMetaData() {
+        //TODO todo
     }
 
     /**
@@ -1403,12 +1447,14 @@ abstract class TAbstractMysqlResultSet extends TObject {
      * @return	integer
      */
     public function key() {
+        //TODO todo
     }
 
     /**
      * descHere
      */
     public function next() {
+        //TODO todo
     }
 
     /**
@@ -1417,6 +1463,7 @@ abstract class TAbstractMysqlResultSet extends TObject {
      * @return	boolean
      */
     public final function offsetExists($offset) {
+        //TODO todo
     }
 
     /**
@@ -1425,6 +1472,7 @@ abstract class TAbstractMysqlResultSet extends TObject {
      * @return	IRow
      */
     public final function offsetGet($offset) {
+        //TODO todo
     }
 
     /**
@@ -1433,6 +1481,7 @@ abstract class TAbstractMysqlResultSet extends TObject {
      * @param	IRow	$value
      */
     public final function offsetSet($offset, $value) {
+        //TODO todo
     }
 
     /**
@@ -1440,18 +1489,21 @@ abstract class TAbstractMysqlResultSet extends TObject {
      * @param	integer	$offset
      */
     public final function offsetUnset($offset) {
+        //TODO todo
     }
 
     /**
      * descHere
      */
     public function Remove() {
+        //TODO todo
     }
 
     /**
      * descHere
      */
     public function rewind() {
+        //TODO todo
     }
 
     /**
@@ -1487,6 +1539,7 @@ abstract class TAbstractMysqlResultSet extends TObject {
      * @return	boolean
      */
     public function valid() {
+        //TODO todo
     }
 
 }
@@ -1607,7 +1660,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
      * @return IRow
      */
     public function getInsertRow() {
-    
+        //TODO todo
     }
 
     /**
@@ -1616,8 +1669,228 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
      * @return	integer
      */
     public function getFetchSize() {
-    
+        //TODO todo
     }
+}
+
+/**
+ * 
+ * Enter description here ...
+ * @author ExSystem
+ */
+final class TMysqlRow extends TObject implements IRow {
+    
+    /**
+     * 
+     * Enter description here ...
+     * @var	TAbstractMysqlResultSet
+     */
+    private $FResultSet = null;
+    /**
+     * 
+     * Enter description here ...
+     * @var	array
+     */
+    private $FCurrentRow = array ();
+    /**
+     * 
+     * Enter description here ...
+     * @var	string
+     */
+    private $FTableName = '';
+    /**
+     * 
+     * Enter description here ...
+     * @var	string[]
+     */
+    private $FPrimaryKeys = array ();
+    /**
+     * 
+     * Enter description here ...
+     * @var	boolean
+     */
+    private $FWasDeleted = false;
+    /**
+     * 
+     * Enter description here ...
+     * @var	boolean
+     */
+    private $FWasUpdated = false;
+    /**
+     * 
+     * Enter description here ...
+     * @var	integer
+     */
+    private $FRowId = -1;
+
+    /**
+     * 
+     * Enter description here ...
+     */
+    private function SyncRowId() {
+        $mCurrRowId = $this->FResultSet->key();
+        if ($this->FRowId != $mCurrRowId) {
+            $this->FRowId = $mCurrRowId;
+        }
+    }
+
+    /**
+     * 
+     * Enter description here ...
+     * @param	TAbstractMysqlResultSet	$ResultSet
+     * @param	array					$CurrentRow
+     * @param	array					$Meta
+     */
+    public function __construct($ResultSet, &$CurrentRow, &$Meta) {
+        TType::Object($ResultSet, 'TAbstractMysqlResultSet');
+        
+        $this->FResultSet = $ResultSet;
+        $this->FCurrentRow = $CurrentRow;
+        foreach ($Meta as $mMetaObject) {
+            //NOT_NULL_FLAG = 1                                                                              
+            //UNIQUE_KEY_FLAG = 4                                                                            
+            //PRI_KEY_FLAG = 2                                                                               
+            //BLOB_FLAG = 16                                                                                 
+            //UNSIGNED_FLAG = 32                                                                             
+            //ZEROFILL_FLAG = 64                                                                             
+            //BINARY_FLAG = 128                                                                              
+            //ENUM_FLAG = 256                                                                                
+            //AUTO_INCREMENT_FLAG = 512                                                                      
+            //TIMESTAMP_FLAG = 1024                                                                          
+            //SET_FLAG = 2048                                                                                
+            //NUM_FLAG = 32768                                                                               
+            //PART_KEY_FLAG = 16384                                                                          
+            //GROUP_FLAG = 32768                                                                             
+            //UNIQUE_FLAG = 65536
+            $mCurrTableName = $mMetaObject->orgtable;
+            if (($this->FTableName != '') && ($this->FTableName == $mCurrTableName) && ($mMetaObject->flags & MYSQLI_PRI_KEY_FLAG != 0)) {
+                $this->FTableName = "`{$mCurrTableName}`";
+                $this->FPrimaryKeys[] = "`{$mMetaObject->orgname}`=?";
+            }
+            else {
+                $this->FTableName = '';
+                $this->FPrimaryKeys = array ();
+                return;
+            }
+        }
+    }
+
+    /**
+     * descHere
+     */
+    public function Delete() {
+        $this->SyncRowId();
+        if ($this->FTableName == '') {
+            throw new EUnsupportedDbFeature(); //TODO exception: cannot do deletion for the resultset.
+        }
+        $mStatement = $this->FResultSet->getStatement();
+        TType::Object($mStatement, 'TMysqlStatement');
+        $mMysqli = $mStatement->getDriver()->getMysqli($mStatement);
+        $mSpinnet = join(' AND ', $this->FPrimaryKeys);
+        $mStatement->Execute("PREPARE sDel FROM 'DELETE FROM {$this->FTableName} WHERE {$mSpinnet}'");
+        $mCount = -1;
+        $mParams = array ();
+        foreach ($this->FPrimaryKeys as &$mKeyName) {
+            ++$mCount;
+            $mParams[] = "@p{$mCount}";
+            $mValue = $mMysqli->real_escape_string($this->FCurrentRow[$mKeyName]);
+            $mStatement->Execute("SET @p{$mCount}='{$mValue}'");
+        }
+        $mStatement->Execute("EXECUTE sDel USING " . join(',', $mParams));
+    }
+
+    /**
+     * descHere
+     * @return	TConcurrencyType
+     */
+    public function getConcurrencyType() {
+    }
+
+    /**
+     * descHere
+     * @return	THoldability
+     */
+    public function getHoldability() {
+    }
+
+    /**
+     * descHere
+     * @return	IResultSet
+     */
+    public function getResultSet() {
+    }
+
+    /**
+     * descHere
+     * @return	TResultSetType
+     */
+    public function getType() {
+    }
+
+    /**
+     * descHere
+     * @return	boolean
+     */
+    public function getWasDeleted() {
+    }
+
+    /**
+     * descHere
+     * @return	boolean
+     */
+    public function getWasUpdated() {
+    }
+
+    /**
+     * descHere
+     * @param	K	$offset
+     * @return	boolean
+     */
+    public final function offsetExists($offset) {
+    }
+
+    /**
+     * descHere
+     * @param	K	$offset
+     * @return	V
+     */
+    public final function offsetGet($offset) {
+    }
+
+    /**
+     * descHere
+     * @param	K	$offset
+     * @param	V	$value
+     */
+    public final function offsetSet($offset, $value) {
+    }
+
+    /**
+     * descHere
+     * @param	K	$offset
+     */
+    public final function offsetUnset($offset) {
+    }
+
+    /**
+     * descHere
+     */
+    public function Refresh() {
+    }
+
+    /**
+     * descHere
+     * @return	void
+     */
+    public function UndoUpdates() {
+    }
+
+    /**
+     * descHere
+     */
+    public function Update() {
+    }
+
 }
 
 final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData { //TODO: pending...
