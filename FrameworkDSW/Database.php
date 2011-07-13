@@ -66,6 +66,54 @@ class EUnsupportedDbFeature extends EDatabaseException {}
  * @author	许子健
  */
 class EIllegalSavepointIdentifier extends EDatabaseException {}
+/**
+ * 
+ * Enter description here ...
+ * @author	许子健
+ */
+class EUnableToUpdateNonSingleTableResultSet extends EDatabaseException {}
+/**
+ * 
+ * Enter description here ...
+ * @author	许子健
+ */
+class EResultSetIsNotUpdatable extends EDatabaseException {}
+/**
+ * 
+ * Enter description here ...
+ * @author	许子健
+ */
+class ERowHasBeenDeleted extends EDatabaseException {}
+/**
+ * 
+ * Enter description here ...
+ * @author	许子健
+ */
+class ENothingToUpdate extends EDatabaseException {}
+/**
+ * 
+ * Enter description here ...
+ * @author	许子健
+ */
+class EInvalidRowId extends EDatabaseException {}
+/**
+ * 
+ * Enter description here ...
+ * @author	许子健
+ */
+class EInvalidColumnName extends EDatabaseException {}
+/**
+ * 
+ * Enter description here ...
+ * @author	许子健
+ */
+class ECurrentRowIsInsertRow extends EDatabaseException {}
+/**
+ * 
+ * Enter description here ...
+ * @author	许子健
+ */
+class EFailedToGetFetchSize extends EDatabaseException {}
 
 /**
  * EDatabaseWarning
@@ -166,7 +214,6 @@ class EFetchAsScalarFailed extends EDatabaseWarning {}
  * @author 许子健
  */
 class ESetCommandFailed extends EDatabaseWarning {}
-
 /**
  * 
  * Enter description here ...
@@ -672,7 +719,7 @@ interface ICallableStatement extends IPreparedStatement {
  * extends IArrayAccess<K: integer, V: IRow>, IIterator<T: IRow>
  * @author	许子健
  */
-interface IResultSet extends IArrayAccess {
+interface IResultSet extends IArrayAccess, IIterator {
 
     /**
      * descHere
@@ -731,6 +778,13 @@ interface IResultSet extends IArrayAccess {
     public function getMetaData();
 
     /**
+     * 
+     * Enter description here ...
+     * @return	TResultSetType
+     */
+    public function getType();
+
+    /**
      * descHere
      * @return	IStatement
      */
@@ -747,11 +801,16 @@ interface IResultSet extends IArrayAccess {
      * @param	integer	$Value
      */
     public function setFetchSize($Value);
+
+    /**
+     * descHere
+     */
+    public function Refresh();
 }
 
 /**
  * IRow
- * extends IArrayAccess <K: integer, V: IParam<T: ?>>
+ * extends IArrayAccess <K: string, V: IParam<T: ?>>
  * @author	许子健
  */
 interface IRow extends IArrayAccess {
@@ -781,12 +840,6 @@ interface IRow extends IArrayAccess {
 
     /**
      * descHere
-     * @return	TResultSetType
-     */
-    public function getType();
-
-    /**
-     * descHere
      * @return	boolean
      */
     public function getWasDeleted();
@@ -796,11 +849,6 @@ interface IRow extends IArrayAccess {
      * @return	boolean
      */
     public function getWasUpdated();
-
-    /**
-     * descHere
-     */
-    public function Refresh();
 
     /**
      * descHere
@@ -3091,8 +3139,8 @@ abstract class TAbstractPdoResultSet extends TObject {
         if ($this->FResultSetType == TResultSetType::eScrollInsensitive()) {
             return count($this->FRawData);
         }
-    
-     //TODO unsupported, throw an exception. 
+        
+        throw new EUnsupportedDbFeature();
     }
 
     /**

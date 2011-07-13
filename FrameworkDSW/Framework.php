@@ -212,12 +212,12 @@ class Framework extends TObject {
      * Act like FreeAndNil() in VCL.
      * @param	TObject	$Object
      */
-    public static final function Free(&$Object) {
+    public static final function Free(&$Object) {        
+        gc_collect_cycles();
         if ($Object !== null) {
             $Object->__destruct();
+            $Object = null;
         }
-        $Object = null;
-        gc_collect_cycles();
     }
 }
 

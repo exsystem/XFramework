@@ -64,7 +64,7 @@ EOD;
      * Constructs the test case.
      */
     public function __construct() {
-        // TODO Auto-generated constructor
+        ini_set('memory_limit', '256M');
     }
 
     /**
@@ -143,7 +143,7 @@ EOD;
         $this->TMysqlConnection->Execute("update `tmysqlconnectiontest` set `_vchar`='CHINA' where `id`=10");
         $mSvpt2 = $this->TMysqlConnection->CreateSavepoint('NamedSvpt');
         $this->TMysqlConnection->Rollback($mSvpt);
-
+        
         $mStmt = $this->TMysqlConnection->CreateStatement(TResultSetType::eForwardOnly(), TConcurrencyType::eReadOnly());
         $mStmt->setCommand("select `_vchar` from `tmysqlconnectiontest`");
         $mData = $mStmt->FetchAsScalar();
@@ -156,11 +156,36 @@ EOD;
      * Tests TMysqlConnection->CreateStatement()
      */
     public function testCreateStatement() {
-        // TODO Auto-generated TMysqlConnectionTest->testCreateStatement()
-        $this->markTestIncomplete("CreateStatement test not implemented");
+        for ($i = 1; $i < 5; ++$i) {
+            $this->TMysqlConnection->Execute("insert into `tmysqlconnectiontest` values({$i}, 10, 1, '中国hi', 20.5)");
+        }
         
-        $this->TMysqlConnection->CreateStatement(/* parameters */);
-    
+        $mStmt = $this->TMysqlConnection->CreateStatement(TResultSetType::eScrollSensitive(), TConcurrencyType::eUpdatable());
+        $mRs = $mStmt->Query('select * from tmysqlconnectiontest');
+        logging("<<<<");
+        
+        foreach ($mRs as $mRow) {
+            $mRow['id']->getValue();
+            $mRow['_int']->getValue();
+            $mRow['_bool']->getValue();
+            $mRow['_vchar']->getValue();
+            $mRow['_float']->getValue();
+            
+            TPrimativeParam::PrepareGeneric(array ('T' => 'string'));
+            $mRow['_vchar'] = new TPrimativeParam('修改过了！Modified');
+            $mRow->Update();            
+        /*
+                logging($mRow['id']->getValue());
+                logging($mRow['_int']->getValue());
+                logging($mRow['_bool']->getValue());
+                logging($mRow['_vchar']->getValue());
+                logging(">>{$mRow['_vchar']->getValue()}<<");
+                logging($mRow['_float']->getValue());
+                */
+        }
+        logging(">>>>");
+        Framework::Free($mRs);
+        Framework::Free($mStmt);
     }
 
     /**
