@@ -493,7 +493,8 @@ class TStdListIterator extends TObject implements IIterator {
      */
     public function __construct($List) {
         parent::__construct();
-        TType::Type($List, array ('TAbstractList' => array ('T' => $this->GenericArg('T'))));
+        TType::Type($List, array (
+            'TAbstractList' => array ('T' => $this->GenericArg('T'))));
         
         $this->FList = $List;
     }
@@ -577,7 +578,8 @@ class TStdListListIterator extends TStdListIterator implements IListIterator {
      * @see FrameworkDSW/TStdListIterator#Create($List)
      */
     public function __construct($List, $StartAt) {
-        TType::Type($List, array ('TAbstractList' => array ('T' => self::StaticGenericArg('T'))));
+        TType::Type($List, array (
+            'TAbstractList' => array ('T' => self::StaticGenericArg('T'))));
         TType::Int($StartAt);
         
         parent::__construct($List);
@@ -690,7 +692,8 @@ abstract class TAbstractCollection extends TObject implements ICollection {
      * @param   ICollection	$Collection <T>
      */
     public function AddAll($Collection) {
-        TType::Type($Collection, array ('ICollection' => array ('T' => $this->GenericArg('T'))));
+        TType::Type($Collection, array (
+            'ICollection' => array ('T' => $this->GenericArg('T'))));
         $this->CheckReadOnly();
         
         foreach ($Collection as $mElement) {
@@ -747,7 +750,8 @@ abstract class TAbstractCollection extends TObject implements ICollection {
      * @return  boolean
      */
     public function ContainsAll($Collection) {
-        TType::Type($Collection, array ('ICollection' => array ('T' => $this->GenericArg('T'))));
+        TType::Type($Collection, array (
+            'ICollection' => array ('T' => $this->GenericArg('T'))));
         
         foreach ($Collection as $mElement) {
             if (!$this->Contains($mElement)) {
@@ -801,7 +805,8 @@ abstract class TAbstractCollection extends TObject implements ICollection {
      * @param   ICollection	$Collection <T>
      */
     public function RemoveAll($Collection) {
-        TType::Type($Collection, array ('ICollection' => array ('T' => $this->GenericArg('T'))));
+        TType::Type($Collection, array (
+            'ICollection' => array ('T' => $this->GenericArg('T'))));
         
         $this->CheckReadOnly();
         $mItr = $this->Iterator();
@@ -825,7 +830,8 @@ abstract class TAbstractCollection extends TObject implements ICollection {
      * @return boolean
      */
     public function RetainAll($Collection) {
-        TType::Type($Collection, array ('ICollection' => array ('T' => $this->GenericArg('T'))));
+        TType::Type($Collection, array (
+            'ICollection' => array ('T' => $this->GenericArg('T'))));
         
         $mModified = false;
         $mItr = $this->Iterator();
@@ -1054,7 +1060,8 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
      */
     public final function InsertAll($Index, $Collection) {
         TType::Int($Index);
-        TType::Type($Collection, array ('ICollection' => array ('T' => $this->GenericArg('T'))));
+        TType::Type($Collection, array (
+            'ICollection' => array ('T' => $this->GenericArg('T'))));
         
         $this->CheckReadOnly();
         $this->CheckIndexForAdd($Index);
@@ -1156,7 +1163,8 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
         TType::Int($Index);
         
         $this->CheckIndexForAdd($Index);
-        TStdListListIterator::PrepareGeneric(array ('T' => $this->GenericArg('T')));
+        TStdListListIterator::PrepareGeneric(array (
+            'T' => $this->GenericArg('T')));
         return new TStdListListIterator($this, $Index);
     }
 
@@ -1212,6 +1220,11 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
         
         $this->CheckReadOnly();
         $this->CheckIndexForGet($Index);
+        
+        if ($this->FElementsOwned) {
+            Framework::Free($this->DoGet($Index));
+        }
+        
         $this->DoSet($Index, $Element);
     }
 
@@ -1352,7 +1365,8 @@ abstract class TAbstractStack extends TAbstractCollection {
      * @param	ICollection	$Collection <T>
      */
     public final function AddAll($Collection) {
-        TType::Object($Collection, array ('ICollection' => array ('T' => $this->GenericArg('T'))));
+        TType::Object($Collection, array (
+            'ICollection' => array ('T' => $this->GenericArg('T'))));
         $this->CheckReadOnly();
         
         foreach ($Collection as $Element) {
@@ -1431,7 +1445,9 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      * @param	TPair	$Element <K, V>
      */
     public function Add($Element) {
-        TType::Type($Element, array ('TPair' => array ('K' => $this->GenericArg('K'), 'V' => $this->GenericArg('V'))));
+        TType::Type($Element, array (
+            'TPair' => array ('K' => $this->GenericArg('K'), 
+                'V' => $this->GenericArg('V'))));
         $this->CheckReadOnly();
         $this->DoPut($Element->Key, $Element->Value);
     }
@@ -1692,7 +1708,9 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      * @param	IMap	$Map <K, V>
      */
     public function PutAll($Map) {
-        TType::Type($Map, array ('IMap' => array ('K' => $this->GenericArg('K'), 'V' => $this->GenericArg('V'))));
+        TType::Type($Map, array (
+            'IMap' => array ('K' => $this->GenericArg('K'), 
+                'V' => $this->GenericArg('V'))));
         $this->CheckReadOnly();
         $this->DoPutAll($Map);
     }
@@ -1948,7 +1966,8 @@ final class TList extends TAbstractList {
      * @param	TList	$List <T>
      */
     public function Swap($List) {
-        TType::Object($List, array ('TList' => array ('T' => $this->GenericArg('T'))));
+        TType::Object($List, array (
+            'TList' => array ('T' => $this->GenericArg('T'))));
         
         $mTempList = $this->FList;
         $mTempCapacity = $this->FCapacity;
@@ -2122,13 +2141,14 @@ final class TLinkedList extends TAbstractList {
 
     /**
      * descHere
+     * @param	boolean	$ElementsOwned
      * @param	T[]		$FromArray
-     * @param	boolean	$KeepOder
+     * @param	boolean	$KeepOrder
      */
-    public function __construct($ElementsOwned = false, $FromArray = null, $KeepOder = true) {
+    public function __construct($ElementsOwned = false, $FromArray = null, $KeepOrder = true) {
         TType::Bool($ElementsOwned);
         TType::Arr($FromArray);
-        TType::Bool($KeepOder);
+        TType::Bool($KeepOrder);
         
         parent::__construct($ElementsOwned);
         
@@ -2138,7 +2158,7 @@ final class TLinkedList extends TAbstractList {
             $this->FAddrSize = 0;
             return;
         }
-        $this->FList = SplFixedArray::fromArray($FromArray, $KeepOder);
+        $this->FList = SplFixedArray::fromArray($FromArray, $KeepOrder);
         $this->FSize = count($this->FList);
         $this->FList->setSize(3 * $this->FSize);
         for ($mCurr = $this->FSize - 1; $mCurr >= 0; --$mCurr) {
@@ -2328,12 +2348,11 @@ final class TLinkedList extends TAbstractList {
      */
     protected function DoClear() {
         if ($this->FElementsOwned) {
-            foreach ($this->FList as &$mElement) {
-                Framework::Free($mElement);
+            for ($mIndex = 0; $mIndex < $this->FSize; ++$mIndex) {
+                Framework::Free($this->FList[3 * $mIndex + self::CData]);
             }
         }
         
-        Framework::Free($this->FList);
         $this->FList = new SplFixedArray(0);
         $this->FHead = -1;
         $this->FTail = -1;
@@ -2378,7 +2397,8 @@ final class TLinkedList extends TAbstractList {
      * @param	TLinkedList	$LinkedList <T>
      */
     public function Swap($LinkedList) {
-        TType::Object($LinkedList, array ('TLinkedList' => array ('T' => $this->GenericArg('T'))));
+        TType::Object($LinkedList, array (
+            'TLinkedList' => array ('T' => $this->GenericArg('T'))));
         $this->CheckReadOnly();
         $LinkedList->CheckReadOnly();
         

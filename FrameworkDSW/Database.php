@@ -184,42 +184,56 @@ class EDatabaseWarning extends EDatabaseException {
 }
 /**
  * 
- * @author 许子健
+ * @author	许子健
  */
 class ECommitFailed extends EDatabaseWarning {}
 /**
  * 
- * @author 许子健
+ * @author	许子健
  */
 class ECreateSavepointFailed extends EDatabaseWarning {}
 /**
  * 
- * @author 许子健
+ * @author	许子健
  */
 class ERollbackFailed extends EDatabaseWarning {}
 /**
  * 
- * @author 许子健
+ * @author	许子健
  */
 class EExecuteFailed extends EDatabaseWarning {}
 /**
  * 
  * Enter description here ...
- * @author 许子健
+ * @author	许子健
  */
 class EFetchAsScalarFailed extends EDatabaseWarning {}
 /**
  * 
  * Enter description here ...
- * @author 许子健
+ * @author	许子健
  */
 class ESetCommandFailed extends EDatabaseWarning {}
 /**
  * 
  * Enter description here ...
- * @author 许子健
+ * @author	许子健
  */
 class EFetchRowFailed extends EDatabaseWarning {}
+/**
+ * 
+ * Enter description here ...
+ * @author	许子健
+ *
+ */
+class ENoMoreResultSet extends EDatabaseWarning {}
+/**
+ * 
+ * Enter description here ...
+ * @author	许子健
+ *
+ */
+class EFetchNextResultSetFailed extends EDatabaseWarning {}
 
 /**
  * TConcurrencyType

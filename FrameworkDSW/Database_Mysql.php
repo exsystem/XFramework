@@ -692,7 +692,6 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
         
         $this->EnsureConnected();
         
-        //TODO: check if params given by this function are supported first.
         return new TMysqlStatement($this, $ResultSetType, $ConcurrencyType);
     }
 
@@ -960,6 +959,18 @@ class TMysqlStatement extends TBaseMysqlObject implements IStatement {
      * @var	TList <T: string>
      */
     private $FCommands = null;
+    /**
+     * 
+     * Enter description here ...
+     * @var	TLinkedList <T: TMysqlResultSet>
+     */
+    private $FResultSets = null;
+    /**
+     * 
+     * Enter description here ...
+     * @var	integer
+     */
+    private $FCurrentResultSet = -1;
 
     /**
      * 
@@ -1009,6 +1020,8 @@ class TMysqlStatement extends TBaseMysqlObject implements IStatement {
      * @see TObject::__destruct()
      */
     public function __destruct() {
+        Framework::Free($this->FResultSets);
+        
         if ($this->FMysqliStmt != null) {
             $this->FMysqliStmt->close();
             $this->FMysqliStmt = null;
@@ -1128,6 +1141,7 @@ class TMysqlStatement extends TBaseMysqlObject implements IStatement {
      * @return	IResultSet
      */
     public function GetCurrentResult() {
+        return $this->getResult($this->FCurrentResultSet);
     }
 
     /**
@@ -1136,6 +1150,18 @@ class TMysqlStatement extends TBaseMysqlObject implements IStatement {
      * @return	IResultSet
      */
     public function getResult($Index) {
+        TType::Int($Index);
+        
+        if ($this->FCurrentResultSet == -1) {
+            throw new EIndexOutOfBounds(); //TODO: no result set.
+        }
+        
+        if ($Index < 0 || $Index > $this->FResultSets->Size()) {
+            throw new EIndexOutOfBounds();
+        }
+        
+        $this->FCurrentResultSet = $Index;
+        return $this->FResultSets[$Index];
     }
 
     /**
@@ -1143,6 +1169,30 @@ class TMysqlStatement extends TBaseMysqlObject implements IStatement {
      * @param	TCurrentResultOption	$Options
      */
     public function NextResult($Options) {
+        TType::Object($Options, 'TCurrentResultOption');
+        if (!$this->FMysqli->more_results()) {
+            throw new EException(); //TODO: no more new result sets.
+        }
+        switch ($Options) {
+            case TCurrentResultOption::eCloseAllResults() :
+                $this->FResultSets->Clear();
+                break;
+            case TCurrentResultOption::eCloseCurrentResult() :
+                $this->FResultSets->RemoveAt($this->FCurrentResultSet);
+                break;
+        }
+        
+        if (!$this->FMysqli->next_result()) {
+            TMysqlConnection::PushWarning(ENoMoreResultSet::ClassType(), $this->FMysqli->sqlstate, $this->FMysqli->errno, $this->FMysqli->error, $this->FConnection);
+        }
+        
+        $mRawResult = $this->FMysqli->store_result();
+        if ($mRawResult === false) {
+            TMysqlConnection::PushWarning(EFetchNextResultSetFailed::ClassType(), $this->FMysqli->sqlstate, $this->FMysqli->errno, $this->FMysqli->error, $this->FConnection);
+        }
+        
+        $this->FCurrentResultSet = $this->FResultSets->Size();
+        $this->FResultSets->Add(new TMysqlResultSet($this, $mRawResult, $this->FConcurrencyType, $this->FResultSetType));
     }
 
     /**
@@ -1156,7 +1206,35 @@ class TMysqlStatement extends TBaseMysqlObject implements IStatement {
             $this->setCommand($Command);
         }
         if ($this->FCommand[0] == '#') {
-            //TODO: a stored procedure is called.
+            if ($this->FResultSetType == TResultSetType::eScrollSensitive() || $this->FConcurrencyType == TConcurrencyType::eUpdatable()) {
+                throw new EUnsupportedDbFeature();
+            }
+            
+            if ($this->FResultSets == null) {
+                TLinkedList::PrepareGeneric(array ('T' => 'TMysqlResultSet'));
+                $this->FResultSets = new TLinkedList(true);
+            }
+            $this->FResultSets->Clear();
+            
+            if ($this->FMysqli->multi_query(substr($this->FCommand, 1)) && $this->FMysqli->more_results()) {
+                $mRawResult = $this->FMysqli->store_result();
+                if ($mRawResult === false) {
+                    TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqli->sqlstate, $this->FMysqli->errno, $this->FMysqli->error, $this->FConnection); //TODO: failed to fetch next result set.
+                }
+                $this->FResultSets->Add(new TMysqlResultSet($this, $mRawResult, $this->FConcurrencyType, $this->FResultSetType));
+                $this->FCurrentResultSet = 0;
+                return $this->FResultSets[0];
+            }
+            else {
+                try {
+                    TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqli->sqlstate, $this->FMysqli->errno, $this->FMysqli->error, $this->FConnection);
+                }
+                catch (EExecuteFailed $Ex) {
+                    while ($this->FMysqli->more_results() && $this->FMysqli->next_result())
+                        ;
+                    throw $Ex;
+                }
+            }
         }
         else {
             return new TMysqlStmtResultSet($this, $this->FMysqliStmt, $this->FConcurrencyType, $this->FResultSetType);
@@ -1170,21 +1248,23 @@ class TMysqlStatement extends TBaseMysqlObject implements IStatement {
     public function setCommand($Value) {
         TType::String($Value);
         $this->FCommand = $Value;
-        if (!$this->FMysqliStmt->prepare($this->FCommand)) {
-            TMysqlConnection::PushWarning(ESetCommandFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FConnection);
-        }
-        
-        switch ($this->FResultSetType) {
-            case TResultSetType::eForwardOnly() :
-                $this->FMysqliStmt->attr_set(MYSQLI_STMT_ATTR_CURSOR_TYPE, MYSQLI_CURSOR_TYPE_READ_ONLY);
-                break;
-            case TResultSetType::eScrollInsensitive() :
-                $this->FMysqliStmt->attr_set(MYSQLI_STMT_ATTR_CURSOR_TYPE, MYSQLI_CURSOR_TYPE_NO_CURSOR);
-                break;
+        if ($this->FCommand[0] != '#') {
+            if (!$this->FMysqliStmt->prepare($Value)) {
+                TMysqlConnection::PushWarning(ESetCommandFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FConnection);
+            }
             
-            case TResultSetType::eScrollSensitive() :
-                $this->FMysqliStmt->attr_set(MYSQLI_STMT_ATTR_CURSOR_TYPE, MYSQLI_CURSOR_TYPE_READ_ONLY);
-                break;
+            switch ($this->FResultSetType) {
+                case TResultSetType::eForwardOnly() :
+                    $this->FMysqliStmt->attr_set(MYSQLI_STMT_ATTR_CURSOR_TYPE, MYSQLI_CURSOR_TYPE_READ_ONLY);
+                    break;
+                case TResultSetType::eScrollInsensitive() :
+                    $this->FMysqliStmt->attr_set(MYSQLI_STMT_ATTR_CURSOR_TYPE, MYSQLI_CURSOR_TYPE_NO_CURSOR);
+                    break;
+                
+                case TResultSetType::eScrollSensitive() :
+                    $this->FMysqliStmt->attr_set(MYSQLI_STMT_ATTR_CURSOR_TYPE, MYSQLI_CURSOR_TYPE_READ_ONLY);
+                    break;
+            }
         }
     }
 }
@@ -1403,7 +1483,9 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
         $this->FetchMeta();
         
         $this->FRow = new TMysqlRow($this, $ConcurrencyType, $this->FCurrentRow, $this->FMeta, $this->FWasDeleted, $this->FWasUpdated);
-        $this->FInsertRow = new TMysqlInsertRow($this, $ConcurrencyType, $this->FMeta);
+        if ($ConcurrencyType == TConcurrencyType::eUpdatable()) {
+            $this->FInsertRow = new TMysqlInsertRow($this, $ConcurrencyType, $this->FMeta);
+        }
     }
 
     /**
@@ -1412,6 +1494,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
      */
     public function __destruct() {
         Framework::Free($this->FRow);
+        Framework::Free($this->FInsertRow);
     }
 
     /**
@@ -1559,7 +1642,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
             $this->FetchTo($offset);
             return true;
         }
-        catch (EIndexOutOfBounds $Ex) {
+        catch (EInvalidRowId $Ex) {
             return false;
         }
     }
@@ -1670,6 +1753,109 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
      */
     public function Remove() {
         $this->FRow->Delete();
+    }
+}
+
+/**
+ * TMysqlResultSet
+ * @author	许子健
+ */
+class TMysqlResultSet extends TAbstractMysqlResultSet implements IResultSet {
+    /**
+     * 
+     * Enter description here ...
+     * @var	mysqli_result
+     */
+    private $FMysqliResult = null;
+
+    /**
+     * (non-PHPdoc)
+     * @see TAbstractMysqlResultSet::FetchMeta()
+     */
+    protected function FetchMeta() {
+        $this->FMeta = $this->FMysqliResult->fetch_fields();
+    }
+
+    /**
+     * descHere
+     * @return	boolean
+     */
+    protected function DoFetch() {
+        $mRaw = $this->FMysqliResult->fetch_assoc();
+        if ($mRaw === null) {
+            return false;
+        }
+        else {
+            $this->FCurrentRow = $mRaw;
+            return true;
+        }
+    }
+
+    /**
+     * descHere
+     * @return	integer
+     */
+    protected function DoGetCount() {
+        return $this->FMysqliResult->num_rows;
+    }
+
+    /**
+     * descHere
+     */
+    protected function DoReset() {
+        $this->FMysqliResult->data_seek(0);
+    }
+
+    /**
+     * descHere
+     * @param	integer	$RowId
+     */
+    protected function DoSeekAndFetch($RowId) {
+        $this->FMysqliResult->data_seek($RowId);
+        $this->FCurrentRow = $this->FMysqliResult->fetch_assoc();
+    }
+
+    /**
+     * descHere
+     * @param	integer	$Value
+     */
+    protected function DoSetFetchSize($Value) {
+        throw new EUnsupportedDbFeature(); //TODO: unsupported.
+    }
+
+    /**
+     * (non-PHPdoc)
+     * @see IResultSet::getFetchSize()
+     * @return	integer
+     */
+    public function getFetchSize() {
+        return 1;
+    }
+
+    /**
+     * 
+     * @param	TMysqlStatement		$Statement
+     * @param	mysqli_result		$MysqliResult
+     * @param	TConcurrencyType	$ConcurrencyType
+     * @param	TResultSetType		$ResultSetType
+     * Enter description here ...
+     */
+    public function __construct($Statement, $MysqliResult, $ConcurrencyType, $ResultSetType) {
+        TType::Object($Statement, 'TMysqlStatement');
+        TType::Object($ConcurrencyType, 'TConcurrencyType');
+        TType::Object($ResultSetType, 'TResultSetType');
+        
+        $this->FMysqliResult = $MysqliResult;
+        parent::__construct($Statement, $ConcurrencyType, $ResultSetType);
+    }
+
+    /**
+     * (non-PHPdoc)
+     * @see TAbstractMysqlResultSet::__destruct()
+     */
+    public function __destruct() {
+        $this->FMysqliResult->free();
+        parent::__destruct();
     }
 }
 
