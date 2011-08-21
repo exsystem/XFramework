@@ -567,6 +567,15 @@ interface IConnection extends IInterface {
      * @return	IPreparedStatement
      */
     public function PrepareStatement($ResultSetType, $ConcurrencyType);
+    
+    /**
+     * 
+     * Enter description here ...
+     * @param	TResultSetType		$ResultSetType
+     * @param	TConcurrencyType	$ConcurrencyType
+     * @return	ICallableStatment
+     */
+    public function PrepareCall($ResultSetType, $ConcurrencyType);
 
     /**
      * descHere

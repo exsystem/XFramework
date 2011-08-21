@@ -1,5 +1,5 @@
 <?php
-//set_include_path(get_include_path() . ':/media/ExSystem-HD/Documents/ZendStudioWorkspace/FrameworkDSW'); //LINUX
+set_include_path(get_include_path() . ':/media/ExSystem-HD/Documents/ZendStudioWorkspace/FrameworkDSW'); //LINUX
 //set_include_path(get_include_path().';E:\\Documents\\ZendStudioWorkspace\\FrameworkDSW'); //WINDOWS
 //set_include_path(get_include_path() . ':/Volumes/ExSystem-HD/Documents/ZendStudioWorkspace/FrameworkDSW'); //MACOSX
 
@@ -34,35 +34,20 @@ EOD;
 $mTruncateDDL = <<<'EOD'
 TRUNCATE TABLE `tmysqlconnectiontest`
 EOD;
-$mDropProcedureCmd = <<<'EOD'
-DROP PROCEDURE IF EXISTS testProcedure;
-EOD;
-$mCreateProcedureCmd = <<<'EOD'
-CREATE PROCEDURE testProcedure()
-BEGIN
-  SELECT * FROM `tmysqlconnectiontest`;
-  SELECT * FROM `tmysqlconnectiontest`;
-  SELECT * FROM `tmysqlconnectiontest`;
-END
-EOD;
 
 $mConn->Execute($mDropDDL);
 $mConn->Execute($mCreateDDL);
 $mConn->Execute($mTruncateDDL);
-$mConn->Execute($mDropProcedureCmd);
-$mConn->Execute($mCreateProcedureCmd);
 
+$mConn->setAutoCommit(false);
 for ($i = 1; $i < 50; ++$i) {
     echo $mConn->Execute("insert into `tmysqlconnectiontest` values({$i}, 10, 1, '中国hi', 20.5)");
 }
-$mStmt = $mConn->CreateStatement(TResultSetType::eScrollInsensitive(), TConcurrencyType::eReadOnly());
-$mRs = $mStmt->Query('select * from tmysqlconnectiontest');
-//$mRs = $mStmt->Query('#call testProcedure()');
-//Framework::Free($mRs); //$mStmt->FCurrentResultSet was not destroyed, which lead calling released mysqli_stmt object, although $mRs has been destroyed.
-//$mStmt->NextResult(TCurrentResultOption::eCloseCurrentResult());
-$mRs = $mStmt->GetCurrentResult();
+$mStmt = $mConn->PrepareStatement(TResultSetType::eScrollInsensitive(), TConcurrencyType::eReadOnly());
+$mRs=$mStmt->Query('select * from tmysqlconnectiontest');
 $mRow = $mRs->current();
 foreach ($mRs as $mRow) {
+    echo "\n";
     echo $mRow['id']->getValue(); //memory leak
     echo $mRow['_int']->getValue(); //memory leak
     echo $mRow['_bool']->getValue(); //memory leak
@@ -70,7 +55,23 @@ foreach ($mRs as $mRow) {
     echo $mRow['_float']->getValue(); //memory leak
 }
 Framework::Free($mRs);
+$mConn->Rollback();
+
+TPrimativeParam::PrepareGeneric(array('T'=>'integer'));
+$param=new TPrimativeParam(100);
+$mStmt->setCommand('select :p*2 as p');
+$mStmt->BindParam(':p', $param);
+$rs=$mStmt->Query();
+foreach ($rs as $row) {
+    echo "\n\n";
+    echo $row['p']->getValue();
+}
+Framework::Free($rs);
+$value=$mStmt->FetchAsScalar();
+echo "\n\n";
+echo $value->getValue();
 Framework::Free($mStmt);
 Framework::Free($mConn);
 Framework::Free($mDriver);
+echo "\n\n";
 echo 'END';
