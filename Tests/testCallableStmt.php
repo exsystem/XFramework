@@ -3,7 +3,6 @@ set_include_path(get_include_path() . ':/media/ExSystem-HD/Documents/ZendStudioW
 //set_include_path(get_include_path().';E:\\Documents\\ZendStudioWorkspace\\FrameworkDSW'); //WINDOWS
 //set_include_path(get_include_path() . ':/Volumes/ExSystem-HD/Documents/ZendStudioWorkspace/FrameworkDSW'); //MACOSX
 
-
 require_once 'FrameworkDSW/Database_Mysql.php';
 
 $mDriver = new TMysqlDriver();
@@ -56,5 +55,6 @@ Framework::Free($mRs);
 Framework::Free($mStmt);
 Framework::Free($mConn);
 Framework::Free($mDriver);
+
 echo "\n\n";
 echo 'END';

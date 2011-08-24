@@ -213,10 +213,10 @@ class Framework extends TObject {
      * @param	TObject	$Object
      */
     public static final function Free(&$Object) {
-        gc_collect_cycles();
         if ($Object !== null) {
             $Object->__destruct();
             $Object = null;
+            gc_collect_cycles();
         }
     }
 }

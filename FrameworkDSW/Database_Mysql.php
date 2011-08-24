@@ -1717,7 +1717,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
     /**
      * 
      * Enter description here ...
-     * @var	TMysqlStatement
+     * @var	TAbstractMysqlStatement
      */
     protected $FStatement = null;
     /**

@@ -688,6 +688,16 @@ abstract class TAbstractCollection extends TObject implements ICollection {
     }
 
     /**
+     * (non-PHPdoc)
+     * @see TObject::__destruct()
+     */
+    public function __destruct() {
+        $this->FReadOnly = false;
+        $this->Clear();
+        parent::__destruct();
+    }
+
+    /**
      *
      * @param   ICollection	$Collection <T>
      */
@@ -1031,7 +1041,7 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
      * 
      */
     public final function Clear() {
-        if ($this->FSize == 0) {
+        if ($this->FSize != 0) {
             $this->CheckReadOnly();
             $this->DoClear();
             $this->FSize = 0;
@@ -1489,11 +1499,6 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
 
     /**
      * descHere
-     */
-    protected abstract function DoClear();
-
-    /**
-     * descHere
      * @param	K	$Key
      * @return	boolean
      */
@@ -1938,12 +1943,11 @@ final class TList extends TAbstractList {
      */
     protected function DoClear() {
         if ($this->FElementsOwned) {
-            foreach ($this->FList as &$mElement) {
+            foreach ($this->FList as $mElement) {
                 Framework::Free($mElement);
             }
         }
         
-        Framework::Free($this->FList);
         $this->FList = new SplFixedArray($this->FCapacity);
     }
 
@@ -2349,15 +2353,18 @@ final class TLinkedList extends TAbstractList {
     protected function DoClear() {
         if ($this->FElementsOwned) {
             for ($mIndex = 0; $mIndex < $this->FSize; ++$mIndex) {
-                Framework::Free($this->FList[3 * $mIndex + self::CData]);
+                $this->FList[3 * $mIndex + self::CData]->__destruct();
+                $this->FList[3 * $mIndex + self::CData] = null;            
+     //Framework::Free($this->FList[3 * $mIndex + self::CData]); //TODO: FIX ME!
             }
         }
         
-        $this->FList = new SplFixedArray(0);
+        $this->FList = new SplFixedArray(30);
         $this->FHead = -1;
         $this->FTail = -1;
         $this->FCurrAddr = -1;
         $this->FCurrIndex = -1;
+        $this->FAddrSize = 0;
     }
 
     /**
@@ -2605,9 +2612,12 @@ final class TMap extends TAbstractMap {
     }
 
     /**
-     * descHere
+     * (non-PHPdoc)
+     * @see TAbstractCollection::Clear()
      */
-    protected function DoClear() {
+    public function Clear() {
+        $this->CheckReadOnly();
+        
         if ($this->FElementsOwned) {
             if ($this->FKeyType == TMapKeyType::eObject() && TType::IsTypePrimitive($this->GenericArg('V'))) {
                 foreach ($this->FMap as &$mValue) {
