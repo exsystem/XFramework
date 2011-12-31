@@ -6,6 +6,8 @@
  * @since	separate file since reversion 30
  */
 
+require_once 'FrameworkDSW/System.php';
+
 // FIXME: 去除PHP表達式不需要的符號。
 
 /**
@@ -14,7 +16,7 @@
  *
  * @author 许子健
  */
-class TExpressionType extends TEnum {
+final class TExpressionType extends TEnum {
     /**
      * 加法運算符，例如“$a+$b”。
      *
@@ -416,6 +418,7 @@ final class TConstantExpression extends TExpression {
      */
     public function __destruct() {
         Framework::Free($this->FValue);
+        parent::__destruct();
     }
 
     /**
@@ -443,7 +446,7 @@ final class TConstantExpression extends TExpression {
 /**
  * TExpressionVisitor
  * TODO: complete this class.
- * 
+ *
  * @author 许子健
  */
 abstract class TExpressionVisitor extends TObject {

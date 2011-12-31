@@ -57,9 +57,9 @@ for ($i = 1; $i < 50; ++$i) {
 }
 $mStmt = $mConn->CreateStatement(TResultSetType::eScrollInsensitive(), TConcurrencyType::eReadOnly());
 $mRs = $mStmt->Query('select * from tmysqlconnectiontest');
-//$mRs = $mStmt->Query('#call testProcedure()');
-//Framework::Free($mRs); //$mStmt->FCurrentResultSet was not destroyed, which lead calling released mysqli_stmt object, although $mRs has been destroyed.
-//$mStmt->NextResult(TCurrentResultOption::eCloseCurrentResult());
+$mRs = $mStmt->Query('#call testProcedure()');
+Framework::Free($mRs); //$mStmt->FCurrentResultSet was not destroyed, which lead calling released mysqli_stmt object, although $mRs has been destroyed.
+$mStmt->NextResult(TCurrentResultOption::eCloseCurrentResult());
 $mRs = $mStmt->GetCurrentResult();
 $mRow = $mRs->current();
 foreach ($mRs as $mRow) {
