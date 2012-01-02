@@ -10,6 +10,7 @@ require_once 'FrameworkDSW/System.php';
 
 // FIXME: 去除PHP表達式不需要的符號。
 
+
 /**
  * TExpressionType
  * 表示在表達式樹結點的表達式類型的枚舉類型。
@@ -197,7 +198,7 @@ final class TExpressionType extends TEnum {
     const eNewArrayInit = 32;
     const eNewArrayBounds = 33;
     /**
-     * 邏輯取反運算符，例如：“!$a”。
+     * 按位取反運算符，例如：“~$a”。
      *
      * @var integer
      */
@@ -282,139 +283,630 @@ final class TExpressionType extends TEnum {
 /**
  * TExpression
  * 表示一个表达式的结点。
- *
- * @author 许子健
+ * 
+ * @author	许子健
  */
 abstract class TExpression extends TObject {
-    /**
-     * 表达式结点的类型。
-     *
-     * @var TExpressionType
-     */
-    protected $FNodeType = null;
     
     /**
-     * 表达式得出的值的数据类型。
-     *
-     * @var mixed
+     * 表达式结点的类型。
+     * 
+     * @var	TExpressionType
      */
-    protected $FType = null;
+    protected $FNodeType = null;
 
     /**
      * 移进该结点。
-     *
-     * @param $Visitor TExpressionVisitor
-     *            表达式访问器。
-     * @return TExpression 表达式本身，或者替代自己的表达式。
+     * @param	TExpressionVisitor	$Visitor    表达式访问器。
+     * @return	TExpression    表达式本身，或者替代自己的表达式。
      */
     protected function Accept($Visitor) {
         return $Visitor->Visit($this);
     }
 
     /**
-     * 访问该表达式结点的子结点。
-     *
-     * @param $Visitor TExpressionVisitor
-     *            表达式子结点的访问器。
-     * @return TExpression 表达式本身，或者替代自己的表达式。
+     * descHere
+     * @param	TExpression	$Left
+     * @param	TExpression	$Right
+     * @return	TBinaryExpression
      */
-    protected function VisitChildren($Visitor) {
-        return $Visitor->Visit($this);
+    public static function Add($Left, $Right) {
+        return self::MakeBinary(TExpressionType::eAdd(), $Left, $Right);
     }
 
     /**
-     * 检查表达式结点是否可规约。
+     * descHere
+     * @param	TExpression	$To
+     * @param	TExpression	$By
+     * @param	TLamdaExpression	$Conversion
+     * @return	TBinaryExpression
      */
-    protected function DoReduceAndCheck() {
+    public static function AddAssign($To, $By, $Conversion = null) {
+        return self::MakeBinary(TExpressionType::eAddAssign(), $To, $By, false, $Conversion);
     }
 
     /**
-     * 是否能够规约。
-     *
-     * @return boolean 返回是否能够规约该表达式结点构成的子表达式。
+     * descHere
+     * @param	TExpression	$To
+     * @param	TExpression	$By
+     * @param	TLamdaExpression	$Conversion
+     * @return	TBinaryExpression
+     */
+    public static function AddAssignChecked($To, $By, $Conversion = null) {
+        return self::MakeBinary(TExpressionType::eAddAssignChecked(), $To, $By, false, $Conversion);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Left
+     * @param	TExpression	$Right
+     * @param	TLamdaExpression	$Conversion
+     * @return	TBinaryExpression
+     */
+    public static function AddChecked($Left, $Right, $Conversion = null) {
+        return self::MakeBinary(TExpressionType::eAddChecked(), $Left, $Right, false, $Conversion);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Left
+     * @param	TExpression	$Right
+     * @return	TBinaryExpression
+     */
+    public static function AndBitwise($Left, $Right) {
+        return self::MakeBinary(TExpressionType::eAnd(), $Left, $Right);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Left
+     * @param	TExpression	$Right
+     * @return	TBinaryExpression
+     */
+    public static function AndAlso($Left, $Right) {
+        return self::MakeBinary(TExpressionType::eAndAlso(), $Left, $Right);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$To
+     * @param	TExpression	$By
+     * @param	TLamdaExpression	$Conversion
+     * @return	TBinaryExpression
+     */
+    public static function AndAssign($To, $By, $Conversion = null) {
+        return self::MakeBinary(TExpressionType::eAndAssign(), $To, $By, false, $Conversion);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Array
+     * @param	TExpression	$Index
+     * @return	TBinaryExpression
+     */
+    public static function ArrayIndexInOneDimensional($Array, $Index) {
+        return self::MakeBinary(TExpressionType::eArrayIndex(), $Array, $Index);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$To
+     * @param	TExpression	$By
+     * @return	TBinaryExpression
+     */
+    public static function Assign($To, $By) {
+        return self::MakeBinary(TExpressionType::eAssign(), $To, $By);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Test
+     * @param	TExpression	$IfNotNull
+     * @param	TLamdaExpression	$Conversion
+     * @return	TBinaryExpression
+     */
+    public static function Coalesce($Test, $IfNotNull, $Conversion = null) {
+        return self::MakeBinary(TExpressionType::eCoalesce(), $Test, $IfNotNull, false, $Conversion);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Test
+     * @param	TExpression	$IfTrue
+     * @param	TExpression	$IfFalse
+     * @param	mixed	$Type
+     * @return	TConditionalExpression
+     */
+    public static function Condition($Test, $IfTrue, $IfFalse, $Type = null) {
+        TType::Object($Test, 'TExpression');
+        TType::Object($IfTrue, 'TExpression');
+        TType::Object($IfFalse, 'TExpression');
+        
+        return new TConditionalExpression($Test, $IfTrue, $IfFalse, $Type);
+    }
+
+    /**
+     * descHere
+     * @param	TObject	$Value
+     * @param	mixed	$Type
+     * @return	TConstantExpression
+     */
+    public static function Constant($Value, $Type = null) {
+        TType::Object($Value, 'TObject');
+        
+        return new TConstantExpression($Value, $Type);
+    }
+
+    /**
+     * descHere
+     * @param	mixed	$Type
+     * @return	TDefaultExpression
+     */
+    public static function DefaultValue($Type) {
+        return new TDefaultExpression($Type);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Left
+     * @param	TExpression	$Right
+     * @return	TBinaryExpression
+     */
+    public static function Divide($Left, $Right) {
+        return self::MakeBinary(TExpressionType::eDivide(), $Left, $Right);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$To
+     * @param	TExpression	$By
+     * @param	TLamdaExpression	$Conversion
+     * @return	TBinaryExpression
+     */
+    public static function DivideAssign($To, $By, $Conversion = null) {
+        return self::MakeBinary(TExpressionType::eDivideAssign(), $To, $By, false, $Conversion);
+    }
+
+    /**
+     * descHere
+     * @return TExpression
+     */
+    protected function DoReduce() {
+        throw new EInvalidParameter();
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Left
+     * @param	TExpression	$Right
+     * @param	boolean	$LiftToNull
+     * @return	TBinaryExpression
+     */
+    public static function Equal($Left, $Right, $LiftToNull = false) {
+        return self::MakeBinary(TExpressionType::eEqual(), $Left, $Right, $LiftToNull);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Left
+     * @param	TExpresion	$Right
+     * @return	TBinaryExpression
+     */
+    public static function ExclusiveOr($Left, $Right) {
+        return self::MakeBinary(TExpressionType::eExclusiveOr(), $Left, $Right);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$To
+     * @param	TExpression	$By
+     * @param	TLamdaExpression	$Conversion
+     * @return	TBinaryExpression
+     */
+    public static function ExclusiveOrAssign($To, $By, $Conversion = null) {
+        return self::MakeBinary(TExpressionType::eExclusiveOrAssign(), $To, $By, false, $Conversion);
+    }
+
+    /**
+     * descHere
+     * @return	boolean
      */
     public function getCanReduce() {
         return false;
     }
 
     /**
-     * 获得该表达式结点的类型。
-     *
-     * @return TExpressionType 返回该表达式结点的类型。
+     * descHere
+     * @return	TExpressionType
      */
     public function getNodeType() {
         return $this->FNodeType;
     }
 
     /**
-     * 获得表达式得出的值的数据类型。
-     *
-     * @return mixed 返回该表达式结果的数据类型。
+     * descHere
+     * @return	mixed
      */
-    public function getType() {
-        return $this->FType;
+    public abstract function getType();
+
+    /**
+     * descHere
+     * @param	TExpression	$Left
+     * @param	TExpression	$Right
+     * @param	boolean	$LiftToNull
+     * @return	TBinaryExpression
+     */
+    public static function GreaterThan($Left, $Right, $LiftToNull = false) {
+        return self::MakeBinary(TExpressionType::eGreaterThan(), $Left, $Right, $LiftToNull);
     }
 
     /**
-     * 规约该表达式结点构成的子表达式。
-     *
-     * @return TExpression 规约后的该表达式。
+     * descHere
+     * @param	TExpression	$Left
+     * @param	TExpression	$Right
+     * @param	boolean	$LiftToNull
+     * @return	TBinaryExpression
+     */
+    public static function GreaterThanOrEqual($Left, $Right, $LiftToNull = false) {
+        return self::MakeBinary(TExpressionType::eGreaterThanOrEqual(), $Left, $Right, $LiftToNull);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Test
+     * @param	TExpression	$IfTrue
+     * @return	TConditionalExpression
+     */
+    public static function IfThen($Test, $IfTrue) {
+        TType::Object($Test, 'TExpression');
+        TType::Object($IfTrue, 'TExpression');
+        
+        return new TConditionalExpression($Test, $IfTrue, null);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Test
+     * @param	TExpression	$IfTrue
+     * @param	TExpression	$IfFalse
+     * @return	TConditionalExpression
+     */
+    public static function IfThenElse($Test, $IfTrue, $IfFalse) {
+        TType::Object($Test, 'TExpression');
+        TType::Object($IfTrue, 'TExpression');
+        TType::Object($IfFalse, 'TExpression');
+        
+        return new TConditionalExpression($Test, $IfTrue, $IfFalse);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Left
+     * @param	TExpression	$Right
+     * @return	TBinaryExpression
+     */
+    public static function LeftShift($Left, $Right) {
+        return self::MakeBinary(TExpressionType::eLeftShift(), $Left, $Right);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$To
+     * @param	TExpression	$By
+     * @param	TLamdaExpression	$Conversion
+     * @return	TBinaryExpression
+     */
+    public static function LeftShiftAssign($To, $By, $Conversion = null) {
+        return self::MakeBinary(TExpressionType::eLeftShiftAssign(), $To, $By, false, $Conversion);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Left
+     * @param	TExpression	$Right
+     * @param	boolean	$LiftToNull
+     * @return	TBinaryExpression
+     */
+    public static function LessThan($Left, $Right, $LiftToNull = false) {
+        return self::MakeBinary(TExpressionType::eLessThan(), $Left, $Right, $LiftToNull);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Left
+     * @param	TExpression	$Right
+     * @param	boolean	$LiftToNull
+     * @return	TBinaryExpression
+     */
+    public static function LessThanOrEqual($Left, $Right, $LiftToNull = false) {
+        return self::MakeBinary(TExpressionType::eLessThanOrEqual(), $Left, $Right, $LiftToNull);
+    }
+
+    /**
+     * descHere
+     * @param	TExpressionType	$ExpressionType
+     * @param	TExpression	$Left
+     * @param	TExpression	$Right
+     * @param	boolean	$LiftToNull
+     * @param	TLamdaExpression	$Conversion
+     * @return	TBinaryExpression
+     */
+    public static function MakeBinary($ExpressionType, $Left, $Right, $LiftToNull = false, $Conversion = null) {
+        return new TBinaryExpression($Left, $Right, $ExpressionType, $Conversion, $LiftToNull);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Left
+     * @param	TExpression	$Right
+     * @return	TBinaryExpression
+     */
+    public static function Modulo($Left, $Right) {
+        return self::MakeBinary(TExpressionType::eModulo(), $Left, $Right);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$To
+     * @param	TExpression	$By
+     * @param	TLamdaExpression	$Conversion
+     * @return	TBinaryExpression
+     */
+    public static function ModuloAssign($To, $By, $Conversion = null) {
+        return self::MakeBinary(TExpressionType::eModuloAssign(), $To, $By, false, $Conversion);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Left
+     * @param	TExpression	$Right
+     * @return	TBinaryExpression
+     */
+    public static function Multiply($Left, $Right) {
+        return self::MakeBinary(TExpressionType::eMultiply(), $Left, $Right);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$To
+     * @param	TExpression	$By
+     * @param	TLamdaExpression	$Conversion
+     * @return	TBinaryExpression
+     */
+    public static function MultiplyAssign($To, $By, $Conversion = null) {
+        return self::MakeBinary(TExpressionType::eMultiplyAssign(), $To, $By, false, $Conversion);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$To
+     * @param	TExpression	$By
+     * @param	TLamdaExpression	$Conversion
+     * @return	TBinaryExpression
+     */
+    public static function MultiplyAssignChecked($To, $By, $Conversion = null) {
+        return self::MakeBinary(TExpressionType::eMultiplyAssignChecked(), $To, $By, false, $Conversion);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Left
+     * @param	TExpression	$Right
+     * @return	TBinaryExpression
+     */
+    public static function MultiplyChecked($Left, $Right) {
+        return self::MakeBinary(TExpressionType::eMultiplyChecked(), $Left, $Right);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Left
+     * @param	TExpression	$Right
+     * @param	boolean	$LiftToNull
+     * @return	TBinaryExpression
+     */
+    public static function NotEqual($Left, $Right, $LiftToNull = false) {
+        return self::MakeBinary(TExpressionType::eNotEqual(), $Left, $Right, $LiftToNull);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Left
+     * @param	TExpression	$Right
+     * @return	TBinaryExpression
+     */
+    public static function OrBitwise($Left, $Right) {
+        return self::MakeBinary(TExpressionType::eOr(), $Left, $Right);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$To
+     * @param	TExpression	$By
+     * @param	TLamdaExpression	$Conversion
+     * @return	TBinaryExpression
+     */
+    public static function OrAssign($To, $By, $Conversion = null) {
+        return self::MakeBinary(TExpressionType::eOrAssign(), $To, $By, false, $Conversion);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Left
+     * @param	TExpression	$Right
+     * @return	TBinaryExpression
+     */
+    public static function OrElse($Left, $Right) {
+        return self::MakeBinary(TExpressionType::eOrElse(), $Left, $Right);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Left
+     * @param	TExpression	$Right
+     * @return	TBinaryExpression
+     */
+    public static function Power($Left, $Right) {
+        return self::MakeBinary(TExpressionType::ePower(), $Left, $Right);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$To
+     * @param	TExpression	$By
+     * @param	TLamdaExpression	$Conversion
+     * @return	TBinaryExpression
+     */
+    public static function PowerAssign($To, $By, $Conversion = null) {
+        return self::MakeBinary(TExpressionType::ePowerAssign(), $To, $By, false, $Conversion);
+    }
+
+    /**
+     * descHere
+     * @return	TExpression
      */
     public function Reduce() {
-        return $this;
+        return $this->DoReduce();
     }
 
     /**
-     * 规约该表达式结点构成的子表达式，并做检查。
-     *
-     * @return TExpression 规约后的该表达式。
+     * descHere
+     * @return	TExpression
      */
     public function ReduceAndCheck() {
-        if (!$this->getCanReduce()) {
-            throw new EInvalidParameter('The expression can not be reduced.');
-        }
-        $this->DoReduceAndCheck();
-        return $this->Reduce();
+        throw new EInvalidParameter();
     }
+
+    /**
+     * descHere
+     * @param	TExpression	$Left
+     * @param	TExpression	$Right
+     * @return	TBinaryExpression
+     */
+    public static function ReferenceEqual($Left, $Right) {
+        return self::MakeBinary(TExpressionType::eEqual(), $Left, $Right); //FIXME: proper type is what?
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Left
+     * @param	TExpression	$Right
+     * @return	TBinaryExpression
+     */
+    public static function ReferenceNotEqual($Left, $Right) {
+        return self::MakeBinary(TExpressionType::eNotEqual(), $Left, $Right); //FIXME: proper type is what?
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Left
+     * @param	TExpression	$Right
+     * @return	TBinaryExpression
+     */
+    public static function RightShift($Left, $Right) {
+        return self::MakeBinary(TExpressionType::eRightShift(), $Left, $Right);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$To
+     * @param	TExpression	$By
+     * @param	TLamdaExpression	$Conversion
+     * @return	TBinaryExpression
+     */
+    public static function RightShiftAssign($To, $By, $Conversion = null) {
+        return self::MakeBinary(TExpressionType::eRightShiftAssign(), $To, $By, false, $Conversion);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Left
+     * @param	TExpression	$Right
+     * @return	TBinaryExpression
+     */
+    public static function Substract($Left, $Right) {
+        return self::MakeBinary(TExpressionType::eSubtract(), $Left, $Right);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$To
+     * @param	TExpression	$By
+     * @param	TLamdaExpression	$Conversion
+     * @return	TBinaryExpression
+     */
+    public static function SubstractAssign($To, $By, $Conversion = null) {
+        return self::MakeBinary(TExpressionType::eSubtractAssign(), $To, $By, false, $Conversion);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$To
+     * @param	TExpression	$By
+     * @param	TLamdaExpression	$Conversion
+     * @return	TBinaryExpression
+     */
+    public static function SubstractAssignChecked($To, $By, $Conversion = null) {
+        return self::MakeBinary(TExpressionType::eSubtractAssignChecked(), $To, $By, false, $Conversion);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Left
+     * @param	TExpression	$Right
+     * @param	TLamdaExpression	$Conversion
+     * @return	TBinaryExpression
+     */
+    public static function SubstractChecked($Left, $Right, $Conversion = null) {
+        return self::MakeBinary(TExpressionType::eSubtractChecked(), $Left, $Right);
+    }
+
+    /**
+     * descHere
+     * @param	TExpressionVisitor	$Visitor
+     * @return	TExpression
+     */
+    protected function VisitChildren($Visitor) {
+    }
+
 }
 
 /**
  * TConstantExpression
- * 代表常量值的表达式。
- *
- * @author 许子健
+ * @author	许子健
  */
 final class TConstantExpression extends TExpression {
     
     /**
-     *
-     * @var TObject 常量的值。基础类型需要转换成对象。
+     * @var	IPrimitive <T: ?>
      */
     private $FValue = null;
+    /**
+     * 
+     * @var mixed
+     */
+    private $FType = null;
 
     /**
-     *
-     * @see TExpression::Accept()
-     * @param $Visitor TExpressionVisitor
-     *            表达式访问器。
-     * @return TExpression 表达式本身，或者替代自己的表达式。
+     * descHere
+     * @param	TObject	$Value
+     * @param	mixed	$Type
      */
-    protected function Accept($Visitor) {
-        return $Visitor->VisitConstant($this);
-    }
-
-    /**
-     * 构造方法。
-     */
-    public function __construct() {
+    protected function __construct($Value, $Type = null) {
         parent::__construct();
+        TType::Object($Value);
+        if ($Type == null) {
+            $this->FType = $Value->ObjectType();
+        }
+        else {
+            $this->FType = $Type;
+        }
+        $this->FValue = $Value;
         $this->FNodeType = TExpressionType::eConstant();
     }
 
     /**
-     * 析构方法。
-     *
-     * @see TObject::__destruct()
+     * descHere
      */
     public function __destruct() {
         Framework::Free($this->FValue);
@@ -422,41 +914,394 @@ final class TConstantExpression extends TExpression {
     }
 
     /**
-     * 获得常量的值。
-     *
-     * @return TObject 当前常量的值。
+     * descHere
+     * @param	TExpressionVisitor	$Visitor
+     * @return	TExpression
+     */
+    protected function Accept($Visitor) {
+        //TODO: visit constant.
+    }
+
+    /**
+     * descHere
+     * @return	mixed
+     */
+    public function getType() {
+        return $this->FType;
+    }
+
+    /**
+     * descHere
+     * @return	IPrimitive <T: ?>
      */
     public function getValue() {
         return $this->FValue;
     }
 
+}
+
+/**
+ * TBinaryExpression
+ * @author	许子健
+ */
+final class TBinaryExpression extends TExpression {
+    
     /**
-     * 设置常量的值。
-     *
-     * @param $Value TObject
-     *            新常量的值。
+     * @var	boolean
      */
-    public function setValue($Value) {
-        TType::Object($Value);
-        $this->FValue = $Value;
-        $this->FType = $this->FValue->ObjectType();
+    private $FLiftToNull = false;
+    /**
+     * @var	TExpression
+     */
+    private $FLeft = null;
+    /**
+     * @var	TExpression
+     */
+    private $FRight = null;
+    /**
+     * 
+     * @var TLamdaExpression
+     */
+    private $FConversion = null;
+
+    /**
+     * descHere
+     * @param	TObject	$Left
+     * @param	TObject	$Right
+     * @param	TExpressionType	$NodeType
+     * @param	TLamdaExpression	$Conversion
+     * @param	boolean	$LiftToNull
+     */
+    protected function __construct($Left, $Right, $NodeType, $Conversion = null, $LiftToNull = false) {
+        parent::__construct();
+        
+        TType::Object($NodeType, 'TExpressionType');
+        TType::Object($Left, 'TExpression');
+        TType::Object($Right, 'TExpression');
+        TType::Object($Conversion, 'TLamdaExpression');
+        TType::Bool($LiftToNull);
+        
+        $this->FLeft = $Left;
+        $this->FRight = $Right;
+        $this->FNodeType = $NodeType;
+        $this->FConversion = $Conversion;
+        $this->$FLiftToNull = $LiftToNull;
     }
+
+    /**
+     * descHere
+     * @param	TExpressionVisitor	$Visitor
+     * @return	TExpression
+     */
+    protected function Accept($Visitor) {
+        return $Visitor->VisitBinary($this);
+    }
+
+    /**
+     * descHere
+     * @return    TExpression
+     */
+    protected function DoReduce() {
+        if ($this->FLeft->IsInstanceOf('TConstantExpression')) {
+            $mLeftValue = $this->FLeft->getValue();
+        }
+        if ($this->FRight->IsInstanceOf('TConstantExpression')) {
+            $mRightValue = $this->FRight->getValue();
+        }
+        
+        switch ($this->FNodeType) { //arithmetic and bitwise
+            case TExpressionType::eAdd() :
+            case TExpressionType::eAddChecked() :
+                $mReducedValue = $mLeftValue->Unbox() + $mRightValue->Unbox();
+                break;
+            case TExpressionType::eSubtract() :
+            case TExpressionType::eSubtractChecked() :
+                $mReducedValue = $mLeftValue->Unbox() - $mRightValue->Unbox();
+                break;
+            case TExpressionType::eMultiply() :
+            case TExpressionType::eMultiplyChecked() :
+                $mReducedValue = $mLeftValue->Unbox() * $mRightValue->Unbox();
+                break;
+            case TExpressionType::eDivide() :
+            case TExpressionType::eDivideChecked() :
+                $mReducedValue = $mLeftValue->Unbox() / $mRightValue->Unbox();
+                break;
+            case TExpressionType::eModulo() :
+                $mReducedValue = $mLeftValue->Unbox() % $mRightValue->Unbox();
+                break;
+            case TExpressionType::eAnd() :
+                $mReducedValue = $mLeftValue->Unbox() & $mRightValue->Unbox();
+                break;
+            case TExpressionType::eOr() :
+                $mReducedValue = $mLeftValue->Unbox() | $mRightValue->Unbox();
+                break;
+            case TExpressionType::eExclusiveOr() :
+                $mReducedValue = $mLeftValue->Unbox() ^ $mRightValue->Unbox();
+                break;
+            case TExpressionType::eLeftShift() :
+                $mReducedValue = $mLeftValue->Unbox() << $mRightValue->Unbox();
+                break;
+            case TExpressionType::eRightShift() :
+                $mReducedValue = $mLeftValue->Unbox() >> $mRightValue->Unbox();
+                break;
+            case TExpressionType::ePower() :
+                $mReducedValue = pow($mLeftValue->Unbox(), $mRightValue->Unbox());
+                if (is_int($mReducedValue)) {
+                    return TExpression::Constant(new TInteger($mReducedValue), 'integer');
+                }
+                else {
+                    return TExpression::Constant(new TInteger($mReducedValue), 'float');
+                }
+                break;
+            default : //logical
+                switch ($this->FNodeType) {
+                    case TExpressionType::eAndAlso() :
+                        $mReducedValue = ($mLeftValue->Unbox() && $mRightValue->Unbox());
+                        break;
+                    case TExpressionType::eOrElse() :
+                        $mReducedValue = ($mLeftValue->Unbox() || $mRightValue->Unbox());
+                        break;
+                    case TExpressionType::eGreaterThan() :
+                        $mReducedValue = ($mLeftValue->Unbox() > $mRightValue->Unbox());
+                        break;
+                    case TExpressionType::eLessThan() :
+                        $mReducedValue = ($mLeftValue->Unbox() < $mRightValue->Unbox());
+                        break;
+                    case TExpressionType::eGreaterThanOrEqual() :
+                        $mReducedValue = ($mLeftValue->Unbox() >= $mRightValue->Unbox());
+                        break;
+                    case TExpressionType::eLessThanOrEqual() :
+                        $mReducedValue = ($mLeftValue->Unbox() <= $mRightValue->Unbox());
+                        break;
+                    case TExpressionType::eEqual() :
+                        $mReducedValue = ($mLeftValue->Unbox() == $mRightValue->Unbox());
+                        break;
+                    case TExpressionType::eNotEqual() :
+                        $mReducedValue = ($mLeftValue->Unbox() != $mRightValue->Unbox());
+                        break;
+                }
+                return TExpression::Constant(new TBoolean($mReducedValue), 'boolean');
+                break;
+        }
+        
+        if (($mLeftValue->GenericArg('T') == 'float') || ($mRightValue->GenericArg('T') == 'float')) {
+            TType::Float($mReducedValue);
+            return TExpression::Constant(new TFloat($mReducedValue), 'float');
+        }
+        else {
+            TType::Int($mReducedValue);
+            return TExpression::Constant(new TInteger($mReducedValue), 'integer');
+        }
+    }
+
+    /**
+     * descHere
+     * @return	boolean
+     */
+    public function getCanReduce() {
+        return ($this->FLeft->getNodeType() == TExpressionType::eConstant()) && ($this->FRight->getNodeType() == TExpressionType::eConstant()) && ($this->FNodeType != TExpressionType::eArrayIndex()) && ($this->FNodeType != TExpressionType::eAssign());
+    }
+
+    /**
+     * descHere
+     * @return	TLamdaExpression
+     */
+    public function getConversion() {
+        return $this->FConversion;
+    }
+
+    /**
+     * descHere
+     * @return	boolean
+     */
+    public function getIsLifted() {
+    }
+
+    /**
+     * descHere
+     * @return	boolean
+     */
+    public function getIsLiftedToNull() {
+        return $this->$FLiftToNull && $this->getIsLifted();
+    }
+
+    /**
+     * descHere
+     * @return	TExpression
+     */
+    public function getLeft() {
+        return $this->FLeft;
+    }
+
+    /**
+     * descHere
+     * @return	TExpression
+     */
+    public function getRight() {
+        return $this->FRight;
+    }
+
+    /**
+     * descHere
+     * @return	mixed
+     */
+    public function getType() {
+    }
+
+    /**
+     * descHere
+     * @param	TObject	$Left
+     * @param	TObject	$Right
+     * @param	TLamdaExpression	$Conversion
+     * @return	TBinaryExpression
+     */
+    public function Update($Left, $Right, $Conversion) {
+    }
+
+}
+
+/**
+ * TConditionalExpression
+ * @author	许子健
+ */
+final class TConditionalExpression extends TExpression {
+    
+    /**
+     * @var	TExpression
+     */
+    private $FIfFalse = null;
+    /**
+     * @var	TExpression
+     */
+    private $FIfTrue = null;
+    /**
+     * @var	TExpression
+     */
+    private $FTest = null;
+    /**
+     * @var	mixed
+     */
+    private $FType = null;
+
+    /**
+     * descHere
+     * @param	TExpression	$Test
+     * @param	TExpression	$IfTrue
+     * @param	TExpression	$IfFalse
+     * @param	mixed	$Type
+     */
+    protected function __construct($Test, $IfTrue, $IfFalse, $Type = null) {
+    }
+
+    /**
+     * descHere
+     * @param	TExpressionVisitor	$Visitor
+     * @return	TExpression
+     */
+    protected function Accept($Visitor) {
+    }
+
+    /**
+     * descHere
+     * @return	TExpression
+     */
+    public function getIfFlase() {
+    }
+
+    /**
+     * descHere
+     * @return	TExpression
+     */
+    public function getIfTrue() {
+    }
+
+    /**
+     * descHere
+     * @return	TExpression
+     */
+    public function getTest() {
+    }
+
+    /**
+     * descHere
+     * @return	mixed
+     */
+    public function getType() {
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Test
+     * @param	TExpression	$IfTrue
+     * @param	TExpression	$IfFalse
+     * @return	TConditionalExpression
+     */
+    public function Update($Test, $IfTrue, $IfFalse) {
+    }
+
+}
+
+/**
+ * TDefaultExpression
+ * @author	许子健
+ */
+class TDefaultExpression extends TExpression {
+    
+    /**
+     * @var	mixed
+     */
+    private $FType = null;
+
+    /**
+     * descHere
+     * @param	mixed	$Type
+     */
+    protected function __construct($Type) {
+    }
+
+    /**
+     * descHere
+     * @return    TExpression
+     */
+    protected function DoReduce() {
+    }
+
+    /**
+     * descHere
+     * @return	mixed
+     */
+    public function getType() {
+    }
+
 }
 
 /**
  * TExpressionVisitor
- * TODO: complete this class.
- *
- * @author 许子健
+ * @author	许子健
  */
 abstract class TExpressionVisitor extends TObject {
 
     /**
-     *
-     * @param $Expression TConstantExpression           
-     * @return TExpression
+     * descHere
+     * @param	TExpression	$Expression
+     * @return	TExpression
+     */
+    public function Visit($Expression) {
+    }
+
+    /**
+     * descHere
+     * @return	int
+     */
+    public function VisitBinary() {
+    }
+
+    /**
+     * descHere
+     * @param	TConstantExpression	$Expression
+     * @return	TExpression
      */
     protected function VisitConstant($Expression) {
-        return $Expression;
     }
+
 }
