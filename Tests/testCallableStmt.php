@@ -11,7 +11,7 @@ $mConfig = new TMap();
 $mConfig['Username'] = 'root';
 $mConfig['Password'] = '';
 $mConfig['ConnectTimeout'] = '2';
-//$mConfig['Socket']='/Applications/XAMPP/xamppfiles/var/mysql/mysql.sock'; //MACOSX ONLY
+$mConfig['Socket']='/Applications/XAMPP/xamppfiles/var/mysql/mysql.sock'; //MACOSX ONLY
 
 
 $mConn = $mDriver->Connect('MySQL://localhost/test', $mConfig);
