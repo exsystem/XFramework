@@ -400,6 +400,15 @@ abstract class TExpression extends TObject {
 
     /**
      * descHere
+     * @param	TExpression	$Array
+     * @return	TUnaryExpression
+     */
+    public static static function ArrayLength($Array) {
+        return self::MakeUnary(TExpressionType::eArrayLength(), $Array);
+    }
+
+    /**
+     * descHere
      *
      * @param $To TExpression           
      * @param $By TExpression           
@@ -449,6 +458,26 @@ abstract class TExpression extends TObject {
         TType::Object($Value, 'TObject');
         
         return new TConstantExpression($Value, $Type);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Expression
+     * @param	mixed	$Type
+     * @return	TUnaryExpression
+     */
+    public static static function Convert($Expression, $Type) {
+        return self::MakeUnary(TExpressionType::eConvert(), $Expression, $Type);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Expression
+     * @param	mixed	$Type
+     * @return	TUnaryExpression
+     */
+    public static static function ConvertChecked($Expression, $Type) {
+        return self::MakeUnary(TExpressionType::eConvertChecked(), $Expression, $Type);
     }
 
     /**
@@ -680,6 +709,16 @@ abstract class TExpression extends TObject {
 
     /**
      * descHere
+     * @param	TExpressionType	$ExpressionType
+     * @param	TExpression	$Operand
+     * @param	mixed	$Type
+     * @return	TUnaryExpression
+     */
+    public static static function MakeUnary($ExpressionType, $Operand, $Type) {
+    }
+
+    /**
+     * descHere
      *
      * @param $Left TExpression           
      * @param $Right TExpression           
@@ -745,6 +784,33 @@ abstract class TExpression extends TObject {
      */
     public static function MultiplyChecked($Left, $Right) {
         return self::MakeBinary(TExpressionType::eMultiplyChecked(), $Left, $Right);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Expression
+     * @return	TUnaryExpression
+     */
+    public static static function Negate($Expression) {
+        return self::MakeUnary(TExpressionType::eNegate(), $Expression);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Expression
+     * @return	TUnaryExpression
+     */
+    public static static function NegateChecked($Expression) {
+        return self::MakeUnary(TExpressionType::eNegateChecked(), $Expression);
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Expression
+     * @return	TUnaryExpression
+     */
+    public static static function Not($Expression) {
+        return self::MakeUnary(TExpressionType::eNot(), $Expression);
     }
 
     /**
@@ -818,11 +884,25 @@ abstract class TExpression extends TObject {
 
     /**
      * descHere
+     * @param	TExpression	$Expression
+     * @return	TUnaryExpression
+     */
+    public static static function Quote($Expression) {
+        return self::MakeUnary(TExpressionType::eQuote(), $Expression);
+    }
+
+    /**
+     * descHere
      *
      * @return TExpression
      */
     public function Reduce() {
-        return $this->DoReduce();
+        if ($this->getCanReduce()) {
+            return $this->DoReduce();
+        }
+        else {
+            throw new EInvalidParameter();
+        }
     }
 
     /**
@@ -936,6 +1016,25 @@ abstract class TExpression extends TObject {
 
     /**
      * descHere
+     * @param	TExpression	$Expression
+     * @param	mixed	$Type
+     * @return	TUnaryExpression
+     */
+    public static static function TypeAs($Expression, $Type) {
+        return self::MakeUnary(TExpressionType::eTypeAs(), $Expression, $Type());
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Expression
+     * @return	TUnaryExpression
+     */
+    public static static function UnaryPlus($Expression) {
+        return self::MakeUnary(TExpressionType::eUnaryPlus(), $Expression);
+    }
+
+    /**
+     * descHere
      *
      * @param $Visitor TExpressionVisitor           
      * @return TExpression
@@ -1019,6 +1118,187 @@ final class TConstantExpression extends TExpression {
      */
     public function getValue() {
         return $this->FValue;
+    }
+
+}
+
+/**
+ * TUnaryExpression
+ * @author	许子健
+ */
+final class TUnaryExpression extends TExpression {
+    
+    /**
+     * @var	boolean
+     */
+    private $FLiftToNull = false;
+    /**
+     * @var	TExpression
+     */
+    private $FOperand = null;
+    /**
+     * @var	mixed
+     */
+    private $FType = null;
+
+    /**
+     * descHere
+     * @param	TExpressionType	$ExpressionType
+     * @param	TExpression	$Operand
+     * @param	mixed	$Type
+     */
+    protected function __construct($ExpressionType, $Operand, $Type = null) {
+        parent::__construct();
+        TType::Object($ExpressionType, 'TExpressionType');
+        TType::Object($Operand, 'TExpression');
+        
+        switch ($ExpressionType) {
+            case TExpressionType::eArrayLength() :
+            case TExpressionType::eNegate() :
+            case TExpressionType::eNegateChecked() :
+            case TExpressionType::eNot() :
+            case TExpressionType::eQuote() :
+            case TExpressionType::eUnaryPlus() :
+                if ($Type !== null) {
+                    throw new EInvalidParameter();
+                }
+                break;
+            case TExpressionType::eConvert() :
+            case TExpressionType::eConvertChecked() :
+            case TExpressionType::eTypeAs() :
+                if ($Type === null) {
+                    throw new EInvalidParameter();
+                }
+                break;
+            default :
+                throw new EInvalidParameter();
+                break;
+        }
+        $mOperandType = $Operand->getType();
+        switch ($ExpressionType) {
+            case TExpressionType::eArrayLength() :
+                if ($mOperandType !== 'array') {
+                    throw new EInvalidParameter();
+                }
+                break;
+            case TExpressionType::eNegate() :
+            case TExpressionType::eNegateChecked() :
+            case TExpressionType::eUnaryPlus() :
+                $mOperandType = $Operand->getType();
+                if (($mOperandType !== 'integer') || ($mOperandType !== 'float')) {
+                    throw new EInvalidParameter();
+                }
+                break;
+            case TExpressionType::eNot() :
+                if ($mOperandType !== 'boolean') {
+                    throw new EInvalidParameter();
+                }
+                break;
+            case TExpressionType::eConvert() :
+            case TExpressionType::eConvertChecked() :
+                if (($mOperandType !== 'boolean') || ($mOperandType !== 'integer') || ($mOperandType !== 'float') || ($mOperandType !== 'string')) {
+                    throw new EInvalidParameter();
+                }
+                if (($Type !== 'boolean') || ($Type !== 'integer') || ($Type !== 'float') || ($Type !== 'string')) {
+                    throw new EInvalidParameter();
+                }
+                break;
+            case TExpressionType::eQuote() :
+            case TExpressionType::eTypeAs() :
+                if (($mOperandType === 'boolean') || ($mOperandType === 'integer') || ($mOperandType === 'float') || ($mOperandType === 'string')) {
+                    throw new EInvalidParameter();
+                }
+                if (($Type === 'boolean') || ($Type === 'integer') || ($Type === 'float') || ($Type === 'string')) {
+                    throw new EInvalidParameter();
+                }
+                break;
+        }
+        
+        $this->FNodeType = $ExpressionType;
+        $this->FOperand = $Operand;
+        $this->FType = $Type;
+    }
+
+    /**
+     * descHere
+     */
+    public function __destruct() {
+        Framework::Free($this->FOperand);
+        
+        parent::__destruct();
+    }
+
+    /**
+     * descHere
+     * @return	TExpression
+     */
+    protected function DoReduce() {
+        //reduce unary plus expression
+        return $this->FOperand;
+    }
+
+    /**
+     * descHere
+     * @return	boolean
+     */
+    public function getCanReduce() {
+        return ($this->FNodeType == TExpressionType::eUnaryPlus());
+    }
+
+    /**
+     * descHere
+     * @return	boolean
+     */
+    public function getIsLifted() {
+    }
+
+    /**
+     * descHere
+     * @return	boolean
+     */
+    public function getIsLiftedToNull() {
+    }
+
+    /**
+     * descHere
+     * @return	TExpression
+     */
+    public function getOperand() {
+        return $this->FOperand;
+    }
+
+    /**
+     * descHere
+     * @return	mixed
+     */
+    public function getType() {
+        if ($this->FType == null) {
+            switch ($this->FNodeType) {
+                case TExpressionType::eArrayLength() :
+                    return 'integer';
+                case TExpressionType::eNegate() :
+                case TExpressionType::eNegateChecked() :
+                case TExpressionType::eUnaryPlus() :
+                    return $this->FOperand->getType();
+                case TExpressionType::eNot() :
+                    return 'boolean';
+                case TExpressionType::eQuote() :
+                    return ''; //FIXME: impl.
+            }
+        }
+        else {
+            return $this->FType;
+        }
+    }
+
+    /**
+     * descHere
+     * @param	TExpression	$Operand
+     * @return	TUnaryExpression
+     */
+    public function Update($Operand) {
+        TType::Object($Operand, 'TExpression');
+        return self::MakeUnary($this->FNodeType, $Operand, $this->FType);
     }
 
 }
@@ -1528,7 +1808,7 @@ final class TConditionalExpression extends TExpression {
  *
  * @author 许子健
  */
-class TDefaultExpression extends TExpression {
+final class TDefaultExpression extends TExpression {
     
     /**
      *
@@ -1761,7 +2041,7 @@ final class TMemberExpression extends TExpression {
  * TLambdaExpression
  * @author	许子健
  */
-class TLambdaExpression extends TExpression {
+final class TLambdaExpression extends TExpression {
     
     /**
      * @var	TExpression
@@ -1772,7 +2052,7 @@ class TLambdaExpression extends TExpression {
      */
     private $FName = '';
     /**
-     * @var	IList<T: TParameterExpression>
+     * @var	IList <T: TParameterExpression>
      */
     private $FParameters = null;
     /**
