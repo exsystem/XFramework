@@ -2138,35 +2138,110 @@ final class TLambdaExpression extends TExpression {
 
 /**
  * TExpressionVisitor
- *
- * @author 许子健
+ * @author	许子健
  */
 abstract class TExpressionVisitor extends TObject {
 
     /**
      * descHere
-     *
-     * @param $Expression TExpression           
-     * @return TExpression
+     * @param	TExpression	$Expression
+     * @return	TExpression
      */
     public function Visit($Expression) {
+        TType::Object($Expression, 'TExpression');
+        
+        $mObjectType = $Expression->ObjectType();
+        
+        switch ($mObjectType) {
+            case 'TBinaryExpression' :
+                return $this->VisitBinary($Expression);
+            case 'TConditionalExpression' :
+                return $this->VisitConditional($Expression);
+            case 'TConstantExpression' :
+                return $this->VisitConstant($Expression);
+            case 'TDefaultExpression' :
+                return $this->VisitDefault($Expression);
+            case 'TLambdaExpression' :
+                return $this->VisitLambda($Expression);
+            case 'TMemberExpression' :
+                return $this->VisitMember($Expression);
+            case 'ParameterExpression' :
+                return $this->VisitParameter($Expression);
+            case 'TUnaryExpression' :
+                return $this->VisitUnary($Expression);
+        }
     }
 
     /**
      * descHere
-     *
-     * @return int
+     * @param	TBinaryExpression	$Expression
+     * @return	TExpression
      */
-    public function VisitBinary() {
+    protected function VisitBinary($Expression) {
+        return $Expression;
     }
 
     /**
      * descHere
-     *
-     * @param $Expression TConstantExpression           
-     * @return TExpression
+     * @param	TConditional	$Expression
+     * @return	TExpression
+     */
+    protected function VisitConditional($Expression) {
+        return $Expression;
+    }
+
+    /**
+     * descHere
+     * @param	TConstantExpression	$Expression
+     * @return	TExpression
      */
     protected function VisitConstant($Expression) {
+        return $Expression;
+    }
+
+    /**
+     * descHere
+     * @param	TDefaultExpression	$Expression
+     * @return	TExpression
+     */
+    protected function VisitDefault($Expression) {
+        return $Expression;
+    }
+
+    /**
+     * descHere
+     * @param	TLambdaExpression	$Expression
+     * @return	TExpression
+     */
+    protected function VisitLambda($Expression) {
+        return $Expression;
+    }
+
+    /**
+     * descHere
+     * @param	TMemberExpression	$Expression
+     * @return	TExpression
+     */
+    protected function VisitMember($Expression) {
+        return $Expression;
+    }
+
+    /**
+     * descHere
+     * @param	TParameterExpression	$Expression
+     * @return	TExpression
+     */
+    protected function VisitParameter($Expression) {
+        return $Expression;
+    }
+
+    /**
+     * descHere
+     * @param	TUnaryExpression	$Expression
+     * @return	TExpression
+     */
+    protected function VisitUnary($Expression) {
+        return $Expression;
     }
 
 }
