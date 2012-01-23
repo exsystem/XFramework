@@ -302,8 +302,9 @@ abstract class TExpression extends TObject {
      * @param $Visitor TExpressionVisitor           
      * @return TExpression 表达式本身，或者替代自己的表达式。
      */
-    protected function Accept($Visitor) {
-        return $Visitor->Visit($this);
+    public function Accept($Visitor) {
+        $mExpression = $this->VisitChildren($Visitor);
+        return $Visitor->Visit($mExpression);
     }
 
     /**
@@ -1040,6 +1041,7 @@ abstract class TExpression extends TObject {
      * @return TExpression
      */
     protected function VisitChildren($Visitor) {
+        return $this;
     }
 
 }
@@ -1090,16 +1092,6 @@ final class TConstantExpression extends TExpression {
     public function __destruct() {
         Framework::Free($this->FValue);
         parent::__destruct();
-    }
-
-    /**
-     * descHere
-     *
-     * @param $Visitor TExpressionVisitor           
-     * @return TExpression
-     */
-    protected function Accept($Visitor) {
-        // TODO: visit constant.
     }
 
     /**
@@ -1301,6 +1293,15 @@ final class TUnaryExpression extends TExpression {
         return self::MakeUnary($this->FNodeType, $Operand, $this->FType);
     }
 
+    /**
+     * descHere
+     * @param	TExpressionVisitor	$Visitor
+     * @return	TExpression
+     */
+    protected function VisitChildren($Visitor) {
+        $this->FOperand = $this->FOperand->Accept($Visitor);
+        return $this;
+    }
 }
 
 /**
@@ -1456,16 +1457,6 @@ final class TBinaryExpression extends TExpression {
         Framework::Free($this->FRight);
         
         parent::__destruct();
-    }
-
-    /**
-     * descHere
-     *
-     * @param $Visitor TExpressionVisitor           
-     * @return TExpression
-     */
-    protected function Accept($Visitor) {
-        return $Visitor->VisitBinary($this);
     }
 
     /**
@@ -1677,6 +1668,16 @@ final class TBinaryExpression extends TExpression {
         }
     }
 
+    /**
+     * descHere
+     * @param	TExpressionVisitor	$Visitor
+     * @return	TExpression
+     */
+    protected function VisitChildren($Visitor) {
+        $this->FLeft = $Visitor->Visit($this->FLeft);
+        $this->FRight = $Visitor->Visit($this->FRight);
+        return $this;
+    }
 }
 
 /**
@@ -1736,17 +1737,6 @@ final class TConditionalExpression extends TExpression {
     /**
      * descHere
      *
-     * @param $Visitor TExpressionVisitor           
-     * @return TExpression
-     */
-    protected function Accept($Visitor) {
-        TType::Object($Visitor, 'TExpressionVisitor');
-        return null; //TODO impl.
-    }
-
-    /**
-     * descHere
-     *
      * @return TExpression
      */
     public function getIfFlase() {
@@ -1801,6 +1791,17 @@ final class TConditionalExpression extends TExpression {
         }
     }
 
+    /**
+     * descHere
+     * @param	TExpressionVisitor	$Visitor
+     * @return	TExpression
+     */
+    protected function VisitChildren($Visitor) {
+        $this->FTest = $this->FTest->Accept($Visitor);
+        $this->FIfTrue = $this->FIfTrue->Accept($Visitor);
+        $this->FIfFalse = $this->FIfFalse->Accept($Visitor);
+        return $this;
+    }
 }
 
 /**
@@ -1898,14 +1899,6 @@ final class TParameterExpression extends TExpression {
 
     /**
      * descHere
-     * @param	TExpressionVisitor	$Visitor
-     * @return	TExpression
-     */
-    protected function Accept($Visitor) {
-    }
-
-    /**
-     * descHere
      * @return	boolean
      */
     public function getIsByRef() {
@@ -1986,14 +1979,6 @@ final class TMemberExpression extends TExpression {
 
     /**
      * descHere
-     * @param	TExpressionVisitor	$Visitor
-     * @return	TExpression
-     */
-    protected function Accept($Visitor) {
-    }
-
-    /**
-     * descHere
      * @return	TExpression
      */
     public function getExpression() {
@@ -2035,6 +2020,15 @@ final class TMemberExpression extends TExpression {
         }
     }
 
+    /**
+     * descHere
+     * @param	TExpressionVisitor	$Visitor
+     * @return	TExpression
+     */
+    protected function VisitChildren($Visitor) {
+        $this->FExpression = $this->FExpression->Accept($Visitor);
+        return $this;
+    }
 }
 
 /**
@@ -2134,6 +2128,15 @@ final class TLambdaExpression extends TExpression {
         return $this->FType;
     }
 
+    /**
+     * descHere
+     * @param	TExpressionVisitor	$Visitor
+     * @return	TExpression
+     */
+    protected function VisitChildren($Visitor) {
+        $this->FBody = $this->FBody->Accept($Visitor);
+        return $this;
+    }
 }
 
 /**
@@ -2150,25 +2153,36 @@ abstract class TExpressionVisitor extends TObject {
     public function Visit($Expression) {
         TType::Object($Expression, 'TExpression');
         
+        if ($Expression->getCanReduce()) {
+            $Expression = $Expression->Reduce();
+        }
         $mObjectType = $Expression->ObjectType();
         
         switch ($mObjectType) {
             case 'TBinaryExpression' :
                 return $this->VisitBinary($Expression);
+                break;
             case 'TConditionalExpression' :
                 return $this->VisitConditional($Expression);
+                break;
             case 'TConstantExpression' :
                 return $this->VisitConstant($Expression);
+                break;
             case 'TDefaultExpression' :
                 return $this->VisitDefault($Expression);
+                break;
             case 'TLambdaExpression' :
                 return $this->VisitLambda($Expression);
+                break;
             case 'TMemberExpression' :
                 return $this->VisitMember($Expression);
+                break;
             case 'ParameterExpression' :
                 return $this->VisitParameter($Expression);
+                break;
             case 'TUnaryExpression' :
-                return $this->VisitUnary($Expression);
+                return  $this->VisitUnary($Expression);
+                break;
         }
     }
 
