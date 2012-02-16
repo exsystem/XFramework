@@ -11,7 +11,6 @@ require_once 'FrameworkDSW/System.php';
 // FIXME: 去除PHP表達式不需要的符號。
 // FIXME: 暫不支持數組（需要等待反射架構完成<type, dimensions>, int => <int, 0>）
 
-
 /**
  * TExpressionType
  * 表示在表達式樹結點的表達式類型的枚舉類型。
@@ -401,8 +400,9 @@ abstract class TExpression extends TObject {
 
     /**
      * descHere
-     * @param	TExpression	$Array
-     * @return	TUnaryExpression
+     *
+     * @param $Array TExpression           
+     * @return TUnaryExpression
      */
     public static static function ArrayLength($Array) {
         return self::MakeUnary(TExpressionType::eArrayLength(), $Array);
@@ -417,6 +417,31 @@ abstract class TExpression extends TObject {
      */
     public static function Assign($To, $By) {
         return self::MakeBinary(TExpressionType::eAssign(), $To, $By);
+    }
+
+    /**
+     * descHere
+     *
+     * @param $Instance TExpression           
+     * @param $Method array           
+     * @param $Arguments IIteratorAggregate
+     *            <T: TExpression>
+     * @param $ReturnType mixed           
+     * @return TMethodCallExpression
+     */
+    public static static function Call($Instance, $Method, $Arguments, $ReturnType = null) {
+        TType::Object($Instance, 'TExpression');
+        TType::Arr($Method);
+        TType::Object($Arguments, array (
+            'IIteratorAggregate' => array ('T' => 'TExpression')));
+        
+        TList::PrepareGeneric(array ('T' => 'TExpression'));
+        $mArguments = new TList(5, true);
+        foreach ($Arguments as $mArgument) {
+            $mArguments->Add($mArgument);
+        }
+        return new TMethodCallExpression($Instance, $Method, $mArguments, $ReturnType);
+    
     }
 
     /**
@@ -463,9 +488,10 @@ abstract class TExpression extends TObject {
 
     /**
      * descHere
-     * @param	TExpression	$Expression
-     * @param	mixed	$Type
-     * @return	TUnaryExpression
+     *
+     * @param $Expression TExpression           
+     * @param $Type mixed           
+     * @return TUnaryExpression
      */
     public static static function Convert($Expression, $Type) {
         return self::MakeUnary(TExpressionType::eConvert(), $Expression, $Type);
@@ -473,9 +499,10 @@ abstract class TExpression extends TObject {
 
     /**
      * descHere
-     * @param	TExpression	$Expression
-     * @param	mixed	$Type
-     * @return	TUnaryExpression
+     *
+     * @param $Expression TExpression           
+     * @param $Type mixed           
+     * @return TUnaryExpression
      */
     public static static function ConvertChecked($Expression, $Type) {
         return self::MakeUnary(TExpressionType::eConvertChecked(), $Expression, $Type);
@@ -640,6 +667,20 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
+     * @param $Body TExpression           
+     * @param $Parameters IList
+     *            <T: TParameterExpression>
+     * @param $Name string           
+     * @param $DelegateType mixed           
+     * @return TLambdaExpresion
+     */
+    public static static function Lambda($Body, $Parameters, $Name = '', $DelegateType = null) {
+        return new TLambdaExpression($Name, $Body, $Parameters, $Body->getType());
+    }
+
+    /**
+     * descHere
+     *
      * @param $Left TExpression           
      * @param $Right TExpression           
      * @return TBinaryExpression
@@ -699,10 +740,10 @@ abstract class TExpression extends TObject {
     }
 
     /**
-     * 
-     * @param TExpression $Expression
-     * @param string $MemberName
-     * @param mixed $Type
+     *
+     * @param $Expression TExpression           
+     * @param $MemberName string           
+     * @param $Type mixed           
      */
     public static function MakeMember($Expression, $MemberName, $Type) {
         return new TMemberExpression($Expression, $MemberName, $Type);
@@ -710,10 +751,11 @@ abstract class TExpression extends TObject {
 
     /**
      * descHere
-     * @param	TExpressionType	$ExpressionType
-     * @param	TExpression	$Operand
-     * @param	mixed	$Type
-     * @return	TUnaryExpression
+     *
+     * @param $ExpressionType TExpressionType           
+     * @param $Operand TExpression           
+     * @param $Type mixed           
+     * @return TUnaryExpression
      */
     public static static function MakeUnary($ExpressionType, $Operand, $Type) {
     }
@@ -789,8 +831,9 @@ abstract class TExpression extends TObject {
 
     /**
      * descHere
-     * @param	TExpression	$Expression
-     * @return	TUnaryExpression
+     *
+     * @param $Expression TExpression           
+     * @return TUnaryExpression
      */
     public static static function Negate($Expression) {
         return self::MakeUnary(TExpressionType::eNegate(), $Expression);
@@ -798,8 +841,9 @@ abstract class TExpression extends TObject {
 
     /**
      * descHere
-     * @param	TExpression	$Expression
-     * @return	TUnaryExpression
+     *
+     * @param $Expression TExpression           
+     * @return TUnaryExpression
      */
     public static static function NegateChecked($Expression) {
         return self::MakeUnary(TExpressionType::eNegateChecked(), $Expression);
@@ -807,8 +851,9 @@ abstract class TExpression extends TObject {
 
     /**
      * descHere
-     * @param	TExpression	$Expression
-     * @return	TUnaryExpression
+     *
+     * @param $Expression TExpression           
+     * @return TUnaryExpression
      */
     public static static function Not($Expression) {
         return self::MakeUnary(TExpressionType::eNot(), $Expression);
@@ -885,8 +930,9 @@ abstract class TExpression extends TObject {
 
     /**
      * descHere
-     * @param	TExpression	$Expression
-     * @return	TUnaryExpression
+     *
+     * @param $Expression TExpression           
+     * @return TUnaryExpression
      */
     public static static function Quote($Expression) {
         return self::MakeUnary(TExpressionType::eQuote(), $Expression);
@@ -924,10 +970,10 @@ abstract class TExpression extends TObject {
      */
     public static function ReferenceEqual($Left, $Right) {
         return self::MakeBinary(TExpressionType::eEqual(), $Left, $Right); // FIXME:
-    // proper
-    // type
-    // is
-    // what?
+                                                                               // proper
+                                                                               // type
+                                                                               // is
+                                                                               // what?
     }
 
     /**
@@ -939,10 +985,10 @@ abstract class TExpression extends TObject {
      */
     public static function ReferenceNotEqual($Left, $Right) {
         return self::MakeBinary(TExpressionType::eNotEqual(), $Left, $Right); // FIXME:
-    // proper
-    // type
-    // is
-    // what?
+                                                                                  // proper
+                                                                                  // type
+                                                                                  // is
+                                                                                  // what?
     }
 
     /**
@@ -1017,9 +1063,10 @@ abstract class TExpression extends TObject {
 
     /**
      * descHere
-     * @param	TExpression	$Expression
-     * @param	mixed	$Type
-     * @return	TUnaryExpression
+     *
+     * @param $Expression TExpression           
+     * @param $Type mixed           
+     * @return TUnaryExpression
      */
     public static static function TypeAs($Expression, $Type) {
         return self::MakeUnary(TExpressionType::eTypeAs(), $Expression, $Type());
@@ -1027,8 +1074,9 @@ abstract class TExpression extends TObject {
 
     /**
      * descHere
-     * @param	TExpression	$Expression
-     * @return	TUnaryExpression
+     *
+     * @param $Expression TExpression           
+     * @return TUnaryExpression
      */
     public static static function UnaryPlus($Expression) {
         return self::MakeUnary(TExpressionType::eUnaryPlus(), $Expression);
@@ -1067,7 +1115,7 @@ final class TConstantExpression extends TExpression {
     /**
      * descHere
      *
-     * @param $Value TObject      
+     * @param $Value TObject           
      * @param $Type mixed           
      */
     protected function __construct($Value, $Type = null) {
@@ -1115,29 +1163,51 @@ final class TConstantExpression extends TExpression {
 }
 
 /**
+ * TTypedExpression
+ * params <T: IDelegate>
+ *
+ * @author 许子健
+ */
+final class TTypedExpression extends TLambdaExpression {
+
+    /**
+     * descHere
+     *
+     * @return T
+     */
+    public function TypedCompile() {
+    }
+}
+
+/**
  * TUnaryExpression
- * @author	许子健
+ *
+ * @author 许子健
  */
 final class TUnaryExpression extends TExpression {
     
     /**
-     * @var	boolean
+     *
+     * @var boolean
      */
     private $FLiftToNull = false;
     /**
-     * @var	TExpression
+     *
+     * @var TExpression
      */
     private $FOperand = null;
     /**
-     * @var	mixed
+     *
+     * @var mixed
      */
     private $FType = null;
 
     /**
      * descHere
-     * @param	TExpressionType	$ExpressionType
-     * @param	TExpression	$Operand
-     * @param	mixed	$Type
+     *
+     * @param $ExpressionType TExpressionType           
+     * @param $Operand TExpression           
+     * @param $Type mixed           
      */
     protected function __construct($ExpressionType, $Operand, $Type = null) {
         parent::__construct();
@@ -1222,16 +1292,18 @@ final class TUnaryExpression extends TExpression {
 
     /**
      * descHere
-     * @return	TExpression
+     *
+     * @return TExpression
      */
     protected function DoReduce() {
-        //reduce unary plus expression
+        // reduce unary plus expression
         return $this->FOperand;
     }
 
     /**
      * descHere
-     * @return	boolean
+     *
+     * @return boolean
      */
     public function getCanReduce() {
         return ($this->FNodeType == TExpressionType::eUnaryPlus());
@@ -1239,21 +1311,24 @@ final class TUnaryExpression extends TExpression {
 
     /**
      * descHere
-     * @return	boolean
+     *
+     * @return boolean
      */
     public function getIsLifted() {
     }
 
     /**
      * descHere
-     * @return	boolean
+     *
+     * @return boolean
      */
     public function getIsLiftedToNull() {
     }
 
     /**
      * descHere
-     * @return	TExpression
+     *
+     * @return TExpression
      */
     public function getOperand() {
         return $this->FOperand;
@@ -1261,7 +1336,8 @@ final class TUnaryExpression extends TExpression {
 
     /**
      * descHere
-     * @return	mixed
+     *
+     * @return mixed
      */
     public function getType() {
         if ($this->FType == null) {
@@ -1275,7 +1351,7 @@ final class TUnaryExpression extends TExpression {
                 case TExpressionType::eNot() :
                     return 'boolean';
                 case TExpressionType::eQuote() :
-                    return ''; //FIXME: impl.
+                    return ''; // FIXME: impl.
             }
         }
         else {
@@ -1285,8 +1361,9 @@ final class TUnaryExpression extends TExpression {
 
     /**
      * descHere
-     * @param	TExpression	$Operand
-     * @return	TUnaryExpression
+     *
+     * @param $Operand TExpression           
+     * @return TUnaryExpression
      */
     public function Update($Operand) {
         TType::Object($Operand, 'TExpression');
@@ -1295,8 +1372,9 @@ final class TUnaryExpression extends TExpression {
 
     /**
      * descHere
-     * @param	TExpressionVisitor	$Visitor
-     * @return	TExpression
+     *
+     * @param $Visitor TExpressionVisitor           
+     * @return TExpression
      */
     protected function VisitChildren($Visitor) {
         $this->FOperand = $this->FOperand->Accept($Visitor);
@@ -1400,7 +1478,7 @@ final class TBinaryExpression extends TExpression {
                     throw new EInvalidParameter();
                 }
             case TExpressionType::eAssign() : // FIXME: applicable?
-                // TODO 'TParameterExpression'
+                                              // TODO 'TParameterExpression'
                 break;
             case TExpressionType::eArrayIndex() :
                 if (($Left->getType() != 'array') || ($Right->getType() != 'TInteger')) {
@@ -1449,6 +1527,7 @@ final class TBinaryExpression extends TExpression {
 
     /**
      * (non-PHPdoc)
+     *
      * @see TObject::__destruct()
      */
     public function __destruct() {
@@ -1654,7 +1733,7 @@ final class TBinaryExpression extends TExpression {
     /**
      * descHere
      *
-     * @param $Left TExpression      
+     * @param $Left TExpression           
      * @param $Right TExpression           
      * @param $Conversion TLambdaExpression           
      * @return TBinaryExpression
@@ -1670,8 +1749,9 @@ final class TBinaryExpression extends TExpression {
 
     /**
      * descHere
-     * @param	TExpressionVisitor	$Visitor
-     * @return	TExpression
+     *
+     * @param $Visitor TExpressionVisitor           
+     * @return TExpression
      */
     protected function VisitChildren($Visitor) {
         $this->FLeft = $Visitor->Visit($this->FLeft);
@@ -1793,8 +1873,9 @@ final class TConditionalExpression extends TExpression {
 
     /**
      * descHere
-     * @param	TExpressionVisitor	$Visitor
-     * @return	TExpression
+     *
+     * @param $Visitor TExpressionVisitor           
+     * @return TExpression
      */
     protected function VisitChildren($Visitor) {
         $this->FTest = $this->FTest->Accept($Visitor);
@@ -1860,29 +1941,33 @@ final class TDefaultExpression extends TExpression {
 
 /**
  * TParameterExpression
- * @author	许子健
+ *
+ * @author 许子健
  */
 final class TParameterExpression extends TExpression {
     
     /**
-     * @var	string
+     *
+     * @var string
      */
     private $FName = '';
     /**
-     * @var	mixed
+     *
+     * @var mixed
      */
     private $FType = null;
     /**
-     * 
+     *
      * @var boolean
      */
     private $FIsByRef = false;
 
     /**
      * descHere
-     * @param	string	$Name
-     * @param	mixed	$Type
-     * @param	boolean	$IsByRef
+     *
+     * @param $Name string           
+     * @param $Type mixed           
+     * @param $IsByRef boolean           
      */
     protected function __construct($Name, $Type, $IsByRef = false) {
         TType::String($Name);
@@ -1899,7 +1984,8 @@ final class TParameterExpression extends TExpression {
 
     /**
      * descHere
-     * @return	boolean
+     *
+     * @return boolean
      */
     public function getIsByRef() {
         return $this->FIsByRef;
@@ -1907,7 +1993,8 @@ final class TParameterExpression extends TExpression {
 
     /**
      * descHere
-     * @return	string
+     *
+     * @return string
      */
     public function getName() {
         return $this->FName;
@@ -1915,15 +2002,17 @@ final class TParameterExpression extends TExpression {
 
     /**
      * descHere
-     * @return	TExpressionType
+     *
+     * @return TExpressionType
      */
     public function getNodeType() {
-        return TExpressionType::eParameter(); //?
+        return TExpressionType::eParameter(); // ?
     }
 
     /**
      * descHere
-     * @return	mixed
+     *
+     * @return mixed
      */
     public function getType() {
         return $this->FType;
@@ -1933,28 +2022,33 @@ final class TParameterExpression extends TExpression {
 
 /**
  * TMemberExpression
- * @author	许子健
+ *
+ * @author 许子健
  */
 final class TMemberExpression extends TExpression {
     
     /**
-     * @var	TExpression
+     *
+     * @var TExpression
      */
     private $FExpression = null;
     /**
-     * @var	string
+     *
+     * @var string
      */
     private $FMemberName = '';
     /**
-     * @var	mixed
+     *
+     * @var mixed
      */
     private $FType = null;
 
     /**
      * descHere
-     * @param	TExpression	$Expression
-     * @param	string	$MemberName
-     * @param	mixed	$Type
+     *
+     * @param $Expression TExpression           
+     * @param $MemberName string           
+     * @param $Type mixed           
      */
     protected function __construct($Expression, $MemberName, $Type) {
         TType::Type($Expression, 'TExpression');
@@ -1979,7 +2073,8 @@ final class TMemberExpression extends TExpression {
 
     /**
      * descHere
-     * @return	TExpression
+     *
+     * @return TExpression
      */
     public function getExpression() {
         return $this->FExpression;
@@ -1987,7 +2082,8 @@ final class TMemberExpression extends TExpression {
 
     /**
      * descHere
-     * @return	string
+     *
+     * @return string
      */
     public function getMember() {
         return $this->FMemberName;
@@ -1995,7 +2091,8 @@ final class TMemberExpression extends TExpression {
 
     /**
      * descHere
-     * @return	mixed
+     *
+     * @return mixed
      */
     public function getType() {
         return $this->FType;
@@ -2003,10 +2100,11 @@ final class TMemberExpression extends TExpression {
 
     /**
      * descHere
-     * @param	TExpression	$Expression
-     * @param	string	$MemberName
-     * @param	mixed	$Type
-     * @return	TMemberExprsssion
+     *
+     * @param $Expression TExpression           
+     * @param $MemberName string           
+     * @param $Type mixed           
+     * @return TMemberExprsssion
      */
     public function Update($Expression, $MemberName, $Type) {
         TType::Object($Expression, 'TExpression');
@@ -2022,8 +2120,9 @@ final class TMemberExpression extends TExpression {
 
     /**
      * descHere
-     * @param	TExpressionVisitor	$Visitor
-     * @return	TExpression
+     *
+     * @param $Visitor TExpressionVisitor           
+     * @return TExpression
      */
     protected function VisitChildren($Visitor) {
         $this->FExpression = $this->FExpression->Accept($Visitor);
@@ -2032,34 +2131,157 @@ final class TMemberExpression extends TExpression {
 }
 
 /**
- * TLambdaExpression
- * @author	许子健
+ * TMethodCallExpression
+ *
+ * @author 许子健
  */
-final class TLambdaExpression extends TExpression {
+final class TMethodCallExpression extends TExpression {
     
     /**
-     * @var	TExpression
+     *
+     * @var IList <T: TExpression>
+     */
+    private $FArguments = null;
+    /**
+     *
+     * @var array
+     */
+    private $FMethod = array ();
+    /**
+     *
+     * @var TExpression
+     */
+    private $FObject = null;
+    /**
+     *
+     * @var mixed
+     */
+    private $FType = null;
+
+    /**
+     * descHere
+     *
+     * @param $Object TExpression           
+     * @param $Method array           
+     * @param $Arguments IList
+     *            <T: TExpression>
+     * @param $ReturnType mixed           
+     */
+    protected function __construct($Object, $Method, $Arguments, $ReturnType = null) {
+        parent::__construct();
+        
+        TType::Object($Object, 'TExpression');
+        TType::Arr($Method);
+        TType::Object($Arguments, array (
+            'IList' => array ('T' => 'TExpression')));
+        
+        $this->FObject = $Object;
+        $this->FMethod = $Method;
+        $this->FArguments = $Arguments;
+        $this->FType = $ReturnType;
+    }
+
+    /**
+     * (non-PHPdoc)
+     *
+     * @see TObject::__destruct()
+     */
+    public function __destruct() {
+        Framework::Free($this->FObject);
+        Framework::Free($this->FArguments);
+    }
+
+    /**
+     * descHere
+     *
+     * @return IList <T: TParameterExpression>
+     */
+    public function getArguments() {
+        return $this->FArguments;
+    }
+
+    /**
+     * descHere
+     *
+     * @return array
+     */
+    public function getMethod() {
+        return $this->FMethod;
+    }
+
+    /**
+     * descHere
+     *
+     * @return TExpression
+     */
+    public function getObject() {
+        return $this->FObject;
+    }
+
+    /**
+     * descHere
+     *
+     * @return mixed
+     */
+    public function getType() {
+        return $this->FType;
+    
+    }
+
+    /**
+     * descHere
+     *
+     * @param $Object TExpression           
+     * @param $Arguments IList
+     *            <T: TParameterExpression>
+     * @return TMethodCallExpression
+     */
+    public function Update($Object, $Arguments) {
+        TType::Object($Object, 'TExpression');
+        TType::Object($Arguments, array (
+            'IList' => array ('T' => 'TParameterExpression')));
+        
+        return TExpression::Call($Object, $this->FMethod, $Arguments, $this->FType);
+    }
+
+}
+
+/**
+ * TLambdaExpression
+ *
+ * @author 许子健
+ */
+class TLambdaExpression extends TExpression {
+    
+    /**
+     *
+     * @var TExpression
      */
     private $FBody = null;
     /**
-     * @var	string
+     *
+     * @var string
      */
     private $FName = '';
     /**
-     * @var	IList <T: TParameterExpression>
+     *
+     * @var IList <T: TParameterExpression>
      */
     private $FParameters = null;
     /**
-     * @var	mixed
+     *
+     * @var mixed
      */
     private $FReturnType = null;
 
     /**
      * descHere
-     * @param	string	$Name
-     * @param	TExpression	$Body
-     * @param	IList<T: TParameterExpression>	$Parameters
-     * @param	mixed	$ReturnType
+     *
+     * @param $Name string           
+     * @param $Body TExpression           
+     * @param
+     *            IList<T: TParameterExpression>	$Parameters
+     * @param $ReturnType mixed           
      */
     protected function __construct($Name, $Body, $Parameters, $ReturnType) {
         TType::String($Name);
@@ -2067,7 +2289,8 @@ final class TLambdaExpression extends TExpression {
         TType::Object($Parameters, array (
             'IList' => array ('T' => 'TParameterExpression')));
         
-        $this->FName = $Name; //TODO: check if already exists, and if the name is valid.
+        $this->FName = $Name; // TODO: check if already exists, and if the name
+                              // is valid.
         $this->FBody = $Body;
         $this->FParameters = $Parameters;
         $this->FReturnType = $ReturnType;
@@ -2077,20 +2300,23 @@ final class TLambdaExpression extends TExpression {
      * descHere
      */
     public function __destruct() {
+        Framework::Free($this->FParameters);
         Framework::Free($this->FBody);
         parent::__destruct();
     }
 
     /**
      * descHere
-     * @return	TDelegate
+     *
+     * @return IDelegate
      */
     public function Compile() {
     }
 
     /**
      * descHere
-     * @return	TExpression
+     *
+     * @return TExpression
      */
     public function getBody() {
         return $this->FBody;
@@ -2098,7 +2324,8 @@ final class TLambdaExpression extends TExpression {
 
     /**
      * descHere
-     * @return	string
+     *
+     * @return string
      */
     public function getName() {
         return $this->FName;
@@ -2106,7 +2333,8 @@ final class TLambdaExpression extends TExpression {
 
     /**
      * descHere
-     * @return	IList<T: TParameterExpression>
+     *
+     * @return IList <T: TParameterExpression>
      */
     public function getParameters() {
         return $this->FParameters;
@@ -2114,7 +2342,8 @@ final class TLambdaExpression extends TExpression {
 
     /**
      * descHere
-     * @return	mixed
+     *
+     * @return mixed
      */
     public function getReturnType() {
         return $this->FReturnType;
@@ -2122,7 +2351,8 @@ final class TLambdaExpression extends TExpression {
 
     /**
      * descHere
-     * @return	mixed
+     *
+     * @return mixed
      */
     public function getType() {
         return $this->FType;
@@ -2130,8 +2360,9 @@ final class TLambdaExpression extends TExpression {
 
     /**
      * descHere
-     * @param	TExpressionVisitor	$Visitor
-     * @return	TExpression
+     *
+     * @param $Visitor TExpressionVisitor           
+     * @return TExpression
      */
     protected function VisitChildren($Visitor) {
         $this->FBody = $this->FBody->Accept($Visitor);
@@ -2141,14 +2372,16 @@ final class TLambdaExpression extends TExpression {
 
 /**
  * TExpressionVisitor
- * @author	许子健
+ *
+ * @author 许子健
  */
 abstract class TExpressionVisitor extends TObject {
 
     /**
      * descHere
-     * @param	TExpression	$Expression
-     * @return	TExpression
+     *
+     * @param $Expression TExpression           
+     * @return TExpression
      */
     public function Visit($Expression) {
         TType::Object($Expression, 'TExpression');
@@ -2181,15 +2414,16 @@ abstract class TExpressionVisitor extends TObject {
                 return $this->VisitParameter($Expression);
                 break;
             case 'TUnaryExpression' :
-                return  $this->VisitUnary($Expression);
+                return $this->VisitUnary($Expression);
                 break;
         }
     }
 
     /**
      * descHere
-     * @param	TBinaryExpression	$Expression
-     * @return	TExpression
+     *
+     * @param $Expression TBinaryExpression           
+     * @return TExpression
      */
     protected function VisitBinary($Expression) {
         return $Expression;
@@ -2197,8 +2431,9 @@ abstract class TExpressionVisitor extends TObject {
 
     /**
      * descHere
-     * @param	TConditional	$Expression
-     * @return	TExpression
+     *
+     * @param $Expression TConditional           
+     * @return TExpression
      */
     protected function VisitConditional($Expression) {
         return $Expression;
@@ -2206,8 +2441,9 @@ abstract class TExpressionVisitor extends TObject {
 
     /**
      * descHere
-     * @param	TConstantExpression	$Expression
-     * @return	TExpression
+     *
+     * @param $Expression TConstantExpression           
+     * @return TExpression
      */
     protected function VisitConstant($Expression) {
         return $Expression;
@@ -2215,8 +2451,9 @@ abstract class TExpressionVisitor extends TObject {
 
     /**
      * descHere
-     * @param	TDefaultExpression	$Expression
-     * @return	TExpression
+     *
+     * @param $Expression TDefaultExpression           
+     * @return TExpression
      */
     protected function VisitDefault($Expression) {
         return $Expression;
@@ -2224,8 +2461,9 @@ abstract class TExpressionVisitor extends TObject {
 
     /**
      * descHere
-     * @param	TLambdaExpression	$Expression
-     * @return	TExpression
+     *
+     * @param $Expression TLambdaExpression           
+     * @return TExpression
      */
     protected function VisitLambda($Expression) {
         return $Expression;
@@ -2233,8 +2471,9 @@ abstract class TExpressionVisitor extends TObject {
 
     /**
      * descHere
-     * @param	TMemberExpression	$Expression
-     * @return	TExpression
+     *
+     * @param $Expression TMemberExpression           
+     * @return TExpression
      */
     protected function VisitMember($Expression) {
         return $Expression;
@@ -2242,8 +2481,19 @@ abstract class TExpressionVisitor extends TObject {
 
     /**
      * descHere
-     * @param	TParameterExpression	$Expression
-     * @return	TExpression
+     * 
+     * @param $Expression TMethodCallExpression           
+     * @return TExpression
+     */
+    protected function VisitMethodCall($Expression) {
+        return $Expression;
+    }
+
+    /**
+     * descHere
+     *
+     * @param $Expression TParameterExpression           
+     * @return TExpression
      */
     protected function VisitParameter($Expression) {
         return $Expression;
@@ -2251,8 +2501,9 @@ abstract class TExpressionVisitor extends TObject {
 
     /**
      * descHere
-     * @param	TUnaryExpression	$Expression
-     * @return	TExpression
+     *
+     * @param $Expression TUnaryExpression           
+     * @return TExpression
      */
     protected function VisitUnary($Expression) {
         return $Expression;
