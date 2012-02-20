@@ -907,6 +907,18 @@ abstract class TExpression extends TObject {
 
     /**
      * descHere
+     * @param	string	$Name
+     * @param	mixed	$Type
+     * @param	boolean	$IsByRef
+     * @return	TParameterExpression
+     */
+    public static static function Parameter($Name, $Type, $IsByRef = false)
+    {
+        return new TParameterExpression($Name, $Type, $IsByRef);
+    }
+    
+    /**
+     * descHere
      *
      * @param $Left TExpression           
      * @param $Right TExpression           
@@ -969,11 +981,7 @@ abstract class TExpression extends TObject {
      * @return TBinaryExpression
      */
     public static function ReferenceEqual($Left, $Right) {
-        return self::MakeBinary(TExpressionType::eEqual(), $Left, $Right); // FIXME:
-                                                                               // proper
-                                                                               // type
-                                                                               // is
-                                                                               // what?
+        return self::MakeBinary(TExpressionType::eEqual(), $Left, $Right);
     }
 
     /**
@@ -984,11 +992,7 @@ abstract class TExpression extends TObject {
      * @return TBinaryExpression
      */
     public static function ReferenceNotEqual($Left, $Right) {
-        return self::MakeBinary(TExpressionType::eNotEqual(), $Left, $Right); // FIXME:
-                                                                                  // proper
-                                                                                  // type
-                                                                                  // is
-                                                                                  // what?
+        return self::MakeBinary(TExpressionType::eNotEqual(), $Left, $Right);
     }
 
     /**
@@ -1070,6 +1074,19 @@ abstract class TExpression extends TObject {
      */
     public static static function TypeAs($Expression, $Type) {
         return self::MakeUnary(TExpressionType::eTypeAs(), $Expression, $Type());
+    }
+    
+    /**
+     * descHere
+     * @param	TExpression	$Body
+     * @param	IList<T: TParameterExpression>	$Parameters
+     * @param	string	$Name
+     * @return	TTypedExpression<T: T>
+     */
+    public static static function TypedLambda($Body, $Parameters, $Name = '')
+    {
+        TTypedExpression::PrepareGeneric(array('T'=>$this->GenericArg('T')));
+        return new TTypedExpression($Name, $Body, $Parameters, $Body->getType());
     }
 
     /**
@@ -1477,8 +1494,10 @@ final class TBinaryExpression extends TExpression {
                 if (($Left->getType() != 'TBoolean') || ($Right->getType() != 'TBoolean')) {
                     throw new EInvalidParameter();
                 }
-            case TExpressionType::eAssign() : // FIXME: applicable?
-                                              // TODO 'TParameterExpression'
+            case TExpressionType::eAssign() :
+                if ($Left->getNodeType()==TExpressionType::eConstant()) {
+                    throw new EInvalidParameter();
+                }
                 break;
             case TExpressionType::eArrayIndex() :
                 if (($Left->getType() != 'array') || ($Right->getType() != 'TInteger')) {
@@ -1508,7 +1527,7 @@ final class TBinaryExpression extends TExpression {
             case TExpressionType::ePower() :
             case TExpressionType::eAndAlso() :
             case TExpressionType::eOrElse() :
-            case TExpressionType::eAssign() : // FIXME: applicable?
+            case TExpressionType::eAssign() :
                 $this->FLiftToNull = true;
                 break;
             case TExpressionType::eGreaterThan() :
@@ -2311,6 +2330,7 @@ class TLambdaExpression extends TExpression {
      * @return IDelegate
      */
     public function Compile() {
+        
     }
 
     /**

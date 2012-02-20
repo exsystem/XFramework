@@ -210,14 +210,19 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     private function MakeCallExpression($Method, $ReturnType, $UseArguments = false) {
         $this->EnsureExpression();
         if ($UseArguments) {
-            $this->FExpression = TExpression::Call($this->FExpression, $Method, $this->FArguments, array (
+            $mExpression = TExpression::Call($this->FExpression->getBody(), $Method, $this->FArguments, array (
                 'IQueryable' => array ('T' => $this->GenericArg('T'))));
         }
         else {
             $this->FArguments->Clear();
-            $this->FExpression = TExpression::Call($this->FExpression, $Method, null, array (
+            $mExpression = TExpression::Call($this->FExpression->getBody(), $Method, null, array (
                 'IQueryable' => array ('T' => $this->GenericArg('T'))));
         }
+        
+        TList::PrepareGeneric(array ('T' => 'TParameterExpresion'));
+        $mParameters = new TList();
+        $mParameters->Add(TExpression::Parameter('t', $this->ObjectType()));
+        $this->FExpression = TExpression::Lambda($mExpression, $mParameters);
         return $this;
     }
 
@@ -227,12 +232,17 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
      */
     private function EnsureExpression() {
         if ($this->FExpression == null) {
-            throw new EException(); // TODO new exception type needed.
+            TList::PrepareGeneric(array ('T' => 'TParameterExpresion'));
+            $mParameters = new TList();
+            $mParameters->Add(TExpression::Parameter('t', $this->ObjectType()));
+            $this->FExpression = TExpression::Lambda(TExpression::Parameter('t', $this->ObjectType()), $mParameters);
         }
     }
 
     /**
      * desc
+     * 
+     * @return T
      */
     private function MakeDefault() {
         switch ($this->GenericArg('T')) {
