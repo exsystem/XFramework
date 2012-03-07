@@ -758,6 +758,7 @@ abstract class TExpression extends TObject {
      * @return TUnaryExpression
      */
     public static static function MakeUnary($ExpressionType, $Operand, $Type) {
+        return new TUnaryExpression($ExpressionType, $Operand, $Type);
     }
 
     /**
@@ -907,16 +908,16 @@ abstract class TExpression extends TObject {
 
     /**
      * descHere
-     * @param	string	$Name
-     * @param	mixed	$Type
-     * @param	boolean	$IsByRef
-     * @return	TParameterExpression
+     *
+     * @param $Name string           
+     * @param $Type mixed           
+     * @param $IsByRef boolean           
+     * @return TParameterExpression
      */
-    public static static function Parameter($Name, $Type, $IsByRef = false)
-    {
+    public static static function Parameter($Name, $Type, $IsByRef = false) {
         return new TParameterExpression($Name, $Type, $IsByRef);
     }
-    
+
     /**
      * descHere
      *
@@ -1075,17 +1076,18 @@ abstract class TExpression extends TObject {
     public static static function TypeAs($Expression, $Type) {
         return self::MakeUnary(TExpressionType::eTypeAs(), $Expression, $Type());
     }
-    
+
     /**
      * descHere
-     * @param	TExpression	$Body
-     * @param	IList<T: TParameterExpression>	$Parameters
-     * @param	string	$Name
-     * @return	TTypedExpression<T: T>
+     *
+     * @param $Body TExpression           
+     * @param $Parameters IList
+     *            <T: TParameterExpression>
+     * @param $Name string           
+     * @return TTypedExpression <T: T>
      */
-    public static static function TypedLambda($Body, $Parameters, $Name = '')
-    {
-        TTypedExpression::PrepareGeneric(array('T'=>$this->GenericArg('T')));
+    public static static function TypedLambda($Body, $Parameters, $Name = '') {
+        TTypedExpression::PrepareGeneric(array ('T' => $this->GenericArg('T')));
         return new TTypedExpression($Name, $Body, $Parameters, $Body->getType());
     }
 
@@ -1495,7 +1497,7 @@ final class TBinaryExpression extends TExpression {
                     throw new EInvalidParameter();
                 }
             case TExpressionType::eAssign() :
-                if ($Left->getNodeType()==TExpressionType::eConstant()) {
+                if ($Left->getNodeType() == TExpressionType::eConstant()) {
                     throw new EInvalidParameter();
                 }
                 break;
@@ -2330,7 +2332,7 @@ class TLambdaExpression extends TExpression {
      * @return IDelegate
      */
     public function Compile() {
-        
+    
     }
 
     /**
@@ -2501,7 +2503,7 @@ abstract class TExpressionVisitor extends TObject {
 
     /**
      * descHere
-     * 
+     *
      * @param $Expression TMethodCallExpression           
      * @return TExpression
      */

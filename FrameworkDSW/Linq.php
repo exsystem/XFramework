@@ -17,8 +17,8 @@ interface TAggregateDelegate extends IDelegate {
     /**
      * descHere
      *
-     * @param $Accumulate A           
-     * @param $Next N           
+     * @param $Accumulate A
+     * @param $Next N
      * @return A
      */
     public function Invoke($Accumulate, $Next);
@@ -35,7 +35,7 @@ interface TAggregateCallbackDelegate extends IDelegate {
     /**
      * descHere
      *
-     * @param $Accumulate A           
+     * @param $Accumulate A
      * @return R
      */
     public function Invoke($Accumulate);
@@ -52,7 +52,7 @@ interface TPredicateDelegate extends IDelegate {
     /**
      * descHere
      *
-     * @param $Element E           
+     * @param $Element E
      * @return boolean
      */
     public function Invoke($Element);
@@ -69,7 +69,7 @@ interface TSelectorDelegate extends IDelegate {
     /**
      * descHere
      *
-     * @param $Source S           
+     * @param $Source S
      * @return D
      */
     public function Invoke($Source);
@@ -86,8 +86,8 @@ interface TGroupByCallbackDelegate extends IDelegate {
     /**
      * descHere
      *
-     * @param $Key K           
-     * @param $Collection C           
+     * @param $Key K
+     * @param $Collection C
      * @return R
      */
     public function Invoke($Key, $Collection);
@@ -105,8 +105,8 @@ interface TJoinCallbackDelegate extends IDelegate {
     /**
      * descHere
      *
-     * @param $Outer O           
-     * @param $Inner I           
+     * @param $Outer O
+     * @param $Inner I
      * @return R
      */
     public function Invoke($Outer, $Inner);
@@ -126,7 +126,7 @@ interface IQueryProvider extends IInterface {
      *            <T: T>
      * @return IQueryable <T: T>
      */
-    public function CreateQuery($Expression);
+    public function CreateQuery($Expression = null);
 
     /**
      * descHere
@@ -184,7 +184,7 @@ interface IExpressibleQueryable extends IQueryable {
      *
      * @param $Expression TTypedExpression
      *            <T: TAggregateDelegate<A: A, N: T>>
-     * @param $Seed A           
+     * @param $Seed A
      * @return A
      */
     public function Aggregate($Expression, $Seed = null);
@@ -228,7 +228,7 @@ interface IExpressibleQueryable extends IQueryable {
     /**
      * descHere
      *
-     * @param $Item T           
+     * @param $Item T
      * @return boolean
      */
     public function Contains($Item);
@@ -245,10 +245,9 @@ interface IExpressibleQueryable extends IQueryable {
     /**
      * descHere
      *
-     * @param $DefaultValue T           
      * @return IQueryable <T: T>
      */
-    public function DefaultIfEmpty($DefaultValue = null);
+    public function DefaultIfEmpty();
 
     /**
      * descHere
@@ -260,7 +259,7 @@ interface IExpressibleQueryable extends IQueryable {
     /**
      * descHere
      *
-     * @param $Index integer           
+     * @param $Index integer
      * @return T
      */
     public function ElementAt($Index);
@@ -268,7 +267,7 @@ interface IExpressibleQueryable extends IQueryable {
     /**
      * descHere
      *
-     * @param $Index integer           
+     * @param $Index integer
      * @return T
      */
     public function ElementAtOrDefault($Index);
@@ -420,7 +419,7 @@ interface IExpressibleQueryable extends IQueryable {
      *
      * @param $Expression TTypedExpression
      *            <T: TAggregateDelegate<A: A, N: T>>
-     * @param $Seed A           
+     * @param $Seed A
      * @param $Callback TTypedExpression
      *            <T: TAggregateCallbackDelegate<A: A, R: R>>
      * @return R
@@ -485,7 +484,7 @@ interface IExpressibleQueryable extends IQueryable {
     /**
      * descHere
      *
-     * @param $Count integer           
+     * @param $Count integer
      * @return IQueryable <T: T>
      */
     public function Skip($Count);
@@ -502,7 +501,7 @@ interface IExpressibleQueryable extends IQueryable {
     /**
      * descHere
      *
-     * @param $Count integer           
+     * @param $Count integer
      * @return IQueryable <T: T>
      */
     public function Take($Count);
