@@ -112,6 +112,55 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
     private $FDistinct = false;
 
     /**
+     *
+     * @param TConstantExpression $SubQueryableExpression
+     * @return string
+     */
+    private function GenerateSubQuerySql($SubQueryableExpression) {
+        TType::Object($SubQueryableExpression, 'TConstantExpression');
+        $mSubQueryProvider = new TMysqlQueryProvider();
+        $mSubQuery = $SubQueryableExpression->getValue();
+        TType::Object($mSubQuery, $this->FQuery->ObjectType());
+        $mSubExpression = $mSubQuery->getExpression();
+
+        $mDummy = $mSubExpression->getParameters();
+        $mWithClass = $mDummy[0]->getType();
+        if (!$mWithClass::InheritsFrom('IEntity')) {
+            Framework::Free($mSubQueryProvider);
+            throw new EInvalidClassCasting(); // TODO not an entity class
+        }
+        $mTableName = $mWithClass::getTableName(); // static string
+                                                   // getTableName()
+        $mSql = "`{$mTableName}` AS `{$mDummy[0]->getName()}`";
+
+        if ($mSubExpression->getBody() != null) {
+            $mSubQueryProvider->Visit($mSubExpression);
+            $mSql = "SELECT {$mSubQueryProvider->FSelect} FROM {$mSql}";
+            if ($mSubQueryProvider->FWhere != '') {
+                $mSql .= " WHERE {$mSubQueryProvider->FWhere}";
+            }
+            if ($mSubQueryProvider->FGroupBy != '') {
+                $mSql .= " GROUP BY {$mSubQueryProvider->FGroupBy}";
+            }
+            if ($mSubQueryProvider->FHaving != '') {
+                $mSql .= " HAVING {$mSubQueryProvider->FHaving}";
+            }
+            if ($mSubQueryProvider->FOrderBy != '') {
+                $mSql .= " ORDER BY {$mSubQueryProvider->FOrderBy}";
+            }
+            if ($mSubQueryProvider->FLimit != '') {
+                $mSql .= " LIMIT {$mSubQueryProvider->FLimit}";
+            }
+        }
+        else {
+            $mMembers = implode(', ', $this->FMembers->ToArray());
+            $mSql = "SELECT {$mMembers} FROM {$mSql}";
+        }
+        Framework::Free($mSubQueryProvider);
+        return "({$mSql})";
+    }
+
+    /**
      * desc
      */
     public function __construct() {
@@ -187,6 +236,16 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
      * @return TExpression
      */
     protected function VisitBinary($Expression) {
+        if ($Expression->getNodeType() == TExpressionType::eAssign()) {
+            $this->FSql .= '(';
+            $this->Visit($Expression->getRight());
+            $this->FAlias = (string) self::$FParameterNameCounter++;
+            $this->FAlias = "col{$this->FAlias}";
+            $this->FSql .= ") AS `{$this->FAlias}`";
+            $this->Visit($Expression->getLeft());
+            $this->FAlias = '';
+            return $Expression;
+        }
         if ($Expression->getNodeType() == TExpressionType::ePower()) {
             $this->FSql .= 'POW(';
             $this->Visit($Expression->getLeft());
@@ -250,9 +309,6 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
                 case TExpressionType::eOrElse() :
                     $this->FSql .= ' OR ';
                     break;
-                case TExpressionType::eAssign() :
-                    $this->FSql .= ' = ';
-                    break;
             }
             $this->Visit($Expression->getRight());
             $this->FSql .= ')';
@@ -287,7 +343,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
      * @return TExpression
      */
     protected function VisitConstant($Expression) {
-        $this->FSql .= ":param_{$this->FParameterNameCounter}";
+        $this->FSql .= ":param{$this->FParameterNameCounter}";
 
         TPrimativeParam::PrepareGeneric(array ('T' => $Expression->getType()));
         $mParameter = new TPrimativeParam($Expression->getValue());
@@ -311,7 +367,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
             'string' => '');
         $mParameter = new TPrimativeParam($mValues[$Expression->getType()]);
         self::$FParameters->Put(":param_{$this->FParameterNameCounter}", $mParameter);
-        self::$FParameterNameCounter++;
+        ++self::$FParameterNameCounter;
 
         return $Expression;
     }
@@ -323,7 +379,8 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
      * @return TExpression
      */
     protected function VisitLambda($Expression) {
-        // TODO ...things to do.
+        $this->Visit($Expression->getBody());
+        // TODO ...any thing needs to do here?
         return $Expression;
     }
 
@@ -368,12 +425,11 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
             return $Expression;
         }
 
-        if ($mMethod === array ('TObjectQuery', 'Concat')) { // UNION ALL
-            $this->FSql = 'ALL ';
-            $this->Visit($mArgs[0]); // TODO [solved--using static] how to sync
-                                     // parameters and aliases & variables
-                                     // infomation?
-            $this->FUnion = $this->FSql;
+        if ($mMethod === array ('TObjectQuery', 'Concat')) {
+            // UNION ALL
+            // TODO [solved--using static] how to sync parameters and aliases &
+            // variables infomation?
+            $this->FUnion = "ALL {$this->GenerateSubQuerySql($mArgs[0])}";
             return $Expression;
         }
 
@@ -407,14 +463,12 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
         // ...) WHERE s.key IS NULL
         if ($mMethod === array ('TObjectQuery', 'Except')) {
             $this->FDistinct = true;
-            $this->FSql = '';
-            $this->Visit($mArgs[0]);
             $mMembers = $this->FMembers->ToArray();
             $mFirstMember = $mMembers[0];
             $mMembers = implode(', ', $mMembers);
             $mCounter = self::$FParameterNameCounter;
             ++self::$FParameterNameCounter;
-            $this->FFrom = "LEFT JOIN ({$this->FSql}) AS `i{$mCounter}` USING ({$mMembers})";
+            $this->FFrom = "LEFT JOIN ({$this->GenerateSubQuerySql($mArgs[0])}) AS `i{$mCounter}` USING ({$mMembers})";
             if ($this->FWhere != '') {
                 $this->FWhere .= ' AND ';
             }
@@ -471,10 +525,8 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
         // SELECT ... FROM T AS t JOIN S AS s ON t.key = s.key GROUP BY t.key
         // HAVING result_selector
         if ($mMethod === array ('TObjectQuery', 'GroupJoin')) {
-            $this->FSql = '';
-            $this->Visit($mArgs[0]); // Inner --yields something such as
-                                     // '(SELECT ...) AS s' or 'S AS s'
-            $this->FFrom = "JOIN {$this->FSql} ON ";
+            // Inner --yields something such as '(SELECT ...) AS s' or 'S AS s'
+            $this->FFrom = "JOIN ({$this->GenerateSubQuerySql($mArgs[0])}) ON ";
             $this->FSql = '';
             $this->Visit($mArgs[1]); // OuterKeySelector
             $this->FGroupBy = $this->FSql;
@@ -488,19 +540,15 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
         }
 
         if ($mMethod === array ('TObjectQuery', 'Intersect')) {
-            $this->FSql = '';
-            $this->Visit($mArgs[0]);
             $mMembers = implode(', ', $this->FMembers->ToArray());
-            $this->FFrom = "INNER JOIN ({$this->FSql}) USING ({$mMembers})";
+            $this->FFrom = "INNER JOIN {$this->GenerateSubQuerySql($mArgs[0])} USING ({$mMembers})";
             return $Expression;
         }
 
         // SELECT ... FROM T as t JOIN S AS s ON t.key = s.key HAVING
         // result_selector
         if ($mMethod === array ('TObjectQuery', 'Join')) {
-            $this->FSql = '';
-            $this->Visit($mArgs[0]);
-            $this->FFrom = "JOIN {$this->FSql} ON ";
+            $this->FFrom = "JOIN {$this->GenerateSubQuerySql($mArgs[0])} ON ";
             $this->FSql = '';
             $this->Visit($mArgs[1]); // OuterKeySelector
             $this->FSql .= ' = ';
@@ -594,9 +642,8 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
         }
 
         if ($mMethod === array ('TObjectQuery', 'Skip')) {
-            $this->FSql = '';
-            $this->Visit($mArgs[0]);
-            $this->FLimit = "{$this->FSql}, -1";
+            $mValue = $mArgs[0]->getValue()->UnboxToInteger(); // TConstantExpresion->TInteger
+            $this->FLimit = "{$mValue}, -1";
             return $Expression;
         }
 
@@ -612,7 +659,6 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
         }
 
         if ($mMethod === array ('TObjectQuery', 'Take')) {
-            $this->FSql = '';
             $mTemp = strstr($this->FLimit, ' ', true); // search ' ' for
                                                        // including ','
             if ($mTemp !== false) {
@@ -621,8 +667,8 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
             else {
                 $this->FLimit = '';
             }
-            $this->Visit($mArgs[0]);
-            $this->FLimit .= "{$this->FSql}";
+            $mValue = $mArgs[0]->getValue()->UnboxToInteger(); // TConstantExpresion->TInteger
+            $this->FLimit .= "{$mValue}";
             return $Expression;
         }
 
