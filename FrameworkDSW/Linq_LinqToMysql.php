@@ -113,6 +113,33 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
 
     /**
      *
+     * @var mixed
+     */
+    private $FEntityType = null;
+    /**
+     *
+     * @var mixed
+     */
+    private $FResultType = null;
+    /**
+     *
+     * @var string
+     */
+    private $FResultElementName = '';
+
+    /**
+     *
+     * @var TMysqlConnection
+     */
+    private $FConnection = null;
+    /**
+     *
+     * @var TObjectContext
+     */
+    private $FContext = null;
+
+    /**
+     *
      * @param TConstantExpression $SubQueryableExpression
      * @return string
      */
@@ -120,7 +147,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
         TType::Object($SubQueryableExpression, 'TConstantExpression');
         $mSubQueryProvider = new TMysqlQueryProvider();
         $mSubQuery = $SubQueryableExpression->getValue();
-        TType::Object($mSubQuery, $this->FQuery->ObjectType());
+        TType::Object($mSubQuery, $this->FResultType);
         $mSubExpression = $mSubQuery->getExpression();
 
         $mDummy = $mSubExpression->getParameters();
@@ -133,7 +160,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
                                                    // getTableName()
         $mSql = "`{$mTableName}` AS `{$mDummy[0]->getName()}`";
 
-        if ($mSubExpression->getBody() != null) {
+        if ($mSubExpression->getBody() !== null) {
             $mSubQueryProvider->Visit($mSubExpression);
             $mSql = "SELECT {$mSubQueryProvider->FSelect} FROM {$mSql}";
             if ($mSubQueryProvider->FWhere != '') {
@@ -166,7 +193,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
     public function __construct() {
         parent::__construct();
 
-        if (self::$FParameters == null) {
+        if (self::$FParameters === null) {
             // TODO how to handle <T: ? > -- i can not put ? and > together
             // since
             // the combination is the ending mark of php. Or just omit it?
@@ -174,7 +201,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
             self::$FParameters = new TMap(true);
         }
 
-        if (self::$FVarAliasMapping == null) {
+        if (self::$FVarAliasMapping === null) {
             TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'string'));
             self::$FVarAliasMapping = new TMap();
         }
@@ -217,16 +244,113 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
         TType::Object($Expression, array (
             'TTypedExpression' => array ('T' => $this->GenericArg('R'))));
 
-        $this->Visit($Expression);
-        // TODO execute the query...dont forget param binding.
+        $mStmt = $this->FConnection->CreateStatement(TResultSetType::eScrollInsensitive(), TConcurrencyType::eReadOnly());
+
+        $mDummy = $Expression->getParameters();
+        $this->FEntityType = $mDummy[0]->getType();
+        $mEntityType = $this->FEntityType;
+        $mEntityName = $mEntityType::getTableName();
+        $this->FResultType = $Expression->getReturnType();
+
+        $mSql = "`{$mEntityName}` AS `{$mDummy[0]->getName()}`";
+        if ($Expression->getBody() !== null) {
+            $this->Visit($Expression);
+            $mSql = "SELECT {$this->FSelect} FROM {$mSql}";
+            if ($this->FWhere != '') {
+                $mSql .= " WHERE {$this->FWhere}";
+            }
+            if ($this->FGroupBy != '') {
+                $mSql .= " GROUP BY {$this->FGroupBy}";
+            }
+            if ($this->FHaving != '') {
+                $mSql .= " HAVING {$this->FHaving}";
+            }
+            if ($this->FOrderBy != '') {
+                $mSql .= " ORDER BY {$this->FOrderBy}";
+            }
+            if ($this->FLimit != '') {
+                $mSql .= " LIMIT {$this->FLimit}";
+            }
+        }
+        else {
+            $mMembers = implode(', ', $this->FMembers->ToArray());
+            $mSql = "SELECT {$mMembers} FROM {$mSql}";
+        }
+
+        $mStmt->setCommand($mSql);
+        foreach (self::$FParameters as $mName => $mParameter) {
+            $mStmt->BindParam($mName, $mParameter);
+        }
+        $mResultSet = $mStmt->Query();
 
         self::$FParameters->Clear();
         self::$FParameterNameCounter = 0;
-        // ...generating result here.
-        // ...binding variables with aliases according to FVarAliasMapping.
+
+        if (is_array($this->FResultType)) {
+            $mDummy = array_keys($this->FResultType);
+            $mClass = $mDummy[0];
+            $mClass::PrepareGeneric($this->FResultType[$mClass]);
+        }
+        else {
+            $mClass = $this->FResultType;
+        }
+        $mElementClass = $this->FResultType[$mClass]['T'];
+        $mResultCollection = new $mClass();
+
+        if (in_array($mElementClass, array ('boolean', 'integer', 'float',
+            'string'))) {
+            foreach ($mResultSet as $mRow) {
+                eval("${$this->FResultElementName} = \$mElement");
+                foreach (self::$FVarAliasMapping as $mAlias => $mVariable) {
+                    $mElement = $mRow[$mAlias]->getValue();
+                    eval("{$mVariable} = \$mElement;");
+                }
+                $mResultCollection->Add($mElement);
+            }
+            if ($this->FDefaultIfEmpty && $mResultSet->getCount() == 0) {
+                $mDefaults = array ('boolean' => false, 'integer' => 0,
+                    'float' => 0.0, 'string' => '');
+                $mResultCollection->Add($mDefaults[$mElementClass]);
+            }
+        }
+        elseif (in_array('IEntity', class_implements($mElementClass))) {
+            // TODO interface comparing is not supported -- InheritsFrom()
+            foreach ($mResultSet as $mRow) {
+                $mElement = new $mElementClass($this->FContext);
+                eval("${$this->FResultElementName} = \$mElement");
+                foreach (self::$FVarAliasMapping as $mAlias => $mVariable) {
+                    $mElementMember = $mRow[$mAlias]->getValue();
+                    eval("{$mVariable} = \$mElementMember;");
+                }
+                $mResultCollection->Add($mElement);
+            }
+            if ($this->FDefaultIfEmpty && $mResultSet->getCount() == 0) {
+                $mResultCollection->Add(null);
+            }
+        }
+        else {
+            foreach ($mResultSet as $mRow) {
+                $mElement = new $mElementClass();
+                eval("${$this->FResultElementName} = \$mElement");
+                foreach (self::$FVarAliasMapping as $mAlias => $mVariable) {
+                    $mElementMember = $mRow[$mAlias]->getValue();
+                    eval("{$mVariable} = \$mElementMember;");
+                }
+                $mResultCollection->Add($mElement);
+            }
+            if ($this->FDefaultIfEmpty && $mResultSet->getCount() == 0) {
+                $mResultCollection->Add(null);
+            }
+        }
+
         self::$FVarAliasMapping->Clear();
+        $this->FEntityType = null;
+        $this->FResultType = null;
+        $this->FResultElementName = '';
         $this->FMembers->Clear();
-        // ...returing the result object.
+        $this->FConnection = null;
+        $this->FContext = null;
+        return $mResultCollection;
     }
 
     /**
@@ -798,5 +922,14 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
         }
 
         return $Expression;
+    }
+
+    /**
+     *
+     * @param TMysqlConnection $Connection
+     */
+    public function UseConnection($Connection) {
+        TType::Object($Connection, 'TMysqlConnection');
+        $this->FConnection = $Connection;
     }
 }

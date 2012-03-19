@@ -19,6 +19,21 @@ interface IEntity extends IInterface {
      * @return TObjectContext
      */
     public function getContext();
+
+    /**
+     * @return    string[]    TODO {string}
+     */
+    public static function getPrimaryKeys();
+
+    /**
+     * @return    array    TODO {<string, string>}
+     */
+    public static function getColumns();
+
+    /**
+     * @return string
+     */
+    public static function getTableName();
 }
 
 /**
@@ -188,7 +203,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
      * desc
      */
     private function PrepareArguments() {
-        if ($this->FArguments == null) {
+        if ($this->FArguments === null) {
             TList::PrepareGeneric(array ('T' => 'TExpression'));
             $this->FArguments = new TList(5, true);
         }
@@ -230,7 +245,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
      * @throws EException
      */
     private function EnsureExpression() {
-        if ($this->FExpression == null) {
+        if ($this->FExpression === null) {
             TList::PrepareGeneric(array ('T' => 'TParameterExpresion'));
             $mParameters = new TList();
             $mParameters->Add(TExpression::Parameter('t', $this->ObjectType()));
@@ -354,7 +369,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
 
         $this->EnsureExpression();
 
-        if ($Predicate == null) {
+        if ($Predicate === null) {
             foreach ($this->FExpression as $mElement) {
                 return true;
             }
@@ -389,7 +404,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
 
         $mResult = 0;
         $mCount = 0;
-        if ($Selector == null) {
+        if ($Selector === null) {
             foreach ($this->FExpression as $mElement) {
                 $mResult += $mElement;
                 ++$mCount;
@@ -436,7 +451,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
         $this->EnsureExpression();
 
         foreach ($this->FExpression as $mElement) {
-            if ($mElement == $Item) {
+            if ($mElement === $Item) {
                 return true;
             }
         }
@@ -460,7 +475,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
         $this->EnsureExpression();
 
         $mCount = 0;
-        if ($Predicate == null) {
+        if ($Predicate === null) {
             foreach ($this->FExpression as $mElement) {
                 ++$mCount;
             }
@@ -572,7 +587,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
 
         $this->EnsureExpression();
 
-        if ($Predicate == null) {
+        if ($Predicate === null) {
             foreach ($this->FExpression as $mElement) {
                 return $mElement;
             }
@@ -822,7 +837,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
                         'E' => $this->GenericArg('T'))))));
 
         $this->EnsureExpression();
-        if ($Predicate == null) {
+        if ($Predicate === null) {
             try {
                 $this->FExpression->getIterator()->rewind();
                 $this->FExpression->getIterator()->next();
@@ -884,7 +899,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
         }
 
         $this->EnsureExpression();
-        if ($Selector == null) {
+        if ($Selector === null) {
             $mMax = $this->FExpression->getIterator()->current();
             foreach ($this->FExpression as $mElement) {
                 if ($mElement > $mMax) {
@@ -922,7 +937,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
         }
 
         $this->EnsureExpression();
-        if ($Selector == null) {
+        if ($Selector === null) {
             $mMin = $this->FExpression->getIterator()->current();
             foreach ($this->FExpression as $mElement) {
                 if ($mElement < $mMin) {
@@ -1102,7 +1117,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
         $mDestination->rewind();
 
         while ($mSource->valid() && $mDestination->valid()) {
-            if ($mSource->current() != $mDestination->current()) {
+            if ($mSource->current() !== $mDestination->current()) {
                 return false;
             }
             $mSource->next();
@@ -1132,7 +1147,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
         $mIterator = $this->FExpression->getIterator();
         $mIterator->rewind();
 
-        if ($Predicate == null) {
+        if ($Predicate === null) {
             $mIterator->next();
             $mResult = $mIterator->current();
             $mIterator->next();
@@ -1205,7 +1220,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
         $this->EnsureExpression();
 
         $mResult = 0;
-        if ($Selector == null) {
+        if ($Selector === null) {
             foreach ($this->FExpression as $mElement) {
                 $mResult += $mElement;
             }

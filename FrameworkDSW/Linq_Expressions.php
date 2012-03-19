@@ -1140,10 +1140,10 @@ final class TConstantExpression extends TExpression {
     protected function __construct($Value, $Type = null) {
         parent::__construct();
 
-        if (($Type == null) && ($Value != null)) {
+        if (($Type === null) && ($Value !== null)) {
             $this->FType = $Value->ObjectType();
         }
-        elseif (($Value == null) || $Value->IsInstanceOf($Type)) {
+        elseif (($Value === null) || $Value->IsInstanceOf($Type)) {
             $this->FType = $Type;
         }
         else {
@@ -1463,10 +1463,10 @@ final class TBinaryExpression extends TExpression {
             case TExpressionType::eLessThan() :
             case TExpressionType::eGreaterThanOrEqual() :
             case TExpressionType::eLessThanOrEqual() :
-                if (($Left->getType() != 'TInteger') || ($Left->getType() != 'TFloat')) {
+                if (($Left->getType() !== 'TInteger') || ($Left->getType() !== 'TFloat')) {
                     throw new EInvalidParameter();
                 }
-                if (($Right->getType() != 'TInteger') || ($Right->getType() != 'TFloat')) {
+                if (($Right->getType() !== 'TInteger') || ($Right->getType() !== 'TFloat')) {
                     throw new EInvalidParameter();
                 }
                 break;
@@ -1476,24 +1476,24 @@ final class TBinaryExpression extends TExpression {
             case TExpressionType::eExclusiveOr() :
             case TExpressionType::eLeftShift() :
             case TExpressionType::eRightShift() :
-                if ($Left->getType() != 'TInteger') {
+                if ($Left->getType() !== 'TInteger') {
                     throw new EInvalidParameter();
                 }
-                if ($Right->getType() != 'TInteger') {
+                if ($Right->getType() !== 'TInteger') {
                     throw new EInvalidParameter();
                 }
                 break;
             case TExpressionType::ePower() :
-                if (($Left->getType() != 'TInteger') || ($Left->getType() != 'TFloat')) {
+                if (($Left->getType() !== 'TInteger') || ($Left->getType() !== 'TFloat')) {
                     throw new EInvalidParameter();
                 }
-                if ($Right->getType() != 'TInteger') {
+                if ($Right->getType() !== 'TInteger') {
                     throw new EInvalidParameter();
                 }
                 break;
             case TExpressionType::eAndAlso() :
             case TExpressionType::eOrElse() :
-                if (($Left->getType() != 'TBoolean') || ($Right->getType() != 'TBoolean')) {
+                if (($Left->getType() !== 'TBoolean') || ($Right->getType() !== 'TBoolean')) {
                     throw new EInvalidParameter();
                 }
             case TExpressionType::eAssign() :
@@ -1502,7 +1502,7 @@ final class TBinaryExpression extends TExpression {
                 }
                 break;
             case TExpressionType::eArrayIndex() :
-                if (($Left->getType() != 'array') || ($Right->getType() != 'TInteger')) {
+                if (($Left->getType() !== 'array') || ($Right->getType() !== 'TInteger')) {
                     throw new EInvalidParameter();
                 }
                 break;
@@ -1659,7 +1659,7 @@ final class TBinaryExpression extends TExpression {
      * @return boolean
      */
     public function getCanReduce() {
-        return (($this->FLeft->getNodeType() == TExpressionType::eConstant()) && ($this->FRight->getNodeType() == TExpressionType::eConstant()) && ($this->FNodeType != TExpressionType::eArrayIndex()) && ($this->FNodeType != TExpressionType::eAssign()) && ($this->FLeft->getValue() != null) && ($this->FRight->getValue() != null));
+        return (($this->FLeft->getNodeType() == TExpressionType::eConstant()) && ($this->FRight->getNodeType() == TExpressionType::eConstant()) && ($this->FNodeType != TExpressionType::eArrayIndex()) && ($this->FNodeType != TExpressionType::eAssign()) && ($this->FLeft->getValue() !== null) && ($this->FRight->getValue() !== null));
     }
 
     /**
