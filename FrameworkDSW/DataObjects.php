@@ -5,6 +5,9 @@
  * @version	$Id$
  * @since	separate file since reversion 30
  */
+require_once 'FrameworkDSW/System.php';
+require_once 'FrameworkDSW/Containers.php';
+require_once 'FrameworkDSW/Linq.php';
 
 /**
  * IEntity

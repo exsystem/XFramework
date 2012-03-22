@@ -7,6 +7,12 @@
  * @since separate file since reversion 43
  */
 
+require_once 'FrameworkDSW/System.php';
+require_once 'FrameworkDSW/Containers.php';
+require_once 'FrameworkDSW/Linq.php';
+require_once 'FrameworkDSW/Linq_Expressions.php';
+require_once 'FrameworkDSW/Database.php';
+
 /**
  * TMysqlQueryProvider
  *

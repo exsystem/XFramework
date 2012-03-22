@@ -66,7 +66,7 @@ class Framework extends TObject {
      * @var        string
      */
     const CClassDelimiter = '.';
-    
+
     /**
      * @var    array
      */
@@ -107,23 +107,23 @@ class Framework extends TObject {
                 $mElement->Sleep();
             }
         };
-        
+
         self::$FStaticTable = array ();
         self::$FClassInfo = array ();
-        
+
         if (is_resource($Var)) {
             throw new ESerializeResource();
         }
-        
+
         if ($Var instanceof TObject) {
             $Var->Sleep();
         }
         elseif (is_array($Var)) {
             array_walk_recursive($Var, $mCallback);
         }
-        
+
         Boot::WriteStaticTable(self::$FStaticTable, self::$FClassInfo, self::CClassDelimiter);
-        
+
         //These code below illustrates the structure of a serialization string.
         //The Static Table is an array of this structure:
         //    array(
@@ -142,12 +142,12 @@ class Framework extends TObject {
         $mResult = serialize(array (
             self::CVar => $Var, self::CStaticTable => self::$FStaticTable));
         $mResult = serialize(array (
-            array (self::CClassInfo => self::$FClassInfo, 
+            array (self::CClassInfo => self::$FClassInfo,
                 self::CContent => $mResult)));
-        
+
         self::$FStaticTable = array ();
         self::$FClassInfo = array ();
-        
+
         return $mResult;
     }
 
@@ -177,7 +177,7 @@ class Framework extends TObject {
         if (((!is_array($mMeta[0][self::CClassInfo])) && (isset($mMeta[0][self::CClassInfo]))) || (!is_string($mMeta[0][self::CContent]))) {
             throw new EBadSerializedData();
         }
-        
+
         self::$FClassInfo = $mMeta[0][self::CClassInfo];
         if (isset(self::$FClassInfo)) {
             foreach (self::$FClassInfo as $mIndex => $mVal) {
@@ -185,26 +185,26 @@ class Framework extends TObject {
                 $mIndex::ClassWakeUp();
             }
         }
-        
+
         $mMeta = unserialize($mMeta[0][self::CContent]);
         if ((!isset($mMeta[self::CVar])) || ((!is_array($mMeta[self::CStaticTable])) && (isset($mMeta[self::CStaticTable])))) {
             throw new EBadSerializedData();
         }
-        
+
         self::$FStaticTable = $mMeta[self::CStaticTable];
         if (isset(self::$FStaticTable)) {
             foreach (self::$FStaticTable as $mIndex => &$mVal) {
                 $mOffset = strpos($mIndex, self::CClassDelimiter);
                 $mClass = substr($mIndex, 0, $mOffset);
                 $mField = substr($mIndex, ++$mOffset);
-                
+
                 $mReflection = new ReflectionProperty($mClass, $mField);
                 $mReflection->setAccessible(true);
                 $mReflection->setValue(null, $mVal);
             }
             self::$FStaticTable = null;
         }
-        
+
         return $mMeta[self::CVar];
     }
 
@@ -216,6 +216,7 @@ class Framework extends TObject {
         if ($Object !== null) {
             $Object->__destruct();
             $Object = null;
+
             gc_collect_cycles();
         }
     }
