@@ -422,6 +422,25 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
+     * @param
+     *            IList<T: TExpression>	$Expressions
+     * @return TBlockExpression
+     */
+    public static function Block($Expressions) {
+        TType::Object($Expressions, array (
+            'IList' => array ('T' => 'TExpression')));
+
+        TList::PrepareGeneric(array ('T' => 'TExpression'));
+        $mExpressions = new TList(5, true);
+        foreach ($Expressions as $mExpression) {
+            $mExpressions->Add($mExpression);
+        }
+        return new TBlockExpression($Expressions);
+    }
+
+    /**
+     * descHere
+     *
      * @param $Instance TExpression
      * @param $Method array
      * @param $Arguments IIteratorAggregate
@@ -1087,7 +1106,8 @@ abstract class TExpression extends TObject {
      * @return TTypedExpression <T: T>
      */
     public static function TypedLambda($Body, $Parameters, $Name = '') {
-        TTypedExpression::PrepareGeneric(array ('T' => $this->GenericArg('T')));
+        TTypedExpression::PrepareGeneric(array (
+            'T' => self::StaticGenericArg('T')));
         return new TTypedExpression($Name, $Body, $Parameters, $Body->getType());
     }
 
@@ -1441,7 +1461,6 @@ final class TBinaryExpression extends TExpression {
             case TExpressionType::eMultiply() :
             case TExpressionType::eMultiplyChecked() :
             case TExpressionType::eDivide() :
-            case TExpressionType::eDivideChecked() :
             case TExpressionType::eGreaterThan() :
             case TExpressionType::eLessThan() :
             case TExpressionType::eGreaterThanOrEqual() :
@@ -1502,7 +1521,6 @@ final class TBinaryExpression extends TExpression {
             case TExpressionType::eMultiply() :
             case TExpressionType::eMultiplyChecked() :
             case TExpressionType::eDivide() :
-            case TExpressionType::eDivideChecked() :
             case TExpressionType::eModulo() :
             case TExpressionType::eAnd() :
             case TExpressionType::eOr() :
@@ -1535,11 +1553,11 @@ final class TBinaryExpression extends TExpression {
      * @see TObject::__destruct()
      */
     public function __destruct() {
-        Framework::Free($this->FConversion);
-        Framework::Free($this->FLeft);
-        Framework::Free($this->FRight);
+        //Framework::Free($this->FConversion);
+        //Framework::Free($this->FLeft);
+        //Framework::Free($this->FRight);
 
-        parent::__destruct();
+        parent::__destruct(); //TODO delete me
     }
 
     /**
@@ -1704,7 +1722,6 @@ final class TBinaryExpression extends TExpression {
             case TExpressionType::eMultiply() :
             case TExpressionType::eMultiplyChecked() :
             case TExpressionType::eDivide() :
-            case TExpressionType::eDivideChecked() :
                 if (($this->FLeft->getType() == 'TFloat') || ($this->FRight->getType() == 'TFloat')) {
                     return 'TFloat';
                 }
@@ -1813,6 +1830,7 @@ final class TConditionalExpression extends TExpression {
             $this->FType = $Type;
         }
 
+        $this->FNodeType = TExpressionType::eConditional();
         $this->FTest = $Test;
         $this->FIfTrue = $IfTrue;
         $this->FIfFalse = $IfFalse;
@@ -1909,6 +1927,7 @@ final class TDefaultExpression extends TExpression {
      */
     public function __construct($Type) {
         parent::__construct();
+        $this->FNodeType = TExpressionType::eDefault();
         $this->FType = $Type;
     }
 
@@ -1981,9 +2000,15 @@ final class TParameterExpression extends TExpression {
             throw new EInvalidParameter();
         }
 
+        $this->FNodeType = TExpressionType::eParameter();
         $this->FName = $Name;
         $this->FType = $Type;
         $this->FIsByRef = $IsByRef;
+    }
+
+    public function __destruct() {
+        parent::__destruct();
+        // TODO delete me!
     }
 
     /**
@@ -2062,6 +2087,7 @@ final class TMemberExpression extends TExpression {
             throw new EInvalidParameter();
         }
 
+        $this->FNodeType = TExpressionType::eMemberAccess();
         $this->FExpression = $Expression;
         $this->FMemberName = $MemberName;
         $this->FType = $Type;
@@ -2071,7 +2097,7 @@ final class TMemberExpression extends TExpression {
      * descHere
      */
     public function __destruct() {
-        Framework::Free($this->FExpression);
+        // Framework::Free($this->FExpression);
         parent::__destruct();
     }
 
@@ -2179,6 +2205,7 @@ final class TMethodCallExpression extends TExpression {
         TType::Object($Arguments, array (
             'IList' => array ('T' => 'TExpression')));
 
+        $this->FNodeType = TExpressionType::eCall();
         $this->FObject = $Object;
         $this->FMethod = $Method;
         $this->FArguments = $Arguments;
@@ -2191,8 +2218,9 @@ final class TMethodCallExpression extends TExpression {
      * @see TObject::__destruct()
      */
     public function __destruct() {
-        Framework::Free($this->FObject);
-        Framework::Free($this->FArguments);
+        // Framework::Free($this->FObject);
+        // Framework::Free($this->FArguments);
+        parent::__destruct();
     }
 
     /**
@@ -2283,16 +2311,18 @@ class TLambdaExpression extends TExpression {
      *
      * @param $Name string
      * @param $Body TExpression
-     * @param
-     *            IList<T: TParameterExpression>	$Parameters
+     * @param $Parameters IList
+     *            <T: TParameterExpression>
      * @param $ReturnType mixed
      */
     public function __construct($Name, $Body, $Parameters, $ReturnType) {
+        parent::__construct();
         TType::String($Name);
         TType::Object($Body, 'TExpression');
         TType::Object($Parameters, array (
             'IList' => array ('T' => 'TParameterExpression')));
 
+        $this->FNodeType = TExpressionType::eLambda();
         $this->FName = $Name; // TODO: check if already exists, and if the name
                               // is valid.
         $this->FBody = $Body;
@@ -2304,8 +2334,8 @@ class TLambdaExpression extends TExpression {
      * descHere
      */
     public function __destruct() {
-        Framework::Free($this->FParameters);
-        Framework::Free($this->FBody);
+        // Framework::Free($this->FParameters);
+        // Framework::Free($this->FBody);
         parent::__destruct();
     }
 
@@ -2393,6 +2423,95 @@ final class TTypedExpression extends TLambdaExpression {
 }
 
 /**
+ * TBlockExpression
+ *
+ * @author 许子健
+ */
+final class TBlockExpression extends TExpression {
+
+    /**
+     *
+     * @var TList <T: TExpression>
+     */
+    private $FExpressions = null;
+
+    /**
+     * descHere
+     *
+     * @param $Expressions TList
+     *            <T: TExpression>
+     */
+    public function __construct($Expressions) {
+        parent::__construct();
+        TType::Object($Expressions, array (
+            'TList' => array ('T' => 'TExpression')));
+        $this->FExpressions = $Expressions;
+        $this->FNodeType = TExpressionType::eBlock();
+    }
+
+    /**
+     * descHere
+     */
+    public function __destruct() {
+        // Framework::Free($this->FExpressions);
+        parent::__destruct();
+    }
+
+    /**
+     * descHere
+     *
+     * @return IList <T: TExpression>
+     */
+    public function getExpressions() {
+        return $this->FExpressions;
+    }
+
+    /**
+     * descHere
+     *
+     * @return TExpression
+     */
+    public function getResult() {
+        return $this->FExpressions->Last();
+    }
+
+    /**
+     * descHere
+     *
+     * @return mixed
+     */
+    public function getType() {
+        return $this->FExpressions->Last()->getType();
+    }
+
+    /**
+     * descHere
+     *
+     * @param $Expressions IList
+     *            <T: TExpression>
+     * @return TBlockExpression
+     */
+    public function Update($Expressions) {
+        TType::Object($Expressions, array (
+            'IList' => array ('T' => 'TExpression')));
+        return TExpression::Block($Expressions);
+    }
+
+    /**
+     * descHere
+     *
+     * @param TExpressionVisitor $Visitor
+     * @return TExpression
+     */
+    protected function VisitChildren($Visitor) {
+        foreach ($this->FExpressions as $mExpression) {
+            $Visitor->Visit($mExpression);
+        }
+        return $this;
+    }
+}
+
+/**
  * TExpressionVisitor
  *
  * @author 许子健
@@ -2417,6 +2536,9 @@ abstract class TExpressionVisitor extends TObject {
             case 'TBinaryExpression' :
                 return $this->VisitBinary($Expression);
                 break;
+            case 'TBlockExpression' :
+                return $this->VisitBlock($Expression);
+                break;
             case 'TConditionalExpression' :
                 return $this->VisitConditional($Expression);
                 break;
@@ -2432,11 +2554,17 @@ abstract class TExpressionVisitor extends TObject {
             case 'TMemberExpression' :
                 return $this->VisitMember($Expression);
                 break;
-            case 'ParameterExpression' :
+            case 'TMethodCallExpression' :
+                return $this->VisitMethodCall($Expression);
+                break;
+            case 'TParameterExpression' :
                 return $this->VisitParameter($Expression);
                 break;
             case 'TUnaryExpression' :
                 return $this->VisitUnary($Expression);
+                break;
+            default : // case array('TTypedExpression' => array ('T' => ...)):
+                return $this->VisitLambda($Expression);
                 break;
         }
     }
@@ -2454,7 +2582,17 @@ abstract class TExpressionVisitor extends TObject {
     /**
      * descHere
      *
-     * @param $Expression TConditional
+     * @param $Expression TBlockExpression
+     * @return TExpression
+     */
+    protected function VisitBlock($Expression) {
+        return $Expression;
+    }
+
+    /**
+     * descHere
+     *
+     * @param $Expression TConditionalExpression
      * @return TExpression
      */
     protected function VisitConditional($Expression) {

@@ -1,5 +1,21 @@
 <?php
 require '../FrameworkDSW/Containers.php';
+
+TMap::PrepareGeneric(array('K'=>'string', 'V'=>'TObject'));
+$map=new TMap();
+$map->Put('a', new TObject());
+$map->Put('b', new TObject());
+
+foreach ($map as $key => $value) {
+    echo $key;
+    echo "\n\r";
+    var_dump($value);
+    echo "\n\r";
+}
+
+
+
+die();
 TList::PrepareGeneric(array ('T' => 'integer'));
 $obj = new TList(10000);
 

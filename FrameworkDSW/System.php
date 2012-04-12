@@ -332,7 +332,7 @@ interface IInterface {
 class TObject implements IInterface {
     /**
      *
-     * @var string
+     * @var array
      */
     private static $FConnected = array ();
     /**
@@ -653,6 +653,10 @@ class TObject implements IInterface {
             $mSignal = spl_object_hash($Signal[0]) . $Signal[1];
         }
 
+        if (array_key_exists($mSignal, self::$FConnected) === false) {
+            return;
+        }
+
         foreach (self::$FConnected[$mSignal] as $mSlot) {
             $mSlot[1] = 'slot' . $mSlot[1];
             call_user_func_array($mSlot, $Param);
@@ -829,7 +833,7 @@ class TObject implements IInterface {
      * @throws EMethodNotExisted
      */
     public function getIterator() {
-        if ($this->Supports('IIterator')) {
+        if ($this->Supports('IIteratorAggregate')) {
             return $this->Iterator();
         }
         else {

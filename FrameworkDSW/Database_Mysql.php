@@ -10,26 +10,26 @@ require_once 'FrameworkDSW/Database.php';
 require_once 'FrameworkDSW/Containers.php';
 
 /**
- * 
+ *
  * Enter description here ...
  * @author	许子健
  */
 abstract class TBaseMysqlObject extends TObject {
     /**
-     * 
+     *
      * Enter description here ...
      * @var	TMysqlDriver
      */
     protected $FDriver = null;
     /**
-     * 
+     *
      * Enter description here ...
      * @var	mysqli
      */
     protected $FMysqli = null;
 
     /**
-     * 
+     *
      * Enter description here ...
      * @param	TMysqlDriver	$Driver
      */
@@ -41,7 +41,7 @@ abstract class TBaseMysqlObject extends TObject {
     }
 
     /**
-     * 
+     *
      * Enter description here ...
      * @return	TMysqlDriver
      */
@@ -52,20 +52,20 @@ abstract class TBaseMysqlObject extends TObject {
 }
 
 /**
- * 
+ *
  * Enter description here ...
  * @author	许子健
  */
 class TMysqlValueTypeMapper extends TObject {
     /**
-     * 
+     *
      * Enter description here ...
      * @var	array
      */
     private static $FTypeMappingTable = array ();
 
     /**
-     * 
+     *
      * Enter description here ...
      * @param	integer	$MysqliType
      * @param	integer	$FieldLength
@@ -75,25 +75,25 @@ class TMysqlValueTypeMapper extends TObject {
         if ($FieldLength == 1 && ($MysqliType == MYSQLI_TYPE_BIT || $MysqliType == MYSQLI_TYPE_TINY)) {
             return 'boolean';
         }
-        
+
         if (count(self::$FTypeMappingTable) == 0) {
-            self::$FTypeMappingTable = array (MYSQLI_TYPE_BIT => 'integer', 
-                MYSQLI_TYPE_BLOB => 'string', MYSQLI_TYPE_CHAR => 'string', 
-                MYSQLI_TYPE_DATE => 'todo', MYSQLI_TYPE_DATETIME => 'todo', 
-                MYSQLI_TYPE_DECIMAL => 'string', MYSQLI_TYPE_DOUBLE => 'string', 
-                MYSQLI_TYPE_ENUM => 'integer', MYSQLI_TYPE_FLOAT => 'float', 
-                MYSQLI_TYPE_GEOMETRY => 'todo', MYSQLI_TYPE_INT24 => 'integer', 
-                MYSQLI_TYPE_INTERVAL => 'integer', MYSQLI_TYPE_LONG => 'integer', 
-                MYSQLI_TYPE_LONG_BLOB => 'string', 
-                MYSQLI_TYPE_LONGLONG => 'integer', 
-                MYSQLI_TYPE_MEDIUM_BLOB => 'todo', MYSQLI_TYPE_NEWDATE => 'todo', 
-                MYSQLI_TYPE_NEWDECIMAL => 'float', MYSQLI_TYPE_SET => 'integer', 
-                MYSQLI_TYPE_SHORT => 'integer', MYSQLI_TYPE_STRING => 'string', 
-                MYSQLI_TYPE_TIME => 'todo', MYSQLI_TYPE_TIMESTAMP => 'todo', 
-                MYSQLI_TYPE_TINY => 'integer', MYSQLI_TYPE_TINY_BLOB => 'todo', 
+            self::$FTypeMappingTable = array (MYSQLI_TYPE_BIT => 'integer',
+                MYSQLI_TYPE_BLOB => 'string', MYSQLI_TYPE_CHAR => 'string',
+                MYSQLI_TYPE_DATE => 'todo', MYSQLI_TYPE_DATETIME => 'todo',
+                MYSQLI_TYPE_DECIMAL => 'string', MYSQLI_TYPE_DOUBLE => 'string',
+                MYSQLI_TYPE_ENUM => 'integer', MYSQLI_TYPE_FLOAT => 'float',
+                MYSQLI_TYPE_GEOMETRY => 'todo', MYSQLI_TYPE_INT24 => 'integer',
+                MYSQLI_TYPE_INTERVAL => 'integer', MYSQLI_TYPE_LONG => 'integer',
+                MYSQLI_TYPE_LONG_BLOB => 'string',
+                MYSQLI_TYPE_LONGLONG => 'integer',
+                MYSQLI_TYPE_MEDIUM_BLOB => 'todo', MYSQLI_TYPE_NEWDATE => 'todo',
+                MYSQLI_TYPE_NEWDECIMAL => 'float', MYSQLI_TYPE_SET => 'integer',
+                MYSQLI_TYPE_SHORT => 'integer', MYSQLI_TYPE_STRING => 'string',
+                MYSQLI_TYPE_TIME => 'todo', MYSQLI_TYPE_TIMESTAMP => 'todo',
+                MYSQLI_TYPE_TINY => 'integer', MYSQLI_TYPE_TINY_BLOB => 'todo',
                 MYSQLI_TYPE_VAR_STRING => 'string', MYSQLI_TYPE_YEAR => 'todo');
         }
-        //TODO: more mapping to do... 
+        //TODO: more mapping to do...
         return self::$FTypeMappingTable[$MysqliType];
     }
 }
@@ -103,7 +103,7 @@ class TMysqlValueTypeMapper extends TObject {
  * @author	许子健
  */
 class TMysqlWarningContext extends TObject implements IDatabaseWarningContext {
-    
+
     /**
      * @var	string
      */
@@ -128,7 +128,7 @@ class TMysqlWarningContext extends TObject implements IDatabaseWarningContext {
         TType::String($SqlState);
         TType::String($ErrorCode);
         TType::String($ErrorMessage);
-        
+
         $this->FSqlState = $SqlState;
         $this->FErrorCode = $ErrorCode;
         $this->FErrorMessage = $ErrorMessage;
@@ -151,7 +151,7 @@ class TMysqlWarningContext extends TObject implements IDatabaseWarningContext {
     }
 
     /**
-     * 
+     *
      * Enter description here ...
      * @return	string
      */
@@ -165,79 +165,79 @@ class TMysqlWarningContext extends TObject implements IDatabaseWarningContext {
  * @author	许子健
  */
 final class TMysqlDriver extends TObject implements IDriver {
-    
+
     /**
      * @var	string
      */
     const CInvalidServer = 'Bad form of the server string.';
-    
+
     /**
-     * 
+     *
      * Enter description here ...
      * @var	string
      */
     private $FServer = '';
-    
+
     /**
-     * 
+     *
      * Enter description here ...
      * @var	integer
      */
     private $FPort = 3306;
-    
+
     /**
-     * 
+     *
      * Enter description here ...
      * @var	string
      */
     private $FDbName = '';
-    
+
     /**
-     * 
+     *
      * Enter description here ...
      * @var	string
      */
     private $FSocket = '';
-    
+
     /**
      * @var	TMap <K: string, V: string>
      */
     private $FProperties = null;
-    
+
     /**
-     * 
+     *
      * Enter description here ...
      * @var array
      */
     private $FMysqliOptions = array ();
-    
+
     /**
-     * 
+     *
      * Enter description here ...
      * @var	integer
      */
     private $FMysqliFlags = 0;
-    
+
     /**
-     * 
+     *
      * Enter description here ...
      * @var	mysqli
      */
     private $FMysqli = null;
 
     /**
-     * 
+     *
      * Enter description here ...
      */
     protected function ConvertProperties() {
         if ($this->FProperties === null) {
             return;
         }
-        
+
         if ($this->FProperties->ContainsKey('Socket')) {
             $this->FSocket = $this->FProperties['Socket'];
         }
-        
+
         if ($this->FProperties->ContainsKey('ConnectTimeout')) {
             $this->FMysqliOptions[MYSQLI_OPT_CONNECT_TIMEOUT] = (integer) $this->FProperties['ConnectTimeout'];
         }
@@ -250,7 +250,7 @@ final class TMysqlDriver extends TObject implements IDriver {
         if ($this->FProperties->ContainsKey('ReadDefaultGroup')) {
             $this->FMysqliOptions[MYSQLI_READ_DEFAULT_GROUP] = $this->FProperties['ReadDefaultGroup'];
         }
-        
+
         if ($this->FProperties->ContainsKey('ClientCompress') && $this->FProperties['ClientCompress'] == 'True') {
             $this->FMysqliFlags += MYSQLI_CLIENT_COMPRESS;
         }
@@ -266,7 +266,7 @@ final class TMysqlDriver extends TObject implements IDriver {
         if ($this->FProperties->ContainsKey('Ssl') && $this->FProperties['Ssl'] == 'True') {
             $this->FMysqliFlags += MYSQLI_CLIENT_SSL;
         }
-        
+
         //TODO: observe and add other PDO common available options.
         $this->FMysqliOptions[MYSQLI_INIT_COMMAND] = 'SET NAMES UTF8';
     }
@@ -281,7 +281,7 @@ final class TMysqlDriver extends TObject implements IDriver {
         TType::String($Url);
         TType::Type($Properties, array (
             'IMap' => array ('K' => 'string', 'V' => 'string')));
-        
+
         $this->FProperties = $Properties;
         if ($this->ValidateUrl($Url)) {
             $this->ConvertProperties();
@@ -300,7 +300,7 @@ final class TMysqlDriver extends TObject implements IDriver {
             catch (EIndexOutOfBounds $Ex) {
                 throw new EInsufficientProperties(EInsufficientProperties::CMsg . 'Username, Password.');
             }
-            
+
             return new TMysqlConnection($this);
         }
         throw new EFailedToConnectDb(EFailedToConnectDb::CMsg . $Url);
@@ -316,26 +316,26 @@ final class TMysqlDriver extends TObject implements IDriver {
         TType::String($Url);
         TType::Type($Properties, array (
             'IMap' => array ('K' => 'string', 'V' => 'string')));
-        
+
         if ($this->ValidateUrl($Url)) {
             $this->FProperties = $Properties;
-            
+
             $mInfo = array ();
-            
+
             $mInfo[0] = new TDriverPropertyInfo();
             $mInfo[0]->Choices = array ();
             $mInfo[0]->Description = 'Specify which user to connect the database.';
             $mInfo[0]->Name = 'Username';
             $mInfo[0]->Required = true;
             $mInfo[0]->Value = $this->FProperties['Username'];
-            
+
             $mInfo[1] = new TDriverPropertyInfo();
             $mInfo[1]->Choices = array ();
             $mInfo[1]->Description = 'The password of the user. Use an empty string for empty password.';
             $mInfo[1]->Name = 'Password';
             $mInfo[1]->Required = true;
             $mInfo[1]->Value = $this->FProperties['Password'];
-            
+
             $mInfo[2] = new TDriverPropertyInfo();
             $mInfo[2]->Choices = array ();
             $mInfo[2]->Description = 'Specifies the socket or named pipe that should be used.';
@@ -347,7 +347,7 @@ final class TMysqlDriver extends TObject implements IDriver {
             else {
                 $mInfo[2]->Value = '';
             }
-            
+
             $mInfo[3] = new TDriverPropertyInfo();
             $mInfo[3]->Choices = array ();
             $mInfo[3]->Description = 'Connection timeout in seconds. (supported on Windows with TCP/IP since PHP 5.3.1)';
@@ -360,7 +360,7 @@ final class TMysqlDriver extends TObject implements IDriver {
                 $mInfo[3]->Value = '0';
             }
             $mInfo[3]->Value = '0';
-            
+
             $mInfo[4] = new TDriverPropertyInfo();
             $mInfo[4]->Choices = array ('True', 'False');
             $mInfo[4]->Description = 'Enable/disable use of LOAD LOCAL INFILE.';
@@ -372,7 +372,7 @@ final class TMysqlDriver extends TObject implements IDriver {
             else {
                 $mInfo[4]->Value = 'False';
             }
-            
+
             $mInfo[5] = new TDriverPropertyInfo();
             $mInfo[5]->Choices = array ();
             $mInfo[5]->Description = 'Read options from named option file instead of my.cnf.';
@@ -384,7 +384,7 @@ final class TMysqlDriver extends TObject implements IDriver {
             else {
                 $mInfo[5]->Value = '';
             }
-            
+
             $mInfo[6] = new TDriverPropertyInfo();
             $mInfo[6]->Choices = array ();
             $mInfo[6]->Description = 'Read options from the named group from my.cnf or the file specified with ReadDefaultFile.';
@@ -396,7 +396,7 @@ final class TMysqlDriver extends TObject implements IDriver {
             else {
                 $mInfo[6]->Value = '';
             }
-            
+
             $mInfo[7] = new TDriverPropertyInfo();
             $mInfo[7]->Choices = array ('True', 'False');
             $mInfo[7]->Description = 'Use compression protocol.';
@@ -408,7 +408,7 @@ final class TMysqlDriver extends TObject implements IDriver {
             else {
                 $mInfo[7]->Value = 'False';
             }
-            
+
             $mInfo[8] = new TDriverPropertyInfo();
             $mInfo[8]->Choices = array ('True', 'False');
             $mInfo[8]->Description = 'Return number of matched rows, not the number of affected rows.';
@@ -420,7 +420,7 @@ final class TMysqlDriver extends TObject implements IDriver {
             else {
                 $mInfo[8]->Value = 'False';
             }
-            
+
             $mInfo[9] = new TDriverPropertyInfo();
             $mInfo[9]->Choices = array ('True', 'False');
             $mInfo[9]->Description = 'Allow spaces after function names. Makes all function names reserved words.';
@@ -432,7 +432,7 @@ final class TMysqlDriver extends TObject implements IDriver {
             else {
                 $mInfo[9]->Value = 'False';
             }
-            
+
             $mInfo[10] = new TDriverPropertyInfo();
             $mInfo[10]->Choices = array ('True', 'False');
             $mInfo[10]->Description = 'Allow interactive_timeout seconds (instead of wait_timeout seconds) of inactivity before closing the connection.';
@@ -444,7 +444,7 @@ final class TMysqlDriver extends TObject implements IDriver {
             else {
                 $mInfo[10]->Value = 'False';
             }
-            
+
             $mInfo[11] = new TDriverPropertyInfo();
             $mInfo[11]->Choices = array ('True', 'False');
             $mInfo[11]->Description = 'Use SSL (encryption).';
@@ -456,7 +456,7 @@ final class TMysqlDriver extends TObject implements IDriver {
             else {
                 $mInfo[11]->Value = 'False';
             }
-            
+
             return $mInfo;
         }
         throw new EFailedToGetDbPropertyInfo(EFailedToGetDbPropertyInfo::CMsg);
@@ -480,7 +480,7 @@ final class TMysqlDriver extends TObject implements IDriver {
      */
     public function ValidateUrl($Url) {
         TType::String($Url);
-        
+
         $mTemp = explode('://', $Url, 2);
         if (count($mTemp) != 2) {
             return false;
@@ -517,7 +517,7 @@ final class TMysqlDriver extends TObject implements IDriver {
     }
 
     /**
-     * 
+     *
      * Enter description here ...
      * @param	TBaseMysqlObject	$Request
      * @return	mysqli
@@ -549,28 +549,28 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
      * @var	string
      */
     const CReadOnlyUnsupported = 'ReadOnly is not supported by MySQL driver.';
-    
+
     /**
-     * 
+     *
      * Enter description here ...
      * @var	boolean
      */
     private $FIsConnected = false;
     /**
-     * 
+     *
      * Enter description here ...
      * @var	EDatabaseWarning
      */
     private $FWarnings = null;
     /**
-     * 
+     *
      * Enter description here ...
      * @var	TMysqlDatabaseMetaData
      */
     private $FMetaData = null;
 
     /**
-     * 
+     *
      * Enter description here ...
      */
     private function EnsureConnected() {
@@ -580,7 +580,7 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
     }
 
     /**
-     * 
+     *
      * Enter description here ...
      * @param	TMysqlConnection	$Connection
      * @param	mysqli	$Mysqli
@@ -594,13 +594,13 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
     }
 
     /**
-     * 
+     *
      * Enter description here ...
      * @param	TMysqlDriver	$Driver
      */
     public function __construct($Driver) {
         TType::Object($Driver, 'TMysqlDriver');
-        
+
         if ($Driver !== null) {
             parent::__construct($Driver);
             $this->FIsConnected = true;
@@ -623,7 +623,7 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
     }
 
     /**
-     * 
+     *
      * Enter description here ...
      * @param	string	$WarningType
      * @param	string	$SqlState
@@ -637,7 +637,7 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
         TType::String($ErrorCode);
         TType::String($ErrorMessage);
         TType::Object($Connection, 'TMysqlConnection');
-        
+
         $mWarning = new $WarningType(new TMysqlWarningContext($SqlState, $ErrorCode, $ErrorMessage));
         $mWarning->setNextWarning($Connection->FWarnings);
         $Connection->FWarnings = $mWarning;
@@ -673,7 +673,7 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
      */
     public function CreateSavepoint($Name = '') {
         TType::String($Name);
-        
+
         $this->EnsureConnected();
         $mSavepoint = new TSavepoint($Name);
         self::EnsureQuery($this, "SAVEPOINT {$mSavepoint->getProperName()}", ECreateSavepointFailed::ClassType());
@@ -689,9 +689,9 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
     public function CreateStatement($ResultSetType, $ConcurrencyType) {
         TType::Object($ResultSetType, 'TResultSetType');
         TType::Object($ConcurrencyType, 'TConcurrencyType');
-        
+
         $this->EnsureConnected();
-        
+
         return new TMysqlStatement($this, $ResultSetType, $ConcurrencyType);
     }
 
@@ -713,7 +713,7 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
     public function Execute($SqlStatement) {
         TType::String($SqlStatement);
         $this->EnsureConnected();
-        
+
         self::EnsureQuery($this, $SqlStatement, EExecuteFailed::ClassType());
         return $this->FMysqli->affected_rows;
     }
@@ -787,7 +787,7 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
         }
         $mLevel = $mLevel->fetch_row();
         $mLevel = (string) $mLevel[0];
-        
+
         switch ($mLevel) {
             case 'READ-UNCOMMITTED' :
                 return TTransactionIsolationLevel::eReadUncommitted();
@@ -819,10 +819,10 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
     public function PrepareStatement($ResultSetType, $ConcurrencyType) {
         TType::Object($ResultSetType, 'TResultSetType');
         TType::Object($ConcurrencyType, 'TConcurrencyType');
-        
+
         $this->EnsureConnected();
-        
-        //TODO: check if the params are supported first. 
+
+        //TODO: check if the params are supported first.
         return new TMysqlPreparedStatement($this, $ResultSetType, $ConcurrencyType);
     }
 
@@ -836,10 +836,10 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
     public function PrepareCall($ResultSetType, $ConcurrencyType) {
         TType::Object($ResultSetType, 'TResultSetType');
         TType::Object($ConcurrencyType, 'TConcurrencyType');
-        
+
         $this->EnsureConnected();
-        
-        //TODO: check if the params are supported first. 
+
+        //TODO: check if the params are supported first.
         return new TMysqlCallableStatment($this, $ResultSetType, $ConcurrencyType);
     }
 
@@ -938,7 +938,7 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
 }
 
 /**
- * 
+ *
  * Enter description here ...
  * @author	许子健
  */
@@ -948,51 +948,51 @@ abstract class TAbstractMysqlStatement extends TBaseMysqlObject {
      */
     protected $FConnection = null;
     /**
-     * 
+     *
      * Enter description here ...
      * @var	TResultSetType
      */
     protected $FResultSetType = null;
     /**
-     * 
+     *
      * Enter description here ...
      * @var	TConcurrencyType
      */
     protected $FConcurrencyType = null;
     /**
-     * 
+     *
      * Enter description here ...
      * @var	string
      */
     protected $FCommand = '';
     /**
-     * 
+     *
      * Enter description here ...
      * @var	TList <T: string>
      */
     private $FCommands = null;
     /**
-     * 
+     *
      * Enter description here ...
      * @var	IResultSet
      */
     protected $FCurrentResultSet = null;
 
     /**
-     * 
+     *
      * Enter description here ...
      */
     abstract protected function DoSetCommand();
 
     /**
-     * 
+     *
      * Enter description here ...
      * @return	IResultSet
      */
     abstract protected function DoQuery();
 
     /**
-     * 
+     *
      * Enter description here ...
      * @param	mixed	$Value
      * @param	integer	$Type
@@ -1001,7 +1001,7 @@ abstract class TAbstractMysqlStatement extends TBaseMysqlObject {
     protected abstract function DoFetchAsScalar(&$Value, &$Type, &$Length);
 
     /**
-     * 
+     *
      * Enter description here ...
      * @param	string	$Command
      * @return	integer
@@ -1009,7 +1009,7 @@ abstract class TAbstractMysqlStatement extends TBaseMysqlObject {
     protected abstract function DoExecute($Command);
 
     /**
-     * 
+     *
      * Enter description here ...
      * @param	TMysqlConnection	$Connection
      * @param	TResultSetType		$ResultSetType
@@ -1017,11 +1017,11 @@ abstract class TAbstractMysqlStatement extends TBaseMysqlObject {
      */
     public function __construct($Connection, $ResultSetType, $ConcurrencyType) {
         parent::__construct($Connection->getDriver());
-        
+
         TType::Object($Connection, 'TMysqlConnection');
         TType::Object($ResultSetType, 'TResultSetType');
         TType::Object($ConcurrencyType, 'TConcurrencyType');
-        
+
         $this->FConnection = $Connection;
         $this->FResultSetType = $ResultSetType;
         $this->FConcurrencyType = $ConcurrencyType;
@@ -1042,11 +1042,11 @@ abstract class TAbstractMysqlStatement extends TBaseMysqlObject {
      */
     public function Execute($Command = '') {
         TType::String($Command);
-        
+
         if ($Command == '') {
             $Command = $this->FCommand;
         }
-        
+
         return $this->DoExecute($Command);
     }
 
@@ -1140,7 +1140,7 @@ abstract class TAbstractMysqlStatement extends TBaseMysqlObject {
         if ($Command != '') {
             $this->setCommand($Command);
         }
-        
+
         $this->FCurrentResultSet = $this->DoQuery();
         return $this->FCurrentResultSet;
     }
@@ -1162,14 +1162,14 @@ abstract class TAbstractMysqlStatement extends TBaseMysqlObject {
  */
 class TMysqlStatement extends TAbstractMysqlStatement implements IStatement {
     /**
-     * 
+     *
      * Enter description here ...
      * @var	mysqli_stmt
      */
     protected $FMysqliStmt = null;
 
     /**
-     * 
+     *
      * Enter description here ...
      */
     protected function EnsureMysqliStmt() {
@@ -1179,7 +1179,7 @@ class TMysqlStatement extends TAbstractMysqlStatement implements IStatement {
     }
 
     /**
-     * 
+     *
      * Enter description here ...
      * @param	string	$WarningType
      */
@@ -1192,7 +1192,7 @@ class TMysqlStatement extends TAbstractMysqlStatement implements IStatement {
     }
 
     /**
-     * 
+     *
      * Enter description here ...
      */
     protected function DoSetCommand() {
@@ -1206,7 +1206,7 @@ class TMysqlStatement extends TAbstractMysqlStatement implements IStatement {
             case TResultSetType::eScrollInsensitive() :
                 $this->FMysqliStmt->attr_set(MYSQLI_STMT_ATTR_CURSOR_TYPE, MYSQLI_CURSOR_TYPE_NO_CURSOR);
                 break;
-            
+
             case TResultSetType::eScrollSensitive() :
                 $this->FMysqliStmt->attr_set(MYSQLI_STMT_ATTR_CURSOR_TYPE, MYSQLI_CURSOR_TYPE_READ_ONLY);
                 break;
@@ -1214,7 +1214,7 @@ class TMysqlStatement extends TAbstractMysqlStatement implements IStatement {
     }
 
     /**
-     * 
+     *
      * Enter description here ...
      * @return	IResultSet
      */
@@ -1223,7 +1223,7 @@ class TMysqlStatement extends TAbstractMysqlStatement implements IStatement {
     }
 
     /**
-     * 
+     *
      * Enter description here ...
      * @param	mixed	$Value
      * @param	integer	$Type
@@ -1255,7 +1255,7 @@ class TMysqlStatement extends TAbstractMysqlStatement implements IStatement {
     }
 
     /**
-     * 
+     *
      * Enter description here ...
      * @param	string	$Command
      * @return	integer
@@ -1266,7 +1266,7 @@ class TMysqlStatement extends TAbstractMysqlStatement implements IStatement {
     }
 
     /**
-     * 
+     *
      * Enter description here ...
      * @param	TMysqlConnection	$Connection
      * @param	TResultSetType		$ResultSetType
@@ -1315,30 +1315,30 @@ class TMysqlStatement extends TAbstractMysqlStatement implements IStatement {
 }
 
 /**
- * 
+ *
  * Enter description here ...
  * @author	许子健
  */
 class TMysqlPreparedStatement extends TMysqlStatement implements IPreparedStatement {
     /**
-     * 
+     *
      * Enter description here ...
      * @var	TMap <K: string, V: IParam<T: ?>>
      */
     private $FParams = null;
     /**
-     * 
+     *
      * Enter description here ...
      * @var	array
      */
     private $FRawParams = array ();
     /**
-     * 
+     *
      * Enter description here ...
      * @var	string
      */
     const CPattern = <<<'EOD'
-/('.*(?<!\\)')|(".*(?<!\\)")|(:[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)/    
+/('.*(?<!\\)')|(".*(?<!\\)")|(:[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)/
 EOD;
 
     /**
@@ -1401,7 +1401,7 @@ EOD;
                 $mChunk = '?';
             }
         }
-        
+
         if (!$this->FMysqliStmt->prepare(implode('', $mChunks)) || !$this->FMysqliStmt->execute()) {
             TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FConnection);
         }
@@ -1425,13 +1425,13 @@ EOD;
      */
     public function BindParam($Name, $Param) {
         TType::Object($Param, 'IParam');
-        
+
         if ($this->FParams == null) {
-            TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'IParam', 
+            TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'IParam',
                 'T' => array ('TPair', array ('K' => 'string', 'V' => 'IParam'))));
             $this->FParams = new TMap(true);
         }
-        
+
         $this->FParams->Put($Name, $Param);
     }
 
@@ -1445,39 +1445,39 @@ EOD;
 }
 
 /**
- * 
+ *
  * Enter description here ...
  * @author	许子健
  */
 class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallableStatement {
     /**
-     * 
+     *
      * Enter description here ...
      * @var	TMap <K: string, V: IParam<T: ?>>
      */
     private $FParams = null;
     /**
-     * 
+     *
      * Enter description here ...
      * @var	string[]
      */
     private $FCurrentSetParams = array ();
-    
+
     /**
-     * 
+     *
      * Enter description here ...
      * @var	TLinkedList <T: TMysqlResultSet>
      */
     private $FResultSets = null;
     /**
-     * 
+     *
      * Enter description here ...
      * @var	integer
      */
     private $FCurrentResultSetIndex = -1;
 
     /**
-     * 
+     *
      * Enter description here ...
      * @return	mysqli_result
      */
@@ -1488,13 +1488,13 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
                 TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqli->sqlstate, $this->FMysqli->errno, $this->FMysqli->error, $this->FConnection);
             }
         }
-        
+
         if ($this->FMysqli->multi_query('EXECUTE sCall') && $this->FMysqli->more_results()) {
             $mRawResult = $this->FMysqli->store_result();
             if ($mRawResult === false) {
                 TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqli->sqlstate, $this->FMysqli->errno, $this->FMysqli->error, $this->FConnection); //TODO: failed to fetch next result set.
             }
-            
+
             return $mRawResult;
         }
         else {
@@ -1538,7 +1538,7 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
         if ($this->FResultSetType == TResultSetType::eScrollSensitive() || $this->FConcurrencyType == TConcurrencyType::eUpdatable()) {
             throw new EUnsupportedDbFeature();
         }
-        
+
         if ($this->FResultSets == null) {
             TLinkedList::PrepareGeneric(array ('T' => 'TMysqlResultSet'));
             $this->FResultSets = new TLinkedList(true);
@@ -1546,7 +1546,7 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
         $this->FResultSets->Clear();
         $this->FCurrentResultSet = null;
         $this->FCurrentResultSetIndex = -1;
-        
+
         $this->FResultSets->Add(new TMysqlResultSet($this, $this->FetchRawResult(), $this->FConcurrencyType, $this->FResultSetType));
         $this->FCurrentResultSetIndex = 0;
         $this->FCurrentResultSet = $this->FResultSets[0];
@@ -1554,7 +1554,7 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
     }
 
     /**
-     * 
+     *
      * Enter description here ...
      * @param	mixed	$Value
      * @param	integer	$Type
@@ -1562,14 +1562,14 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
      */
     protected function DoFetchAsScalar(&$Value, &$Type, &$Length) {
         $mRawResult = $this->FetchRawResult();
-        
+
         $mMeta = $mRawResult->fetch_field();
         $Type = $mMeta->type;
         $Length = $mMeta->length;
         $mMeta = null;
         $mRawRow = $mRawResult->fetch_row();
         $mRawResult->close();
-        
+
         while ($this->FMysqli->more_results() && $this->FMysqli->next_result())
             ;
         if ($mRawRow === null) {
@@ -1586,7 +1586,7 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
      */
     protected function DoExecute($Command) {
         $mRawResult = $this->FetchRawResult();
-        
+
         $mResult = $mRawResult->num_rows;
         $mRawResult->close();
         while ($this->FMysqli->more_results() && $this->FMysqli->next_result())
@@ -1604,13 +1604,13 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
     }
 
     /**
-     * 
+     *
      * @param	string			$Name
      * @return	IParam <T: ?>
      */
     public function GetParam($Name) {
         TType::String($Name);
-        
+
         $mRawResult = $this->FMysqli->query("SELECT @p_{$Name}");
         if (!$mRawResult instanceof mysqli_result) {
             TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqli->sqlstate, $this->FMysqli->errno, $this->FMysqli->error, $this->FConnection);
@@ -1623,7 +1623,7 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
             $this->FParams[$Name]->setValue($mRawRow[0]);
         }
         $mRawResult->close();
-        
+
         return $this->FParams[$Name];
     }
 
@@ -1635,13 +1635,13 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
      */
     public function BindParam($Name, $Param) {
         TType::Object($Param, 'IParam');
-        
+
         if ($this->FParams == null) {
-            TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'IParam', 
+            TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'IParam',
                 'T' => array ('TPair', array ('K' => 'string', 'V' => 'IParam'))));
             $this->FParams = new TMap(true);
         }
-        
+
         $this->FParams->Put($Name, $Param);
     }
 
@@ -1660,15 +1660,15 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
      */
     public function getResult($Index) {
         TType::Int($Index);
-        
+
         if ($this->FCurrentResultSetIndex == -1) {
             throw new EIndexOutOfBounds(); //TODO: no result set.
         }
-        
+
         if ($Index < 0 || $Index > $this->FResultSets->Size()) {
             throw new EIndexOutOfBounds();
         }
-        
+
         $this->FCurrentResultSet = $this->FResultSets[$Index];
         $this->FCurrentResultSetIndex = $Index;
         return $this->FCurrentResultSet;
@@ -1691,16 +1691,16 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
                 $this->FResultSets->RemoveAt($this->FCurrentResultSetIndex);
                 break;
         }
-        
+
         if (!$this->FMysqli->next_result()) {
             TMysqlConnection::PushWarning(ENoMoreResultSet::ClassType(), $this->FMysqli->sqlstate, $this->FMysqli->errno, $this->FMysqli->error, $this->FConnection);
         }
-        
+
         $mRawResult = $this->FMysqli->store_result();
         if ($mRawResult === false) {
             TMysqlConnection::PushWarning(EFetchNextResultSetFailed::ClassType(), $this->FMysqli->sqlstate, $this->FMysqli->errno, $this->FMysqli->error, $this->FConnection);
         }
-        
+
         $this->FCurrentResultSetIndex = $this->FResultSets->Size();
         $this->FCurrentResultSet = new TMysqlResultSet($this, $mRawResult, $this->FConcurrencyType, $this->FResultSetType);
         $this->FResultSets->Add($this->FCurrentResultSet);
@@ -1713,27 +1713,27 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
  * @author	许子健
  */
 abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
-    
+
     /**
-     * 
+     *
      * Enter description here ...
      * @var	TAbstractMysqlStatement
      */
     protected $FStatement = null;
     /**
-     * 
+     *
      * Enter description here ...
      * @var TResultSetType
      */
     protected $FResultSetType = null;
     /**
-     * 
+     *
      * Enter description here ...
      * @var	array
      */
     protected $FMeta = array ();
     /**
-     * 
+     *
      * Enter description here ...
      * data structure:
      * colName => value, ...
@@ -1741,90 +1741,90 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
      */
     protected $FCurrentRow = array ();
     /**
-     * 
+     *
      * Enter description here ...
      * @var	integer
      */
     private $FCurrentRowId = -1;
     /**
-     * 
+     *
      * Enter description here ...
      * @var	TFetchDirection
      */
     private $FFetchDirection = null;
     /**
-     * 
+     *
      * Enter description here ...
      * @var	TMysqlRow
      */
     private $FRow = null;
     /**
-     * 
+     *
      * Enter description here ...
      * @var	TMysqlInsertRow
      */
     private $FInsertRow = null;
     /**
-     * 
+     *
      * Enter description here ...
      * @var	boolean
      */
     private $FValid = false;
     /**
-     * 
+     *
      * Enter description here ...
      * @var	boolean
      */
     private $FWasDeleted = false;
     /**
-     * 
+     *
      * Enter description here ...
      * @var	boolean
      */
     private $FWasUpdated = false;
 
     /**
-     * 
+     *
      * Enter description here ...
      */
     abstract protected function FetchMeta();
 
     /**
-     * 
+     *
      * Enter description here ...
      * @return	integer
      */
     abstract protected function DoGetCount();
 
     /**
-     * 
+     *
      * Enter description here ...
      * @param	integer	$Value
      */
     abstract protected function DoSetFetchSize($Value);
 
     /**
-     * 
+     *
      * Enter description here ...
      * @param	integer	$RowId
      */
     abstract protected function DoSeekAndFetch($RowId);
 
     /**
-     * 
+     *
      * Enter description here ...
      * @return	boolean
      */
     abstract protected function DoFetch();
 
     /**
-     * 
+     *
      * Enter description here ...
      */
     abstract protected function DoReset();
 
     /**
-     * 
+     *
      * Enter description here ...
      * @param	integer	$RowId
      */
@@ -1835,7 +1835,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
     }
 
     /**
-     * 
+     *
      * Enter description here ...
      * @param	integer	$RowId
      */
@@ -1859,7 +1859,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
     }
 
     /**
-     * 
+     *
      * Enter description here ...
      * @param	integer	$RowId
      */
@@ -1907,19 +1907,19 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
      * @param	TResultSetType	$ResultSetType
      */
     public function __construct($Statement, $ConcurrencyType, $ResultSetType) {
-        $this->PrepareGeneric(array ('K' => 'integer', 'V' => 'IRow', 
+        $this->PrepareGeneric(array ('K' => 'integer', 'V' => 'IRow',
             'T' => 'IRow'));
         parent::__construct($Statement->getConnection()->getDriver());
         TType::Object($Statement, 'TAbstractMysqlStatement');
         TType::Object($ConcurrencyType, 'TConcurrencyType');
         TType::Object($ResultSetType, 'TResultSetType');
-        
+
         $this->FStatement = $Statement;
         $this->FResultSetType = $ResultSetType;
         $this->FFetchDirection = TFetchDirection::eForward();
-        
+
         $this->FetchMeta();
-        
+
         $this->FRow = new TMysqlRow($this, $ConcurrencyType, $this->FCurrentRow, $this->FMeta, $this->FWasDeleted, $this->FWasUpdated);
         if ($ConcurrencyType == TConcurrencyType::eUpdatable()) {
             $this->FInsertRow = new TMysqlInsertRow($this, $ConcurrencyType, $this->FMeta);
@@ -1950,7 +1950,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
      */
     public function FetchAbsolute($RowId) {
         TType::Int($RowId);
-        
+
         $this->EnsureRowId($RowId);
         $this->FetchTo($RowId);
         return $this->FRow;
@@ -1963,7 +1963,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
      */
     public function FetchRelative($Offset) {
         TType::Int($Offset);
-        
+
         $Offset += $this->FCurrentRowId;
         $this->EnsureRowId($Offset);
         $this->FetchTo($Offset);
@@ -2075,7 +2075,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
      */
     public final function offsetExists($offset) {
         TType::Int($offset);
-        
+
         try {
             $this->FetchTo($offset);
             return true;
@@ -2160,7 +2160,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
         if ($Value < 1) {
             throw new EInvalidParameter();
         }
-        
+
         $this->DoSetFetchSize($Value);
     }
 
@@ -2186,7 +2186,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
     }
 
     /**
-     * 
+     *
      * Enter description here ...
      */
     public function Remove() {
@@ -2200,7 +2200,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
  */
 class TMysqlResultSet extends TAbstractMysqlResultSet implements IResultSet {
     /**
-     * 
+     *
      * Enter description here ...
      * @var	mysqli_result
      */
@@ -2271,7 +2271,7 @@ class TMysqlResultSet extends TAbstractMysqlResultSet implements IResultSet {
     }
 
     /**
-     * 
+     *
      * @param	TMysqlCallableStatment		$Statement
      * @param	mysqli_result				$MysqliResult
      * @param	TConcurrencyType			$ConcurrencyType
@@ -2282,7 +2282,7 @@ class TMysqlResultSet extends TAbstractMysqlResultSet implements IResultSet {
         TType::Object($Statement, 'TMysqlCallableStatment');
         TType::Object($ConcurrencyType, 'TConcurrencyType');
         TType::Object($ResultSetType, 'TResultSetType');
-        
+
         $this->FMysqliResult = $MysqliResult;
         parent::__construct($Statement, $ConcurrencyType, $ResultSetType);
     }
@@ -2305,9 +2305,9 @@ class TMysqlResultSet extends TAbstractMysqlResultSet implements IResultSet {
  * @author	许子健
  */
 class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet {
-    
+
     /**
-     * 
+     *
      * Enter description here ...
      * @var	mysqli_stmt
      */
@@ -2319,7 +2319,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
      */
     protected function FetchMeta() {
         $mRawMeta = $this->FMysqliStmt->result_metadata();
-        
+
         if ($mRawMeta instanceof mysqli_result) {
             $this->FMeta = $mRawMeta->fetch_fields();
             $mRawMeta->close();
@@ -2387,7 +2387,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
     }
 
     /**
-     * 
+     *
      * @param	TMysqlStatement	$Statement
      * @param	mysqli_stmt		$MysqliStmt
      * @param	TConcurrencyType	$ConcurrencyType
@@ -2398,14 +2398,14 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
         TType::Object($Statement, 'TMysqlStatement');
         TType::Object($ConcurrencyType, 'TConcurrencyType');
         TType::Object($ResultSetType, 'TResultSetType');
-        
+
         $this->FMysqliStmt = $MysqliStmt;
         parent::__construct($Statement, $ConcurrencyType, $ResultSetType);
-        
+
         foreach ($this->FMeta as $mItem) {
             $mParams[] = &$this->FCurrentRow[$mItem->name];
         }
-        
+
         if (!$this->FMysqliStmt->execute()) {
             TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FStatement->getConnection());
         }
@@ -2413,7 +2413,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
             //TODO: php-cgi doesn't return NO_CURSOR in WINDOWS! MYSQLI_CURSOR_TYPE_READ_ONLY returned.
             $this->FMysqliStmt->store_result();
         }
-        
+
         call_user_func_array(array ($this->FMysqliStmt, 'bind_result'), $mParams);
     }
 
@@ -2428,7 +2428,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
             }
         }
         $this->FMysqliStmt = null;
-        
+
         parent::__destruct();
     }
 
@@ -2449,62 +2449,62 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
 }
 
 /**
- * 
+ *
  * Enter description here ...
  * @author ExSystem
  */
 abstract class TAbstractMysqlRow extends TBaseMysqlObject {
     /**
-     * 
+     *
      * Enter description here ...
      * @var	TAbstractMysqlResultSet
      */
     protected $FResultSet = null;
     /**
-     * 
+     *
      * Enter description here ...
      * @var	TConcurrencyType
      */
     private $FConcurrencyType = null;
     /**
-     * 
+     *
      * Enter description here ...
      * @var	array
      */
     protected $FRowMeta = array ();
     /**
-     * 
+     *
      * Enter description here ...
      * @var	array
      */
     private $FColumnNames = array ();
     /**
-     * 
+     *
      * Enter description here ...
      * @var	array
      */
     protected $FPendingUpdateRow = array ();
     /**
-     * 
+     *
      * Enter description here ...
      * @var	string
      */
     protected $FTableName = '';
     /**
-     * 
+     *
      * Enter description here ...
      * @var	string[]
      */
     protected $FPrimaryKeys = array ();
     /**
-     * 
+     *
      * Enter description here ...
      * @var	boolean
      */
     protected $FWasUpdated = false;
 
     /**
-     * 
+     *
      * Enter description here ...
      */
     protected function EnsureUpdatable() {
@@ -2517,13 +2517,13 @@ abstract class TAbstractMysqlRow extends TBaseMysqlObject {
     }
 
     /**
-     * 
+     *
      * Enter description here ...
      */
     abstract protected function DoUpdate();
 
     /**
-     * 
+     *
      * Enter description here ...
      * @param	TAbstractMysqlResultSet	$ResultSet
      * @param	TConcurrencyType		$ConcurrencyType
@@ -2534,26 +2534,26 @@ abstract class TAbstractMysqlRow extends TBaseMysqlObject {
         TType::Object($ResultSet, 'TAbstractMysqlResultSet');
         TType::Object($ConcurrencyType, 'TConcurrencyType');
         parent::__construct($ResultSet->getStatement()->getDriver());
-        
+
         $this->FResultSet = $ResultSet;
         $this->FConcurrencyType = $ConcurrencyType;
         $this->FWasUpdated = &$WasUpdated;
         $this->FTableName = "`{$Meta[0]->orgtable}`";
         foreach ($Meta as $mMetaObject) {
-            //NOT_NULL_FLAG = 1                                                                              
-            //UNIQUE_KEY_FLAG = 4                                                                            
-            //PRI_KEY_FLAG = 2                                                                               
-            //BLOB_FLAG = 16                                                                                 
-            //UNSIGNED_FLAG = 32                                                                             
-            //ZEROFILL_FLAG = 64                                                                             
-            //BINARY_FLAG = 128                                                                              
-            //ENUM_FLAG = 256                                                                                
-            //AUTO_INCREMENT_FLAG = 512                                                                      
-            //TIMESTAMP_FLAG = 1024                                                                          
-            //SET_FLAG = 2048                                                                                
-            //NUM_FLAG = 32768                                                                               
-            //PART_KEY_FLAG = 16384                                                                          
-            //GROUP_FLAG = 32768                                                                             
+            //NOT_NULL_FLAG = 1
+            //UNIQUE_KEY_FLAG = 4
+            //PRI_KEY_FLAG = 2
+            //BLOB_FLAG = 16
+            //UNSIGNED_FLAG = 32
+            //ZEROFILL_FLAG = 64
+            //BINARY_FLAG = 128
+            //ENUM_FLAG = 256
+            //AUTO_INCREMENT_FLAG = 512
+            //TIMESTAMP_FLAG = 1024
+            //SET_FLAG = 2048
+            //NUM_FLAG = 32768
+            //PART_KEY_FLAG = 16384
+            //GROUP_FLAG = 32768
             //UNIQUE_FLAG = 65536
             $mCurrTableName = "`{$mMetaObject->orgtable}`";
             if (($this->FTableName != '``') && ($this->FTableName == $mCurrTableName)) {
@@ -2568,7 +2568,7 @@ abstract class TAbstractMysqlRow extends TBaseMysqlObject {
                 break;
             }
         }
-        
+
         foreach ($Meta as $mMetaObject) {
             $this->FRowMeta[$mMetaObject->name] = TMysqlValueTypeMapper::MapType($mMetaObject->type, $mMetaObject->length);
             $this->FColumnNames[$mMetaObject->name] = $mMetaObject->orgname;
@@ -2606,7 +2606,7 @@ abstract class TAbstractMysqlRow extends TBaseMysqlObject {
      */
     public final function offsetExists($offset) {
         TType::String($offset);
-        
+
         return array_key_exists($offset, $this->FRowMeta);
     }
 
@@ -2621,9 +2621,9 @@ abstract class TAbstractMysqlRow extends TBaseMysqlObject {
         if (!$this->offsetExists($offset)) {
             throw new EInvalidColumnName();
         }
-        
+
         $this->EnsureUpdatable();
-        
+
         if ($value == null) {
             $this->FPendingUpdateRow["`{$this->FColumnNames[$offset]}`"] = null;
         }
@@ -2650,7 +2650,7 @@ abstract class TAbstractMysqlRow extends TBaseMysqlObject {
         if (!$this->offsetExists($offset)) {
             throw new ENoSuchElement();
         }
-        
+
         $this->offsetSet($offset, null);
     }
 
@@ -2659,7 +2659,7 @@ abstract class TAbstractMysqlRow extends TBaseMysqlObject {
      */
     public function UndoUpdates() {
         $this->EnsureUpdatable();
-        
+
         $this->FPendingUpdateRow = array ();
     }
 
@@ -2668,13 +2668,13 @@ abstract class TAbstractMysqlRow extends TBaseMysqlObject {
      */
     public function Update() {
         $this->EnsureUpdatable();
-        
+
         if (count($this->FPendingUpdateRow) == 0) {
             throw new ENothingToUpdate();
         }
-        
+
         $this->DoUpdate();
-        
+
         $this->FResultSet->FetchRelative(0);
         $this->FPendingUpdateRow = array ();
         $this->FWasUpdated = true;
@@ -2682,26 +2682,26 @@ abstract class TAbstractMysqlRow extends TBaseMysqlObject {
 }
 
 /**
- * 
+ *
  * Enter description here ...
  * @author ExSystem
  */
 final class TMysqlRow extends TAbstractMysqlRow implements IRow {
     /**
-     * 
+     *
      * Enter description here ...
      * @var	boolean
      */
     private $FWasDeleted = false;
     /**
-     * 
+     *
      * Enter description here ...
      * @var	array
      */
     private $FCurrentRow = array ();
 
     /**
-     * 
+     *
      * Enter description here ...
      */
     protected function EnsureUpdatable() {
@@ -2712,18 +2712,18 @@ final class TMysqlRow extends TAbstractMysqlRow implements IRow {
     }
 
     /**
-     * 
+     *
      * Enter description here ...
      */
     protected function DoUpdate() {
         $mStatement = $this->FResultSet->getStatement();
         TType::Object($mStatement, 'TMysqlStatement');
-        
+
         $mSetSpinnet = join('=?, ', array_keys($this->FPendingUpdateRow));
         $mSetSpinnet .= '=?';
         $mWhereSpinnet = join(' AND ', $this->FPrimaryKeys);
         $mStatement->Execute("PREPARE sUpd FROM 'UPDATE {$this->FTableName} SET {$mSetSpinnet} WHERE {$mWhereSpinnet}'");
-        
+
         $mCount = -1;
         $mParams = array ();
         foreach ($this->FPendingUpdateRow as $mCol => &$mData) {
@@ -2732,12 +2732,12 @@ final class TMysqlRow extends TAbstractMysqlRow implements IRow {
             $mValue = $this->FMysqli->real_escape_string($mData);
             $mStatement->Execute("SET @q{$mCount}='{$mValue}'");
         }
-        
+
         $mCount = -1;
         foreach ($this->FPrimaryKeys as $mKeyName => &$mDummy) {
             ++$mCount;
             $mParams[] = "@p{$mCount}";
-            
+
             $mValue = $this->FMysqli->real_escape_string($this->FCurrentRow[$mKeyName]);
             $mStatement->Execute("SET @p{$mCount}='{$mValue}'");
         }
@@ -2745,7 +2745,7 @@ final class TMysqlRow extends TAbstractMysqlRow implements IRow {
     }
 
     /**
-     * 
+     *
      * Enter description here ...
      * @param	TAbstractMysqlResultSet	$ResultSet
      * @param	TConcurrencyType		$ConcurrencyType
@@ -2757,10 +2757,10 @@ final class TMysqlRow extends TAbstractMysqlRow implements IRow {
     public function __construct($ResultSet, $ConcurrencyType, &$CurrentRow, &$Meta, &$WasDeleted, &$WasUpdated) {
         TType::Object($ResultSet, 'TAbstractMysqlResultSet');
         TType::Object($ConcurrencyType, 'TConcurrencyType');
-        
+
         $this->FCurrentRow = &$CurrentRow;
         $this->FWasDeleted = &$WasDeleted;
-        
+
         parent::__construct($ResultSet, $ConcurrencyType, $Meta, $WasUpdated);
     }
 
@@ -2769,10 +2769,10 @@ final class TMysqlRow extends TAbstractMysqlRow implements IRow {
      */
     public function Delete() {
         $this->EnsureUpdatable();
-        
+
         $mStatement = $this->FResultSet->getStatement();
         TType::Object($mStatement, 'TMysqlStatement');
-        
+
         $mSpinnet = join(' AND ', $this->FPrimaryKeys);
         $mStatement->Execute("PREPARE sDel FROM 'DELETE FROM {$this->FTableName} WHERE {$mSpinnet}'");
         $mCount = -1;
@@ -2784,7 +2784,7 @@ final class TMysqlRow extends TAbstractMysqlRow implements IRow {
             $mStatement->Execute("SET @p{$mCount}='{$mValue}'");
         }
         $mStatement->Execute("EXECUTE sDel USING " . join(',', $mParams));
-        
+
         $this->FPendingUpdateRow = array ();
         $this->FResultSet->FetchRelative(-1);
         $this->FWasDeleted = true;
@@ -2800,7 +2800,7 @@ final class TMysqlRow extends TAbstractMysqlRow implements IRow {
         if (!$this->offsetExists($offset)) {
             throw new EInvalidColumnName();
         }
-        
+
         $mRaw = $this->FCurrentRow[$offset];
         $mType = $this->FRowMeta[$offset];
         if ($mType == 'boolean') {
@@ -2816,7 +2816,7 @@ final class TMysqlRow extends TAbstractMysqlRow implements IRow {
         else {
             $mGenericParam = array ('T' => 'string');
         }
-        
+
         TPrimativeParam::PrepareGeneric($mGenericParam);
         return new TPrimativeParam($mRaw);
     }
@@ -2832,13 +2832,13 @@ final class TMysqlRow extends TAbstractMysqlRow implements IRow {
 }
 
 /**
- * 
+ *
  * Enter description here ...
  * @author	许子健
  */
 final class TMysqlInsertRow extends TAbstractMysqlRow implements IRow {
     /**
-     * 
+     *
      * Enter description here ...
      * @var	boolean
      */
@@ -2851,11 +2851,11 @@ final class TMysqlInsertRow extends TAbstractMysqlRow implements IRow {
     protected function DoUpdate() {
         $mStatement = $this->FResultSet->getStatement();
         TType::Object($mStatement, 'TMysqlStatement');
-        
+
         $mColumnsSpinnet = join(', ', array_keys($this->FPendingUpdateRow));
         $mValuesSpinnet = str_repeat('?, ', count($this->FPendingUpdateRow) - 1) . '?';
         $mStatement->Execute("PREPARE sIns FROM 'INSERT INTO {$this->FTableName}({$mColumnsSpinnet}) VALUES({$mValuesSpinnet})'");
-        
+
         $mCount = -1;
         $mParams = array ();
         foreach ($this->FPendingUpdateRow as $mCol => &$mData) {
@@ -2868,7 +2868,7 @@ final class TMysqlInsertRow extends TAbstractMysqlRow implements IRow {
     }
 
     /**
-     * 
+     *
      * Enter description here ...
      * @param	TAbstractMysqlResultSet	$ResultSet
      * @param	TConcurrencyType		$ConcurrencyType
@@ -2877,7 +2877,7 @@ final class TMysqlInsertRow extends TAbstractMysqlRow implements IRow {
     public function __construct($ResultSet, $ConcurrencyType, &$Meta) {
         TType::Object($ResultSet, 'TAbstractMysqlResultSet');
         TType::Object($ConcurrencyType, 'TConcurrencyType');
-        
+
         parent::__construct($ResultSet, $ConcurrencyType, $Meta, $this->FWasInserted);
     }
 
@@ -2891,7 +2891,7 @@ final class TMysqlInsertRow extends TAbstractMysqlRow implements IRow {
         if (!$this->offsetExists($offset)) {
             throw new EInvalidColumnName();
         }
-        
+
         $mRaw = $this->FPendingUpdateRow["`{$this->FColumnNames[$offset]}`"];
         $mType = $this->FRowMeta[$offset];
         if ($mType == 'boolean') {
@@ -2907,7 +2907,7 @@ final class TMysqlInsertRow extends TAbstractMysqlRow implements IRow {
         else {
             $mGenericParam = array ('T' => 'string');
         }
-        
+
         TPrimativeParam::PrepareGeneric($mGenericParam);
         return new TPrimativeParam($mRaw);
     }
@@ -2932,7 +2932,7 @@ final class TMysqlInsertRow extends TAbstractMysqlRow implements IRow {
 
 final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData { //TODO: pending...
     /**
-     * 
+     *
      * @var TMysqlConnection
      */
     private $FConnection = null;
@@ -2943,7 +2943,7 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
     public function __construct($Connection) {
         parent::__construct();
         TType::Object($Connection, 'TMysqlConnection');
-        
+
         $this->FConnection = $Connection;
     }
 

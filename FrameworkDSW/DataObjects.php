@@ -8,6 +8,7 @@
 require_once 'FrameworkDSW/System.php';
 require_once 'FrameworkDSW/Containers.php';
 require_once 'FrameworkDSW/Linq.php';
+require_once 'FrameworkDSW/Linq_Expressions.php';
 
 /**
  * IEntity
@@ -24,16 +25,24 @@ interface IEntity extends IInterface {
     public function getContext();
 
     /**
-     * @return    string[]    TODO {string}
+     *
+     * @return string[] TODO {string}
      */
     public static function getPrimaryKeys();
 
     /**
-     * @return    array    TODO {<string, string>}
+     *
+     * @return array TODO {<string, string>}
      */
     public static function getColumns();
 
     /**
+     * @return array TODO {<string, string>}
+     */
+    public static function getColumnsType();
+
+    /**
+     *
      * @return string
      */
     public static function getTableName();
@@ -99,7 +108,7 @@ abstract class TObjectContext extends TObject {
     public function CreateQuery() {
         $this->FProvider->PrepareMethodGeneric(array (
             'T' => $this->GenericArg('T')));
-        return $this->FProvider->CreateQuery();
+        return $this->FProvider->CreateQuery($this);
     }
 
     /**
@@ -192,6 +201,12 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
 
     /**
      *
+     * @var TObjectContext
+     */
+    private $FContext = null;
+
+    /**
+     *
      * @var TTypedExpression <T: T>
      */
     private $FExpression = null;
@@ -208,7 +223,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     private function PrepareArguments() {
         if ($this->FArguments === null) {
             TList::PrepareGeneric(array ('T' => 'TExpression'));
-            $this->FArguments = new TList(5, true);
+            $this->FArguments = new TList(5);
         }
         else {
             $this->FArguments->Clear();
@@ -234,11 +249,11 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
                 'IQueryable' => array ('T' => $this->GenericArg('T'))));
         }
 
-        TList::PrepareGeneric(array ('T' => 'TParameterExpresion'));
+        TList::PrepareGeneric(array ('T' => 'TParameterExpression'));
         $mParameters = new TList();
-        $mParameters->Add(TExpression::Parameter('t', $this->ObjectType()));
+        $mParameters->Add(TExpression::Parameter('t', $this->GenericArg('T')));
         TExpression::PrepareGeneric(array (
-            'T' => array ('IList' => array ('T' => $this->GenericArg('T')))));
+            'T' => array ('IIterator' => array ('T' => $this->GenericArg('T')))));
         $this->FExpression = TExpression::TypedLambda($mExpression, $mParameters);
         return $this;
     }
@@ -249,11 +264,12 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
      */
     private function EnsureExpression() {
         if ($this->FExpression === null) {
-            TList::PrepareGeneric(array ('T' => 'TParameterExpresion'));
+            TList::PrepareGeneric(array ('T' => 'TParameterExpression'));
             $mParameters = new TList();
             $mParameters->Add(TExpression::Parameter('t', $this->ObjectType()));
             TExpression::PrepareGeneric(array (
-                'T' => array ('IList' => array ('T' => $this->GenericArg('T')))));
+                'T' => array (
+                    'IIterator' => array ('T' => $this->GenericArg('T')))));
             $this->FExpression = TExpression::TypedLambda(TExpression::Parameter('t', $this->ObjectType()), $mParameters);
         }
     }
@@ -283,14 +299,18 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
+     * @param $Context TObjectContext
      * @param $Expression TTypedExpression
      *            <T: T>
      */
-    public function __construct($Expression = null) {
+    public function __construct($Context, $Expression = null) {
         parent::__construct();
 
+        TType::Object($Context, 'TObjectContext');
         TType::Object($Expression, array (
             'TTypedExpression' => array ('T' => $this->GenericArg('T'))));
+
+        $this->FContext = $Context;
         $this->FExpression = $Expression;
     }
 
@@ -300,7 +320,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
      * @see TObject::__destruct()
      */
     public function __destruct() {
-        Framework::Free($this->FArguments);
+        Framework::Free($this->FArguments); //FIXME !!!!!!!!!!
         Framework::Free($this->FExpression);
         parent::__destruct();
     }
@@ -777,7 +797,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
      */
     public function Iterator() {
         $this->EnsureExpression();
-        $this->FContext->getQueryProvider()->PrepareGeneric(array (
+        $this->FContext->getQueryProvider()->PrepareMethodGeneric(array (
             'R' => array ('IIterator' => array ('T' => $this->GenericArg('T')))));
         return $this->FContext->getQueryProvider()->Execute($this->FExpression);
     }
@@ -1352,7 +1372,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
         $this->PrepareArguments();
         $this->FArguments->Add($Condition);
         return $this->MakeCallExpression(array ('TObjectQuery', 'Where'), array (
-            'IQueryable' => array ('T' => $this->GenericArg('T'))));
+            'IQueryable' => array ('T' => $this->GenericArg('T'))), true);
     }
 
     /**
