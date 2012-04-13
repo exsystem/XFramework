@@ -147,7 +147,7 @@ interface IInterface {
     /**
      * Compare with another object.
      *
-     * @param $Obj TObject
+     * @param $Obj IInterface
      * @return boolean
      */
     public function Equals($Obj);
@@ -373,7 +373,7 @@ class TObject implements IInterface {
     /**
      * Compare with another object.
      *
-     * @param $Obj TObject
+     * @param $Obj IInterface
      * @return boolean
      */
     public function Equals($Obj) {
@@ -818,12 +818,6 @@ class TObject implements IInterface {
      */
     public function __invoke() {
         throw new EMethodNotExisted();
-    }
-
-    /**
-     * PHP magic method.
-     */
-    public function __clone() {
     }
 
     /**

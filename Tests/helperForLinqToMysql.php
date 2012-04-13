@@ -199,6 +199,7 @@ class TTestContext extends TObjectContext {
         $mConfig['Username'] = 'root';
         $mConfig['Password'] = '';
         $mConfig['ConnectTimeout'] = '2';
+        $mConfig['Socket']='/Applications/XAMPP/xamppfiles/var/mysql/mysql.sock'; //MACOSX ONLY
         $this->FConn = $mDriver->Connect('MySQL://localhost/test', $mConfig);
 
         $this->FProvider->UseConnection($this->FConn);

@@ -2409,7 +2409,9 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
         if (!$this->FMysqliStmt->execute()) {
             TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FStatement->getConnection());
         }
-        if ($this->FMysqliStmt->attr_get(MYSQLI_STMT_ATTR_CURSOR_TYPE) === MYSQLI_CURSOR_TYPE_NO_CURSOR) { //TODO: php-cgi crashed here only in SnowLeopard.
+        if ($this->FMysqliStmt->attr_get(MYSQLI_STMT_ATTR_CURSOR_TYPE) === MYSQLI_CURSOR_TYPE_NO_CURSOR) { 
+            //TODO: php-cgi crashed here only in SnowLeopard.
+            //see https://bugs.php.net/bug.php?id=55104
             //TODO: php-cgi doesn't return NO_CURSOR in WINDOWS! MYSQLI_CURSOR_TYPE_READ_ONLY returned.
             $this->FMysqliStmt->store_result();
         }

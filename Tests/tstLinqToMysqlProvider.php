@@ -1,6 +1,6 @@
 <?php
 
-require_once 'FrameworkDSW\Linq_LinqToMysql.php';
+require_once 'FrameworkDSW/Linq_LinqToMysql.php';
 require_once 'Tests/helperForLinqToMysql.php';
 
 echo PHP_VERSION;
