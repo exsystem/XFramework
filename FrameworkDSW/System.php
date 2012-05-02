@@ -22,7 +22,9 @@ class EException extends Exception {
     }
 
     /**
-     * Enter description here ...
+     * Enter description here .
+     *
+     * ..
      */
     public function __destruct() {
     }
@@ -56,14 +58,12 @@ class EIsNotNullable extends ESysException {}
 class ENotImplemented extends ERuntimeException {}
 /**
  *
- *
  * Enter description here ...
  *
  * @author 许子健
  */
 class EInvalidParameter extends ERuntimeException {
     /**
-     *
      *
      * Enter description here ...
      *
@@ -79,8 +79,6 @@ class EInvalidParameter extends ERuntimeException {
  */
 class EFieldNotExisted extends ERuntimeException {
     /**
-     *
-     *
      * Enter description here ...
      *
      * @var string
@@ -147,7 +145,7 @@ interface IInterface {
     /**
      * Compare with another object.
      *
-     * @param $Obj IInterface
+     * @param $Obj IInterface            
      * @return boolean
      */
     public function Equals($Obj);
@@ -191,7 +189,7 @@ interface IInterface {
 
     /**
      *
-     * @param $Type mixed
+     * @param $Type mixed            
      * @return boolean
      */
     public function IsInstanceOf($Type);
@@ -215,7 +213,7 @@ interface IInterface {
 
     /**
      *
-     * @param $ArgName string
+     * @param $ArgName string            
      * @return mixed
      */
     public function GenericArg($ArgName);
@@ -228,7 +226,7 @@ interface IInterface {
 
     /**
      *
-     * @param $ArgName string
+     * @param $ArgName string            
      * @return mixed
      */
     public static function StaticGenericArg($ArgName);
@@ -291,34 +289,34 @@ interface IInterface {
 
     /**
      *
-     * @param $Signal array
-     * @param $Slot array
+     * @param $Signal array            
+     * @param $Slot array            
      */
     public static function Link($Signal, $Slot);
 
     /**
      *
-     * @param $Signal array
-     * @param $Slot array
+     * @param $Signal array            
+     * @param $Slot array            
      */
     public static function Unlink($Signal, $Slot);
 
     /**
      *
-     * @param $Signal array
-     * @param $Param array
+     * @param $Signal array            
+     * @param $Param array            
      */
     public static function Dispatch($Signal, $Param);
 
     /**
      *
-     * @param $Args array
+     * @param $Args array            
      */
     public static function PrepareGeneric($Args);
 
     /**
      *
-     * @param $Args array
+     * @param $Args array            
      */
     public function PrepareMethodGeneric($Args);
 }
@@ -373,7 +371,7 @@ class TObject implements IInterface {
     /**
      * Compare with another object.
      *
-     * @param $Obj IInterface
+     * @param $Obj IInterface            
      * @return boolean
      */
     public function Equals($Obj) {
@@ -445,7 +443,7 @@ class TObject implements IInterface {
 
     /**
      *
-     * @param $Type mixed
+     * @param $Type mixed            
      * @return boolean
      */
     public final function IsInstanceOf($Type) {
@@ -463,7 +461,7 @@ class TObject implements IInterface {
      */
     public final static function InheritsFrom($AClass) {
         TType::MetaClass($AClass);
-
+        
         return is_subclass_of(self::ClassType(), $AClass);
     }
 
@@ -480,7 +478,7 @@ class TObject implements IInterface {
 
     /**
      *
-     * @param $ArgName string
+     * @param $ArgName string            
      * @return mixed
      */
     public final function GenericArg($ArgName) {
@@ -503,7 +501,7 @@ class TObject implements IInterface {
 
     /**
      *
-     * @param $ArgName string
+     * @param $ArgName string            
      * @return mixed
      */
     public final static function StaticGenericArg($ArgName) {
@@ -579,24 +577,24 @@ class TObject implements IInterface {
 
     /**
      *
-     * @param $Signal array
-     * @param $Slot array
+     * @param $Signal array            
+     * @param $Slot array            
      */
     public final static function Link($Signal, $Slot) {
         TType::Arr($Signal);
         TType::Arr($Slot);
-
+        
         if (!method_exists($Signal[0], 'signal' . $Signal[1]) || !method_exists($Slot[0], 'slot' . $Slot[1])) {
             throw new EUnableToConnect();
         }
-
+        
         if (is_string($Signal[0])) {
             $mSignal = $Signal[0] . ':' . $Signal[1];
         }
         else {
             $mSignal = spl_object_hash($Signal[0]) . $Signal[1];
         }
-
+        
         if (!isset(self::$FConnected[$mSignal]) || !in_array($Slot, self::$FConnected[$mSignal])) {
             self::$FConnected[$mSignal][] = $Slot;
         }
@@ -604,30 +602,30 @@ class TObject implements IInterface {
 
     /**
      *
-     * @param $Signal array
-     * @param $Slot array
+     * @param $Signal array            
+     * @param $Slot array            
      */
     public final static function Unlink($Signal, $Slot) {
         TType::Arr($Signal);
-
+        
         if (!method_exists($Signal[0], 'signal' . $Signal[1]) || !method_exists($Slot[0], 'slot' . $Slot[1])) {
             throw new EUnableToDisconnect();
         }
-
+        
         if (is_string($Signal[0])) {
             $mSignal = $Signal[0] . ':' . $Signal[1];
         }
         else {
             $mSignal = spl_object_hash($Signal[0]) . $Signal[1];
         }
-
+        
         if (isset(self::$FConnected[$mSignal])) {
             $mIndex = array_search($Slot, self::$FConnected[$mSignal]);
         }
         else {
             $mIndex = false;
         }
-
+        
         if ($mIndex !== false) {
             unset(self::$FConnected[$mSignal][$mIndex]);
         }
@@ -635,28 +633,28 @@ class TObject implements IInterface {
 
     /**
      *
-     * @param $Signal array
-     * @param $Param array
+     * @param $Signal array            
+     * @param $Param array            
      */
     public final static function Dispatch($Signal, $Param) {
         TType::Arr($Signal);
         TType::Arr($Param);
-
+        
         if (!method_exists($Signal[0], 'signal' . $Signal[1])) {
             throw new EUnableToDispatch();
         }
-
+        
         if (is_string($Signal[0])) {
             $mSignal = $Signal[0] . ':' . $Signal[1];
         }
         else {
             $mSignal = spl_object_hash($Signal[0]) . $Signal[1];
         }
-
+        
         if (array_key_exists($mSignal, self::$FConnected) === false) {
             return;
         }
-
+        
         foreach (self::$FConnected[$mSignal] as $mSlot) {
             $mSlot[1] = 'slot' . $mSlot[1];
             call_user_func_array($mSlot, $Param);
@@ -665,7 +663,7 @@ class TObject implements IInterface {
 
     /**
      *
-     * @param $Args array
+     * @param $Args array            
      */
     public final static function PrepareGeneric($Args) {
         array_walk_recursive($Args, function (&$Value, $Key) {
@@ -674,7 +672,7 @@ class TObject implements IInterface {
             // throw new Exception('error');
             // }
             // else
-            if (is_string($Value) && !($Value == 'boolean' || $Value == 'integer' || $Value == 'float' || $Value == 'string' || $Value == 'array' || class_exists($Value) || interface_exists($Value))) {
+            if (is_string($Value) && !($Value == 'boolean' || $Value == 'integer' || $Value == 'float' || $Value == 'string' || $Value == 'array' || class_exists($Value) || interface_exists($Value) || $Value == 'mixed')) {
                 throw new EInvalidTypeCasting();
             }
             elseif (!is_string($Value)) {
@@ -686,7 +684,7 @@ class TObject implements IInterface {
 
     /**
      *
-     * @param $Args array
+     * @param $Args array            
      */
     public final function PrepareMethodGeneric($Args) {
         array_walk_recursive($Args, function (&$Value, $Key) {
@@ -695,7 +693,7 @@ class TObject implements IInterface {
             // throw new Exception('error');
             // }
             // else
-            if (is_string($Value) && !($Value == 'boolean' || $Value == 'integer' || $Value == 'float' || $Value == 'string' || $Value == 'array' || class_exists($Value) || interface_exists($Value))) {
+            if (is_string($Value) && !($Value == 'boolean' || $Value == 'integer' || $Value == 'float' || $Value == 'string' || $Value == 'array' || class_exists($Value) || interface_exists($Value) || $Value == 'mixed')) {
                 throw new EInvalidTypeCasting();
             }
             elseif (!is_string($Value)) {
@@ -725,8 +723,8 @@ class TObject implements IInterface {
      * Banned to call.
      * A {@link EMethodNotExisted} exception will be always thrown.
      *
-     * @param $name string
-     * @param $arguments array
+     * @param $name string            
+     * @param $arguments array            
      * @return mixed
      */
     public static final function __callStatic($name, $arguments) {
@@ -853,9 +851,27 @@ abstract class TRecord extends TObject {
     }
 
     /**
+     * (non-PHPdoc)
+     *
+     * @param $Obj IInterface            
+     * @return boolean
+     * @see TObject::Equals()
+     */
+    public final function Equals($Obj) {
+        TType::Object($Obj, $this->ObjectType());
+        foreach ($Obj as $mField => &$mValue) {
+            if ($this->$mField !== $mValue) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * PHP magic method.
      */
     public final function __clone() {
+        // prevent modifying by children classed.
     }
 
     /**
@@ -899,18 +915,19 @@ abstract class TEnum extends TObject {
 
     /**
      *
-     * @param $Value mixed
+     * @param $Value mixed            
      */
     public final function __construct($Value) {
         $this->FValue = $Value;
     }
 
     /**
-     *
+     * desc...
      */
-    /**public final function __destruct() {
-    }
-
+     public final function __destruct() {
+       //nothing.
+     }
+     
     /**
      *
      * @return mixed
@@ -944,15 +961,15 @@ abstract class TSet extends TObject {
     private $FSet = array ();
 
     /**
-     *
+     * constructor.
      */
-    /**public final function __construct() {
-        $mReflection = new ReflectionObject($this);
-        foreach ($mReflection->getConstants() as $mElement => $mDummy) {
-            $this->FSet[$mElement] = false;
-        }
-    }
-
+     public final function __construct() {
+     	 $mReflection = new ReflectionObject($this);
+	     foreach ($mReflection->getConstants() as $mElement => $mDummy) {
+	       $this->FSet[$mElement] = false;
+         }
+     }
+     
     /**
      *
      * @return array
@@ -963,7 +980,7 @@ abstract class TSet extends TObject {
 
     /**
      *
-     * @param $Element string
+     * @param $Element string            
      */
     public final function In($Element) {
         if (!array_key_exists($Element)) {
@@ -974,7 +991,7 @@ abstract class TSet extends TObject {
 
     /**
      *
-     * @param $Element string
+     * @param $Element string            
      */
     public final function Out($Element) {
         if (!array_key_exists($Element)) {
@@ -985,7 +1002,7 @@ abstract class TSet extends TObject {
 
     /**
      *
-     * @param $Element string
+     * @param $Element string            
      * @return boolean
      */
     public final function IsIn($Element) {
@@ -997,7 +1014,7 @@ abstract class TSet extends TObject {
 
     /**
      *
-     * @param $Set TSet
+     * @param $Set TSet            
      */
     public final function Union($Set) {
         TType::Object($Set, $this->ClassType());
@@ -1008,7 +1025,7 @@ abstract class TSet extends TObject {
 
     /**
      *
-     * @param $Set TSet
+     * @param $Set TSet            
      */
     public final function Subtract($Set) {
         TType::Object($Set, $this->ClassType());
@@ -1019,7 +1036,7 @@ abstract class TSet extends TObject {
 
     /**
      *
-     * @param $Set TSet
+     * @param $Set TSet            
      */
     public final function Intersect($Set) {
         TType::Object($Set, $this->ClassType());
@@ -1030,7 +1047,7 @@ abstract class TSet extends TObject {
 
     /**
      *
-     * @param $Set TSet
+     * @param $Set TSet            
      * @return boolean
      */
     public final function IsSubsetOf($Set) {
@@ -1045,7 +1062,7 @@ abstract class TSet extends TObject {
 
     /**
      *
-     * @param $Set TSet
+     * @param $Set TSet            
      * @return boolean
      */
     public final function IsSupersetOf($Set) {
@@ -1057,9 +1074,9 @@ abstract class TSet extends TObject {
         }
         return true;
     }
-
+    
     // TODO: to store fixed length hash codes of each elements instead of an
-// array.
+    // array.
     // TODO: store the set by using bit-mask for efficiency.
 }
 
@@ -1104,7 +1121,7 @@ final class TDelegate {
      *
      * @param $Callback mixed
      *            string or closure
-     * @param $Type string
+     * @param $Type string            
      */
     public final function __construct($Callback, $Type) {
         try {
@@ -1136,7 +1153,7 @@ final class TDelegate {
 
     /**
      *
-     * @param $Callback mixed
+     * @param $Callback mixed            
      */
     public final function setDelegate($Callback) {
         if (is_callable($Callback)) {
@@ -1146,7 +1163,7 @@ final class TDelegate {
             else { // then it must be an array if callable
                 $mCallback = new ReflectionMethod($Callback[0], $Callback[1]);
             }
-
+            
             $mNumber = $mCallback->getNumberOfParameters();
             if ($mNumber >= $this->FAtLeast && $mNumber <= $this->FNoMoreThan) {
                 $this->FDelegate = $Callback;
@@ -1172,21 +1189,21 @@ interface IPrimitive extends IInterface {
     /**
      * descHere
      *
-     * @param $Value T
+     * @param $Value T            
      */
     public function __construct($Value);
 
     /**
      * descHere
      *
-     * @param $Value T
+     * @param $Value T            
      */
     public function Box($Value);
 
     /**
      * descHere
      *
-     * @param $Value mixed
+     * @param $Value mixed            
      * @return T
      */
     public static function ConvertFrom($Value);
@@ -1238,7 +1255,7 @@ interface IComparable extends IInterface {
     /**
      * descHere
      *
-     * @param $Value T
+     * @param $Value T            
      * @return integer
      */
     public function CompareTo($Value);
@@ -1260,7 +1277,7 @@ final class TBoolean extends TObject implements IPrimitive, IComparable {
     /**
      * descHere
      *
-     * @param $Value boolean
+     * @param $Value boolean            
      */
     public function __construct($Value = false) {
         parent::__construct();
@@ -1270,7 +1287,7 @@ final class TBoolean extends TObject implements IPrimitive, IComparable {
     /**
      * descHere
      *
-     * @param $Value boolean
+     * @param $Value boolean            
      */
     public function Box($Value) {
         TType::Bool($Value);
@@ -1280,7 +1297,7 @@ final class TBoolean extends TObject implements IPrimitive, IComparable {
     /**
      * descHere
      *
-     * @param $Value TBoolean
+     * @param $Value TBoolean            
      * @return integer
      */
     public function CompareTo($Value) {
@@ -1299,7 +1316,7 @@ final class TBoolean extends TObject implements IPrimitive, IComparable {
     /**
      * descHere
      *
-     * @param $Value mixed
+     * @param $Value mixed            
      * @return mixed
      */
     public static function ConvertFrom($Value) {
@@ -1383,7 +1400,7 @@ final class TInteger extends TObject implements IComparable, IPrimitive {
     /**
      * descHere
      *
-     * @param $Value integer
+     * @param $Value integer            
      */
     public function __construct($Value = 0) {
         parent::__construct();
@@ -1393,7 +1410,7 @@ final class TInteger extends TObject implements IComparable, IPrimitive {
     /**
      * descHere
      *
-     * @param $Value integer
+     * @param $Value integer            
      */
     public function Box($Value) {
         TType::Int($Value);
@@ -1403,7 +1420,7 @@ final class TInteger extends TObject implements IComparable, IPrimitive {
     /**
      * descHere
      *
-     * @param $Value TInteger
+     * @param $Value TInteger            
      * @return integer
      */
     public function CompareTo($Value) {
@@ -1414,7 +1431,7 @@ final class TInteger extends TObject implements IComparable, IPrimitive {
     /**
      * descHere
      *
-     * @param $Value mixed
+     * @param $Value mixed            
      * @return integer
      */
     public static function ConvertFrom($Value) {
@@ -1483,7 +1500,7 @@ final class TFloat extends TObject implements IPrimitive, IComparable {
     /**
      * descHere
      *
-     * @param $Value float
+     * @param $Value float            
      */
     public function __construct($Value = 0.0) {
         parent::__construct();
@@ -1493,7 +1510,7 @@ final class TFloat extends TObject implements IPrimitive, IComparable {
     /**
      * descHere
      *
-     * @param $Value float
+     * @param $Value float            
      */
     public function Box($Value) {
         TType::Float($Value);
@@ -1503,7 +1520,7 @@ final class TFloat extends TObject implements IPrimitive, IComparable {
     /**
      * descHere
      *
-     * @param $Value TFloat
+     * @param $Value TFloat            
      * @return integer
      */
     public function CompareTo($Value) {
@@ -1514,7 +1531,7 @@ final class TFloat extends TObject implements IPrimitive, IComparable {
     /**
      * descHere
      *
-     * @param $Value mixed
+     * @param $Value mixed            
      * @return float
      */
     public static function ConvertFrom($Value) {
@@ -1583,7 +1600,7 @@ final class TString extends TObject implements IComparable, IPrimitive {
     /**
      * descHere
      *
-     * @param $Value string
+     * @param $Value string            
      */
     public function __construct($Value = '') {
         parent::__construct();
@@ -1593,7 +1610,7 @@ final class TString extends TObject implements IComparable, IPrimitive {
     /**
      * descHere
      *
-     * @param $Value string
+     * @param $Value string            
      */
     public function Box($Value) {
         TType::String($Value);
@@ -1603,7 +1620,7 @@ final class TString extends TObject implements IComparable, IPrimitive {
     /**
      * descHere
      *
-     * @param $Value TString
+     * @param $Value TString            
      * @return integer
      */
     public function CompareTo($Value) {
@@ -1613,7 +1630,7 @@ final class TString extends TObject implements IComparable, IPrimitive {
     /**
      * descHere
      *
-     * @param $Value mixed
+     * @param $Value mixed            
      * @return string
      */
     public static function ConvertFrom($Value) {
