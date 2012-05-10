@@ -4,6 +4,10 @@ require_once 'FrameworkDSW/Linq_LinqToMysql.php';
 require_once 'Tests/helperForLinqToMysql.php';
 
 echo PHP_VERSION;
+echo "\n";
+
+echo memory_get_usage(true); //echo 4718592 bytes.
+echo "\n";
 
 $MysqlQueryProvider = new TMysqlQueryProvider();
 $c = new TTestContext($MysqlQueryProvider);
@@ -41,6 +45,18 @@ $orderby = TExpression::TypedLambda($orderby, $params);
 $q->PrepareMethodGeneric(array ('R' => 'TStudent', 'K' => 'string'));
 foreach ($q->Select($selector)->Where($expr)->OrderByDescending($orderby) as $s) {
     echo $s->getName()->getValue();
+    echo "\n";
     $c->DeleteObject($s);
 }
 $c->SaveChanges();
+Framework::Free($selector);
+Framework::Free($expr);
+Framework::Free($orderby);
+Framework::Free($q);
+Framework::Free($c);
+
+echo memory_get_usage(true); //echo 5242880 bytes; total difference: 524288 bytes = 0.75 MB
+echo "\n";
+
+echo memory_get_peak_usage(true);
+echo "\n";

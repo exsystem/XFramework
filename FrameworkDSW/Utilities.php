@@ -153,6 +153,9 @@ final class TType extends TObject {
         elseif (is_array($Type)) { // should be an array then.
             $mClass = array_keys($Type);
             $mClass = (string) $mClass[0];
+            if (($mClass=='TPair') && ($Var instanceof $mClass)) {
+                return;
+            }
             if ((!$Var instanceof $mClass) || ($Type[$mClass] + $Var->GenericArgs() != $Var->GenericArgs())) {
                 throw new EInvalidObjectCasting();
             }

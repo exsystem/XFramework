@@ -75,10 +75,12 @@ class TStudent extends TObject implements IEntity {
     }
 
     /**
+     *
      * @return array TODO {<string, string>}
      */
     public static function getColumnsType() {
-        return array ('FStudentNo'=>'TInteger', 'FName'=>'TString', 'FGender'=>'TBoolean');
+        return array ('FStudentNo' => 'TInteger', 'FName' => 'TString',
+            'FGender' => 'TBoolean');
     }
 
     /**
@@ -153,6 +155,11 @@ class TStudent extends TObject implements IEntity {
     }
 }
 
+/**
+ * for database named `test`.
+ * @author 许子健
+ *
+ */
 class TTestContext extends TObjectContext {
 
     /**
@@ -199,7 +206,9 @@ class TTestContext extends TObjectContext {
         $mConfig['Username'] = 'root';
         $mConfig['Password'] = '';
         $mConfig['ConnectTimeout'] = '2';
-        $mConfig['Socket']='/Applications/XAMPP/xamppfiles/var/mysql/mysql.sock'; //MACOSX ONLY
+        $mConfig['Socket'] = '/opt/lampp/var/mysql/mysql.sock'; //LINUX ONLY
+        #$mConfig['Socket'] = '/Applications/XAMPP/xamppfiles/var/mysql/mysql.sock'; // MACOSX
+                                                                                  // ONLY
         $this->FConn = $mDriver->Connect('MySQL://localhost/test', $mConfig);
 
         $this->FProvider->UseConnection($this->FConn);
@@ -228,7 +237,8 @@ class TTestContext extends TObjectContext {
         global $CHANGED;
 
         function display($obj) {
-            var_dump(array($obj->getStudentNo()->getValue(), $obj->getName()->getValue(), $obj->getGender()->getValue()));
+            var_dump(array ($obj->getStudentNo()->getValue(),
+                $obj->getName()->getValue(), $obj->getGender()->getValue()));
         }
 
         foreach ($ADD as $addItem) {
@@ -241,6 +251,20 @@ class TTestContext extends TObjectContext {
 
         foreach ($CHANGED as $changeItem) {
             display($changeItem);
+        }
+
+        foreach ($ADD as $item) {
+            Framework::Free($item);
+        }
+
+        foreach ($RESULT as $item) {
+            Framework::Free($item);
+        }
+        foreach ($DELETE as $item) {
+            Framework::Free($item);
+        }
+        foreach ($CHANGED as $item) {
+            Framework::Free($item);
         }
 
         $RESULT = array ();

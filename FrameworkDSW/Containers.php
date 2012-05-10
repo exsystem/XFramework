@@ -416,7 +416,12 @@ class TStdMapMapIterator extends TObject implements IIterator {
         TType::Arr($MapData);
         TType::Object($KeyType, 'TMapKeyType');
         
-        $this->FKeyType = $KeyType;
+        if ($KeyType == TMapKeyType::eRecord()) {
+            $this->FKeyType = TMapKeyType::eObject();
+        }
+        else {
+            $this->FKeyType = $KeyType;
+        }
         $this->FMapData = $MapData;
     }
 
@@ -442,14 +447,6 @@ class TStdMapMapIterator extends TObject implements IIterator {
         switch ($this->FKeyType) {
             case TMapKeyType::eObject() :
                 return current($this->FMapData)->Key;
-            case TMapKeyType::eRecord() :
-                $mKeyRaw = key($this->FMapData);
-                $mRecordType = $this->GenericArg('K');
-                $mKey = new $mRecordType();
-                foreach ($mKeyRaw as $mField => $mValue) {
-                    $mKey->$mField = $mValue;
-                }
-                return $mKey;
             default :
                 return key($this->FMapData);
         }
@@ -2824,7 +2821,8 @@ final class TMap extends TAbstractMap {
                 return (string) $Key;
                 break;
             case TMapKeyType::eArray() :
-                return sha1(serialize($Key), true);
+            case TMapKeyType::eRecord() :
+                return sha1(serialize((array) $Key), true);
                 break;
             case TMapKeyType::eBoolean() :
                 return $Key ? '1' : '0';
@@ -2845,17 +2843,22 @@ final class TMap extends TAbstractMap {
             'T' => array (
                 'TPair' => array ('K' => $this->GenericArg('K'), 
                     'V' => $this->GenericArg('V')))));
-        if (is_subclass_of($this->GenericArg('K'), 'TRecord')) {
+        $mKClassType = $this->GenericArg('K');
+        if (is_array($mKClassType)) {
+            $mKClassType = array_keys($mKClassType);
+            $mKClassType = $mKClassType[0];
+        }
+        if (class_exists($mKClassType) && is_subclass_of($mKClassType, 'TRecord')) {
             $this->FKeyType = TMapKeyType::eRecord();
-            $this->FDirectKey = true;
+            $this->FDirectKey = false;
             return;
         }
-        $this->FDirectKey = ($this->GenericArg('K') == 'integer' || $this->GenericArg('K') == 'string');
+        $this->FDirectKey = ($mKClassType == 'integer' || $mKClassType == 'string');
         if ($this->FDirectKey) {
             $this->FKeyType = TMapKeyType::eDirectKey();
             return;
         }
-        switch ($this->GenericArg('K')) {
+        switch ($mKClassType) {
             case 'float' :
                 $this->FKeyType = TMapKeyType::eFloat();
                 break;
@@ -2905,8 +2908,6 @@ final class TMap extends TAbstractMap {
         switch ($this->FKeyType) {
             case TMapKeyType::eDirectKey() :
                 return array_key_exists($Key, $this->FMap);
-            case TMapKeyType::eRecord() :
-                return array_key_exists((array) $Key, $this->FMap);
             default :
                 return array_key_exists($this->HashKey($Key), $this->FMap);
         }
@@ -2919,7 +2920,7 @@ final class TMap extends TAbstractMap {
      * @return boolean
      */
     protected function DoContainsValue($Value) {
-        if ($this->FKeyType == TMapKeyType::eObject()) {
+        if (($this->FKeyType == TMapKeyType::eObject()) || ($this->FKeyType == TMapKeyType::eRecord())) {
             if (TType::IsTypePrimitive($this->GenericArg('V'))) {
                 foreach ($this->FMap as $mPair) {
                     if ($mPair->Value === $Value) {
@@ -2964,9 +2965,6 @@ final class TMap extends TAbstractMap {
      */
     protected function DoGet($Key) {
         if ($this->FDirectKey) {
-            if ($this->FKeyType == TMapKeyType::eRecord()) {
-                return $this->FMap[(array) $Key];
-            }
             return $this->FMap[$Key];
         }
         $mPair = $this->FMap[$this->HashKey($Key)];
@@ -2997,12 +2995,9 @@ final class TMap extends TAbstractMap {
      */
     protected function DoPut($Key, $Value) {
         if ($this->FDirectKey) {
-            if ($this->FKeyType == TMapKeyType::eRecord()) {
-                $Key = (array) $Key;
-            }
             $this->FMap[$Key] = $Value;
         }
-        elseif ($this->FKeyType == TMapKeyType::eObject()) {
+        elseif (($this->FKeyType == TMapKeyType::eObject()) || ($this->FKeyType == TMapKeyType::eRecord())) {
             $mPair = new TPair();
             $mPair->Key = $Key;
             $mPair->Value = $Value;
@@ -3021,18 +3016,11 @@ final class TMap extends TAbstractMap {
      */
     protected function DoPutAll($Map) {
         if ($this->FDirectKey) {
-            if ($this->FKeyType == TMapKeyType::eRecord()) {
-                foreach ($Map as $mKey => $mValue) {
-                    $this->FMap[(array) $mKey] = $mValue;
-                }
-            }
-            else {
-                foreach ($Map as $mKey => $mValue) {
-                    $this->FMap[$mKey] = $mValue;
-                }
+            foreach ($Map as $mKey => $mValue) {
+                $this->FMap[$mKey] = $mValue;
             }
         }
-        elseif ($this->FKeyType == TMapKeyType::eObject()) {
+        elseif (($this->FKeyType == TMapKeyType::eObject()) || ($this->FKeyType == TMapKeyType::eRecord())) {
             $mPair = new TPair();
             foreach ($Map as $mKey => $mValue) {
                 $mPair->Key = $mKey;
@@ -3057,7 +3045,7 @@ final class TMap extends TAbstractMap {
             return null;
         }
         TList::PrepareGeneric(array ('T' => $this->GenericArg('V')));
-        if ($this->FKeyType == TMapKeyType::eObject()) {
+        if (($this->FKeyType == TMapKeyType::eObject()) || ($this->FKeyType == TMapKeyType::eRecord())) {
             $mResult = new TList(count($this->FMap), $this->FElementsOwned);
             foreach ($this->FMap as $mValue) {
                 $mResult->Add($mValue);

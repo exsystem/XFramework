@@ -6,6 +6,9 @@
  * @since	separate file since reversion 30
  */
 
+require_once 'FrameworkDSW/System.php';
+require_once 'FrameworkDSW/Containers.php';
+
 /**
  * TAggregateDelegate
  * params <A, N>

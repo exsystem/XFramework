@@ -6,6 +6,8 @@
  * @since   separate file since reversion 1
  */
 
+require_once 'FrameworkDSW/Containers.php';
+
 /**
  * EAclException
  *
@@ -95,7 +97,7 @@ interface IAclAssertion extends IInterface {
      * @param string $Privilege            
      * @return boolean
      */
-    public static static function Assert($ACL, $Role, $Resource, $Privilege);
+    public static function Assert($ACL, $Role, $Resource, $Privilege);
 }
 
 /**
@@ -325,10 +327,12 @@ class TRuntimeAclStorage extends TObject implements IAclStorage {
         $mRoleResourcePair = new TPair();
         $mRoleResourcePair->Key = $Resource;
         $mRoleResourcePair->Value = $Role;
+        
+        $mPrivilegePair = new TPair();
+        $mPrivilegePair->Key = $Privilege;
+        $mPrivilegePair->Value = $Assertion;
+        
         if ($this->FRules->ContainsKey($mRoleResourcePair)) {
-            $mPrivilegePair = new TPair();
-            $mPrivilegePair->Key = $Privilege;
-            $mPrivilegePair->Value = $Assertion;
             if (!$this->FRules[$mRoleResourcePair]->Contains($mPrivilegePair)) {
                 $this->FRules[$mRoleResourcePair]->Add($mPrivilegePair);
             }
@@ -589,16 +593,16 @@ class TRuntimeAclStorage extends TObject implements IAclStorage {
         TType::String($Privilege);
         
         $mResourceRolePair = new TPair();
-        $mResourceRolePair->Key = $Role;
-        $mResourceRolePair->Value = $Resource;
+        $mResourceRolePair->Key = $Resource;
+        $mResourceRolePair->Value = $Role;
         
         $mPrivilegePair = new TPair();
         $mPrivilegePair->Key = $Privilege;
         $mPrivilegePair->Value = $Assertion;
         
         if (!$this->FRules->ContainsKey($mResourceRolePair)) {
-            foreach ($this->FResources[$Resource] as &$mAncestorResource) {
-                $mResourceRolePair->Value = $mAncestorResource;
+            foreach ($this->FResources[$Resource] as $mAncestorResource) {
+                $mResourceRolePair->Key = $mAncestorResource;
                 if (($this->FRules->ContainsKey($mResourceRolePair)) && ($this->FRules[$mResourceRolePair]->Contains($mPrivilegePair))) {
                     return true;
                 }
@@ -836,7 +840,7 @@ class TAcl extends TObject {
         }
         
         $mResourceId = '';
-        if ($Resource == null) {
+        if ($Resource != null) {
             $mResourceId = $Resource->getResourceId();
         }
         if ($Role == null) {
