@@ -219,12 +219,12 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
     /**
      * (non-PHPdoc)
      *
-     * @see TObject::__destruct()
+     * @see TObject::Destroy()
      */
-    public function __destruct() {
+    public function Destroy() {
         Framework::Free($this->FMembers);
 
-        parent::__destruct();
+        parent::Destroy();
     }
 
     /**
@@ -523,7 +523,6 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
      * @param $Expression TDefaultExpression
      * @return TExpression
      */
-
     protected function VisitDefault($Expression) {
         $this->FSql .= ":param_{$this->FParameterNameCounter}";
 

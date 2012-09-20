@@ -1922,11 +1922,11 @@ class TPdoWarningContext extends TObject implements IDatabaseWarningContext {
 
     /**
      * (non-PHPdoc)
-     * @see TObject::__destruct()
+     * @see TObject::Destroy()
      */
-    public function __destruct() {
+    public function Destroy() {
         $this->FPdoException = null;
-        parent::__destruct();
+        parent::Destroy();
     }
 
     /**

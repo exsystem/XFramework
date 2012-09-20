@@ -214,9 +214,8 @@ class Framework extends TObject {
      */
     public static final function Free(&$Object) {
         if ($Object !== null) {
-            $Object->__destruct();
+            $Object->Destroy();
             $Object = null;
-
             gc_collect_cycles();
         }
     }

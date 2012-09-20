@@ -41,6 +41,26 @@ $mConn->Execute($mTruncateDDL);
 for ($i = 1; $i < 50; ++$i) {
     echo $mConn->Execute("insert into `tmysqlconnectiontest` values({$i}, 10, 1, '中国hi', 20.5)");
 }
+
+
+$mSt = $mConn->PrepareStatement(TResultSetType::eScrollSensitive(), TConcurrencyType::eReadOnly());
+$mSt->setCommand('insert into tmysqlconnectiontest (_int, _bool, _vchar, _float) values (:a, :b, :c, :d)');
+TPrimativeParam::PrepareGeneric(array('T'=>'integer'));
+$a=new TPrimativeParam(10);
+$mSt->BindParam(':a', $a);
+TPrimativeParam::PrepareGeneric(array('T'=>'boolean'));
+$b=new TPrimativeParam(true);
+$mSt->BindParam(':b', $b);
+TPrimativeParam::PrepareGeneric(array('T'=>'string'));
+$c=new TPrimativeParam('string');
+$mSt->BindParam(':c', $c);
+TPrimativeParam::PrepareGeneric(array('T'=>'float'));
+$d=new TPrimativeParam(1.5);
+$mSt->BindParam(':d', $d);
+$rrr=$mSt->Execute();
+
+
+
 $mStmt = $mConn->CreateStatement(TResultSetType::eScrollSensitive(), TConcurrencyType::eUpdatable());
 $mRs = $mStmt->Query('select * from tmysqlconnectiontest');
 $mRow=$mRs->current();
@@ -52,7 +72,7 @@ foreach ($mRs as $mRow) {
     echo $mRow['_bool']->getValue(); //memory leak
     echo $mRow['_vchar']->getValue(); //memory leak
     echo $mRow['_float']->getValue(); //memory leak
-    
+
     TPrimativeParam::PrepareGeneric(array ('T' => 'string'));
     $mRow['_vchar'] = new TPrimativeParam('modified');
     $mRow->Update(); //memory leak

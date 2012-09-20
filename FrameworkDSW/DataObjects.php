@@ -317,12 +317,12 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * (non-PHPdoc)
      *
-     * @see TObject::__destruct()
+     * @see TObject::Destroy()
      */
-    public function __destruct() {
+    public function Destroy() {
         Framework::Free($this->FArguments); //FIXME !!!!!!!!!!
         Framework::Free($this->FExpression);
-        parent::__destruct();
+        parent::Destroy();
     }
 
     /**

@@ -1176,9 +1176,9 @@ final class TConstantExpression extends TExpression {
     /**
      * descHere
      */
-    public function __destruct() {
+    public function Destroy() {
         Framework::Free($this->FValue);
-        parent::__destruct();
+        parent::Destroy();
     }
 
     /**
@@ -1306,10 +1306,10 @@ final class TUnaryExpression extends TExpression {
     /**
      * descHere
      */
-    public function __destruct() {
+    public function Destroy() {
         Framework::Free($this->FOperand);
 
-        parent::__destruct();
+        parent::Destroy();
     }
 
     /**
@@ -1550,14 +1550,14 @@ final class TBinaryExpression extends TExpression {
     /**
      * (non-PHPdoc)
      *
-     * @see TObject::__destruct()
+     * @see TObject::Destroy()
      */
-    public function __destruct() {
-        //Framework::Free($this->FConversion);
-        //Framework::Free($this->FLeft);
-        //Framework::Free($this->FRight);
+    public function Destroy() {
+        Framework::Free($this->FConversion);
+        Framework::Free($this->FLeft);
+        Framework::Free($this->FRight);
 
-        parent::__destruct(); //TODO delete me
+        parent::Destroy(); //TODO delete me
     }
 
     /**
@@ -2006,8 +2006,8 @@ final class TParameterExpression extends TExpression {
         $this->FIsByRef = $IsByRef;
     }
 
-    public function __destruct() {
-        parent::__destruct();
+    public function Destroy() {
+        parent::Destroy();
         // TODO delete me!
     }
 
@@ -2096,9 +2096,9 @@ final class TMemberExpression extends TExpression {
     /**
      * descHere
      */
-    public function __destruct() {
-        // Framework::Free($this->FExpression);
-        parent::__destruct();
+    public function Destroy() {
+         Framework::Free($this->FExpression);
+        parent::Destroy();
     }
 
     /**
@@ -2215,12 +2215,12 @@ final class TMethodCallExpression extends TExpression {
     /**
      * (non-PHPdoc)
      *
-     * @see TObject::__destruct()
+     * @see TObject::Destroy()
      */
-    public function __destruct() {
-        // Framework::Free($this->FObject);
-        // Framework::Free($this->FArguments);
-        parent::__destruct();
+    public function Destroy() {
+         Framework::Free($this->FObject);
+         Framework::Free($this->FArguments);
+        parent::Destroy();
     }
 
     /**
@@ -2333,10 +2333,10 @@ class TLambdaExpression extends TExpression {
     /**
      * descHere
      */
-    public function __destruct() {
-        // Framework::Free($this->FParameters);
-        // Framework::Free($this->FBody);
-        parent::__destruct();
+    public function Destroy() {
+         Framework::Free($this->FParameters);
+         Framework::Free($this->FBody);
+        parent::Destroy();
     }
 
     /**
@@ -2452,9 +2452,9 @@ final class TBlockExpression extends TExpression {
     /**
      * descHere
      */
-    public function __destruct() {
-        // Framework::Free($this->FExpressions);
-        parent::__destruct();
+    public function Destroy() {
+         Framework::Free($this->FExpressions);
+        parent::Destroy();
     }
 
     /**

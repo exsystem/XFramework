@@ -60,3 +60,4 @@ echo "\n";
 
 echo memory_get_peak_usage(true);
 echo "\n";
+echo 'ENDED';

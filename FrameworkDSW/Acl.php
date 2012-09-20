@@ -390,12 +390,12 @@ class TRuntimeAclStorage extends TObject implements IAclStorage {
     /**
      * descHere
      */
-    public function __destruct() {
+    public function Destroy() {
         Framework::Free($this->FResources);
         Framework::Free($this->FRoles);
         Framework::Free($this->FRules);
         
-        parent::__destruct();
+        parent::Destroy();
     }
 
     /**

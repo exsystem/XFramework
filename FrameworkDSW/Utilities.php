@@ -221,6 +221,8 @@ final class TType extends TObject {
             case 'TDelegate' :
                 TType::Delegate($Var);
                 break;
+            case 'mixed':
+                break;
             default : // an array or a compund type string
                 if (is_string($Type) && !(class_exists($Type) || interface_exists($Type))) {
                     throw new EInvalidObjectCasting();

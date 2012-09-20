@@ -613,9 +613,9 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
 
     /**
      * (non-PHPdoc)
-     * @see TObject::__destruct()
+     * @see TObject::Destroy()
      */
-    public function __destruct() {
+    public function Destroy() {
         if ($this->FIsConnected) {
             $this->ClearWarnings();
             $this->Disconnect();
@@ -1029,9 +1029,9 @@ abstract class TAbstractMysqlStatement extends TBaseMysqlObject {
 
     /**
      * (non-PHPdoc)
-     * @see TObject::__destruct()
+     * @see TObject::Destroy()
      */
-    public function __destruct() {
+    public function Destroy() {
         Framework::Free($this->FCommands);
     }
 
@@ -1045,6 +1045,9 @@ abstract class TAbstractMysqlStatement extends TBaseMysqlObject {
 
         if ($Command == '') {
             $Command = $this->FCommand;
+        }
+        if ($Command != $this->FCommand) {
+            $this->setCommand($Command);
         }
 
         return $this->DoExecute($Command);
@@ -1279,16 +1282,16 @@ class TMysqlStatement extends TAbstractMysqlStatement implements IStatement {
 
     /**
      * (non-PHPdoc)
-     * @see TObject::__destruct()
+     * @see TObject::Destroy()
      */
-    public function __destruct() {
+    public function Destroy() {
         if ($this->FMysqliStmt != null) {
             $this->FMysqliStmt->close();
             $this->FMysqliStmt = null;
         }
         //TODO actually it is no need to surround this with the if. for a wired php bug only in Running mode, not in debugging.
         //mysqlistmt::close() will run again after closed.
-        parent::__destruct();
+        parent::Destroy();
     }
 
     /**
@@ -1394,15 +1397,27 @@ EOD;
      * @return	integer
      */
     protected function DoExecute($Command) {
-        $mChunks = preg_split(self::CPattern, $Command, 0, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
-        foreach ($mChunks as &$mChunk) {
-            if ($mChunk[0] == ':') {
-                $this->FRawParams[] = $mChunk;
-                $mChunk = '?';
+//         $mChunks = preg_split(self::CPattern, $Command, 0, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+//         foreach ($mChunks as &$mChunk) {
+//             if ($mChunk[0] == ':') {
+//                 $this->FRawParams[] = $mChunk;
+//                 $mChunk = '?';
+//             }
+//         }
+        if ($this->FParams != null && $this->FParams->Size() > 0) {
+            $mTypes = '';
+            $mParamsRef = array ();
+            foreach ($this->FRawParams as $mKey => &$mParam) {
+                $mTypes .= 's';
+                $mParam = $this->FParams[$mParam]->getValue();
+                $mParamsRef[] = &$this->FRawParams[$mKey];
+            }
+            array_unshift($mParamsRef, $mTypes);
+            if (!call_user_func_array(array ($this->FMysqliStmt, 'bind_param'), $mParamsRef)) {
+                TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FConnection);
             }
         }
-
-        if (!$this->FMysqliStmt->prepare(implode('', $mChunks)) || !$this->FMysqliStmt->execute()) {
+        if (/*!$this->FMysqliStmt->prepare(implode('', $mChunks)) ||*/ !$this->FMysqliStmt->execute()) {
             TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FConnection);
         }
         return $this->FMysqliStmt->affected_rows;
@@ -1410,11 +1425,11 @@ EOD;
 
     /**
      * (non-PHPdoc)
-     * @see TMysqlStatement::__destruct()
+     * @see TMysqlStatement::Destroy()
      */
-    public function __destruct() {
+    public function Destroy() {
         Framework::Free($this->FParams);
-        parent::__destruct();
+        parent::Destroy();
     }
 
     /**
@@ -1596,11 +1611,11 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
 
     /**
      * (non-PHPdoc)
-     * @see TAbstractMysqlStatement::__destruct()
+     * @see TAbstractMysqlStatement::Destroy()
      */
-    public function __destruct() {
+    public function Destroy() {
         Framework::Free($this->FResultSets);
-        parent::__destruct();
+        parent::Destroy();
     }
 
     /**
@@ -1928,9 +1943,9 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
 
     /**
      * (non-PHPdoc)
-     * @see TObject::__destruct()
+     * @see TObject::Destroy()
      */
-    public function __destruct() {
+    public function Destroy() {
         Framework::Free($this->FRow);
         Framework::Free($this->FInsertRow);
     }
@@ -2133,7 +2148,12 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
         catch (EExecuteFailed $Ex) {
             $this->FValid = false;
         }
-        $this->FetchTo(0);
+        try {
+            $this->FetchTo(0);
+        }
+        catch (EInvalidRowId $Ex) {
+            $this->FValid = false;
+        }
     }
 
     /**
@@ -2289,14 +2309,14 @@ class TMysqlResultSet extends TAbstractMysqlResultSet implements IResultSet {
 
     /**
      * (non-PHPdoc)
-     * @see TAbstractMysqlResultSet::__destruct()
+     * @see TAbstractMysqlResultSet::Destroy()
      */
-    public function __destruct() {
+    public function Destroy() {
         if ($this->FMysqliResult != null) {
             $this->FMysqliResult->close();
             $this->FMysqliResult = null;
         }
-        parent::__destruct();
+        parent::Destroy();
     }
 }
 
@@ -2409,7 +2429,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
         if (!$this->FMysqliStmt->execute()) {
             TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FStatement->getConnection());
         }
-        if ($this->FMysqliStmt->attr_get(MYSQLI_STMT_ATTR_CURSOR_TYPE) === MYSQLI_CURSOR_TYPE_NO_CURSOR) { 
+        if ($this->FMysqliStmt->attr_get(MYSQLI_STMT_ATTR_CURSOR_TYPE) === MYSQLI_CURSOR_TYPE_NO_CURSOR) {
             //TODO: php-cgi crashed here only in SnowLeopard.
             //see https://bugs.php.net/bug.php?id=55104
             //TODO: php-cgi doesn't return NO_CURSOR in WINDOWS! MYSQLI_CURSOR_TYPE_READ_ONLY returned.
@@ -2421,9 +2441,9 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
 
     /**
      * (non-PHPdoc)
-     * @see TObject::__destruct()
+     * @see TObject::Destroy()
      */
-    public function __destruct() {
+    public function Destroy() {
         if ($this->FMysqliStmt != null) {
             if ($this->FMysqliStmt->attr_get(MYSQLI_STMT_ATTR_CURSOR_TYPE) === MYSQLI_CURSOR_TYPE_NO_CURSOR) {
                 $this->FMysqliStmt->free_result();
@@ -2431,7 +2451,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
         }
         $this->FMysqliStmt = null;
 
-        parent::__destruct();
+        parent::Destroy();
     }
 
     /**
@@ -2718,13 +2738,13 @@ final class TMysqlRow extends TAbstractMysqlRow implements IRow {
      * Enter description here ...
      */
     protected function DoUpdate() {
-        $mStatement = $this->FResultSet->getStatement();
-        TType::Object($mStatement, 'TMysqlStatement');
+        //$mStatement = $this->FResultSet->getStatement();
+        //TType::Object($mStatement, 'TMysqlStatement');
 
         $mSetSpinnet = join('=?, ', array_keys($this->FPendingUpdateRow));
         $mSetSpinnet .= '=?';
         $mWhereSpinnet = join(' AND ', $this->FPrimaryKeys);
-        $mStatement->Execute("PREPARE sUpd FROM 'UPDATE {$this->FTableName} SET {$mSetSpinnet} WHERE {$mWhereSpinnet}'");
+        $this->FMysqli->query/*$mStatement->Execute*/("PREPARE sUpd FROM 'UPDATE {$this->FTableName} SET {$mSetSpinnet} WHERE {$mWhereSpinnet}'");
 
         $mCount = -1;
         $mParams = array ();
@@ -2732,7 +2752,7 @@ final class TMysqlRow extends TAbstractMysqlRow implements IRow {
             ++$mCount;
             $mParams[] = "@q{$mCount}";
             $mValue = $this->FMysqli->real_escape_string($mData);
-            $mStatement->Execute("SET @q{$mCount}='{$mValue}'");
+            $this->FMysqli->query/*$mStatement->Execute*/("SET @q{$mCount}='{$mValue}'");
         }
 
         $mCount = -1;
@@ -2741,9 +2761,9 @@ final class TMysqlRow extends TAbstractMysqlRow implements IRow {
             $mParams[] = "@p{$mCount}";
 
             $mValue = $this->FMysqli->real_escape_string($this->FCurrentRow[$mKeyName]);
-            $mStatement->Execute("SET @p{$mCount}='{$mValue}'");
+            $this->FMysqli->query/*$mStatement->Execute*/("SET @p{$mCount}='{$mValue}'");
         }
-        $mStatement->Execute("EXECUTE sUpd USING " . join(',', $mParams));
+        $this->FMysqli->query/*$mStatement->Execute*/("EXECUTE sUpd USING " . join(',', $mParams));
     }
 
     /**
@@ -2851,12 +2871,13 @@ final class TMysqlInsertRow extends TAbstractMysqlRow implements IRow {
      * @see TAbstractMysqlRow::DoExecutePrepareUpdate()
      */
     protected function DoUpdate() {
-        $mStatement = $this->FResultSet->getStatement();
-        TType::Object($mStatement, 'TMysqlStatement');
+        //$mStatement = $this->FResultSet->getStatement();
+        //TType::Object($mStatement, 'TMysqlStatement');
 
         $mColumnsSpinnet = join(', ', array_keys($this->FPendingUpdateRow));
         $mValuesSpinnet = str_repeat('?, ', count($this->FPendingUpdateRow) - 1) . '?';
-        $mStatement->Execute("PREPARE sIns FROM 'INSERT INTO {$this->FTableName}({$mColumnsSpinnet}) VALUES({$mValuesSpinnet})'");
+        $this->FMysqli->query/*$mStatement->Execute*/("PREPARE sIns FROM 'INSERT INTO {$this->FTableName}({$mColumnsSpinnet}) VALUES({$mValuesSpinnet})'");
+        //if using $mStatement->Execute('PREPARE ...'), you would got exception thrown as this is equavelent doing PREPARE x FROM 'PREPARE y ...' in mysql prompt tool, which is not allowed, and mysqli will not give you error description.
 
         $mCount = -1;
         $mParams = array ();
@@ -2864,9 +2885,9 @@ final class TMysqlInsertRow extends TAbstractMysqlRow implements IRow {
             ++$mCount;
             $mParams[] = "@q{$mCount}";
             $mValue = $this->FMysqli->real_escape_string($mData);
-            $mStatement->Execute("SET @q{$mCount}='{$mValue}'");
+            $this->FMysqli->query/*$mStatement->Execute*/("SET @q{$mCount}='{$mValue}'");
         }
-        $mStatement->Execute("EXECUTE sIns USING " . join(',', $mParams));
+        $this->FMysqli->query/*$mStatement->Execute*/("EXECUTE sIns USING " . join(',', $mParams));
     }
 
     /**

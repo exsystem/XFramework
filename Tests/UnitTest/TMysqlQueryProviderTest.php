@@ -98,13 +98,13 @@ class TMysqlQueryProviderTest extends PHPUnit_Framework_TestCase {
     }
 
     /**
-     * Tests TMysqlQueryProvider->__destruct()
+     * Tests TMysqlQueryProvider->Destroy()
      */
-    public function test__destruct() {
-        // TODO Auto-generated TMysqlQueryProviderTest->test__destruct()
-        $this->markTestIncomplete("__destruct test not implemented");
+    public function testDestroy() {
+        // TODO Auto-generated TMysqlQueryProviderTest->testDestroy()
+        $this->markTestIncomplete("Destroy test not implemented");
 
-        $this->TMysqlQueryProvider->__destruct(/* parameters */);
+        $this->TMysqlQueryProvider->Destroy(/* parameters */);
 
     }
 

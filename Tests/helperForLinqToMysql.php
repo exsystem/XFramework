@@ -218,11 +218,11 @@ class TTestContext extends TObjectContext {
     /**
      * (non-PHPdoc)
      *
-     * @see TObject::__destruct()
+     * @see TObject::Destroy()
      */
-    public function __destruct() {
+    public function Destroy() {
         Framework::Free($this->FConn); // TODO what about result sets & rows?
-        parent::__destruct();
+        parent::Destroy();
     }
 
     /**

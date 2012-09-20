@@ -298,6 +298,18 @@ interface IComponent extends IInterface {
 }
 
 /**
+ * IView
+ * @author	许子健
+ */
+interface IView extends IInterface {//extends IComponent {
+    /**
+     * descHere
+     * @param	IMap	$ViewData <K: string, V: IInterface>
+     */
+    public function Update($ViewData);
+}
+
+/**
  * TComponent class
  * @author  许子健
  */
@@ -307,7 +319,7 @@ abstract class TComponent extends TObject implements IComponent {
      * @var	string
      */
     const CValidIdentPattern = '/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/';
-    
+
     /**
      *
      * @var	string
@@ -328,7 +340,7 @@ abstract class TComponent extends TObject implements IComponent {
      */
     private $FComponents = null; //TODO: what about using a linked list?
 
-    
+
     /**
      * @param  TComponent  $Owner
      * @see FrameworkDSW/TObject#Create()
@@ -336,7 +348,7 @@ abstract class TComponent extends TObject implements IComponent {
     public function __construct($Owner = null) {
         parent::__construct();
         TType::Object($Owner, 'TComponent');
-        
+
         if (isset($Owner)) {
             $Owner->InsertComponent($this);
             $this->FOwner = $Owner;
@@ -347,12 +359,12 @@ abstract class TComponent extends TObject implements IComponent {
      * (non-PHPdoc)
      * @see FrameworkDSW/TObject#Destroy()
      */
-    public function __destruct() {
+    public function Destroy() {
         if (isset($this->FOwner)) {
             $this->FOwner->RemoveComponent($this);
         }
-        
-        parent::__destruct();
+
+        parent::Destroy();
     }
 
     /**
@@ -396,7 +408,7 @@ abstract class TComponent extends TObject implements IComponent {
     protected function Notify($Component, $Operation) {
         TType::Object($Component, 'TComponent');
         TType::Object($Operation, 'TOperation');
-        
+
         if (isset($this->FComponents)) {
             foreach ($this->FComponents as $mComponent) {
                 $mComponent->Notify($Component, $Operation);
@@ -410,7 +422,7 @@ abstract class TComponent extends TObject implements IComponent {
      */
     public function InsertComponent($Component) {
         TType::Object($Component, 'TComponent');
-        
+
         if (isset($Component->FOwner)) {
             $Component->FOwner->Remove($Component);
         }
@@ -424,7 +436,7 @@ abstract class TComponent extends TObject implements IComponent {
      */
     public function RemoveComponent($Component) {
         TType::Object($Component, 'TComponent');
-        
+
         $this->Notify($Component, TOperation::eRemove());
         $this->Remove($Component);
     }
@@ -436,7 +448,7 @@ abstract class TComponent extends TObject implements IComponent {
      */
     public function FindComponent($Name) {
         TType::String($Name);
-        
+
         self::ValidateName($Name);
         if (isset($this->FComponents)) {
             foreach ($this->FComponents as $mComponent) {
@@ -445,7 +457,7 @@ abstract class TComponent extends TObject implements IComponent {
                 }
             }
         }
-        
+
         throw new ENoSuchComponent();
     }
 
@@ -463,13 +475,13 @@ abstract class TComponent extends TObject implements IComponent {
      */
     public function setName($Value) {
         TType::String($Value);
-        
+
         if ($Value != $this->FName) {
             if ($Value == '') {
                 $this->FName = '';
                 return;
             }
-            
+
             if (isset($this->FOwner)) {
                 try {
                     $this->FOwner->FindComponent($Value);
@@ -503,7 +515,7 @@ abstract class TComponent extends TObject implements IComponent {
         if (!isset($this->FComponents)) {
             throw new EIndexOutOfBounds();
         }
-        
+
         return $this->FComponents[$Index];
     }
 
@@ -1185,7 +1197,7 @@ abstract class TControl extends TComponent implements IControl {
      * @var	TDelegate
      */
     private $FOnMouseWheelUp = null;
-    
+
     /**
      *
      */
@@ -1205,7 +1217,7 @@ abstract class TControl extends TComponent implements IControl {
     }
 
     /**
-     * 
+     *
      * @param	TMouseButton	$Button
      * @param	TShiftState		$Shift
      * @param	integer			$X
@@ -1218,7 +1230,7 @@ abstract class TControl extends TComponent implements IControl {
     }
 
     /**
-     * 
+     *
      * @param	TMouseButton	$Button
      * @param	TShiftState		$Shift
      * @param	integer			$X
@@ -1231,7 +1243,7 @@ abstract class TControl extends TComponent implements IControl {
     }
 
     /**
-     * 
+     *
      * @param	TMouseButton	$Button
      * @param	TShiftState		$Shift
      * @param	integer			$X
