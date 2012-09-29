@@ -509,8 +509,8 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
     protected function VisitConstant($Expression) {
         $this->FSql .= (':param_' . self::$FParameterNameCounter);
 
-        TPrimativeParam::PrepareGeneric(array ('T' => $Expression->getType()));
-        $mParameter = new TPrimativeParam($Expression->getValue());
+        TPrimitiveParam::PrepareGeneric(array ('T' => $Expression->getType()));
+        $mParameter = new TPrimitiveParam($Expression->getValue());
         self::$FParameters->Put(':param_' . self::$FParameterNameCounter, $mParameter);
         self::$FParameterNameCounter++;
 
@@ -526,10 +526,10 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
     protected function VisitDefault($Expression) {
         $this->FSql .= ":param_{$this->FParameterNameCounter}";
 
-        TPrimativeParam::PrepareGeneric(array ('T' => $Expression->getType()));
+        TPrimitiveParam::PrepareGeneric(array ('T' => $Expression->getType()));
         $mValues = array ('boolean' => false, 'integer' => 0, 'float' => 0.0,
             'string' => '');
-        $mParameter = new TPrimativeParam($mValues[$Expression->getType()]);
+        $mParameter = new TPrimitiveParam($mValues[$Expression->getType()]);
         self::$FParameters->Put(":param_{$this->FParameterNameCounter}", $mParameter);
         ++self::$FParameterNameCounter;
 

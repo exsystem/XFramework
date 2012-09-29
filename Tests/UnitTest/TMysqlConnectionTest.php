@@ -171,8 +171,8 @@ EOD;
             $mRow['_vchar']->getValue();
             $mRow['_float']->getValue();
             
-            TPrimativeParam::PrepareGeneric(array ('T' => 'string'));
-            $mRow['_vchar'] = new TPrimativeParam('修改过了！Modified');
+            TPrimitiveParam::PrepareGeneric(array ('T' => 'string'));
+            $mRow['_vchar'] = new TPrimitiveParam('修改过了！Modified');
             $mRow->Update();            
         /*
                 logging($mRow['id']->getValue());

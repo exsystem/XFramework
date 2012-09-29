@@ -1101,8 +1101,8 @@ abstract class TAbstractMysqlStatement extends TBaseMysqlObject {
         else {
             $mGenericParam = array ('T' => 'string');
         }
-        TPrimativeParam::PrepareGeneric($mGenericParam);
-        return new TPrimativeParam($mRaw);
+        TPrimitiveParam::PrepareGeneric($mGenericParam);
+        return new TPrimitiveParam($mRaw);
     }
 
     /**
@@ -1301,7 +1301,7 @@ class TMysqlStatement extends TAbstractMysqlStatement implements IStatement {
      */
     public function getResult($Index) {
         TType::Int($Index);
-        if ($Index != 0 || $this->FCurrentResultSet == null) {
+        if ($Index != 0 || $this->FCurrentResultSet === null) {
             throw new EIndexOutOfBounds();
         }
         return $this->FCurrentResultSet;
@@ -1404,12 +1404,12 @@ EOD;
 //                 $mChunk = '?';
 //             }
 //         }
-        if ($this->FParams != null && $this->FParams->Size() > 0) {
+        if ($this->FParams !== null && $this->FParams->Size() > 0) {
             $mTypes = '';
             $mParamsRef = array ();
             foreach ($this->FRawParams as $mKey => &$mParam) {
                 $mTypes .= 's';
-                $mParam = $this->FParams[$mParam]->getValue();
+                $mParam = ($this->FParams[$mParam] === null) ? null : $this->FParams[$mParam]->getValue();
                 $mParamsRef[] = &$this->FRawParams[$mKey];
             }
             array_unshift($mParamsRef, $mTypes);
@@ -1441,7 +1441,7 @@ EOD;
     public function BindParam($Name, $Param) {
         TType::Object($Param, 'IParam');
 
-        if ($this->FParams == null) {
+        if ($this->FParams === null) {
             TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'IParam',
                 'T' => array ('TPair', array ('K' => 'string', 'V' => 'IParam'))));
             $this->FParams = new TMap(true);
@@ -1554,7 +1554,7 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
             throw new EUnsupportedDbFeature();
         }
 
-        if ($this->FResultSets == null) {
+        if ($this->FResultSets === null) {
             TLinkedList::PrepareGeneric(array ('T' => 'TMysqlResultSet'));
             $this->FResultSets = new TLinkedList(true);
         }
@@ -1651,7 +1651,7 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
     public function BindParam($Name, $Param) {
         TType::Object($Param, 'IParam');
 
-        if ($this->FParams == null) {
+        if ($this->FParams === null) {
             TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'IParam',
                 'T' => array ('TPair', array ('K' => 'string', 'V' => 'IParam'))));
             $this->FParams = new TMap(true);
@@ -2119,7 +2119,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
         TType::Int($offset);
         $this->FetchAbsolute($offset);
         foreach ($value as $mColumn => $mData) {
-            if ($mData == null) {
+            if ($mData === null) {
                 $this->FPendingUpdateRow["`{$this->FColumnNames[$offset]}`"] = null;
             }
             else {
@@ -2646,7 +2646,7 @@ abstract class TAbstractMysqlRow extends TBaseMysqlObject {
 
         $this->EnsureUpdatable();
 
-        if ($value == null) {
+        if ($value === null) {
             $this->FPendingUpdateRow["`{$this->FColumnNames[$offset]}`"] = null;
         }
         else {
@@ -2839,8 +2839,8 @@ final class TMysqlRow extends TAbstractMysqlRow implements IRow {
             $mGenericParam = array ('T' => 'string');
         }
 
-        TPrimativeParam::PrepareGeneric($mGenericParam);
-        return new TPrimativeParam($mRaw);
+        TPrimitiveParam::PrepareGeneric($mGenericParam);
+        return new TPrimitiveParam($mRaw);
     }
 
     /**
@@ -2931,8 +2931,8 @@ final class TMysqlInsertRow extends TAbstractMysqlRow implements IRow {
             $mGenericParam = array ('T' => 'string');
         }
 
-        TPrimativeParam::PrepareGeneric($mGenericParam);
-        return new TPrimativeParam($mRaw);
+        TPrimitiveParam::PrepareGeneric($mGenericParam);
+        return new TPrimitiveParam($mRaw);
     }
 
     /**
@@ -3022,8 +3022,8 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TPrimativeParam $Catalog <T: string>
-     * @param	TPrimativeParam $SchemaPattern <T: string>
+     * @param	TPrimitiveParam $Catalog <T: string>
+     * @param	TPrimitiveParam $SchemaPattern <T: string>
      * @param	string	$TypeNamePattern
      * @param	string	$AttributeNamePattern
      * @return	IResultSet
@@ -3034,8 +3034,8 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TPrimativeParam	$Catalog <T: string>
-     * @param	TPrimativeParam	$Schema <T: string>
+     * @param	TPrimitiveParam	$Catalog <T: string>
+     * @param	TPrimitiveParam	$Schema <T: string>
      * @param	string	$Table
      * @param	TBestRowIdentifierScope	$Scope
      * @param	boolean	$Nullable
@@ -3063,8 +3063,8 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TPrimativeParam	$Catalog <T: string>
-     * @param	TPrimativeParam	$Schema <T: string>
+     * @param	TPrimitiveParam	$Catalog <T: string>
+     * @param	TPrimitiveParam	$Schema <T: string>
      * @param	string	$Table
      * @param	string	$ColumnNamePattern
      * @return	IResultSet
@@ -3074,8 +3074,8 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TPrimativeParam	$Catalog <T: string>
-     * @param	TPrimativeParam	$SchemaPattern <T: string>
+     * @param	TPrimitiveParam	$Catalog <T: string>
+     * @param	TPrimitiveParam	$SchemaPattern <T: string>
      * @param	string	$TableNamePattern
      * @param	string	$ColumnNamePattern
      * @return	IResultSet
@@ -3092,11 +3092,11 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TPrimativeParam	$PrimaryCatalog <T: string>
-     * @param	TPrimativeParam	$PrimarySchema <T: string>
+     * @param	TPrimitiveParam	$PrimaryCatalog <T: string>
+     * @param	TPrimitiveParam	$PrimarySchema <T: string>
      * @param	string	$PrimaryTable
-     * @param	TPrimativeParam	$ForeignCatalog <T: string>
-     * @param	TPrimativeParam	$ForeignSchema <T: string>
+     * @param	TPrimitiveParam	$ForeignCatalog <T: string>
+     * @param	TPrimitiveParam	$ForeignSchema <T: string>
      * @param	string	$ForeignTable
      * @return	IResultSet
      */
@@ -3154,8 +3154,8 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TPrimativeParam	$Catalog <T: string>
-     * @param	TPrimativeParam	$Schema <T: string>
+     * @param	TPrimitiveParam	$Catalog <T: string>
+     * @param	TPrimitiveParam	$Schema <T: string>
      * @param	string	$Table
      * @return	IResultSet
      */
@@ -3178,8 +3178,8 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TPrimativeParam	$Catalog <T: string>
-     * @param	TPrimativeParam	$Schema <T: string>
+     * @param	TPrimitiveParam	$Catalog <T: string>
+     * @param	TPrimitiveParam	$Schema <T: string>
      * @param	string	$Table
      * @return	IResultSet
      */
@@ -3188,8 +3188,8 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TPrimativeParam	$Catalog <T: string>
-     * @param	TPrimativeParam	$Schema <T: string>
+     * @param	TPrimitiveParam	$Catalog <T: string>
+     * @param	TPrimitiveParam	$Schema <T: string>
      * @param	string	$Table
      * @param	boolean	$Unique
      * @param	boolean	$Approximate
@@ -3347,8 +3347,8 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TPrimativeParam	$Catalog <T: string>
-     * @param	TPrimativeParam	$Schema <T: string>
+     * @param	TPrimitiveParam	$Catalog <T: string>
+     * @param	TPrimitiveParam	$Schema <T: string>
      * @param	string	$Table
      * @return	IResultSet
      */
@@ -3357,8 +3357,8 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TPrimativeParam	$Catalog <T: string>
-     * @param	TPrimativeParam	$SchemaPattern <T: string>
+     * @param	TPrimitiveParam	$Catalog <T: string>
+     * @param	TPrimitiveParam	$SchemaPattern <T: string>
      * @param	string	$ProcedureNamePattern
      * @param	string	$ColumnNamePattern
      * @return	IResultSet
@@ -3368,8 +3368,8 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TPrimativeParam	$Catalog <T: string>
-     * @param	TPrimativeParam	$SchemaPattern <T: string>
+     * @param	TPrimitiveParam	$Catalog <T: string>
+     * @param	TPrimitiveParam	$SchemaPattern <T: string>
      * @param	string	$ProcedureNamePattern
      * @return	IResultSet
      */
@@ -3441,8 +3441,8 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TPrimativeParam	$Catalog <T: string>
-     * @param	TPrimativeParam	$SchemaPattern <T: string>
+     * @param	TPrimitiveParam	$Catalog <T: string>
+     * @param	TPrimitiveParam	$SchemaPattern <T: string>
      * @param	string	$TableNameSchema
      * @return	IResultSet
      */
@@ -3451,8 +3451,8 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TPrimativeParam	$Catalog <T: string>
-     * @param	TPrimativeParam	$SchemaPattern <T: string>
+     * @param	TPrimitiveParam	$Catalog <T: string>
+     * @param	TPrimitiveParam	$SchemaPattern <T: string>
      * @param	string	$TypeNamePattern
      * @return	IResultSet
      */
@@ -3461,8 +3461,8 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TPrimativeParam	$Catalog <T: string>
-     * @param	TPrimativeParam	$SchemaPattern <T: string>
+     * @param	TPrimitiveParam	$Catalog <T: string>
+     * @param	TPrimitiveParam	$SchemaPattern <T: string>
      * @param	string	$TableNamePatttern
      * @return	IResultSet
      */
@@ -3471,8 +3471,8 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TPrimativeParam	$Catalog <T: string>
-     * @param	TPrimativeParam	$SchemaPattern <T: string>
+     * @param	TPrimitiveParam	$Catalog <T: string>
+     * @param	TPrimitiveParam	$SchemaPattern <T: string>
      * @param	string	$TableNamePattern
      * @param	string[]	$Types
      * @return	IResultSet
@@ -3496,8 +3496,8 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TPrimativeParam	$Catalog <T: string>
-     * @param	TPrimativeParam	$SchemaPattern <T: string>
+     * @param	TPrimitiveParam	$Catalog <T: string>
+     * @param	TPrimitiveParam	$SchemaPattern <T: string>
      * @param	string	$TypeNamePattern
      * @return	IResultSet
      */
@@ -3520,8 +3520,8 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TPrimativeParam	$Catalog <T: string>
-     * @param	TPrimativeParam	$Schema <T: string>
+     * @param	TPrimitiveParam	$Catalog <T: string>
+     * @param	TPrimitiveParam	$Schema <T: string>
      * @param	string	$Table
      * @return	IResultSet
      */

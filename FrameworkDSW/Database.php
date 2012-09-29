@@ -930,8 +930,8 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TPrimativeParam <T: string>	$Catalog
-     * @param	TPrimativeParam <T: string>	$SchemaPattern
+     * @param	TPrimitiveParam <T: string>	$Catalog
+     * @param	TPrimitiveParam <T: string>	$SchemaPattern
      * @param	string	$TypeNamePattern
      * @param	string	$AttributeNamePattern
      * @return	IResultSet
@@ -940,8 +940,8 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TPrimativeParam <T: string>	$Catalog
-     * @param	TPrimativeParam <T: string>	$Schema
+     * @param	TPrimitiveParam <T: string>	$Catalog
+     * @param	TPrimitiveParam <T: string>	$Schema
      * @param	string	$Table
      * @param	TBestRowIdentifierScope	$Scope
      * @param	boolean	$Nullable
@@ -963,8 +963,8 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TPrimativeParam <T: string>	$Catalog
-     * @param	TPrimativeParam <T: string>	$Schema
+     * @param	TPrimitiveParam <T: string>	$Catalog
+     * @param	TPrimitiveParam <T: string>	$Schema
      * @param	string	$Table
      * @param	string	$ColumnNamePattern
      * @return	IResultSet
@@ -973,8 +973,8 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TPrimativeParam <T: string>	$Catalog
-     * @param	TPrimativeParam <T: string>	$SchemaPattern
+     * @param	TPrimitiveParam <T: string>	$Catalog
+     * @param	TPrimitiveParam <T: string>	$SchemaPattern
      * @param	string	$TableNamePattern
      * @param	string	$ColumnNamePattern
      * @return	IResultSet
@@ -989,11 +989,11 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TPrimativeParam <T: string>	$PrimaryCatalog
-     * @param	TPrimativeParam <T: string>	$PrimarySchema
+     * @param	TPrimitiveParam <T: string>	$PrimaryCatalog
+     * @param	TPrimitiveParam <T: string>	$PrimarySchema
      * @param	string	$PrimaryTable
-     * @param	TPrimativeParam <T: string>	$ForeignCatalog
-     * @param	TPrimativeParam <T: string>	$ForeignSchema
+     * @param	TPrimitiveParam <T: string>	$ForeignCatalog
+     * @param	TPrimitiveParam <T: string>	$ForeignSchema
      * @param	string	$ForeignTable
      * @return	IResultSet
      */
@@ -1043,8 +1043,8 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TPrimativeParam <T: string>	$Catalog
-     * @param	TPrimativeParam <T: string>	$Schema
+     * @param	TPrimitiveParam <T: string>	$Catalog
+     * @param	TPrimitiveParam <T: string>	$Schema
      * @param	string	$Table
      * @return	IResultSet
      */
@@ -1064,8 +1064,8 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TPrimativeParam <T: string>	$Catalog
-     * @param	TPrimativeParam <T: string>	$Schema
+     * @param	TPrimitiveParam <T: string>	$Catalog
+     * @param	TPrimitiveParam <T: string>	$Schema
      * @param	string	$Table
      * @return	IResultSet
      */
@@ -1073,8 +1073,8 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TPrimativeParam <T: string>	$Catalog
-     * @param	TPrimativeParam <T: string>	$Schema
+     * @param	TPrimitiveParam <T: string>	$Catalog
+     * @param	TPrimitiveParam <T: string>	$Schema
      * @param	string	$Table
      * @param	boolean	$Unique
      * @param	boolean	$Approximate
@@ -1210,8 +1210,8 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TPrimativeParam <T: string>	$Catalog
-     * @param	TPrimativeParam <T: string>	$Schema
+     * @param	TPrimitiveParam <T: string>	$Catalog
+     * @param	TPrimitiveParam <T: string>	$Schema
      * @param	string	$Table
      * @return	IResultSet
      */
@@ -1219,8 +1219,8 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TPrimativeParam <T: string>	$Catalog
-     * @param	TPrimativeParam <T: string>	$SchemaPattern
+     * @param	TPrimitiveParam <T: string>	$Catalog
+     * @param	TPrimitiveParam <T: string>	$SchemaPattern
      * @param	string	$ProcedureNamePattern
      * @param	string	$ColumnNamePattern
      * @return	IResultSet
@@ -1229,8 +1229,8 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TPrimativeParam <T: string>	$Catalog
-     * @param	TPrimativeParam <T: string>	$SchemaPattern
+     * @param	TPrimitiveParam <T: string>	$Catalog
+     * @param	TPrimitiveParam <T: string>	$SchemaPattern
      * @param	string	$ProcedureNamePattern
      * @return	IResultSet
      */
@@ -1292,8 +1292,8 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TPrimativeParam <T: string>	$Catalog
-     * @param	TPrimativeParam <T: string>	$SchemaPattern
+     * @param	TPrimitiveParam <T: string>	$Catalog
+     * @param	TPrimitiveParam <T: string>	$SchemaPattern
      * @param	string	$TableNameSchema
      * @return	IResultSet
      */
@@ -1301,8 +1301,8 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TPrimativeParam <T: string>	$Catalog
-     * @param	TPrimativeParam <T: string>	$SchemaPattern
+     * @param	TPrimitiveParam <T: string>	$Catalog
+     * @param	TPrimitiveParam <T: string>	$SchemaPattern
      * @param	string	$TypeNamePattern
      * @return	IResultSet
      */
@@ -1310,8 +1310,8 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TPrimativeParam <T: string>	$Catalog
-     * @param	TPrimativeParam <T: string>	$SchemaPattern
+     * @param	TPrimitiveParam <T: string>	$Catalog
+     * @param	TPrimitiveParam <T: string>	$SchemaPattern
      * @param	string	$TableNamePatttern
      * @return	IResultSet
      */
@@ -1319,8 +1319,8 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TPrimativeParam <T: string>	$Catalog
-     * @param	TPrimativeParam <T: string>	$SchemaPattern
+     * @param	TPrimitiveParam <T: string>	$Catalog
+     * @param	TPrimitiveParam <T: string>	$SchemaPattern
      * @param	string	$TableNamePattern
      * @param	string[]	$Types
      * @return	IResultSet
@@ -1341,8 +1341,8 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TPrimativeParam <T: string>	$Catalog
-     * @param	TPrimativeParam <T: string>	$SchemaPattern
+     * @param	TPrimitiveParam <T: string>	$Catalog
+     * @param	TPrimitiveParam <T: string>	$SchemaPattern
      * @param	string	$TypeNamePattern
      * @return	IResultSet
      */
@@ -1362,8 +1362,8 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TPrimativeParam <T: string>	$Catalog
-     * @param	TPrimativeParam <T: string>	$Schema
+     * @param	TPrimitiveParam <T: string>	$Catalog
+     * @param	TPrimitiveParam <T: string>	$Schema
      * @param	string	$Table
      * @return	IResultSet
      */
@@ -2051,12 +2051,12 @@ abstract class TAbstractParam extends TObject {
 }
 
 /**
- * TPrimativeParam
+ * TPrimitiveParam
  * param	<T>
  * extends	IParam<T>
  * @author	许子健
  */
-final class TPrimativeParam extends TAbstractParam implements IParam {
+final class TPrimitiveParam extends TAbstractParam implements IParam {
     /**
      *
      * @var	string

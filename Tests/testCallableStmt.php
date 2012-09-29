@@ -33,8 +33,8 @@ $mConn->Execute($mDropProcedureCmd);
 $mConn->Execute($mCreateProcedureCmd);
 
 $mStmt = $mConn->PrepareCall(TResultSetType::eScrollInsensitive(), TConcurrencyType::eReadOnly());
-TPrimativeParam::PrepareGeneric(array ('T' => 'integer'));
-$mStmt->BindParam('foo', new TPrimativeParam(100));
+TPrimitiveParam::PrepareGeneric(array ('T' => 'integer'));
+$mStmt->BindParam('foo', new TPrimitiveParam(100));
 $mRs = $mStmt->Query('call test_multi_sets(:foo)');
 try {
     while (true) {

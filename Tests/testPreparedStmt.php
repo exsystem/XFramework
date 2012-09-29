@@ -57,8 +57,8 @@ foreach ($mRs as $mRow) {
 Framework::Free($mRs);
 $mConn->Rollback();
 
-TPrimativeParam::PrepareGeneric(array('T'=>'integer'));
-$param=new TPrimativeParam(100);
+TPrimitiveParam::PrepareGeneric(array('T'=>'integer'));
+$param=new TPrimitiveParam(100);
 $mStmt->setCommand('select :p*2 as p');
 $mStmt->BindParam(':p', $param);
 $rs=$mStmt->Query();
