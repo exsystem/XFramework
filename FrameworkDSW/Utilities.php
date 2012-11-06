@@ -157,7 +157,20 @@ final class TType extends TObject {
                 return;
             }
             if ((!$Var instanceof $mClass) || ($Type[$mClass] + $Var->GenericArgs() != $Var->GenericArgs())) {
-                throw new EInvalidObjectCasting();
+                $mTypeOfClass = $Type[$mClass];
+                array_walk_recursive($mTypeOfClass, function ($mValue, $mIndex) use (&$mTypeOfClass) {
+                    switch ($mValue) {
+                        case 'boolean': break;
+                        case 'integer': break;
+                        case 'float': break;
+                        case 'string': break;
+                        case 'array': break;
+                        default: $mTypeOfClass[$mIndex] = "\\{$mValue}"; break;
+                    }
+                });
+                if ($mTypeOfClass + $Var->GenericArgs() != $Var->GenericArgs()) {
+                    throw new EInvalidObjectCasting();
+                }
             }
         }
     }

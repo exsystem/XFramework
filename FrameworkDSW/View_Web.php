@@ -109,12 +109,12 @@ class TWebThemeManager extends TObject {
      */
     public static function getTheme($Name) {
         TType::String($Name);
-        if (in_array($Name, self::FThemes, true)) {
-            return new TWebTheme($Name, self::FThemesPath, self::FThemesUrl);
-        }
-        else {
-            throw new EInvalidParameter();
-        }
+        //if (in_array($Name, self::$FThemes, true)) {
+        return new TWebTheme($Name, self::$FThemesPath . $Name . '/', self::$FThemesUrl . $Name . '/');
+        //}
+        //else {
+        //    throw new EInvalidParameter();
+        //}
     }
 
     /**
@@ -123,7 +123,7 @@ class TWebThemeManager extends TObject {
      * @return string[]
      */
     public static function getThemes() {
-        return self::FThemes;
+        return self::$FThemes;
     }
 
     /**
@@ -269,14 +269,14 @@ class TWebPage extends TComponent implements IView {
      */
     public function Css($Name) {
         TType::String($Name);
-        return "{$this->FThemeUrl}/Style/{$Name}.css";
+        return "{$this->FThemeUrl}Style/{$Name}.css";
     }
 
     /**
      * descHere
      *
      * @param string $Name
-     * @return string
+     * @return IIntterface
      */
     public function Data($Name) {
         TType::String($Name);
@@ -286,7 +286,7 @@ class TWebPage extends TComponent implements IView {
             return $mRaw->UnboxToString();
         }
         else {
-            return 'OBJECT';
+            return $mRaw;
         }
     }
 
@@ -325,7 +325,7 @@ class TWebPage extends TComponent implements IView {
      */
     public function Js($Name) {
         TType::String($Name);
-        return "{$this->FThemeUrl}/Script/{$Name}.js";
+        return "{$this->FThemeUrl}Script/{$Name}.js";
     }
 
     /**

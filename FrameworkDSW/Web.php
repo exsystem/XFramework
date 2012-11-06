@@ -199,7 +199,7 @@ interface IUrlRouter extends IInterface {
      * @param THttpRequest $Request
      * @return string
      */
-    public function ParseUrl($Request);
+    public function ParseUrl($Request = null);
 
     /**
      * descHere
@@ -1563,8 +1563,12 @@ class TUrlRouter extends TObject implements IUrlRouter {
      * @param THttpRequest $Request
      * @return string
      */
-    public function ParseUrl($Request) {
+    public function ParseUrl($Request = null) {
         TType::Object($Request, 'THttpRequest');
+
+        if ($Request === null) {
+            $Request = $this->FRequest;
+        }
 
         switch ($this->FUrlMode) {
             case TUrlMode::ePath() :

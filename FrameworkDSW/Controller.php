@@ -255,7 +255,7 @@ class TControllerManager extends TObject implements IControllerManager {
     public function Notify($Model) {
         TType::Object($Model, 'IModel');
         foreach ($this->FBinding as $mAction => $mModel) {
-            if ($mModel == $Model) {
+            if ($mModel === $Model) {
                 $mController = $mAction[0];
                 $mNotifyMethod = "Notify{$mAction[1]}";
                 $mNotify = false;
