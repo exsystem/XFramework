@@ -1369,11 +1369,9 @@ EOD;
     }
 
     /**
-     * (non-PHPdoc)
-     * @see TMysqlStatement::DoQuery()
-     * @return	IResultSet
+     *
      */
-    protected function DoQuery() {
+    protected function BindRawParameters() {
         if ($this->FParams != null && $this->FParams->Size() > 0) {
             $mTypes = '';
             $mParamsRef = array ();
@@ -1387,7 +1385,28 @@ EOD;
                 TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FConnection);
             }
         }
+    }
+
+    /**
+     * (non-PHPdoc)
+     * @see TMysqlStatement::DoQuery()
+     * @return	IResultSet
+     */
+    protected function DoQuery() {
+        $this->BindRawParameters();
         return new TMysqlStmtResultSet($this, $this->FMysqliStmt, $this->FConcurrencyType, $this->FResultSetType);
+    }
+
+    /**
+     *
+     * Enter description here ...
+     * @param	mixed	$Value
+     * @param	integer	$Type
+     * @param	integer	$Length
+     */
+    protected function DoFetchAsScalar(&$Value, &$Type, &$Length) {
+        $this->BindRawParameters();
+        parent::DoFetchAsScalar($Value, $Type, $Length);
     }
 
     /**
@@ -1397,27 +1416,8 @@ EOD;
      * @return	integer
      */
     protected function DoExecute($Command) {
-//         $mChunks = preg_split(self::CPattern, $Command, 0, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
-//         foreach ($mChunks as &$mChunk) {
-//             if ($mChunk[0] == ':') {
-//                 $this->FRawParams[] = $mChunk;
-//                 $mChunk = '?';
-//             }
-//         }
-        if ($this->FParams !== null && $this->FParams->Size() > 0) {
-            $mTypes = '';
-            $mParamsRef = array ();
-            foreach ($this->FRawParams as $mKey => &$mParam) {
-                $mTypes .= 's';
-                $mParam = ($this->FParams[$mParam] === null) ? null : $this->FParams[$mParam]->getValue();
-                $mParamsRef[] = &$this->FRawParams[$mKey];
-            }
-            array_unshift($mParamsRef, $mTypes);
-            if (!call_user_func_array(array ($this->FMysqliStmt, 'bind_param'), $mParamsRef)) {
-                TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FConnection);
-            }
-        }
-        if (/*!$this->FMysqliStmt->prepare(implode('', $mChunks)) ||*/ !$this->FMysqliStmt->execute()) {
+        $this->BindRawParameters();
+        if (!$this->FMysqliStmt->execute()) {
             TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FConnection);
         }
         return $this->FMysqliStmt->affected_rows;
@@ -1456,6 +1456,7 @@ EOD;
      */
     public function ClearParams() {
         Framework::Free($this->FParams);
+        $this->FRawParams = array ();
     }
 }
 
@@ -2325,7 +2326,11 @@ class TMysqlResultSet extends TAbstractMysqlResultSet implements IResultSet {
  * @author	许子健
  */
 class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet {
-
+    /**
+     *
+     * @var integer
+     */
+    private $FInsensitiveResultSetCount = -1;
     /**
      *
      * Enter description here ...
@@ -2364,8 +2369,11 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
      * @return	integer
      */
     protected function DoGetCount() {
-        $this->FMysqliStmt->store_result();
-        return $this->FMysqliStmt->num_rows;
+        if ($this->FInsensitiveResultSetCount == -1) {
+            $this->FMysqliStmt->store_result();
+            $this->FInsensitiveResultSetCount = $this->FMysqliStmt->num_rows;
+        }
+        return $this->FInsensitiveResultSetCount;
     }
 
     /**

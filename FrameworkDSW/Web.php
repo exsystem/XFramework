@@ -196,10 +196,9 @@ interface IUrlRouter extends IInterface {
     /**
      * descHere
      *
-     * @param THttpRequest $Request
      * @return string
      */
-    public function ParseUrl($Request = null);
+    public function ParseUrl();
 
     /**
      * descHere
@@ -455,12 +454,22 @@ class THttpRequest extends TObject {
     // TODO Some features are not implemented now, like RESTful ablity! Do not
     // call any method with REST.
 
+
+    /**
+     *
+     * @var string[]
+     */
+    private $FPutParameters = array ();
+    /**
+     *
+     * @var string[]
+     */
+    private $FDeleteParameters = array ();
     /**
      *
      * @var string
      */
-    const CCsrfTokenName = '__FDSW_CSRF_TOKEN';
-
+    private $FCsrfTokenName = '__FDSW_CSRF_TOKEN';
     /**
      *
      * @var string
@@ -485,7 +494,7 @@ class THttpRequest extends TObject {
      *
      * @var string[]
      */
-    private $FResetParameters = array ();
+    private $FRestParameters = array ();
     /**
      *
      * @var string
@@ -524,7 +533,7 @@ class THttpRequest extends TObject {
     protected function CreateCsrfCookie() {
         $mCsrfTokenCookie = new THttpCookie();
         $mCsrfTokenCookie->Value = sha1(uniqid((string) mt_rand(), true));
-        $this->getCookies()->Put(self::CCsrfTokenName, $mCsrfTokenCookie);
+        $this->getCookies()->Put($this->FCsrfTokenName, $mCsrfTokenCookie);
         $this->FCsrfToken = $mCsrfTokenCookie->Value;
         return $mCsrfTokenCookie;
     }
@@ -653,10 +662,10 @@ class THttpRequest extends TObject {
     public function getCsrfToken() {
         if ($this->FCsrfToken == '') {
             $mCookies = $this->getCookies();
-            if (!$mCookies->ContainsKey(self::CCsrfTokenName)) {
+            if (!$mCookies->ContainsKey($this->FCsrfTokenName)) {
                 $this->CreateCsrfCookie();
             }
-            $this->FCsrfToken = $mCookies[self::CCsrfTokenName]->Value;
+            $this->FCsrfToken = $mCookies[$this->FCsrfTokenName]->Value;
         }
 
         return $this->FCsrfToken;
@@ -670,7 +679,50 @@ class THttpRequest extends TObject {
      */
     public function GetDelete($Name) {
         TType::String($Name);
-        return '';
+
+        if ($this->FDeleteParameters == array ()) {
+            $this->FDeleteParameters = $this->getIsDeleteRequest() ? $this->FDeleteParameters : array ();
+        }
+        if (isset($this->FDeleteParameters[$Name])) {
+            return $this->FDeleteParameters[$Name];
+        }
+        else {
+            throw new EInvalidParameter();
+        }
+    }
+
+    /**
+     * descHere
+     *
+     * @param string $Name
+     * @return string
+     */
+    public function GetPut($Name) {
+        TType::String($Name);
+
+        if ($this->FPutParameters == array ()) {
+            $this->FPutParameters = $this->getIsPutRequest() ? $this->FPutParameters : array ();
+        }
+        if (isset($this->FPutParameters[$Name])) {
+            return $this->FPutParameters[$Name];
+        }
+        else {
+            throw new EInvalidParameter();
+        }
+    }
+
+    /**
+     * @return string[]
+     */
+    protected function getRestParameters() {
+        $mResult = array ();
+        if (function_exists('mb_parse_str')) {
+            mb_parse_str(file_get_contents('php://input'), $mResult);
+        }
+        else {
+            parse_str(file_get_contents('php://input'), $mResult);
+        }
+        return $mResult;
     }
 
     /**
@@ -827,7 +879,30 @@ class THttpRequest extends TObject {
      * @return boolean
      */
     public function getIsDeleteRequest() {
-        return false;
+        return (isset($_SERVER['REQUEST_METHOD']) && (strtoupper($_SERVER['REQUEST_METHOD']) == 'DELETE')) || $this->getIsDeleteRequestViaPostRequest();
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getIsDeleteRequestViaPostRequest() {
+        return isset($_POST['_method']) && strtoupper($_POST['_method']) == 'DELETE';
+    }
+
+    /**
+     *
+     * @return boolean
+     */
+    public function getIsPutRequest() {
+        return isset($_SERVER['REQUEST_METHOD']) && (strtoupper($_SERVER['REQUEST_METHOD'] == 'PUT'));
+    }
+
+    /**
+     *
+     * @return boolean
+     */
+    public function getIsPostRequest() {
+        return isset($_SERVER['REQUEST_METHOD']) && (strtoupper($_SERVER['REQUEST_METHOD'] == 'POST'));
     }
 
     /**
@@ -863,6 +938,18 @@ class THttpRequest extends TObject {
      * descHere
      */
     public function ValidateCsrfToken() {
+        if ($this->getIsPostRequest()) {
+            $mCookies = $this->getCookies();
+            if ($mCookies->ContainsKey($this->FCsrfTokenName) && isset($_POST[$this->FCsrfTokenName])) {
+                $mValid = ($mCookies[$this->FCsrfToken] == (string) $_POST[$this->FCsrfTokenName]);
+            }
+            else {
+                $mValid = false;
+            }
+        }
+        if (!$mValid) {
+            throw new EHttpException(400);
+        }
     }
 
     /**
@@ -884,8 +971,7 @@ class THttpRequest extends TObject {
         TType::String($XHeader);
         TType::Bool($Terminate);
         TType::Bool($ForceDownload);
-        TType::Object($AddHeaders, array (
-            'IMap' => array ('K' => 'string', 'V' => 'string')));
+        TType::Object($AddHeaders, array ('IMap' => array ('K' => 'string', 'V' => 'string')));
 
         if ($ForceDownload) {
             $mDisposition = 'attachment';
@@ -899,7 +985,7 @@ class THttpRequest extends TObject {
         }
 
         if ($MimeType == '') { // TODO FIXME should replace with the correct way
-                               // of detecting mime type of the file.
+            // of detecting mime type of the file.
             $MimeType = 'text/plain';
         }
 
@@ -1124,61 +1210,86 @@ class THttpRequest extends TObject {
 }
 
 /**
- * THttpRequestType
+ * THttpMethod
  *
  * @author 许子健
  */
-class THttpRequestType extends TEnum {
+class THttpMethod extends TRecord {
+    /**
+     *
+     * @var string
+     */
+    public $Method = '';
 
     /**
      *
-     * @var integer
+     * @return THttpMethod
      */
-    const eDelete = 4;
-    /**
-     *
-     * @var integer
-     */
-    const eGet = 0;
-    /**
-     *
-     * @var integer
-     */
-    const eHead = 2;
-    /**
-     *
-     * @var integer
-     */
-    const ePost = 1;
-    /**
-     *
-     * @var integer
-     */
-    const ePut = 3;
-}
-
-/**
- * THttpVerb
- *
- * @author 许子健
- */
-final class THttpVerb extends TSet {
+    public static function Delete() {
+        $mResult = new THttpMethod();
+        $mResult->Method = 'DELETE';
+        return $mResult;
+    }
 
     /**
      *
-     * @var integer
+     * @return THttpMethod
      */
-    const eDelete = 2;
+    public static function Get() {
+        $mResult = new THttpMethod();
+        $mResult->Method = 'GET';
+        return $mResult;
+    }
+
     /**
      *
-     * @var integer
+     * @return THttpMethod
      */
-    const eGet = 0;
+    public static function Head() {
+        $mResult = new THttpMethod();
+        $mResult->Method = 'HEAD';
+        return $mResult;
+    }
+
     /**
      *
-     * @var integer
+     * @return THttpMethod
      */
-    const ePost = 1;
+    public static function Options() {
+        $mResult = new THttpMethod();
+        $mResult->Method = 'OPTIONS';
+        return $mResult;
+    }
+
+    /**
+     *
+     * @return THttpMethod
+     */
+    public static function Post() {
+        $mResult = new THttpMethod();
+        $mResult->Method = 'POST';
+        return $mResult;
+    }
+
+    /**
+     *
+     * @return THttpMethod
+     */
+    public static function Put() {
+        $mResult = new THttpMethod();
+        $mResult->Method = 'PUT';
+        return $mResult;
+    }
+
+    /**
+     *
+     * @return THttpMethod
+     */
+    public static function Trace() {
+        $mResult = new THttpMethod();
+        $mResult->Method = 'TRACE';
+        return $mResult;
+    }
 }
 
 /**
@@ -1273,8 +1384,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
      */
     protected function CreateDefaultUrl($Route, $Parameters = null, $Ampersand = '&') {
         TType::String($Route);
-        TType::Object($Parameters, array (
-            'IMap' => array ('K' => 'string', 'V' => 'string')));
+        TType::Object($Parameters, array ('IMap' => array ('K' => 'string', 'V' => 'string')));
         TType::String($Ampersand);
 
         $mQueryString = $this->CreatePathInfo($Parameters, '=', $Ampersand);
@@ -1371,8 +1481,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
      * @return string
      */
     public function CreatePathInfo($Parameters, $Equal = '=', $Ampersand = '&') {
-        TType::Object($Parameters, array (
-            'IMap' => array ('K' => 'string', 'V' => 'string')));
+        TType::Object($Parameters, array ('IMap' => array ('K' => 'string', 'V' => 'string')));
         TType::String($Equal);
         TType::String($Ampersand);
 
@@ -1394,8 +1503,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
      */
     public function CreateUrl($Route, $Parameters = null, $Ampersand = '&') {
         TType::String($Route);
-        TType::Object($Parameters, array (
-            'IMap' => array ('K' => 'string', 'V' => 'string')));
+        TType::Object($Parameters, array ('IMap' => array ('K' => 'string', 'V' => 'string')));
         TType::String($Ampersand);
 
         TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'string'));
@@ -1560,23 +1668,17 @@ class TUrlRouter extends TObject implements IUrlRouter {
     /**
      * descHere
      *
-     * @param THttpRequest $Request
      * @return string
      */
-    public function ParseUrl($Request = null) {
-        TType::Object($Request, 'THttpRequest');
-
-        if ($Request === null) {
-            $Request = $this->FRequest;
-        }
-
+    public function ParseUrl() {
+        $mRequest = $this->FRequest;
         switch ($this->FUrlMode) {
             case TUrlMode::ePath() :
-                $mRawPathInfo = $Request->getPathInfo();
+                $mRawPathInfo = $mRequest->getPathInfo();
                 $mPathInfo = $this->RemoveUrlSuffix($mRawPathInfo, $this->getUrlSuffix());
                 foreach ($this->FRules as $mRule) {
                     try {
-                        $mRoute = $mRule->ParseUrl($this, $Request, $mPathInfo, $mRawPathInfo);
+                        $mRoute = $mRule->ParseUrl($this, $mRequest, $mPathInfo, $mRawPathInfo);
                     }
                     catch (EParseUrlFailed $Ex) {
                         continue;
@@ -1834,9 +1936,9 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
     private $FUseInheritedSuffix = false;
     /**
      *
-     * @var THttpVerb
+     * @var THttpMethod[]
      */
-    private $FVerb = null;
+    private $FVerb = array();
 
     /**
      * descHere
@@ -1863,14 +1965,12 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
         if (strpos($Route, '<') !== false && preg_match_all('/<(\w+)>/', $Route, $mReferences)) {
             TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'string'));
             $this->FReferences = new TMap();
-            foreach ($mReferences[1] as $mRefernce) {
-                $this->FReferences->Put($mRefernce, "<{$mRefernce}>");
+            foreach ($mReferences[1] as $mReference) {
+                $this->FReferences->Put($mReference, "<{$mReference}>");
             }
         }
 
         $this->FHasHostInfo = !strncasecmp($Pattern, 'http://', 7) || !strncasecmp($Pattern, 'https://', 8);
-
-        $this->FVerb = new THttpVerb();
 
         if (preg_match_all('/<(\w+):?(.*?)?>/', $Pattern, $mParameters)) {
             TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'string'));
@@ -1894,7 +1994,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
         $mPattern = rtrim($Pattern, '*');
         $this->FAppend = ($mPattern != $Pattern);
         $mPattern = trim($mPattern, '/');
-        $this->FTemplate = preg_replace('/<(\w+):.*?>/', '<$1>', $mPattern);
+        $this->FTemplate = preg_replace('/<(\w+):?.*?>/', '<$1>', $mPattern);
         $this->FPattern = '/^' . strtr($this->FTemplate, $mTr) . '\/';
         if ($this->FAppend) {
             $this->FPattern .= '/u';
@@ -1932,8 +2032,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
     public function CreateUrl($Router, $Route, $Parameters = null, $Ampersand = '&') {
         TType::Object($Router, 'TUrlRouter');
         TType::String($Route);
-        TType::Object($Parameters, array (
-            'IMap' => array ('K' => 'string', 'V' => 'string')));
+        TType::Object($Parameters, array ('IMap' => array ('K' => 'string', 'V' => 'string')));
         TType::String($Ampersand);
 
         if ($this->FParsingOnly) {
@@ -2174,7 +2273,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
     /**
      * descHere
      *
-     * @return THttpVerb
+     * @return THttpMethod[]
      */
     public function getVerb() {
         return $this->FVerb;
@@ -2301,8 +2400,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
      *            <K: string, V: string>
      */
     public function setDefaultParameters($Value) {
-        TType::Object($Value, array (
-            'IMap' => array ('K' => 'string', 'V' => 'string')));
+        TType::Object($Value, array ('IMap' => array ('K' => 'string', 'V' => 'string')));
         Framework::Free($this->FDefaultParameters);
         $this->FDefaultParameters = $Value;
     }
@@ -2324,8 +2422,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
      *            <K: string, V: string>
      */
     public function setParameters($Value) {
-        TType::Object($Value, array (
-            'IMap' => array ('K' => 'string', 'V' => 'string')));
+        TType::Object($Value, array ('IMap' => array ('K' => 'string', 'V' => 'string')));
         Framework::Free($this->FParameters);
         $this->FParameters = $Value;
     }
@@ -2357,8 +2454,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
      *            <K: string, V: string>
      */
     public function setReferences($Value) {
-        TType::Object($Value, array (
-            'IMap' => array ('K' => 'string', 'V' => 'string')));
+        TType::Object($Value, array ('IMap' => array ('K' => 'string', 'V' => 'string')));
         Framework::Free($this->FReferences);
         $this->FReferences = $Value;
     }
@@ -2445,10 +2541,10 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
     /**
      * descHere
      *
-     * @param THttpVerb $Value
+     * @param THttpMethod[] $Value
      */
     public function setVerb($Value) {
-        TType::Type($Value, 'THttpVerb');
+        TType::Arr($Value);
         $this->FVerb = $Value;
     }
 }
