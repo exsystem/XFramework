@@ -412,6 +412,7 @@ class TJsonView extends TComponent implements IView {
                     $mStatusStack[] = array (self::CData => $Item,
                             self::CInsertionPoint => &$mInsertionPoint);
                 }
+                $mCurrentInsertionPoint = $mArray;
             }
             elseif (($mCurrentData instanceof IMap && in_array($mCurrentData->GenericArg('K'), array (
                     'string', 'TString'))) || $mCurrentData instanceof TRecord) {
