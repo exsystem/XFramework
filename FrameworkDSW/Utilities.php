@@ -147,16 +147,16 @@ final class TType extends TObject {
             return;
         }
 
-        if (is_string($Type) && (!$Var instanceof $Type)) {
+        if (is_string($Type) && (!($Var instanceof $Type))) {
             throw new EInvalidObjectCasting();
         }
         elseif (is_array($Type)) { // should be an array then.
             $mClass = array_keys($Type);
             $mClass = (string) $mClass[0];
-            if (($mClass=='TPair') && ($Var instanceof $mClass)) {
+            if (($mClass == 'TPair') && ($Var instanceof $mClass)) {
                 return;
             }
-            if ((!$Var instanceof $mClass) || ($Type[$mClass] + $Var->GenericArgs() != $Var->GenericArgs())) {
+            if (($Var instanceof $mClass) && ($Type[$mClass] + $Var->GenericArgs() != $Var->GenericArgs())) {
                 $mTypeOfClass = $Type[$mClass];
                 array_walk_recursive($mTypeOfClass, function ($mValue, $mIndex) use (&$mTypeOfClass) {
                     switch ($mValue) {
