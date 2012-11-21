@@ -79,19 +79,19 @@ class TMysqlValueTypeMapper extends TObject {
         if (count(self::$FTypeMappingTable) == 0) {
             self::$FTypeMappingTable = array (MYSQLI_TYPE_BIT => 'integer',
                 MYSQLI_TYPE_BLOB => 'string', MYSQLI_TYPE_CHAR => 'string',
-                MYSQLI_TYPE_DATE => 'todo', MYSQLI_TYPE_DATETIME => 'todo',
+                MYSQLI_TYPE_DATE => 'string', MYSQLI_TYPE_DATETIME => 'string', //TODO: date,datetime->string
                 MYSQLI_TYPE_DECIMAL => 'string', MYSQLI_TYPE_DOUBLE => 'string',
                 MYSQLI_TYPE_ENUM => 'integer', MYSQLI_TYPE_FLOAT => 'float',
                 MYSQLI_TYPE_GEOMETRY => 'todo', MYSQLI_TYPE_INT24 => 'integer',
                 MYSQLI_TYPE_INTERVAL => 'integer', MYSQLI_TYPE_LONG => 'integer',
                 MYSQLI_TYPE_LONG_BLOB => 'string',
                 MYSQLI_TYPE_LONGLONG => 'integer',
-                MYSQLI_TYPE_MEDIUM_BLOB => 'todo', MYSQLI_TYPE_NEWDATE => 'todo',
+                MYSQLI_TYPE_MEDIUM_BLOB => 'string', MYSQLI_TYPE_NEWDATE => 'string', //TODO: blob->string? newdate->string?
                 MYSQLI_TYPE_NEWDECIMAL => 'float', MYSQLI_TYPE_SET => 'integer',
                 MYSQLI_TYPE_SHORT => 'integer', MYSQLI_TYPE_STRING => 'string',
-                MYSQLI_TYPE_TIME => 'todo', MYSQLI_TYPE_TIMESTAMP => 'todo',
-                MYSQLI_TYPE_TINY => 'integer', MYSQLI_TYPE_TINY_BLOB => 'todo',
-                MYSQLI_TYPE_VAR_STRING => 'string', MYSQLI_TYPE_YEAR => 'todo');
+                MYSQLI_TYPE_TIME => 'integer', MYSQLI_TYPE_TIMESTAMP => 'integer', //TODO: time, timestamp->integer?
+                MYSQLI_TYPE_TINY => 'integer', MYSQLI_TYPE_TINY_BLOB => 'string', //TODO: blob->string?
+                MYSQLI_TYPE_VAR_STRING => 'string', MYSQLI_TYPE_YEAR => 'integer'); //TODO: year->integer?
         }
         //TODO: more mapping to do...
         return self::$FTypeMappingTable[$MysqliType];

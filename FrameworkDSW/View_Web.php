@@ -402,7 +402,7 @@ class TJsonView extends TComponent implements IView {
                 $mStatusStack[] = array (self::CData => $mCurrentData->Value,
                         self::CInsertionPoint => &$mInsertionPoint);
             }
-            elseif ($mCurrentData instanceof IList) {
+            elseif ($mCurrentData instanceof IList || is_array($mCurrentData)) {
                 unset($mArray);
                 $mArray = array ();
                 foreach ($mCurrentData as $Item) {
