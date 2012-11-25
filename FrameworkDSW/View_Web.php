@@ -335,8 +335,7 @@ class TWebPage extends TComponent implements IView {
      *            <K: string, V: IInterface>
      */
     public function Update($ViewData) {
-        TType::Object($ViewData, array (
-                'IMap' => array ('K' => 'string', 'V' => 'IInterface')));
+        TType::Object($ViewData, array ('IMap' => array ('K' => 'string', 'V' => 'IInterface')));
         $this->FViewData = $ViewData;
 
         require_once $this->FTemplate;
@@ -361,18 +360,38 @@ class TJsonView extends TComponent implements IView {
     const CInsertionPoint = 1;
 
     /**
+     *
+     * @var string
+     */
+    private $FJsonpCallback = '';
+
+    /**
+     * @return string
+     */
+    public function getJsonpCallback() {
+        return $this->FJsonpCallback;
+    }
+
+    /**
+     *
+     * @param string $Value
+     */
+    public function setJsonpCallback($Value) {
+        TType::String($Value);
+        $this->FJsonpCallback = $Value;
+    }
+
+    /**
      *  (non-PHPdoc)
      * @see IView::Update()
      * @param IMap $ViewData <K: string, V: IInterface>
      */
     public function Update($ViewData) {
-        TType::Object($ViewData, array (
-                'IMap' => array ('K' => 'string', 'V' => 'IInterface')));
+        TType::Object($ViewData, array ('IMap' => array ('K' => 'string', 'V' => 'IInterface')));
 
         $mResult = null;
         $mStatusStack = array ();
-        $mStatusStack[] = array (self::CData => $ViewData,
-                self::CInsertionPoint => &$mResult);
+        $mStatusStack[] = array (self::CData => $ViewData, self::CInsertionPoint => &$mResult);
 
         while (count($mStatusStack) > 0) {
             unset($mCurrentStatus);
@@ -399,8 +418,7 @@ class TJsonView extends TComponent implements IView {
                 }
                 unset($mInsertionPoint);
                 $mInsertionPoint = &$mCurrentInsertionPoint[$mCurrentData->Key];
-                $mStatusStack[] = array (self::CData => $mCurrentData->Value,
-                        self::CInsertionPoint => &$mInsertionPoint);
+                $mStatusStack[] = array (self::CData => $mCurrentData->Value, self::CInsertionPoint => &$mInsertionPoint);
             }
             elseif ($mCurrentData instanceof IList || is_array($mCurrentData)) {
                 unset($mArray);
@@ -409,21 +427,18 @@ class TJsonView extends TComponent implements IView {
                     unset($mInsertionPoint);
                     $mInsertionPoint = null;
                     $mArray[] = &$mInsertionPoint;
-                    $mStatusStack[] = array (self::CData => $Item,
-                            self::CInsertionPoint => &$mInsertionPoint);
+                    $mStatusStack[] = array (self::CData => $Item, self::CInsertionPoint => &$mInsertionPoint);
                 }
                 $mCurrentInsertionPoint = $mArray;
             }
-            elseif (($mCurrentData instanceof IMap && in_array($mCurrentData->GenericArg('K'), array (
-                    'string', 'TString'))) || $mCurrentData instanceof TRecord) {
+            elseif (($mCurrentData instanceof IMap && in_array($mCurrentData->GenericArg('K'), array ('string', 'TString'))) || $mCurrentData instanceof TRecord) {
                 unset($mArray);
                 $mArray = array ();
                 foreach ($mCurrentData as $mItemKey => $mItemData) {
                     unset($mInsertionPoint);
                     $mInsertionPoint = null;
                     $mArray[$mItemKey] = &$mInsertionPoint;
-                    $mStatusStack[] = array (self::CData => $mItemData,
-                            self::CInsertionPoint => &$mInsertionPoint);
+                    $mStatusStack[] = array (self::CData => $mItemData, self::CInsertionPoint => &$mInsertionPoint);
                 }
                 if (count($mArray) == 0) {
                     $mCurrentInsertionPoint = new stdClass();
@@ -436,7 +451,13 @@ class TJsonView extends TComponent implements IView {
                 throw new EInvalidParameter();
             }
         }
-        echo json_encode($mResult);
+
+        if ($this->FJsonpCallback == '') {
+            echo json_encode($mResult);
+        }
+        else {
+            echo $this->FJsonpCallback, '(', json_encode($mResult), ')';
+        }
         ob_end_flush();
     }
 }
