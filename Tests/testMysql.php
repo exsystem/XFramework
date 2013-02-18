@@ -1,8 +1,8 @@
 <?php
 //set_include_path(get_include_path() . ':/media/ExSystem-HD/Documents/ZendStudioWorkspace/FrameworkDSW');
 //set_include_path(get_include_path().';E:\\Documents\\ZendStudioWorkspace\\FrameworkDSW');
-set_include_path(get_include_path() . ':/Volumes/ExSystem-HD/Documents/ZendStudioWorkspace/FrameworkDSW');
-
+//set_include_path(get_include_path() . ':/Volumes/ExSystem-HD/Documents/ZendStudioWorkspace/FrameworkDSW');
+set_include_path(get_include_path() . ':/Users/exsystem/Documents/ZendStudioWorkspace/FrameworkDSW');
 require_once 'FrameworkDSW/Database_Mysql.php';
 
 $mDriver = new TMysqlDriver();
@@ -11,7 +11,7 @@ $mConfig = new TMap();
 $mConfig['Username'] = 'root';
 $mConfig['Password'] = '';
 $mConfig['ConnectTimeout'] = '2';
-//$mConfig['Socket']='/Applications/XAMPP/xamppfiles/var/mysql/mysql.sock';
+$mConfig['Socket']='/Applications/XAMPP/xamppfiles/var/mysql/mysql.sock';
 
 
 $mConn = $mDriver->Connect('MySQL://localhost/test', $mConfig);
@@ -58,11 +58,17 @@ TPrimitiveParam::PrepareGeneric(array('T'=>'float'));
 $d=new TPrimitiveParam(1.5);
 $mSt->BindParam(':d', $d);
 $rrr=$mSt->Execute();
+echo $rrr, "\r\n";
 
+Framework::Free($mSt);
 
+echo $mConn->Execute("PREPARE sDel FROM 'DELETE FROM `tmysqlconnectiontest` WHERE `id`=?'");
+echo $mConn->Execute("SET @idd = 1");
+echo $mConn->Execute("EXECUTE sDel USING @idd");
+echo 'DONE!!', "\r\n";
 
 $mStmt = $mConn->CreateStatement(TResultSetType::eScrollSensitive(), TConcurrencyType::eUpdatable());
-$mRs = $mStmt->Query('select * from tmysqlconnectiontest');
+$mRs = $mStmt->Query('select id,_int,_bool,_vchar,_float from tmysqlconnectiontest order by id');
 $mRow=$mRs->current();
 
 
@@ -78,7 +84,12 @@ foreach ($mRs as $mRow) {
     $mRow->Update(); //memory leak
     echo $mRow['_vchar']->getValue(); //memory leak
 
-    $mRow->Delete();
+    try {
+        $mRow->Delete();
+    }
+    catch(EException $Ex) {
+        var_dump($Ex);
+    }
 }
 
 Framework::Free($mRs);

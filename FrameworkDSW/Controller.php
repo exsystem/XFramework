@@ -373,5 +373,8 @@ class TControllerManager extends TObject implements IControllerManager {
             }
             Framework::Free($mViewData);
         }
+        else {
+            throw new EInvalidParameter();
+        }
     }
 }

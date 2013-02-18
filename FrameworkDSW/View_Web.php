@@ -338,6 +338,7 @@ class TWebPage extends TComponent implements IView {
         TType::Object($ViewData, array ('IMap' => array ('K' => 'string', 'V' => 'IInterface')));
         $this->FViewData = $ViewData;
 
+        ob_clean();
         require_once $this->FTemplate;
         ob_end_flush();
     }
@@ -452,6 +453,7 @@ class TJsonView extends TComponent implements IView {
             }
         }
 
+        ob_clean();
         if ($this->FJsonpCallback == '') {
             echo json_encode($mResult);
         }
