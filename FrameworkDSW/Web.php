@@ -397,7 +397,7 @@ class THttpCookies extends TMap {
      */
     public function __construct($Request) {
         TType::Object($Request, 'THttpRequest');
-        self::PrepareGeneric(array ('K' => 'string', 'V' => 'THttpCookie'));
+        self::PrepareGeneric(array('K' => 'string', 'V' => 'THttpCookie'));
         parent::__construct();
 
         $this->FRequest = $Request;
@@ -446,6 +446,501 @@ class THttpCookies extends TMap {
 }
 
 /**
+ * IHttpSessionStorage
+ * @author	许子健
+ */
+interface IHttpSessionStorage extends IInterface {
+
+    /**
+     * descHere
+     */
+    public function Close();
+
+    /**
+     * descHere
+     * @param	string	$SessionId
+     */
+    public function Delete($SessionId);
+
+    /**
+     * descHere
+     * @param	string	$SavePath
+     * @param	string	$Name
+     */
+    public function Open($SavePath, $Name);
+
+    /**
+     * descHere
+     * @param	string	$MaxLifeTime
+     */
+    public function Purge($MaxLifeTime);
+
+    /**
+     * descHere
+     * @param	string	$SessionId
+     * @return string
+     */
+    public function Read($SessionId);
+
+    /**
+     * descHere
+     * @param	string	$SessionId
+     * @param	string	$SessionData
+     */
+    public function Write($SessionId, $SessionData);
+
+}
+
+/**
+ * TSessionCookieMode
+ * @author	许子健
+ */
+class TSessionCookieMode extends TEnum {
+
+    /**
+     * @var	integer
+     */
+    const eNone = 0;
+    /**
+     * @var	integer
+     */
+    const eAllow = 1;
+    /**
+     * @var	integer
+     */
+    const eOnly = 2;
+
+}
+
+/**
+ * THttpSession
+ * extends TAbstractMap<K: string, V: mixed>
+ * @author	许子健
+ */
+class THttpSession extends TAbstractMap {
+
+    /**
+     *
+     * @var IHttpSessionStorage
+     */
+    private $FStorage = null;
+
+    /**
+     * descHere
+     * @param    boolean $AutoStart
+     * @param	IHttpSessionStorage	$Storage
+     */
+    public function __construct($AutoStart = true, $Storage = null) {
+        TType::Bool($AutoStart);
+        TType::Object($Storage, 'IHttpSessionStorage');
+        $this->PrepareMethodGeneric(array('K' => 'string', 'V' => 'mixed', 'T' => array('TPair' => array('K' => 'string', 'V' => 'mixed'))));
+        parent::__construct(false);
+        ini_set('session.gc_probability', 1);
+        ini_set('session.gc_divisor', 100);
+        $this->FStorage = $Storage;
+        if ($AutoStart) {
+            $this->Open();
+        }
+    }
+
+    /**
+     * (non-PHPdoc)
+     * @see TAbstractCollection::Destroy()
+     */
+    public function Destroy() {
+        $this->Close();
+        parent::Destroy();
+    }
+
+    /**
+     * descHere
+     */
+    public function Close() {
+        if (session_id() !== '') {
+            session_write_close();
+        }
+    }
+
+    /**
+     * descHere
+     */
+    public function Clear() {
+        session_unset();
+    }
+
+    /**
+     * descHere
+     * @param	K	$Key
+     * @return	boolean
+     */
+    protected function DoContainsKey($Key) {
+        return isset($_SESSION[$Key]);
+    }
+
+    /**
+     * descHere
+     * @param	K	$Key
+     */
+    protected function DoDelete($Key) {
+        unset($_SESSION[$Key]);
+    }
+
+    /**
+     * descHere
+     * @param	K	$Key
+     * @return	V
+     */
+    protected function DoGet($Key) {
+        return $_SESSION[$Key];
+    }
+
+    /**
+     * descHere
+     * @param	K	$Key
+     * @param	V	$Value
+     */
+    protected function DoPut($Key, $Value) {
+        $_SESSION[$Key] = $Value;
+    }
+
+    /**
+     * descHere
+     * @return	string
+     */
+    public function getCookieDomain() {
+        return session_get_cookie_params()['domain'];
+    }
+
+    /**
+     * descHere
+     * @return	boolean
+     */
+    public function getCookieHttpOnly() {
+        return session_get_cookie_params()['httponly'];
+    }
+
+    /**
+     * descHere
+     * @return	integer
+     */
+    public function getCookieLifeTime() {
+        return session_get_cookie_params()['lifetime'];
+    }
+
+    /**
+     * descHere
+     * @return	TSessionCookieMode
+     */
+    public function getCookieMode() {
+        if (ini_get('session.use_cookies') === '0') {
+            return TSessionCookieMode::eNone();
+        }
+        elseif (ini_get('session.use_only_cookies') === '0') {
+            return TSessionCookieMode::eAllow();
+        }
+        else {
+            return TSessionCookieMode::eOnly();
+        }
+    }
+
+    /**
+     * descHere
+     * @return	string
+     */
+    public function getCookiePath() {
+        return session_get_cookie_params()['path'];
+    }
+
+    /**
+     * descHere
+     * @return	float
+     */
+    public function getGcProbability() {
+        return (float) (ini_get('session.gc_probability') / ini_get('session.gc_divisor') * 100);
+    }
+
+    /**
+     * descHere
+     * @return	boolean
+     */
+    public function getIsStarted() {
+        return session_id() !== '';
+    }
+
+    /**
+     * descHere
+     * @return	string
+     */
+    public function getSavePath() {
+        return session_save_path();
+    }
+
+    /**
+     * descHere
+     * @return	string
+     */
+    public function getSessionId() {
+        return session_id();
+    }
+
+    /**
+     * descHere
+     * @return	string
+     */
+    public function getSessionName() {
+        return session_name();
+    }
+
+    /**
+     * descHere
+     * @return	IHttpSessionStorage
+     */
+    public function getStorage() {
+        return $this->FStorage;
+    }
+
+    /**
+     * descHere
+     * @return	integer
+     */
+    public function getTimeout() {
+        return (integer) ini_get('session.gc_maxlifetime');
+    }
+
+    /**
+     * descHere
+     * @return	boolean
+     */
+    public function getUseTransparentSessionId() {
+        return ini_get('session.use_trans_sid') === '1';
+    }
+
+    /**
+     * descHere
+     */
+    public function Open() {
+        if ($this->FStorage !== null) {
+            $mSelf = $this;
+            session_set_save_handler(function ($SavePath, $Name) use ($mSelf) {
+                try {
+                    $mSelf->FStorage->Open($SavePath, $Name);
+                    return true;
+                }
+                catch (EException $Ex) {
+                    return false;
+                }
+            }, function () use ($mSelf) {
+                try {
+                    $mSelf->FStorage->Close();
+                    return true;
+                }
+                catch (EException $Ex) {
+                    return false;
+                }
+            }, function ($SessionId) use ($mSelf) {
+                try {
+                    return $mSelf->FStorage->Read($SessionId);
+                }
+                catch (EException $Ex) {
+                    return '';
+                }
+            }, function ($SessionId, $SessionData) use ($mSelf) {
+                try {
+                    $mSelf->FStorage->Write($SessionId, $SessionData);
+                    return true;
+                }
+                catch (EException $Ex) {
+                    return false;
+                }
+            }, function ($SessionId) use ($mSelf) {
+                try {
+                    $mSelf->FStorage->Delete($SessionId);
+                    return true;
+                }
+                catch (EException $Ex) {
+                    return false;
+                }
+            }, function ($MaxLifeTime) use ($mSelf) {
+                try {
+                    $mSelf->FStorage->Purge($MaxLifeTime);
+                    return true;
+                }
+                catch (EException $Ex) {
+                    return false;
+                }
+            });
+        }
+        session_start();
+        if (session_id() === '') {
+            throw new EException();//TODO detail info here.
+        }
+    }
+
+    /**
+     * descHere
+     */
+    public function Purge() {
+        if (session_id() !== '') {
+            session_unset();
+            session_destroy();
+        }
+    }
+
+    /**
+     * descHere
+     * @param	boolean	$DeleteOldSession
+     */
+    public function RegenerateId($DeleteOldSession = false) {
+        TType::Bool($DeleteOldSession);
+        session_regenerate_id($DeleteOldSession);
+    }
+
+    /**
+     * descHere
+     * @param	string	$Value
+     */
+    public function setCookieDomain($Value) {
+        TType::String($Value);
+        $mParams = session_get_cookie_params();
+        session_set_cookie_params($mParams['lifetime'], $mParams['path'], $Value);
+    }
+
+    /**
+     * descHere
+     * @param	boolean	$Value
+     */
+    public function setCookieHttpOnly($Value) {
+        TType::Bool($Value);
+        $mParams = session_get_cookie_params();
+        session_set_cookie_params($mParams['lifetime'], $mParams['path'], $mParams['domain'], $mParams['secure'], $Value);
+    }
+
+    /**
+     * descHere
+     * @param	integer	$Value
+     */
+    public function setCookieLifeTime($Value) {
+        TType::Int($Value);
+        $mParams = session_get_cookie_params();
+        session_set_cookie_params($Value, $mParams['path'], $mParams['domain'], $mParams['secure'], $mParams['httponly']);
+    }
+
+    /**
+     * descHere
+     * @param	TSessionCookieMode	$Value
+     */
+    public function setCookieMode($Value) {
+        TType::Object($Value, 'TSessionCookieMode');
+
+        switch ($Value) {
+        case TSessionCookieMode::eNone():
+            ini_set('session.use_cookies', '0');
+            ini_set('session.use_only_cookies', '0');
+            break;
+        case TSessionCookieMode::eAllow():
+            ini_set('session.use_cookies', '1');
+            ini_set('session.use_only_cookies', '0');
+            break;
+        case TSessionCookieMode::eOnly():
+            ini_set('session.use_cookies', '1');
+            ini_set('session.use_only_cookies', '1');
+            break;
+        }
+    }
+
+    /**
+     * descHere
+     * @param	string	$Value
+     */
+    public function setCookiePath($Value) {
+        TType::Int($Value);
+        $mParams = session_get_cookie_params();
+        session_set_cookie_params($Value, $mParams['path'], $mParams['domain'], $mParams['secure'], $mParams['httponly']);
+    }
+
+    /**
+     * descHere
+     * @param	float	$Value
+     */
+    public function setGcProbability($Value) {
+        TType::Float($Value);
+        if ($Value >= 0 && $Value <= 100) {
+            // percent * 21474837 / 2147483647 ≈ percent * 0.01
+            ini_set('session.gc_probability', floor($Value * 21474836.47));
+            ini_set('session.gc_divisor', 2147483647);
+        }
+        else {
+            throw new EInvalidParameter();
+        }
+    }
+
+    /**
+     * descHere
+     * @param	string	$Value
+     */
+    public function setSavePath($Value) {
+        TType::String($Value);
+        if ($this->FStorage === null && !is_dir($Value)) {
+            throw new EInvalidParameter();
+        }
+        else {
+            session_save_path($Value);
+        }
+    }
+
+    /**
+     * descHere
+     * @param	string	$Value
+     */
+    public function setSessionId($Value) {
+        TType::String($Value);
+        session_id($Value);
+    }
+
+    /**
+     * descHere
+     * @param	string	$Value
+     */
+    public function setSessionName($Value) {
+        TType::String($Value);
+        session_name($Value);
+    }
+
+    /**
+     * descHere
+     * @param	IHttpSessionStorage	$Storage
+     */
+    public function setStorage($Storage) {
+        TType::Object($Storage, 'IHttpSessionStorage');
+        if ($this->getIsStarted()) {
+            throw new EInvalidParameter();
+        }
+        else {
+            $this->FStorage = $Storage;
+        }
+    }
+
+    /**
+     * descHere
+     * @param	integer	$Value
+     */
+    public function setTimeout($Value) {
+        TType::Int($Value);
+        ini_set('session.gc_maxlifetime', $Value);
+    }
+
+    /**
+     * descHere
+     * @param	boolean	$Value
+     */
+    public function setUseTransparentSessionId($Value) {
+        TType::Bool($Value);
+        ini_set('session.use_trans_sid', $Value);
+    }
+
+}
+
+/**
  * THttpRequest
  *
  * @author 许子健
@@ -454,17 +949,16 @@ class THttpRequest extends TObject {
     // TODO Some features are not implemented now, like RESTful ablity! Do not
     // call any method with REST.
 
-
     /**
      *
      * @var string[]
      */
-    private $FPutParameters = array ();
+    private $FPutParameters = array();
     /**
      *
      * @var string[]
      */
-    private $FDeleteParameters = array ();
+    private $FDeleteParameters = array();
     /**
      *
      * @var string
@@ -494,7 +988,7 @@ class THttpRequest extends TObject {
      *
      * @var string[]
      */
-    private $FRestParameters = array ();
+    private $FRestParameters = array();
     /**
      *
      * @var string
@@ -631,7 +1125,7 @@ class THttpRequest extends TObject {
             throw new EBrowscapNotEnabled();
         }
 
-        TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'string'));
+        TMap::PrepareGeneric(array('K' => 'string', 'V' => 'string'));
         $mResult = new TMap();
         foreach ($mRaw as $mKey => &$mValue) {
             if (is_bool($mValue)) {
@@ -680,8 +1174,8 @@ class THttpRequest extends TObject {
     public function GetDelete($Name) {
         TType::String($Name);
 
-        if ($this->FDeleteParameters == array ()) {
-            $this->FDeleteParameters = $this->getIsDeleteRequest() ? $this->FDeleteParameters : array ();
+        if ($this->FDeleteParameters == array()) {
+            $this->FDeleteParameters = $this->getIsDeleteRequest() ? $this->FDeleteParameters : array();
         }
         if (isset($this->FDeleteParameters[$Name])) {
             return $this->FDeleteParameters[$Name];
@@ -700,8 +1194,8 @@ class THttpRequest extends TObject {
     public function GetPut($Name) {
         TType::String($Name);
 
-        if ($this->FPutParameters == array ()) {
-            $this->FPutParameters = $this->getIsPutRequest() ? $this->FPutParameters : array ();
+        if ($this->FPutParameters == array()) {
+            $this->FPutParameters = $this->getIsPutRequest() ? $this->FPutParameters : array();
         }
         if (isset($this->FPutParameters[$Name])) {
             return $this->FPutParameters[$Name];
@@ -715,7 +1209,7 @@ class THttpRequest extends TObject {
      * @return string[]
      */
     protected function getRestParameters() {
-        $mResult = array ();
+        $mResult = array();
         if (function_exists('mb_parse_str')) {
             mb_parse_str(file_get_contents('php://input'), $mResult);
         }
@@ -971,7 +1465,7 @@ class THttpRequest extends TObject {
         TType::String($XHeader);
         TType::Bool($Terminate);
         TType::Bool($ForceDownload);
-        TType::Object($AddHeaders, array ('IMap' => array ('K' => 'string', 'V' => 'string')));
+        TType::Object($AddHeaders, array('IMap' => array('K' => 'string', 'V' => 'string')));
 
         if ($ForceDownload) {
             $mDisposition = 'attachment';
@@ -985,7 +1479,7 @@ class THttpRequest extends TObject {
         }
 
         if ($MimeType == '') { // TODO FIXME should replace with the correct way
-            // of detecting mime type of the file.
+        // of detecting mime type of the file.
             $MimeType = 'text/plain';
         }
 
@@ -1384,45 +1878,45 @@ class TUrlRouter extends TObject implements IUrlRouter {
      */
     protected function CreateDefaultUrl($Route, $Parameters = null, $Ampersand = '&') {
         TType::String($Route);
-        TType::Object($Parameters, array ('IMap' => array ('K' => 'string', 'V' => 'string')));
+        TType::Object($Parameters, array('IMap' => array('K' => 'string', 'V' => 'string')));
         TType::String($Ampersand);
 
         $mQueryString = $this->CreatePathInfo($Parameters, '=', $Ampersand);
         switch ($this->getUrlMode()) {
-            case TUrlMode::ePath() :
-                $mUrl = rtrim($this->getBaseUrl() . "/{$Route}");
-                if ($this->FAppendParameters) {
-                    $mUrl = rtrim("{$mUrl}/" . $this->CreatePathInfo($Parameters, '/', '/'), '/');
-                    if ($Route != '') {
-                        $mUrl .= $this->getUrlSuffix();
-                    }
-                }
-                else {
-                    if ($Route != '') {
-                        $mUrl .= $this->getUrlSuffix();
-                    }
-                    if ($mQueryString != '') {
-                        $mUrl .= "?{$mQueryString}";
-                    }
-                }
-
-                break;
-            case TUrlMode::eGet() :
-                $mUrl = $this->getBaseUrl();
-                if (!$this->getShowScriptName()) {
-                    $mUrl .= '/';
-                }
+        case TUrlMode::ePath():
+            $mUrl = rtrim($this->getBaseUrl() . "/{$Route}");
+            if ($this->FAppendParameters) {
+                $mUrl = rtrim("{$mUrl}/" . $this->CreatePathInfo($Parameters, '/', '/'), '/');
                 if ($Route != '') {
-                    $mUrl .= "?{$this->FRouteVariableName}={$Route}";
-
-                    if ($mQueryString != '') {
-                        $mUrl .= "{$Ampersand}{$mQueryString}";
-                    }
+                    $mUrl .= $this->getUrlSuffix();
                 }
-                elseif ($mQueryString != '') {
+            }
+            else {
+                if ($Route != '') {
+                    $mUrl .= $this->getUrlSuffix();
+                }
+                if ($mQueryString != '') {
                     $mUrl .= "?{$mQueryString}";
                 }
-                break;
+            }
+
+            break;
+        case TUrlMode::eGet():
+            $mUrl = $this->getBaseUrl();
+            if (!$this->getShowScriptName()) {
+                $mUrl .= '/';
+            }
+            if ($Route != '') {
+                $mUrl .= "?{$this->FRouteVariableName}={$Route}";
+
+                if ($mQueryString != '') {
+                    $mUrl .= "{$Ampersand}{$mQueryString}";
+                }
+            }
+            elseif ($mQueryString != '') {
+                $mUrl .= "?{$mQueryString}";
+            }
+            break;
         }
         return $mUrl;
     }
@@ -1439,7 +1933,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
 
         $this->FUrlMode = TUrlMode::ePath();
 
-        TLinkedList::PrepareGeneric(array ('T' => 'IUrlRouteRule'));
+        TLinkedList::PrepareGeneric(array('T' => 'IUrlRouteRule'));
         $this->FRules = new TLinkedList(true);
         $this->FRequest = $HttpRequest;
     }
@@ -1481,11 +1975,11 @@ class TUrlRouter extends TObject implements IUrlRouter {
      * @return string
      */
     public function CreatePathInfo($Parameters, $Equal = '=', $Ampersand = '&') {
-        TType::Object($Parameters, array ('IMap' => array ('K' => 'string', 'V' => 'string')));
+        TType::Object($Parameters, array('IMap' => array('K' => 'string', 'V' => 'string')));
         TType::String($Equal);
         TType::String($Ampersand);
 
-        $mPairs = array ();
+        $mPairs = array();
         foreach ($Parameters as $mKey => $mValue) {
             $mPairs[] = urlencode($mKey) . $Equal . urlencode($mValue);
         }
@@ -1503,10 +1997,10 @@ class TUrlRouter extends TObject implements IUrlRouter {
      */
     public function CreateUrl($Route, $Parameters = null, $Ampersand = '&') {
         TType::String($Route);
-        TType::Object($Parameters, array ('IMap' => array ('K' => 'string', 'V' => 'string')));
+        TType::Object($Parameters, array('IMap' => array('K' => 'string', 'V' => 'string')));
         TType::String($Ampersand);
 
-        TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'string'));
+        TMap::PrepareGeneric(array('K' => 'string', 'V' => 'string'));
         $mParameters = new TMap();
         if ($Parameters != null) {
             $mParameters->PutAll($Parameters);
@@ -1673,36 +2167,36 @@ class TUrlRouter extends TObject implements IUrlRouter {
     public function ParseUrl() {
         $mRequest = $this->FRequest;
         switch ($this->FUrlMode) {
-            case TUrlMode::ePath() :
-                $mRawPathInfo = $mRequest->getPathInfo();
-                $mPathInfo = $this->RemoveUrlSuffix($mRawPathInfo, $this->getUrlSuffix());
-                foreach ($this->FRules as $mRule) {
-                    try {
-                        $mRoute = $mRule->ParseUrl($this, $mRequest, $mPathInfo, $mRawPathInfo);
-                    }
-                    catch (EParseUrlFailed $Ex) {
-                        continue;
-                    }
-                    return $mRoute;
+        case TUrlMode::ePath():
+            $mRawPathInfo = $mRequest->getPathInfo();
+            $mPathInfo = $this->RemoveUrlSuffix($mRawPathInfo, $this->getUrlSuffix());
+            foreach ($this->FRules as $mRule) {
+                try {
+                    $mRoute = $mRule->ParseUrl($this, $mRequest, $mPathInfo, $mRawPathInfo);
                 }
-                if ($this->FUseStrictParsing) {
-                    throw new EResolveRquestFailed(404);
+                catch (EParseUrlFailed $Ex) {
+                    continue;
                 }
-                else {
-                    return $mPathInfo;
-                }
-                break;
-            case TUrlMode::eGet() :
-                if (isset($_GET[$this->FRouteVariableName])) {
-                    return $_GET[$this->FRouteVariableName];
-                }
-                elseif (isset($_POST[$this->FRouteVariableName])) {
-                    return $_POST[$this->FRouteVariableName];
-                }
-                else {
-                    throw new EResolveRquestFailed(404);
-                }
-                break;
+                return $mRoute;
+            }
+            if ($this->FUseStrictParsing) {
+                throw new EResolveRquestFailed(404);
+            }
+            else {
+                return $mPathInfo;
+            }
+            break;
+        case TUrlMode::eGet():
+            if (isset($_GET[$this->FRouteVariableName])) {
+                return $_GET[$this->FRouteVariableName];
+            }
+            elseif (isset($_POST[$this->FRouteVariableName])) {
+                return $_POST[$this->FRouteVariableName];
+            }
+            else {
+                throw new EResolveRquestFailed(404);
+            }
+            break;
         }
     }
 
@@ -1782,7 +2276,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
      *            <T: IUrlRouteRule>
      */
     public function setRules($Value) {
-        TType::Object($Value, array ('IList' => array ('T' => 'IUrlRouteRule')));
+        TType::Object($Value, array('IList' => array('T' => 'IUrlRouteRule')));
         if ($Value == null) {
             throw new EInvalidParameter();
         }
@@ -1963,7 +2457,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
         $mTr2['/'] = '\\/';
 
         if (strpos($Route, '<') !== false && preg_match_all('/<(\w+)>/', $Route, $mReferences)) {
-            TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'string'));
+            TMap::PrepareGeneric(array('K' => 'string', 'V' => 'string'));
             $this->FReferences = new TMap();
             foreach ($mReferences[1] as $mReference) {
                 $this->FReferences->Put($mReference, "<{$mReference}>");
@@ -1973,7 +2467,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
         $this->FHasHostInfo = !strncasecmp($Pattern, 'http://', 7) || !strncasecmp($Pattern, 'https://', 8);
 
         if (preg_match_all('/<(\w+):?(.*?)?>/', $Pattern, $mParameters)) {
-            TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'string'));
+            TMap::PrepareGeneric(array('K' => 'string', 'V' => 'string'));
             $this->FParameters = new TMap();
 
             $mTokens = array_combine($mParameters[1], $mParameters[2]);
@@ -2032,7 +2526,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
     public function CreateUrl($Router, $Route, $Parameters = null, $Ampersand = '&') {
         TType::Object($Router, 'TUrlRouter');
         TType::String($Route);
-        TType::Object($Parameters, array ('IMap' => array ('K' => 'string', 'V' => 'string')));
+        TType::Object($Parameters, array('IMap' => array('K' => 'string', 'V' => 'string')));
         TType::String($Ampersand);
 
         if ($this->FParsingOnly) {
@@ -2045,7 +2539,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
         else {
             $mCaseSensitive = 'i';
         }
-        $mTr = array ();
+        $mTr = array();
         if ($Route != $this->FRoute) {
             if ($this->FRoutePattern != '' && preg_match("{$this->FRoutePattern}{$mCaseSensitive}", $Route, $mMatches) && $this->FReferences != null) {
                 foreach ($this->FReferences as $mKey => $mName) {
@@ -2328,14 +2822,14 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
                     }
                 }
             }
-            $mTr = array ();
+            $mTr = array();
 
             if ($this->FReferences == null) {
-                TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'string'));
+                TMap::PrepareGeneric(array('K' => 'string', 'V' => 'string'));
                 $this->FReferences = new TMap();
             }
             if ($this->FParameters == null) {
-                TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'string'));
+                TMap::PrepareGeneric(array('K' => 'string', 'V' => 'string'));
                 $this->FParameters = new TMap();
             }
 
@@ -2400,7 +2894,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
      *            <K: string, V: string>
      */
     public function setDefaultParameters($Value) {
-        TType::Object($Value, array ('IMap' => array ('K' => 'string', 'V' => 'string')));
+        TType::Object($Value, array('IMap' => array('K' => 'string', 'V' => 'string')));
         Framework::Free($this->FDefaultParameters);
         $this->FDefaultParameters = $Value;
     }
@@ -2422,7 +2916,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
      *            <K: string, V: string>
      */
     public function setParameters($Value) {
-        TType::Object($Value, array ('IMap' => array ('K' => 'string', 'V' => 'string')));
+        TType::Object($Value, array('IMap' => array('K' => 'string', 'V' => 'string')));
         Framework::Free($this->FParameters);
         $this->FParameters = $Value;
     }
@@ -2454,7 +2948,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
      *            <K: string, V: string>
      */
     public function setReferences($Value) {
-        TType::Object($Value, array ('IMap' => array ('K' => 'string', 'V' => 'string')));
+        TType::Object($Value, array('IMap' => array('K' => 'string', 'V' => 'string')));
         Framework::Free($this->FReferences);
         $this->FReferences = $Value;
     }

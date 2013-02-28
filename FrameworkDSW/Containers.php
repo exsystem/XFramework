@@ -2842,12 +2842,12 @@ class TMap extends TAbstractMap {
      */
     public function __construct($ElementsOwned = false) {
         TType::Bool($ElementsOwned);
-        parent::__construct(false);
-        $this->FElementsOwned = $ElementsOwned;
         $this->PrepareMethodGeneric(array (
-            'T' => array (
-                'TPair' => array ('K' => $this->GenericArg('K'),
-                    'V' => $this->GenericArg('V')))));
+                'T' => array (
+                        'TPair' => array ('K' => $this->GenericArg('K'),
+                                'V' => $this->GenericArg('V')))));
+        parent::__construct($ElementsOwned);
+
         $mKClassType = $this->GenericArg('K');
         if (is_array($mKClassType)) {
             $mKClassType = array_keys($mKClassType);
