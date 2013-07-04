@@ -5,10 +5,25 @@
  * @version	$Id$
  * @since	separate file since reversion 1
  */
-
+namespace FrameworkDSW\Database;
 require_once 'FrameworkDSW/System.php';
 require_once 'FrameworkDSW/Utilities.php';
 require_once 'FrameworkDSW/Containers.php';
+use FrameworkDSW\System\EException;
+use FrameworkDSW\Utilities\TType;
+use FrameworkDSW\System\TEnum;
+use FrameworkDSW\System\TRecord;
+use FrameworkDSW\System\IInterface;
+use FrameworkDSW\Containers\IArrayAccess;
+use FrameworkDSW\Containers\IIterator;
+use FrameworkDSW\System\TObject;
+use FrameworkDSW\System\TBoolean;
+use FrameworkDSW\System\TInteger;
+use FrameworkDSW\System\TFloat;
+use FrameworkDSW\System\TString;
+use FrameworkDSW\System\EIsNotNullable;
+use FrameworkDSW\Framework\Framework;
+use FrameworkDSW\Containers\TList;
 
 /**
  * EDatabaseException
@@ -2174,24 +2189,24 @@ abstract class TAbstractPdoDriver extends TObject {
             return;
         }
         if ($this->FProperties->ContainsKey('AutoCommit')) {
-            $this->FPdoOptions[PDO::ATTR_AUTOCOMMIT] = (boolean) $this->FProperties['AutoCommit'];
+            $this->FPdoOptions[\PDO::ATTR_AUTOCOMMIT] = (boolean) $this->FProperties['AutoCommit'];
         }
         if ($this->FProperties->ContainsKey('Timeout')) {
-            $this->FPdoOptions[PDO::ATTR_TIMEOUT] = (integer) $this->FProperties['Timeout'];
+            $this->FPdoOptions[\PDO::ATTR_TIMEOUT] = (integer) $this->FProperties['Timeout'];
         }
         if ($this->FProperties->ContainsKey('Prefetch')) {
-            $this->FPdoOptions[PDO::ATTR_PREFETCH] = (integer) $this->FProperties['Prefetch'];
+            $this->FPdoOptions[\PDO::ATTR_PREFETCH] = (integer) $this->FProperties['Prefetch'];
         }
         if ($this->FProperties->ContainsKey('Case')) {
             switch ($this->FProperties['Case']) {
                 case 'Natrual' :
-                    $this->FPdoOptions[PDO::ATTR_CASE] = PDO::CASE_NATURAL;
+                    $this->FPdoOptions[\PDO::ATTR_CASE] = \PDO::CASE_NATURAL;
                     break;
                 case 'Upper' :
-                    $this->FPdoOptions[PDO::ATTR_CASE] = PDO::CASE_UPPER;
+                    $this->FPdoOptions[\PDO::ATTR_CASE] = \PDO::CASE_UPPER;
                     break;
                 case 'Lower' :
-                    $this->FPdoOptions[PDO::ATTR_CASE] = PDO::CASE_LOWER;
+                    $this->FPdoOptions[\PDO::ATTR_CASE] = \PDO::CASE_LOWER;
                     break;
                 default :
                     break;
@@ -2416,7 +2431,7 @@ abstract class TAbstractPdoConnection extends TObject {
         try {
             $this->FPdo->rollBack();
         }
-        catch (PDOException $Ex) {
+        catch (\PDOException $Ex) {
             self::PushWarning(ERollbackFailed::ClassType(), $Ex, $this);
         }
     }
@@ -2457,7 +2472,7 @@ abstract class TAbstractPdoConnection extends TObject {
         if ($Driver !== null && $Pdo !== null) {
             $this->FDriver = $Driver;
             $this->FPdo = $Pdo;
-            $this->FPdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->FPdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
             $this->FIsConnected = true;
         }
         else {
@@ -2503,7 +2518,7 @@ abstract class TAbstractPdoConnection extends TObject {
         try {
             $this->DoCommit();
         }
-        catch (PDOException $Ex) {
+        catch (\PDOException $Ex) {
             self::PushWarning(ECommitFailed::ClassType(), $Ex, $this);
         }
     }
@@ -2553,7 +2568,7 @@ abstract class TAbstractPdoConnection extends TObject {
         try {
             $mResult = $this->FPdo->exec($SqlStatement);
         }
-        catch (PDOException $Ex) {
+        catch (\PDOException $Ex) {
             self::PushWarning(EExecuteFailed::ClassType(), $Ex, $this);
         }
         return $mResult;
@@ -2565,7 +2580,7 @@ abstract class TAbstractPdoConnection extends TObject {
      */
     public function getAutoCommit() {
         $this->EnsureConnected();
-        return (boolean) $this->FPdo->getAttribute(PDO::ATTR_AUTOCOMMIT);
+        return (boolean) $this->FPdo->getAttribute(\PDO::ATTR_AUTOCOMMIT);
     }
 
     /**
@@ -2674,7 +2689,7 @@ abstract class TAbstractPdoConnection extends TObject {
     public function setAutoCommit($Value) {
         TType::Bool($Value);
         $this->EnsureConnected();
-        $this->FPdo->setAttribute(PDO::ATTR_AUTOCOMMIT, $Value);
+        $this->FPdo->setAttribute(\PDO::ATTR_AUTOCOMMIT, $Value);
     }
 
     /**
@@ -2822,7 +2837,7 @@ abstract class TAbstractPdoStatement extends TObject implements IStatement {
             $mStmt = $this->FPdo->query($this->FCommand);
             return $mStmt->rowCount();
         }
-        catch (PDOException $Ex) {
+        catch (\PDOException $Ex) {
             TAbstractPdoConnection::PushWarning(EExecuteFailed::ClassType(), $Ex, $this->FConnection);
         }
     }
@@ -2845,7 +2860,7 @@ abstract class TAbstractPdoStatement extends TObject implements IStatement {
             }
             $this->FConnection->Commit();
         }
-        catch (PDOException $Ex) {
+        catch (\PDOException $Ex) {
             $this->FConnection->Rollback();
             TAbstractPdoConnection::PushWarning(EExecuteFailed::ClassType(), $Ex, $this->FConnection);
         }
@@ -2860,7 +2875,7 @@ abstract class TAbstractPdoStatement extends TObject implements IStatement {
         try {
             return $this->DoFetchAsScalar();
         }
-        catch (PDOException $Ex) {
+        catch (\PDOException $Ex) {
             TAbstractPdoConnection::PushWarning(EFetchAsScalarFailed::ClassType(), $Ex, $this->FConnection);
         }
     }
@@ -2930,14 +2945,14 @@ abstract class TAbstractPdoStatement extends TObject implements IStatement {
 
         $this->FCommand = $Value;
         //TODO: to deal with insensitive. maybe to write back to db after updating result sets.
-        $mAttr = array (PDO::ATTR_CURSOR => PDO::CURSOR_SCROLL);
+        $mAttr = array (\PDO::ATTR_CURSOR => \PDO::CURSOR_SCROLL);
         if ($this->FResultSetType == TResultSetType::eForwardOnly()) {
-            $mAttr[PDO::ATTR_CURSOR] = PDO::CURSOR_FWDONLY;
+            $mAttr[\PDO::ATTR_CURSOR] = \PDO::CURSOR_FWDONLY;
         }
         try {
             $this->FPdoStatement = $this->FPdo->prepare($this->FCommand, $mAttr);
         }
-        catch (PDOException $Ex) {
+        catch (\PDOException $Ex) {
             TAbstractPdoConnection::PushWarning(ESetCommandFailed::ClassType(), $Ex, $this->FConnection);
         }
     }
@@ -3098,7 +3113,7 @@ abstract class TAbstractPdoResultSet extends TObject {
                 $this->FCurrentRow = $RowId;
                 break;
             case TResultSetType::eScrollSensitive() :
-                $RawRow = $this->FPdoStatement->fetch(PDO::FETCH_BOTH, PDO::FETCH_ORI_ABS, $RowId);
+                $RawRow = $this->FPdoStatement->fetch(\PDO::FETCH_BOTH, \PDO::FETCH_ORI_ABS, $RowId);
                 //TODO generate the IRow instance.
                 break;
             default : //not supported. eg. forward only mode
@@ -3125,26 +3140,26 @@ abstract class TAbstractPdoResultSet extends TObject {
             case TResultSetType::eScrollSensitive() :
                 switch ($this->FFetchDirection) {
                     case TFetchDirection::eForward() :
-                        $RawRow = $this->FPdoStatement->fetch(PDO::FETCH_BOTH, PDO::FETCH_ORI_REL, $Offset);
+                        $RawRow = $this->FPdoStatement->fetch(\PDO::FETCH_BOTH, \PDO::FETCH_ORI_REL, $Offset);
                         //TODO generate the IRow instance based on $RawRow.
                         break;
                     case TFetchDirection::eReverse() :
                         if ($this->FCurrentRow == -2) {
-                            $RawRow = $this->FPdoStatement->fetch(PDO::FETCH_BOTH, PDO::FETCH_ORI_LAST);
+                            $RawRow = $this->FPdoStatement->fetch(\PDO::FETCH_BOTH, \PDO::FETCH_ORI_LAST);
                             $this->FCurrentRow = 0;
                             --$Offset;
                         }
                         if ($Offset > 0) {
                             while ($Offset > 1) {
-                                $this->FPdoStatement->fetch(PDO::FETCH_BOTH, PDO::FETCH_ORI_PRIOR);
+                                $this->FPdoStatement->fetch(\PDO::FETCH_BOTH, \PDO::FETCH_ORI_PRIOR);
                             }
-                            $RawRow = $this->FPdoStatement->fetch(PDO::FETCH_BOTH, PDO::FETCH_ORI_PRIOR);
+                            $RawRow = $this->FPdoStatement->fetch(\PDO::FETCH_BOTH, \PDO::FETCH_ORI_PRIOR);
                         }
                         else {
                             while ($Offset < -1) {
-                                $this->FPdoStatement->fetch(PDO::FETCH_BOTH, PDO::FETCH_ORI_NEXT);
+                                $this->FPdoStatement->fetch(\PDO::FETCH_BOTH, \PDO::FETCH_ORI_NEXT);
                             }
-                            $RawRow = $this->FPdoStatement->fetch(PDO::FETCH_BOTH, PDO::FETCH_ORI_NEXT);
+                            $RawRow = $this->FPdoStatement->fetch(\PDO::FETCH_BOTH, \PDO::FETCH_ORI_NEXT);
                         }
                         //TODO generate the IRow instance based on $RawRow.
                         break;

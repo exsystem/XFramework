@@ -5,13 +5,17 @@
  * @version $Id$
  * @since   separate file since reversion 1
  */
-
+namespace FrameworkDSW\System;
+use FrameworkDSW\Utilities\TType;
+use FrameworkDSW\Utilities\EInvalidTypeCasting;
+use FrameworkDSW\Utilities\EInvalidStringCasting;
+use FrameworkDSW\Utilities\EInvalidDelegateCasting;
 /**
  * The ultimate base class of all exception classes inside FrameworkDSW.
  *
  * @author 许子健
  */
-class EException extends Exception {
+class EException extends \Exception {
 
     /**
      *
@@ -447,7 +451,7 @@ class TObject implements IInterface {
      * @return boolean
      */
     public final function IsInstanceOf($Type) {
-        return $Type === $this->ObjectType();
+        return $Type === $this->ObjectType(); //TODO !!! Incorrect implementaion.
     }
 
     /**
@@ -517,7 +521,7 @@ class TObject implements IInterface {
      * @return string The path of this class.
      */
     public final static function DeclaredIn() {
-        $mInfo = new ReflectionClass(self::ClassType());
+        $mInfo = new \ReflectionClass(self::ClassType());
         return $mInfo->getFileName();
     }
 
@@ -728,11 +732,11 @@ class TObject implements IInterface {
      * @return mixed
      */
     public static final function __callStatic($name, $arguments) {
-        $mReflection = new ReflectionClass(get_called_class());
+        $mReflection = new \ReflectionClass(get_called_class());
         $mIsEnumOrSet = true;
-        if (!$mReflection->isSubclassOf(new ReflectionClass('TEnum'))) {
+        if (!$mReflection->isSubclassOf(new \ReflectionClass('TEnum'))) {
             $mIsEnumOrSet = false;
-            if (!$mReflection->isSubclassOf(new ReflectionClass('TSet'))) {
+            if (!$mReflection->isSubclassOf(new \ReflectionClass('TSet'))) {
                 throw new EMethodNotExisted();
             }
         }
@@ -964,7 +968,7 @@ abstract class TSet extends TObject {
      * constructor.
      */
      public final function __construct() {
-     	 $mReflection = new ReflectionObject($this);
+     	 $mReflection = new \ReflectionObject($this);
 	     foreach ($mReflection->getConstants() as $mElement => $mDummy) {
 	       $this->FSet[$mElement] = false;
          }
@@ -1125,12 +1129,12 @@ final class TDelegate {
      */
     public final function __construct($Callback, $Type) {
         try {
-            $mPorotype = new ReflectionMethod($Type, 'Invoke');
+            $mPorotype = new \ReflectionMethod($Type, 'Invoke');
             $this->FAtLeast = $mPorotype->getNumberOfRequiredParameters();
             $this->FNoMoreThan = $mPorotype->getNumberOfParameters();
             $this->setDelegate($Callback);
         }
-        catch (ReflectionException $e) {
+        catch (\ReflectionException $e) {
             throw new EInvalidDelegateCasting();
         }
     }
@@ -1157,11 +1161,11 @@ final class TDelegate {
      */
     public final function setDelegate($Callback) {
         if (is_callable($Callback)) {
-            if (is_string($Callback) || $Callback instanceof Closure) {
-                $mCallback = new ReflectionFunction($Callback);
+            if (is_string($Callback) || $Callback instanceof \Closure) {
+                $mCallback = new \ReflectionFunction($Callback);
             }
             else { // then it must be an array if callable
-                $mCallback = new ReflectionMethod($Callback[0], $Callback[1]);
+                $mCallback = new \ReflectionMethod($Callback[0], $Callback[1]);
             }
 
             $mNumber = $mCallback->getNumberOfParameters();

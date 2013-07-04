@@ -5,8 +5,18 @@
  * @version	$Id$
  * @since	separate file since reversion 30
  */
-
+namespace FrameworkDSW\Linq\Expressions;
 require_once 'FrameworkDSW/System.php';
+use FrameworkDSW\System\TEnum;
+use FrameworkDSW\System\TObject;
+use FrameworkDSW\Utilities\TType;
+use FrameworkDSW\Containers\TList;
+use FrameworkDSW\System\EInvalidParameter;
+use FrameworkDSW\Framework\Framework;
+use FrameworkDSW\System\TInteger;
+use FrameworkDSW\System\TBoolean;
+use FrameworkDSW\System\TFloat;
+use FrameworkDSW\System\TString;
 
 // FIXME: 去除PHP表達式不需要的符號。
 // FIXME: 暫不支持數組（需要等待反射架構完成<type, dimensions>, int => <int, 0>）

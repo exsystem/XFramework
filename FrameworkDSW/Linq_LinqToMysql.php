@@ -1,17 +1,32 @@
 <?php
 /**
- * Linq_Expressions.php
+ * Linq_LinqToMysql.php
  *
  * @author 许子健
  * @version $Id$
  * @since separate file since reversion 43
  */
-
+namespace FrameworkDSW\Linq\LinqToMysql;
 require_once 'FrameworkDSW/System.php';
 require_once 'FrameworkDSW/Containers.php';
 require_once 'FrameworkDSW/Linq.php';
 require_once 'FrameworkDSW/Linq_Expressions.php';
 require_once 'FrameworkDSW/Database.php';
+use FrameworkDSW\Linq\Expressions\TExpressionVisitor;
+use FrameworkDSW\Linq\IQueryProvider;
+use FrameworkDSW\Utilities\TType;
+use FrameworkDSW\Framework\Framework;
+use FrameworkDSW\Utilities\EInvalidClassCasting;
+use FrameworkDSW\Containers\TMap;
+use FrameworkDSW\Containers\TList;
+use FrameworkDSW\DataObjects\TObjectQuery;
+use FrameworkDSW\Database\TConcurrencyType;
+use FrameworkDSW\Database\TResultSetType;
+use FrameworkDSW\Linq\Expressions\TExpressionType;
+use FrameworkDSW\System\EException;
+use FrameworkDSW\Database\TPrimitiveParam;
+use FrameworkDSW\Linq\Expressions\TParameterExpression;
+use FrameworkDSW\Linq\Expressions\TExpression;
 
 /**
  * TMysqlQueryProvider

@@ -5,9 +5,63 @@
  * @version	$Id$
  * @since	separate file since reversion 17
  */
-
+namespace FrameworkDSW\Database\Mysql;
 require_once 'FrameworkDSW/Database.php';
 require_once 'FrameworkDSW/Containers.php';
+use FrameworkDSW\System\TObject;
+use FrameworkDSW\Utilities\TType;
+use FrameworkDSW\Database\IDatabaseWarningContext;
+use FrameworkDSW\Database\IDriver;
+use FrameworkDSW\Containers\EIndexOutOfBounds;
+use FrameworkDSW\Database\EFailedToConnectDb;
+use FrameworkDSW\Database\TDriverPropertyInfo;
+use FrameworkDSW\Database\EInsufficientProperties;
+use FrameworkDSW\Database\EFailedToGetDbPropertyInfo;
+use FrameworkDSW\Utilities\TVersion;
+use FrameworkDSW\Database\IConnection;
+use FrameworkDSW\Database\EDisconnected;
+use FrameworkDSW\System\EIsNotNullable;
+use FrameworkDSW\Framework\Framework;
+use FrameworkDSW\Database\TSavepoint;
+use FrameworkDSW\Database\ECreateSavepointFailed;
+use FrameworkDSW\Database\EExecuteFailed;
+use FrameworkDSW\Database\THoldability;
+use FrameworkDSW\Database\ECommitFailed;
+use FrameworkDSW\Database\TTransactionIsolationLevel;
+use FrameworkDSW\Database\EUnsupportedDbFeature;
+use FrameworkDSW\Database\TAbstractPdoConnection;
+use FrameworkDSW\Database\EEmptyCommand;
+use FrameworkDSW\Database\TPrimitiveParam;
+use FrameworkDSW\Containers\TList;
+use FrameworkDSW\Database\IStatement;
+use FrameworkDSW\Database\TResultSetType;
+use FrameworkDSW\Database\ENoMoreResultSet;
+use FrameworkDSW\Database\IPreparedStatement;
+use FrameworkDSW\Database\ESetCommandFailed;
+use FrameworkDSW\Containers\TMap;
+use FrameworkDSW\Database\ICallableStatement;
+use FrameworkDSW\Database\EFetchAsScalarFailed;
+use FrameworkDSW\Database\TConcurrencyType;
+use FrameworkDSW\Containers\TLinkedList;
+use FrameworkDSW\System\EException;
+use FrameworkDSW\Database\TCurrentResultOption;
+use FrameworkDSW\Database\EFetchNextResultSetFailed;
+use FrameworkDSW\Database\EInvalidRowId;
+use FrameworkDSW\Database\TFetchDirection;
+use FrameworkDSW\System\EInvalidParameter;
+use FrameworkDSW\Database\IResultSet;
+use FrameworkDSW\Database\EFetchRowFailed;
+use FrameworkDSW\Database\EFailedToGetFetchSize;
+use FrameworkDSW\Database\EUnableToUpdateNonSingleTableResultSet;
+use FrameworkDSW\Database\EResultSetIsNotUpdatable;
+use FrameworkDSW\Database\EInvalidColumnName;
+use FrameworkDSW\Containers\ENoSuchElement;
+use FrameworkDSW\Database\ENothingToUpdate;
+use FrameworkDSW\Database\IRow;
+use FrameworkDSW\Database\ERowHasBeenDeleted;
+use FrameworkDSW\Database\ECurrentRowIsInsertRow;
+use FrameworkDSW\Database\IDatabaseMetaData;
+use FrameworkDSW\System\ENotImplemented;
 
 /**
  *
@@ -275,7 +329,7 @@ final class TMysqlDriver extends TObject implements IDriver {
         if ($this->ValidateUrl($Url)) {
             $this->ConvertProperties();
             try {
-                $this->FMysqli = new mysqli();
+                $this->FMysqli = new \mysqli();
                 mysqli_report(MYSQLI_REPORT_STRICT | MYSQLI_REPORT_ERROR);
                 foreach ($this->FMysqliOptions as $mKey => &$mValue) {
                     $this->FMysqli->options($mKey, $mValue);
@@ -285,7 +339,7 @@ final class TMysqlDriver extends TObject implements IDriver {
             catch (EIndexOutOfBounds $Ex) {
                 throw new EInsufficientProperties(EInsufficientProperties::CMsg . 'Username, Password.');
             }
-            catch (mysqli_sql_exception $Ex) {
+            catch (\mysqli_sql_exception $Ex) {
                 throw new EFailedToConnectDb(EFailedToConnectDb::CMsg . $Url, 0, $Ex);
             }
 
@@ -578,7 +632,7 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
         try {
             $Connection->FMysqli->query($QueryString);
         }
-        catch (mysqli_sql_exception $Ex) {
+        catch (\mysqli_sql_exception $Ex) {
             self::PushMysqliExceptionWarning($ExceptionType, $Ex, $Connection);
         }
     }
@@ -644,7 +698,7 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
         TType::String($WarningType);
         TType::Object($Connection, 'TMysqlConnection');
 
-        $mExClassReflection = new ReflectionProperty('mysqli_sql_exception', 'sqlstate');
+        $mExClassReflection = new \ReflectionProperty('mysqli_sql_exception', 'sqlstate');
         $mExClassReflection->setAccessible(true);
         self::PushWarning($WarningType, $mExClassReflection->getValue($Exception), $Exception->getCode(), $Exception->getMessage(), $Connection);
     }
@@ -669,7 +723,7 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
         try {
             $this->FMysqli->commit();
         }
-        catch (mysqli_sql_exception $Ex) {
+        catch (\mysqli_sql_exception $Ex) {
             self::PushMysqliExceptionWarning(ECommitFailed::ClassType(), $Ex, $this);
         }
     }
@@ -735,7 +789,7 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
         try {
             $mRaw = $this->FMysqli->query('SELECT @@autocommit');
         }
-        catch (mysqli_sql_exception $Ex) {
+        catch (\mysqli_sql_exception $Ex) {
             self::PushMysqliExceptionWarning(EExecuteFailed::ClassType(), $Ex, $this);
         }
         $mRaw = $mRaw->fetch_row();
@@ -794,7 +848,7 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
         try {
             $mLevel = $this->FMysqli->query('SELECT @@tx_isolation');
         }
-        catch (mysqli_sql_exception $Ex) {
+        catch (\mysqli_sql_exception $Ex) {
             self::PushMysqliExceptionWarning(EExecuteFailed::ClassType(), $Ex, $this);
         }
         $mLevel = $mLevel->fetch_row();
@@ -892,7 +946,7 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
         try {
             $this->FMysqli->autocommit($Value);
         }
-        catch (mysqli_sql_exception $Ex) {
+        catch (\mysqli_sql_exception $Ex) {
             self::PushMysqliExceptionWarning(EExecuteFailed::ClassType(), $Ex, $this);
         }
     }
@@ -1216,7 +1270,7 @@ class TMysqlStatement extends TAbstractMysqlStatement implements IStatement {
         try {
             $this->FMysqliStmt->prepare($this->FCommand);
         }
-        catch (mysqli_sql_exception $Ex) {
+        catch (\mysqli_sql_exception $Ex) {
             TMysqlConnection::PushMysqliExceptionWarning(ESetCommandFailed::ClassType(), $Ex, $this->FConnection);
         }
         switch ($this->FResultSetType) {
@@ -1262,7 +1316,7 @@ class TMysqlStatement extends TAbstractMysqlStatement implements IStatement {
             $mMeta->close();
             $this->FMysqliStmt->reset();//Prevent 'Command out of async' error for next mysqli_stmt_prepare() calling including those of other TMysqlStatement objects.
         }
-        catch (mysqli_sql_exception $Ex) {
+        catch (\mysqli_sql_exception $Ex) {
             $this->ResetMysqliStmt(EFetchAsScalarFailed::ClassType(), $Ex);
         }
     }
@@ -1399,7 +1453,7 @@ EOD;
             try {
                 call_user_func_array(array($this->FMysqliStmt, 'bind_param'), $mParamsRef);
             }
-            catch (mysqli_sql_exception $Ex) {
+            catch (\mysqli_sql_exception $Ex) {
                 TMysqlConnection::PushMysqliExceptionWarning(EExecuteFailed::ClassType(), $Ex, $this->FConnection);
             }
         }
@@ -1438,7 +1492,7 @@ EOD;
         try {
             $this->FMysqliStmt->execute();
         }
-        catch (mysqli_sql_exception $Ex) {
+        catch (\mysqli_sql_exception $Ex) {
             TMysqlConnection::PushMysqliExceptionWarning(EExecuteFailed::ClassType(), $Ex, $this->FConnection);
         }
         return $this->FMysqliStmt->affected_rows;
@@ -1523,7 +1577,7 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
             try {
                 $this->FMysqli->query("SET @p{$mParam} = '{$mParamValue}'");
             }
-            catch (mysqli_sql_exception $Ex) {
+            catch (\mysqli_sql_exception $Ex) {
                 TMysqlConnection::PushMysqliExceptionWarning(EExecuteFailed::ClassType(), $Ex, $this->FConnection);
             }
         }
@@ -1533,11 +1587,11 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
             try {
                 return $this->FMysqli->store_result();
             }
-            catch (mysqli_sql_exception $Ex) {
+            catch (\mysqli_sql_exception $Ex) {
                 TMysqlConnection::PushMysqliExceptionWarning(EExecuteFailed::ClassType(), $Ex, $this->FConnection);
             }
         }
-        catch (mysqli_sql_exception $Ex) {
+        catch (\mysqli_sql_exception $Ex) {
             try {
                 TMysqlConnection::PushMysqliExceptionWarning(EExecuteFailed::ClassType(), $Ex, $this->FConnection);
             }
@@ -1567,7 +1621,7 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
         try {
             $this->FMysqli->query("PREPARE sCall FROM '{$mCmd}'");
         }
-        catch (mysqli_sql_exception $Ex) {
+        catch (\mysqli_sql_exception $Ex) {
             TMysqlConnection::PushMysqliExceptionWarning(ESetCommandFailed::ClassType(), $Ex, $this->FConnection);
         }
     }
@@ -1657,7 +1711,7 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
         try {
             $mRawResult = $this->FMysqli->query("SELECT @p_{$Name}");
         }
-        catch (mysqli_sql_exception $Ex) {
+        catch (\mysqli_sql_exception $Ex) {
             TMysqlConnection::PushMysqliExceptionWarning(EExecuteFailed::ClassType(), $Ex, $this->FConnection);
         }
         $mRawRow = $mRawResult->fetch_row();
@@ -1739,14 +1793,14 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
         try {
             $this->FMysqli->next_result();
         }
-        catch (mysqli_sql_exception $Ex) {
+        catch (\mysqli_sql_exception $Ex) {
             TMysqlConnection::PushMysqliExceptionWarning(ENoMoreResultSet::ClassType(), $Ex, $this->FConnection);
         }
 
         try {
             $mRawResult = $this->FMysqli->store_result();
         }
-        catch (mysqli_sql_exception $Ex) {
+        catch (\mysqli_sql_exception $Ex) {
             TMysqlConnection::PushMysqliExceptionWarning(EFetchNextResultSetFailed::ClassType(), $Ex, $this->FConnection);
         }
 
@@ -2380,7 +2434,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
             $this->FMeta = $mRawMeta->fetch_fields();
             $mRawMeta->close();
         }
-        catch (mysqli_sql_exception $Ex) {
+        catch (\mysqli_sql_exception $Ex) {
             TMysqlConnection::PushMysqliExceptionWarning(EExecuteFailed::ClassType(), $Ex, $this->FStatement->getConnection());
         }
     }
@@ -2414,7 +2468,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
         try {
             $this->FMysqliStmt->reset();
         }
-        catch (mysqli_sql_exception $Ex) {
+        catch (\mysqli_sql_exception $Ex) {
             TMysqlConnection::PushMysqliExceptionWarning(EFetchRowFailed::ClassType(), $Ex, $this->FStatement->getConnection());
         }
         foreach ($this->FMeta as $mItem) {
@@ -2426,7 +2480,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
                 $this->FMysqliStmt->store_result();
             }
         }
-        catch (mysqli_sql_exception $Ex) {
+        catch (\mysqli_sql_exception $Ex) {
             TMysqlConnection::PushMysqliExceptionWarning(EFetchRowFailed::ClassType(), $Ex, $this->FStatement->getConnection());
         }
     }
@@ -2441,7 +2495,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
         try {
             $this->FMysqliStmt->fetch();
         }
-        catch (mysqli_sql_exception $Ex) {
+        catch (\mysqli_sql_exception $Ex) {
             TMysqlConnection::PushMysqliExceptionWarning(EExecuteFailed::ClassType(), $Ex, $this->FStatement->getConnection());
         }
     }
@@ -2478,7 +2532,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
         try {
             $this->FMysqliStmt->execute();
         }
-        catch (mysqli_sql_exception $Ex) {
+        catch (\mysqli_sql_exception $Ex) {
             TMysqlConnection::PushMysqliExceptionWarning(EExecuteFailed::ClassType(), $Ex, $this->FStatement->getConnection());
         }
         if ($this->FMysqliStmt->attr_get(MYSQLI_STMT_ATTR_CURSOR_TYPE) === MYSQLI_CURSOR_TYPE_NO_CURSOR) {
@@ -2514,7 +2568,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
         try {
             return $this->FMysqliStmt->attr_get(MYSQLI_STMT_ATTR_PREFETCH_ROWS);
         }
-        catch (mysqli_sql_exception $Ex) {
+        catch (\mysqli_sql_exception $Ex) {
             throw new EFailedToGetFetchSize();
         }
     }

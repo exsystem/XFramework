@@ -5,10 +5,23 @@
  * @version	$Id$
  * @since	separate file since reversion 30
  */
+namespace FrameworkDSW\DataObjects;
 require_once 'FrameworkDSW/System.php';
 require_once 'FrameworkDSW/Containers.php';
 require_once 'FrameworkDSW/Linq.php';
 require_once 'FrameworkDSW/Linq_Expressions.php';
+use FrameworkDSW\System\IInterface;
+use FrameworkDSW\System\TObject;
+use FrameworkDSW\Utilities\TType;
+use FrameworkDSW\Linq\IExpressibleOrderedQueryable;
+use FrameworkDSW\Containers\TList;
+use FrameworkDSW\Linq\Expressions\TExpression;
+use FrameworkDSW\Framework\Framework;
+use FrameworkDSW\Containers\EIndexOutOfBounds;
+use FrameworkDSW\Containers\ENoSuchElement;
+use FrameworkDSW\Utilities\EInvalidTypeCasting;
+use FrameworkDSW\System\EException;
+use FrameworkDSW\System\TInteger;
 
 /**
  * IEntity

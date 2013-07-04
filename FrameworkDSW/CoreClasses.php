@@ -5,7 +5,18 @@
  * @version	$Id$
  * @since	separate file since reversion 1
  */
+namespace FrameworkDSW\CoreClasses;
 require_once 'FrameworkDSW/System.php';
+use FrameworkDSW\System\EException;
+use FrameworkDSW\System\TEnum;
+use FrameworkDSW\System\TObject;
+use FrameworkDSW\System\TSet;
+use FrameworkDSW\System\IDelegate;
+use FrameworkDSW\System\IInterface;
+use FrameworkDSW\Utilities\TType;
+use FrameworkDSW\Containers\TList;
+use FrameworkDSW\Framework\Framework;
+use FrameworkDSW\Containers\EIndexOutOfBounds;
 
 class EComponentErr extends EException {}
 class EInvalidComponentName extends EComponentErr {}

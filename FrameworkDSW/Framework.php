@@ -5,9 +5,11 @@
  * @version $Id$
  * @since   separate file since reversion 1
  */
+namespace FrameworkDSW\Framework;
 require_once 'FrameworkDSW/Boot.php'; //must be the first line.
 require_once 'FrameworkDSW/System.php';
-
+use FrameworkDSW\System\ESysException;
+use FrameworkDSW\System\TObject;
 /**
  * Serialization exception.
  * @author  许子健
@@ -122,7 +124,7 @@ class Framework extends TObject {
             array_walk_recursive($Var, $mCallback);
         }
 
-        Boot::WriteStaticTable(self::$FStaticTable, self::$FClassInfo, self::CClassDelimiter);
+        \Boot::WriteStaticTable(self::$FStaticTable, self::$FClassInfo, self::CClassDelimiter);
 
         //These code below illustrates the structure of a serialization string.
         //The Static Table is an array of this structure:
@@ -198,7 +200,7 @@ class Framework extends TObject {
                 $mClass = substr($mIndex, 0, $mOffset);
                 $mField = substr($mIndex, ++$mOffset);
 
-                $mReflection = new ReflectionProperty($mClass, $mField);
+                $mReflection = new \ReflectionProperty($mClass, $mField);
                 $mReflection->setAccessible(true);
                 $mReflection->setValue(null, $mVal);
             }

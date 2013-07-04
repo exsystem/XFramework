@@ -5,9 +5,21 @@
  * @version $Id$
  * @since   separate file since reversion 52
  */
-
+namespace FrameworkDSW\Controller;
 require_once 'FrameworkDSW/Containers.php';
 require_once 'FrameworkDSW/CoreClasses.php';
+use FrameworkDSW\System\IDelegate;
+use FrameworkDSW\System\IInterface;
+use FrameworkDSW\System\TObject;
+use FrameworkDSW\Containers\TMap;
+use FrameworkDSW\Framework\Framework;
+use FrameworkDSW\Utilities\TType;
+use FrameworkDSW\System\EInvalidParameter;
+use FrameworkDSW\System\TDelegate;
+use FrameworkDSW\System\EInvalidParameter;
+use FrameworkDSW\Containers\TLinkedList;
+use FrameworkDSW\System\TDelegate;
+use FrameworkDSW\Containers\TPair;
 
 /**
  * TOnControllerUpdate
@@ -198,9 +210,9 @@ class TControllerManager extends TObject implements IControllerManager {
 
         TType::MetaClass($mController);
         try {
-            $mActionMeta = new ReflectionMethod($mController, "Action{$mAction}");
+            $mActionMeta = new \ReflectionMethod($mController, "Action{$mAction}");
         }
-        catch (ReflectionException $Ex) {
+        catch (\ReflectionException $Ex) {
             throw new EInvalidParameter();
         }
 
@@ -282,9 +294,9 @@ class TControllerManager extends TObject implements IControllerManager {
 
         TType::MetaClass($mController);
         try {
-            $mActionMeta = new ReflectionMethod($mController, "Action{$mAction}");
+            $mActionMeta = new \ReflectionMethod($mController, "Action{$mAction}");
         }
-        catch (ReflectionException $Ex) {
+        catch (\ReflectionException $Ex) {
             throw new EInvalidParameter();
         }
 
@@ -312,9 +324,9 @@ class TControllerManager extends TObject implements IControllerManager {
 
         TType::MetaClass($mController);
         try {
-            $mActionMeta = new ReflectionMethod($mController, "Action{$mAction}");
+            $mActionMeta = new \ReflectionMethod($mController, "Action{$mAction}");
         }
-        catch (ReflectionException $Ex) {
+        catch (\ReflectionException $Ex) {
             throw new EInvalidParameter();
         }
 
@@ -343,9 +355,9 @@ class TControllerManager extends TObject implements IControllerManager {
 
         TType::MetaClass($mController);
         try {
-            $mActionMeta = new ReflectionMethod($mController, "Action{$mAction}");
+            $mActionMeta = new \ReflectionMethod($mController, "Action{$mAction}");
         }
-        catch (ReflectionException $Ex) {
+        catch (\ReflectionException $Ex) {
             throw new EInvalidParameter();
         }
 

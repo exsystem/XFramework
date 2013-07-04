@@ -5,8 +5,19 @@
  * @version $Id$
  * @since   separate file since reversion 52
  */
-
+namespace FrameworkDSW\Web;
 require_once 'FrameworkDSW/Containers.php';
+use FrameworkDSW\System\EException;
+use FrameworkDSW\System\IInterface;
+use FrameworkDSW\Utilities\TType;
+use FrameworkDSW\System\TRecord;
+use FrameworkDSW\Containers\TMap;
+use FrameworkDSW\System\EInvalidParameter;
+use FrameworkDSW\System\TEnum;
+use FrameworkDSW\Containers\TAbstractMap;
+use FrameworkDSW\System\TObject;
+use FrameworkDSW\Containers\TLinkedList;
+use FrameworkDSW\Framework\Framework;
 
 /**
  *

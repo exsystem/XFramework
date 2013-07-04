@@ -5,8 +5,13 @@
  * @version	$Id$
  * @since	separate file since reversion 1
  */
+namespace FrameworkDSW\Utilities;
 require_once 'FrameworkDSW/System.php';
-
+use FrameworkDSW\System\ERuntimeException;
+use FrameworkDSW\System\EException;
+use FrameworkDSW\System\TObject;
+use FrameworkDSW\System\TDelegate;
+use FrameworkDSW\System\TRecord;
 /**
  *
  * @author 许子健

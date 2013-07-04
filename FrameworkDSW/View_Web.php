@@ -5,10 +5,21 @@
  * @version $Id$
  * @since   separate file since reversion 52
  */
-
+namespace FrameworkDSW\View\Web;
 require_once 'FrameworkDSW/CoreClasses.php';
 require_once 'FrameworkDSW/Containers.php';
-
+use FrameworkDSW\System\TObject;
+use FrameworkDSW\Utilities\TType;
+use FrameworkDSW\CoreClasses\TComponent;
+use FrameworkDSW\CoreClasses\IView;
+use FrameworkDSW\Containers\TMap;
+use FrameworkDSW\System\IPrimitive;
+use FrameworkDSW\Containers\TPair;
+use FrameworkDSW\System\TString;
+use FrameworkDSW\System\EInvalidParameter;
+use FrameworkDSW\Containers\IList;
+use FrameworkDSW\Containers\IMap;
+use FrameworkDSW\System\TRecord;
 /**
  * TWebTheme
  *
@@ -442,7 +453,7 @@ class TJsonView extends TComponent implements IView {
                     $mStatusStack[] = array (self::CData => $mItemData, self::CInsertionPoint => &$mInsertionPoint);
                 }
                 if (count($mArray) == 0) {
-                    $mCurrentInsertionPoint = new stdClass();
+                    $mCurrentInsertionPoint = new \stdClass();
                 }
                 else {
                     $mCurrentInsertionPoint = $mArray;

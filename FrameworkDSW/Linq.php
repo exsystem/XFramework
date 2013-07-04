@@ -5,9 +5,13 @@
  * @version	$Id$
  * @since	separate file since reversion 30
  */
-
+namespace FrameworkDSW\Linq;
 require_once 'FrameworkDSW/System.php';
 require_once 'FrameworkDSW/Containers.php';
+use FrameworkDSW\System\IDelegate;
+use FrameworkDSW\System\IInterface;
+use FrameworkDSW\Containers\IIteratorAggregate;
+use FrameworkDSW\System\TObject;
 
 /**
  * TAggregateDelegate

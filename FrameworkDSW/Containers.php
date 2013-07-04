@@ -5,7 +5,17 @@
  * @version $Id$
  * @since   separate file since reversion 1
  */
+namespace FrameworkDSW\Containers;
 require_once 'FrameworkDSW/System.php';
+use FrameworkDSW\System\ERuntimeException;
+use FrameworkDSW\System\EException;
+use FrameworkDSW\System\IInterface;
+use FrameworkDSW\System\TObject;
+use FrameworkDSW\Utilities\TType;
+use FrameworkDSW\System\ENotImplemented;
+use FrameworkDSW\System\TRecord;
+use FrameworkDSW\Framework\Framework;
+use FrameworkDSW\System\TEnum;
 
 /**
  *
@@ -99,7 +109,7 @@ class ECollectionNotExisted extends EContainerException {}
  * IIterator
  * param	<T>
  */
-interface IIterator extends IInterface, Iterator {
+interface IIterator extends IInterface, \Iterator {
 
     /**
      * Remove
@@ -111,7 +121,7 @@ interface IIterator extends IInterface, Iterator {
  * IIteratorAggregate
  * param	<T>
  */
-interface IIteratorAggregate extends IInterface, IteratorAggregate {
+interface IIteratorAggregate extends IInterface, \IteratorAggregate {
 
     /**
      *
@@ -124,7 +134,7 @@ interface IIteratorAggregate extends IInterface, IteratorAggregate {
  * IArrayAccess
  * param	<K, V>
  */
-interface IArrayAccess extends IInterface, ArrayAccess {}
+interface IArrayAccess extends IInterface, \ArrayAccess {}
 
 // IListItrerator : {[node_0, node_1, node_2, ... ,node_n ,] tail_node}
 
@@ -1962,12 +1972,12 @@ final class TList extends TAbstractList {
         TType::Bool($KeepOrder);
 
         if (is_null($FromArray)) {
-            $this->FList = new SplFixedArray($Capacity);
+            $this->FList = new \SplFixedArray($Capacity);
             $this->FCapacity = $Capacity;
             return;
         }
 
-        $this->FList = SplFixedArray::fromArray($FromArray, $KeepOrder);
+        $this->FList = \SplFixedArray::fromArray($FromArray, $KeepOrder);
         $this->FSize = count($this->FList);
         $this->FCapacity = $this->FSize;
     }
@@ -2138,7 +2148,7 @@ final class TList extends TAbstractList {
             }
         }
 
-        $this->FList = new SplFixedArray($this->FCapacity);
+        $this->FList = new \SplFixedArray($this->FCapacity);
     }
 
     /**
@@ -2354,11 +2364,11 @@ final class TLinkedList extends TAbstractList {
 
         if (is_null($FromArray) || count($FromArray) == 0) {
             $this->FSize = 0;
-            $this->FList = new SplFixedArray(30);
+            $this->FList = new \SplFixedArray(30);
             $this->FAddrSize = 0;
             return;
         }
-        $this->FList = SplFixedArray::fromArray($FromArray, $KeepOrder);
+        $this->FList = \SplFixedArray::fromArray($FromArray, $KeepOrder);
         $this->FSize = count($this->FList);
         $this->FList->setSize(3 * $this->FSize);
         for ($mCurr = $this->FSize - 1; $mCurr >= 0; --$mCurr) {
@@ -2564,7 +2574,7 @@ final class TLinkedList extends TAbstractList {
             }
         }
 
-        $this->FList = new SplFixedArray(30);
+        $this->FList = new \SplFixedArray(30);
         $this->FHead = -1;
         $this->FTail = -1;
         $this->FCurrAddr = -1;
@@ -2717,7 +2727,7 @@ final class TStack extends TAbstractStack implements IStack {
     public function __construct($ElementsOwned = false) {
         TType::Bool($ElementsOwned);
         parent::__construct($ElementsOwned);
-        $this->FStack = new SplStack();
+        $this->FStack = new \SplStack();
     }
 
     /**
