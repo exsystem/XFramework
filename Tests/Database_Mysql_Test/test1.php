@@ -1,9 +1,15 @@
 <?php
-//set_include_path(get_include_path() . ':/media/ExSystem-HD/Documents/ZendStudioWorkspace/FrameworkDSW');
-//set_include_path(get_include_path().';E:\\Documents\\ZendStudioWorkspace\\FrameworkDSW');
-//set_include_path(get_include_path() . ':/Volumes/ExSystem-HD/Documents/ZendStudioWorkspace/FrameworkDSW');
-set_include_path(get_include_path() . ':/Users/exsystem/Documents/ZendStudioWorkspace/FrameworkDSW');
-require_once 'FrameworkDSW/Database_Mysql.php';
+
+require_once 'FrameworkDSW/Framework.php';
+
+use FrameworkDSW\Framework\Framework;
+use FrameworkDSW\Database\Mysql\TMysqlDriver;
+use FrameworkDSW\Containers\TMap;
+use FrameworkDSW\Database\TResultSetType;
+use FrameworkDSW\Database\TConcurrencyType;
+use FrameworkDSW\Database\TPrimitiveParam;
+use FrameworkDSW\System\EException;
+
 
 $mDriver = new TMysqlDriver();
 TMap::PrepareGeneric(array('K' => 'string', 'V' => 'string'));

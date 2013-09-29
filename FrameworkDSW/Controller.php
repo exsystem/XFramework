@@ -1,13 +1,12 @@
 <?php
 /**
- * Controller.php
+ * \FrameworkDSW\Controller\Controller
  * @author  许子健
  * @version $Id$
  * @since   separate file since reversion 52
  */
 namespace FrameworkDSW\Controller;
-require_once 'FrameworkDSW/Containers.php';
-require_once 'FrameworkDSW/CoreClasses.php';
+
 use FrameworkDSW\System\IDelegate;
 use FrameworkDSW\System\IInterface;
 use FrameworkDSW\System\TObject;
@@ -16,13 +15,11 @@ use FrameworkDSW\Framework\Framework;
 use FrameworkDSW\Utilities\TType;
 use FrameworkDSW\System\EInvalidParameter;
 use FrameworkDSW\System\TDelegate;
-use FrameworkDSW\System\EInvalidParameter;
 use FrameworkDSW\Containers\TLinkedList;
-use FrameworkDSW\System\TDelegate;
 use FrameworkDSW\Containers\TPair;
 
 /**
- * TOnControllerUpdate
+ * \FrameworkDSW\Controller\TOnControllerUpdate
  *
  * @author 许子健
  */
@@ -37,7 +34,7 @@ interface TOnControllerUpdate extends IDelegate {
 }
 
 /**
- * TOnModelNotify
+ * \FrameworkDSW\Controller\TOnModelNotify
  *
  * @author 许子健
  */
@@ -46,13 +43,13 @@ interface TOnModelNotify extends IDelegate {
     /**
      * descHere
      *
-     * @param IModel $Model
+     * @param \FrameworkDSW\Controller\IModel $Model
      */
     public function Invoke($Model);
 }
 
 /**
- * IModel
+ * \FrameworkDSW\Controller\IModel
  *
  * @author 许子健
  */
@@ -61,13 +58,13 @@ interface IModel extends IInterface {
     /**
      * descHere
      *
-     * @param TOnModelNotify $Value
+     * @param \FrameworkDSW\Controller\TOnModelNotify $Value
      */
     public function setNotify($Value);
 }
 
 /**
- * IController
+ * \FrameworkDSW\Controller\IController
  *
  * @author 许子健
  */
@@ -76,13 +73,13 @@ interface IController extends IInterface {
     /**
      * descHere
      *
-     * @param TOnControllerUpdate $Value
+     * @param \FrameworkDSW\Controller\TOnControllerUpdate $Value
      */
     public static function setUpdate($Value);
 }
 
 /**
- * IControllerManager
+ * \FrameworkDSW\Controller\IControllerManager
  *
  * @author 许子健
  */
@@ -92,7 +89,7 @@ interface IControllerManager extends IInterface {
      * descHere
      *
      * @param mixed $Action
-     * @param IModel $Model
+     * @param \FrameworkDSW\Controller\IModel $Model
      */
     public function Bind($Action, $Model);
 
@@ -100,7 +97,7 @@ interface IControllerManager extends IInterface {
      * descHere
      *
      * @param mixed $Action
-     * @param IModel $Model
+     * @param \FrameworkDSW\Controller\IModel $Model
      * @return boolean
      */
     public function IsBind($Action, $Model);
@@ -109,7 +106,7 @@ interface IControllerManager extends IInterface {
      * descHere
      *
      * @param mixed $Action
-     * @param IView $View
+     * @param \FrameworkDSW\CoreClasses\IView $View
      * @return boolean
      */
     public function IsRegistered($Action, $View);
@@ -117,7 +114,7 @@ interface IControllerManager extends IInterface {
     /**
      * descHere
      *
-     * @param IModel $Model
+     * @param \FrameworkDSW\Controller\IModel $Model
      */
     public function Notify($Model);
 
@@ -125,7 +122,7 @@ interface IControllerManager extends IInterface {
      * descHere
      *
      * @param mixed $Action
-     * @param IView $View
+     * @param \FrameworkDSW\CoreClasses\IView $View
      */
     public function Register($Action, $View);
 
@@ -133,7 +130,7 @@ interface IControllerManager extends IInterface {
      * descHere
      *
      * @param mixed $Action
-     * @param IModel $Model
+     * @param \FrameworkDSW\Controller\IModel $Model
      */
     public function Unbind($Action, $Model);
 
@@ -141,7 +138,7 @@ interface IControllerManager extends IInterface {
      * descHere
      *
      * @param mixed $Action
-     * @param IView $View
+     * @param \FrameworkDSW\CoreClasses\IView $View
      */
     public function Unregister($Action, $View);
 
@@ -154,7 +151,7 @@ interface IControllerManager extends IInterface {
 }
 
 /**
- * TControllerManager
+ * \FrameworkDSW\Controller\TControllerManager
  *
  * @author 许子健
  */
@@ -162,12 +159,12 @@ class TControllerManager extends TObject implements IControllerManager {
 
     /**
      *
-     * @var TMap <K: mixed, V: IModel>
+     * @var \FrameworkDSW\Containers\TMap <K: mixed, V: \FrameworkDSW\Controller\IModel>
      */
     private $FBinding = null;
     /**
      *
-     * @var TMap <K: mixed, V: TLinkedList<T: IView>>
+     * @var \FrameworkDSW\Containers\TMap <K: mixed, V: \FrameworkDSW\Containers\TLinkedList<T: \FrameworkDSW\Controller\IView>>
      */
     private $FRegistration = null;
 
@@ -201,7 +198,8 @@ class TControllerManager extends TObject implements IControllerManager {
      * descHere
      *
      * @param mixed $Action
-     * @param IModel $Model
+     * @param \FrameworkDSW\Controller\IModel $Model
+     * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function Bind($Action, $Model) {
         TType::Object($Model, 'IModel');
@@ -210,7 +208,7 @@ class TControllerManager extends TObject implements IControllerManager {
 
         TType::MetaClass($mController);
         try {
-            $mActionMeta = new \ReflectionMethod($mController, "Action{$mAction}");
+            new \ReflectionMethod($mController, "Action{$mAction}");
         }
         catch (\ReflectionException $Ex) {
             throw new EInvalidParameter();
@@ -229,7 +227,7 @@ class TControllerManager extends TObject implements IControllerManager {
      * descHere
      *
      * @param mixed $Action
-     * @param IModel $Model
+     * @param \FrameworkDSW\Controller\IModel $Model
      * @return boolean
      */
     public function IsBind($Action, $Model) {
@@ -246,7 +244,7 @@ class TControllerManager extends TObject implements IControllerManager {
      * descHere
      *
      * @param mixed $Action
-     * @param IView $View
+     * @param \FrameworkDSW\CoreClasses\IView $View
      * @return boolean
      */
     public function IsRegistered($Action, $View) {
@@ -262,7 +260,7 @@ class TControllerManager extends TObject implements IControllerManager {
     /**
      * descHere
      *
-     * @param IModel $Model
+     * @param \FrameworkDSW\Controller\IModel $Model
      */
     public function Notify($Model) {
         TType::Object($Model, 'IModel');
@@ -285,7 +283,8 @@ class TControllerManager extends TObject implements IControllerManager {
      * descHere
      *
      * @param mixed $Action
-     * @param IView $View
+     * @param \FrameworkDSW\CoreClasses\IView $View
+     * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function Register($Action, $View) {
         TType::Object($View, 'IView');
@@ -294,7 +293,7 @@ class TControllerManager extends TObject implements IControllerManager {
 
         TType::MetaClass($mController);
         try {
-            $mActionMeta = new \ReflectionMethod($mController, "Action{$mAction}");
+            new \ReflectionMethod($mController, "Action{$mAction}");
         }
         catch (\ReflectionException $Ex) {
             throw new EInvalidParameter();
@@ -315,7 +314,8 @@ class TControllerManager extends TObject implements IControllerManager {
      * descHere
      *
      * @param mixed $Action
-     * @param IModel $Model
+     * @param \FrameworkDSW\Controller\IModel $Model
+     * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function Unbind($Action, $Model) {
         TType::Object($Model, 'IModel');
@@ -324,15 +324,15 @@ class TControllerManager extends TObject implements IControllerManager {
 
         TType::MetaClass($mController);
         try {
-            $mActionMeta = new \ReflectionMethod($mController, "Action{$mAction}");
+            new \ReflectionMethod($mController, "Action{$mAction}");
         }
         catch (\ReflectionException $Ex) {
             throw new EInvalidParameter();
         }
 
         $mPair = new TPair();
-        $mPair = $Action;
-        $mPair = $Model;
+        $mPair->Key = $Action;
+        $mPair->Value = $Model;
 
         if ($this->FBinding->Contains($mPair)) {
             $this->FBinding->Delete($Action);
@@ -346,7 +346,8 @@ class TControllerManager extends TObject implements IControllerManager {
      * descHere
      *
      * @param mixed $Action
-     * @param IView $View
+     * @param \FrameworkDSW\CoreClasses\IView $View
+     * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function Unregister($Action, $View) {
         TType::Object($View, 'IView');
@@ -355,7 +356,7 @@ class TControllerManager extends TObject implements IControllerManager {
 
         TType::MetaClass($mController);
         try {
-            $mActionMeta = new \ReflectionMethod($mController, "Action{$mAction}");
+            new \ReflectionMethod($mController, "Action{$mAction}");
         }
         catch (\ReflectionException $Ex) {
             throw new EInvalidParameter();
@@ -373,6 +374,7 @@ class TControllerManager extends TObject implements IControllerManager {
      * descHere
      *
      * @param mixed $Action
+     * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function Update($Action) {
         $mController = $Action[0];

@@ -1,5 +1,11 @@
 <?php
-require_once 'FrameworkDSW/Acl.php';
+require_once 'FrameworkDSW/Framework.php';
+
+use FrameworkDSW\Acl\TAcl;
+use FrameworkDSW\Acl\TRuntimeAclStorage;
+use FrameworkDSW\Acl\TAclResource;
+use FrameworkDSW\Acl\TAclRole;
+
 
 $acl = new TAcl($storage = new TRuntimeAclStorage());
 for ($i = 0; $i < 100; ++$i) {

@@ -1,18 +1,19 @@
 <?php
 /**
- * CoreClasses
+ * \FrameworkDSW\CoreClasses
  * @author	许子健
  * @version	$Id$
  * @since	separate file since reversion 1
  */
 namespace FrameworkDSW\CoreClasses;
-require_once 'FrameworkDSW/System.php';
+
 use FrameworkDSW\System\EException;
 use FrameworkDSW\System\TEnum;
 use FrameworkDSW\System\TObject;
 use FrameworkDSW\System\TSet;
 use FrameworkDSW\System\IDelegate;
 use FrameworkDSW\System\IInterface;
+use FrameworkDSW\Utilities\TSize;
 use FrameworkDSW\Utilities\TType;
 use FrameworkDSW\Containers\TList;
 use FrameworkDSW\Framework\Framework;
@@ -24,7 +25,7 @@ class ENoSuchComponent extends EComponentErr {}
 class ENoOwnerComponent extends EComponentErr {}
 
 /**
- * TOperation
+ * \FrameworkDSW\CoreClasses\TOperation
  * @author	许子健
  */
 final class TOperation extends TEnum {
@@ -32,7 +33,7 @@ final class TOperation extends TEnum {
 }
 
 /**
- * TCursor
+ * \FrameworkDSW\CoreClasses\TCursor
  * @author	许子健
  */
 final class TCursor extends TEnum {
@@ -62,7 +63,7 @@ final class TCursor extends TEnum {
 }
 
 /**
- * TDragState
+ * \FrameworkDSW\CoreClasses\TDragState
  * @author	许子健
  */
 final class TDragState extends TEnum {
@@ -70,14 +71,14 @@ final class TDragState extends TEnum {
 }
 
 /**
- * TDragDropObject
+ * \FrameworkDSW\CoreClasses\TDragDropObject
  * @author	许子健
  */
 class TDragDropObject extends TObject {//TODO: impl TDragDropObject.
 }
 
 /**
- * TShiftState
+ * \FrameworkDSW\CoreClasses\TShiftState
  * @author	许子健
  */
 final class TShiftState extends TSet {
@@ -87,7 +88,7 @@ final class TShiftState extends TSet {
 }
 
 /**
- * TMouseButton
+ * \FrameworkDSW\CoreClasses\TMouseButton
  * @author	许子健
  */
 final class TMouseButton extends TSet {
@@ -108,29 +109,29 @@ final class TAlign extends TEnum {
 
 
 /**
- * TNotifyEvent
+ * \FrameworkDSW\CoreClasses\TNotifyEvent
  * @author	许子健
  */
 interface TNotifyEvent extends IDelegate {
 
     /**
      *
-     * @param	TObject	$Sender
+     * @param	\FrameworkDSW\System\TObject	$Sender
      */
     public function Invoke($Sender);
 }
 
 /**
- * TMouseEvent
+ * \FrameworkDSW\CoreClasses\TMouseEvent
  * @author	许子健
  */
 interface TMouseEvent extends IDelegate {
 
     /**
      *
-     * @param	TObject			$Sender
-     * @param	TMouseButton	$Button
-     * @param	TShiftState		$Shift
+     * @param	\FrameworkDSW\System\TObject			$Sender
+     * @param	\FrameworkDSW\CoreClasses\TMouseButton	$Button
+     * @param	\FrameworkDSW\CoreClasses\TShiftState		$Shift
      * @param	integer			$X
      * @param	integer			$Y
      */
@@ -138,14 +139,14 @@ interface TMouseEvent extends IDelegate {
 }
 
 /**
- * TContextPopupEvent
+ * \FrameworkDSW\CoreClasses\TContextPopupEvent
  * @author	许子健
  */
 interface TContextPopupEvent extends IDelegate {
 
     /**
      *
-     * @param	TObject	$Sender
+     * @param	\FrameworkDSW\System\TObject	$Sender
      * @param	integer	$X
      * @param	integer	$Y
      * @param	boolean	$Handled
@@ -154,33 +155,33 @@ interface TContextPopupEvent extends IDelegate {
 }
 
 /**
- * TDragOverEvent
+ * \FrameworkDSW\CoreClasses\TDragOverEvent
  * @author 许子健
  */
 interface TDragOverEvent extends IDelegate {
 
     /**
      *
-     * @param	TObject		$Sender
-     * @param	TObject		$Source
+     * @param	\FrameworkDSW\System\TObject		$Sender
+     * @param	\FrameworkDSW\System\TObject		$Source
      * @param	integer		$X
      * @param	integer		$Y
-     * @param	TDragState	$State
+     * @param	\FrameworkDSW\CoreClasses\TDragState	$State
      * @param	boolean		$Accept
      */
     public function Invoke($Sender, $Source, $X, $Y, $State, &$Accept);
 }
 
 /**
- * TDragDropEvent
+ * \FrameworkDSW\CoreClasses\TDragDropEvent
  * @author	许子健
  */
 interface TDragDropEvent extends IDelegate {
 
     /**
      *
-     * @param	TObject			$Sender
-     * @param	TDragDropObject	$Source
+     * @param	\FrameworkDSW\System\TObject			$Sender
+     * @param	\FrameworkDSW\CoreClasses\TDragDropObject	$Source
      * @param	integer			$X
      * @param	integer			$Y
      */
@@ -195,22 +196,22 @@ interface TStartDragEvent extends IDelegate {
 
     /**
      *
-     * @param	TObject		$Sender
-     * @param	TDragObject	$DragObject
+     * @param	\FrameworkDSW\System\TObject		$Sender
+     * @param	\FrameworkDSW\CoreClasses\TDragState	$DragObject
      */
     public function Invoke($Sender, &$DragObject);
 }
 
 /**
- * TEndDragEvent
+ * \FrameworkDSW\CoreClasses\TEndDragEvent
  * @author	许子健
  */
 interface TEndDragEvent extends IDelegate {
 
     /**
      *
-     * @param	TObject	$Sender
-     * @param	TObject	$Target
+     * @param	\FrameworkDSW\System\TObject	$Sender
+     * @param	\FrameworkDSW\System\TObject	$Target
      * @param	integer	$X
      * @param	integer	$Y
      */
@@ -218,15 +219,15 @@ interface TEndDragEvent extends IDelegate {
 }
 
 /**
- * TMouseWheelEvent
+ * \FrameworkDSW\CoreClasses\TMouseWheelEvent
  * @author	许子健
  */
 interface TMouseWheelEvent extends IDelegate {
 
     /**
      *
-     * @param	TObject		$Sender
-     * @param	TShiftState	$Shift
+     * @param	\FrameworkDSW\System\TObject		$Sender
+     * @param	\FrameworkDSW\CoreClasses\TShiftState	$Shift
      * @param	integer		$WheelDelta
      * @param	integer		$X
      * @param	integer		$Y
@@ -236,15 +237,15 @@ interface TMouseWheelEvent extends IDelegate {
 }
 
 /**
- * TMouseWheelUpDownEvent
+ * \FrameworkDSW\CoreClasses\TMouseWheelUpDownEvent
  * @author	许子健
  */
 interface TMouseWheelUpDownEvent extends IDelegate {
 
     /**
      *
-     * @param	TObject		$Sender
-     * @param	TShiftState	$Shift
+     * @param	\FrameworkDSW\System\TObject		$Sender
+     * @param	\FrameworkDSW\CoreClasses\TShiftState	$Shift
      * @param	integer		$X
      * @param	integer		$Y
      * @param	boolean		$Handled
@@ -253,33 +254,33 @@ interface TMouseWheelUpDownEvent extends IDelegate {
 }
 
 /**
- * IComponent
+ * \FrameworkDSW\CoreClasses\IComponent
  * @author	许子健
  */
 interface IComponent extends IInterface {
 
     /**
      *
-     * @param	IComponent	$Owner
+     * @param	\FrameworkDSW\CoreClasses\IComponent	$Owner
      */
     public function __construct($Owner);
 
     /**
      *
-     * @param	IComponent	$Component
+     * @param	\FrameworkDSW\CoreClasses\IComponent	$Component
      */
     public function InsertComponent($Component);
 
     /**
      *
-     * @param	IComponent	$Component
+     * @param	\FrameworkDSW\CoreClasses\IComponent	$Component
      */
     public function RemoveComponent($Component);
 
     /**
      *
      * @param	string		$Name
-     * @return	IComponent
+     * @return	\FrameworkDSW\CoreClasses\IComponent
      */
     public function FindComponent($Name);
 
@@ -297,7 +298,7 @@ interface IComponent extends IInterface {
 
     /**
      *
-     * @return	IComponent
+     * @return	\FrameworkDSW\CoreClasses\IComponent
      */
     public function getOwner();
 
@@ -309,19 +310,19 @@ interface IComponent extends IInterface {
 }
 
 /**
- * IView
+ * \FrameworkDSW\CoreClasses\IView
  * @author	许子健
  */
 interface IView extends IInterface {//extends IComponent {
     /**
      * descHere
-     * @param	IMap	$ViewData <K: string, V: IInterface>
+     * @param	\FrameworkDSW\Containers\IMap	$ViewData <K: string, V: \FrameworkDSW\System\IInterface>
      */
     public function Update($ViewData);
 }
 
 /**
- * TComponent class
+ * \FrameworkDSW\CoreClasses\TComponent class
  * @author  许子健
  */
 abstract class TComponent extends TObject implements IComponent {
@@ -342,18 +343,18 @@ abstract class TComponent extends TObject implements IComponent {
     private $FTag = null;
     /**
      *
-     * @var	TComponent
+     * @var	\FrameworkDSW\CoreClasses\TComponent
      */
     private $FOwner = null;
     /**
      *
-     * @var	TList
+     * @var	\FrameworkDSW\Containers\TList <T: \FrameworkDSW\CoreClasses\TComponent>
      */
     private $FComponents = null; //TODO: what about using a linked list?
 
 
     /**
-     * @param  TComponent  $Owner
+     * @param  \FrameworkDSW\CoreClasses\TComponent  $Owner
      * @see FrameworkDSW/TObject#Create()
      */
     public function __construct($Owner = null) {
@@ -380,7 +381,8 @@ abstract class TComponent extends TObject implements IComponent {
 
     /**
      *
-     * @param	string	$Name
+     * @param    string $Name
+     * @throws EInvalidComponentName
      */
     private static function ValidateName($Name) {
         if (preg_match(self::CValidIdentPattern, $Name) != 1) {
@@ -390,7 +392,7 @@ abstract class TComponent extends TObject implements IComponent {
 
     /**
      *
-     * @param	TComponent	$Component
+     * @param	\FrameworkDSW\CoreClasses\TComponent	$Component
      */
     private function Insert($Component) {
         if (!isset($this->FComponents)) {
@@ -401,7 +403,7 @@ abstract class TComponent extends TObject implements IComponent {
 
     /**
      *
-     * @param	TComponent	$Component
+     * @param	\FrameworkDSW\CoreClasses\TComponent	$Component
      */
     private function Remove($Component) {
         unset($Component->FOwner);
@@ -413,8 +415,8 @@ abstract class TComponent extends TObject implements IComponent {
 
     /**
      *
-     * @param	TComponent	$Component
-     * @param	TOperation	$Operation
+     * @param	\FrameworkDSW\CoreClasses\TComponent	$Component
+     * @param	\FrameworkDSW\CoreClasses\TOperation	$Operation
      */
     protected function Notify($Component, $Operation) {
         TType::Object($Component, 'TComponent');
@@ -429,7 +431,7 @@ abstract class TComponent extends TObject implements IComponent {
 
     /**
      *
-     * @param	IComponent	$Component
+     * @param	\FrameworkDSW\CoreClasses\IComponent	$Component
      */
     public function InsertComponent($Component) {
         TType::Object($Component, 'TComponent');
@@ -443,7 +445,7 @@ abstract class TComponent extends TObject implements IComponent {
 
     /**
      *
-     * @param	IComponent	$Component
+     * @param	\FrameworkDSW\CoreClasses\IComponent	$Component
      */
     public function RemoveComponent($Component) {
         TType::Object($Component, 'TComponent');
@@ -454,8 +456,9 @@ abstract class TComponent extends TObject implements IComponent {
 
     /**
      *
-     * @param	string		$Name
-     * @return	IComponent
+     * @param    string $Name
+     * @throws ENoSuchComponent
+     * @return    \FrameworkDSW\CoreClasses\IComponent
      */
     public function FindComponent($Name) {
         TType::String($Name);
@@ -482,7 +485,8 @@ abstract class TComponent extends TObject implements IComponent {
 
     /**
      *
-     * @param	string	$Value
+     * @param    string $Value
+     * @throws EInvalidComponentName
      */
     public function setName($Value) {
         TType::String($Value);
@@ -511,7 +515,7 @@ abstract class TComponent extends TObject implements IComponent {
 
     /**
      *
-     * @return	IComponent
+     * @return	\FrameworkDSW\CoreClasses\IComponent
      */
     public function getOwner() {
         return $this->FOwner;
@@ -519,8 +523,9 @@ abstract class TComponent extends TObject implements IComponent {
 
     /**
      *
-     * @param	integer		$Index
-     * @return	TComponent
+     * @param    integer $Index
+     * @throws \FrameworkDSW\Containers\EIndexOutOfBounds
+     * @return    \FrameworkDSW\CoreClasses\TComponent
      */
     public function getComponent($Index) {
         if (!isset($this->FComponents)) {
@@ -543,7 +548,8 @@ abstract class TComponent extends TObject implements IComponent {
 
     /**
      *
-     * @return	integer
+     * @throws ENoOwnerComponent
+     * @return    integer
      */
     public function getComponentIndex() {
         if (!isset($this->FOwner)) {
@@ -572,7 +578,7 @@ abstract class TComponent extends TObject implements IComponent {
 
 
 /**
- * IControl
+ * \FrameworkDSW\CoreClasses\IControl
  * @author	许子健
  */
 interface IControl extends IInterface {
@@ -605,7 +611,7 @@ interface IControl extends IInterface {
 
     /**
      *
-     * @param	strign	$Value
+     * @param	string	$Value
      */
     public function setName($Value);
 
@@ -1299,7 +1305,7 @@ abstract class TControl extends TComponent implements IControl {
 
     /**
      *
-     * @param	strign	$Value
+     * @param	string	$Value
      */
     public function setName($Value) {
     }
@@ -1783,7 +1789,7 @@ abstract class TControl extends TComponent implements IControl {
 //TODO private FWindowProc: TWndMethod
 //TODO private FControlStyle: TControlStyle
 //TODO private FControlState: TControlState
-//TODO what about touching ablity?
+//TODO what about touching ability?
 
 
 /**
@@ -1816,7 +1822,7 @@ interface ILayoutManager extends IInterface {
      * @param	IControl	$Control
      * @return	TSize
      */
-    public function MininumLayoutSize($Control);
+    public function MinimumLayoutSize($Control);
 
     /**
      *

@@ -1,38 +1,43 @@
 <?php
 /**
- * Framework
+ * \FrameworkDSW\Framework
  * @author  许子健
  * @version $Id$
  * @since   separate file since reversion 1
  */
 namespace FrameworkDSW\Framework;
-require_once 'FrameworkDSW/Boot.php'; //must be the first line.
+
 require_once 'FrameworkDSW/System.php';
+use FrameworkDSW\System\EInvalidParameter;
 use FrameworkDSW\System\ESysException;
 use FrameworkDSW\System\TObject;
 /**
  * Serialization exception.
  * @author  许子健
  */
-class ESerializationException extends ESysException {}
+class ESerializationException extends ESysException {
+}
 /**
  *
  * @author  许子健
  */
-class ESerializeResource extends ESerializationException {}
+class ESerializeResource extends ESerializationException {
+}
 /**
  *
  * @author  许子健
  */
-class EBadSerializedData extends ESerializationException {}
+class EBadSerializedData extends ESerializationException {
+}
 /**
  *
  * @author  许子健
  */
-class EIllegalClass extends ESerializationException {}
+class EIllegalClass extends ESerializationException {
+}
 
 /**
- * Framework class
+ * \FrameworkDSW\Framework\Framework
  *
  * The Framework implements some static methods for framework objects to use.
  * @author  许子健
@@ -72,11 +77,18 @@ class Framework extends TObject {
     /**
      * @var    array
      */
-    private static $FStaticTable = array ();
+    private static $FStaticTable = array();
     /**
      * @var    array
      */
-    private static $FClassInfo = array ();
+    private static $FClassInfo = array();
+
+    /**
+     * Data Structure:
+     * {<TypeNameWithNamespace, UnitPath>} + <*, {UnitPath}>
+     * @var array
+     */
+    private static $FExternalUnits = array();
 
     /**
      * Serialize a variable or a class into a string.
@@ -99,19 +111,21 @@ class Framework extends TObject {
      * variables.<br>
      * It is no need to record included source files, since these information
      * will be recorded in this method.
-     * @param  mixed   $Var        The variable or the name of the class to be
+     * @param  mixed $Var        The variable or the name of the class to be
      * serialized.
+     * @throws ESerializeResource
      * @return string              The result of the serialization.
      */
     public static function Serialize($Var) {
+        /** @noinspection PhpUnusedParameterInspection */
         $mCallback = function (&$mDummy, &$mElement) {
             if ($mElement instanceof TObject) {
                 $mElement->Sleep();
             }
         };
 
-        self::$FStaticTable = array ();
-        self::$FClassInfo = array ();
+        self::$FStaticTable = array();
+        self::$FClassInfo = array();
 
         if (is_resource($Var)) {
             throw new ESerializeResource();
@@ -124,7 +138,8 @@ class Framework extends TObject {
             array_walk_recursive($Var, $mCallback);
         }
 
-        \Boot::WriteStaticTable(self::$FStaticTable, self::$FClassInfo, self::CClassDelimiter);
+        self::WriteStaticTable(self::$FStaticTable, self::$FClassInfo,
+                self::CClassDelimiter);
 
         //These code below illustrates the structure of a serialization string.
         //The Static Table is an array of this structure:
@@ -141,14 +156,16 @@ class Framework extends TObject {
         //        [...,
         //        [CLASS_NAME_n => FILE_PATH_OF_CLASS_n]]]]
         //    );
-        $mResult = serialize(array (
-            self::CVar => $Var, self::CStaticTable => self::$FStaticTable));
-        $mResult = serialize(array (
-            array (self::CClassInfo => self::$FClassInfo,
-                self::CContent => $mResult)));
+        $mResult = serialize(
+                array(self::CVar => $Var,
+                        self::CStaticTable => self::$FStaticTable));
+        $mResult = serialize(
+                array(
+                        array(self::CClassInfo => self::$FClassInfo,
+                                self::CContent => $mResult)));
 
-        self::$FStaticTable = array ();
-        self::$FClassInfo = array ();
+        self::$FStaticTable = array();
+        self::$FClassInfo = array();
 
         return $mResult;
     }
@@ -156,7 +173,7 @@ class Framework extends TObject {
     /**
      * Unserialize a string into a variable or a class.
      *
-     * This function will unserilize a variable or a class with its
+     * This function will unserialize a variable or a class with its
      * corresponding variables and classes together according the given string
      * produced by {@link Framework::Serialize()} before.<br>
      * All the classes will be loaded automatically, and after that, their
@@ -171,25 +188,31 @@ class Framework extends TObject {
      * When <var>$SerializedVar</var> are checked as corrupted, such as a wrong
      * class name, the class cannot be found, a class static field are not
      * existed, an {@link EBadSerializedData} exception will be thrown.
-     * @param  string  $SerializedData The string of the serialization.
+     * @param string $SerializedVar The string of the serialization.
+     * @throws EBadSerializedData
      * @return mixed                   The unserialized variable.
      */
     public static function Unserialize($SerializedVar) {
         $mMeta = unserialize($SerializedVar);
-        if (((!is_array($mMeta[0][self::CClassInfo])) && (isset($mMeta[0][self::CClassInfo]))) || (!is_string($mMeta[0][self::CContent]))) {
+        if (((!is_array($mMeta[0][self::CClassInfo]))
+                && (isset($mMeta[0][self::CClassInfo])))
+                || (!is_string($mMeta[0][self::CContent]))) {
             throw new EBadSerializedData();
         }
 
         self::$FClassInfo = $mMeta[0][self::CClassInfo];
         if (isset(self::$FClassInfo)) {
             foreach (self::$FClassInfo as $mIndex => $mVal) {
+                /** @noinspection PhpIncludeInspection */
                 require_once realpath($mVal);
                 $mIndex::ClassWakeUp();
             }
         }
 
         $mMeta = unserialize($mMeta[0][self::CContent]);
-        if ((!isset($mMeta[self::CVar])) || ((!is_array($mMeta[self::CStaticTable])) && (isset($mMeta[self::CStaticTable])))) {
+        if ((!isset($mMeta[self::CVar]))
+                || ((!is_array($mMeta[self::CStaticTable]))
+                        && (isset($mMeta[self::CStaticTable])))) {
             throw new EBadSerializedData();
         }
 
@@ -212,7 +235,7 @@ class Framework extends TObject {
 
     /**
      * Act like FreeAndNil() in VCL.
-     * @param	TObject	$Object
+     * @param	\FrameworkDSW\System\TObject	$Object
      */
     public static final function Free(&$Object) {
         if ($Object !== null) {
@@ -221,7 +244,120 @@ class Framework extends TObject {
             gc_collect_cycles();
         }
     }
-}
 
+    /**
+     *
+     * @param string $TypeName
+     * @param string $UnitPath
+     */
+    public static final function RegisterExternalUnit($TypeName, $UnitPath) {
+        self::$FExternalUnits[(string) $TypeName] = (string) $UnitPath;
+    }
+
+    /**
+     *
+     * @param string $Name
+     * @throws \FrameworkDSW\System\EInvalidParameter
+     */
+    public static final function AutoLoader($Name) {
+        if (substr($Name, 0, 13) === 'FrameworkDSW\\') {
+            $Name = substr($Name, 13);
+            if ($Name === false) {
+                throw new EInvalidParameter(); //TODO exception type!
+            }
+            $mPos = strrpos($Name, '\\');
+            if ($mPos === false) {
+                throw new EInvalidParameter(); //TODO exception type!
+            }
+            $Name = substr($Name, 0, $mPos);
+            if ($Name === false) {
+                throw new EInvalidParameter(); //TODO exception type!
+            }
+            $Name = str_replace('\\', '_', $Name);
+            if ($Name === false) {
+                throw new EInvalidParameter(); //TODO exception type!
+            }
+            /**@var string $Name**/
+            /** @noinspection PhpIncludeInspection */
+            require_once "FrameworkDSW/{$Name}.php";
+            return;
+        }
+
+        if (isset(self::$FExternalUnits[$Name])) {
+            /** @noinspection PhpIncludeInspection */
+            require_once (string) self::$FExternalUnits;
+        }
+        elseif (isset(self::$FExternalUnits['*'])) {
+            foreach (self::$FExternalUnits['*'] as $mUnit) {
+                /** @noinspection PhpIncludeInspection */
+                require_once (string) $mUnit;
+            }
+        }
+        else {
+        	$Name = str_replace('\\',DIRECTORY_SEPARATOR ,$Name);
+            /**@var string $Name**/
+            /** @noinspection PhpIncludeInspection */
+            if (file_exists("{$Name}.php")) {
+                require_once "{$Name}.php";
+            }
+        }
+    }
+
+    /**
+     *
+     * @var    integer
+     */
+    private static $FStartAt = null;
+    /**
+     *
+     * @var    array
+     */
+    private static $FDeclaredClasses = null;
+
+    /**
+     *
+     */
+    static public function PreBoot() {
+    	if (isset(self::$FDeclaredClasses)) {
+    		return;
+    	}
+
+    	self::$FDeclaredClasses = get_declared_classes();
+    	self::$FStartAt = count(self::$FDeclaredClasses);
+
+    	spl_autoload_register('FrameworkDSW\Framework\Framework::AutoLoader', true);
+    }
+
+    /**
+     *
+     * @param  array $StaticTable
+     * @param  array $ClassInfo
+     * @param  string $ClassDelimiter
+     * @throws \Exception
+     */
+    static public function WriteStaticTable(&$StaticTable, &$ClassInfo, $ClassDelimiter) {
+    	if (!isset(self::$FDeclaredClasses)) {
+    		throw new \Exception('FATAL ERROR!');
+    	}
+
+    	self::$FDeclaredClasses = array_slice(get_declared_classes(), self::$FStartAt);
+    	foreach (self::$FDeclaredClasses as $mClass) {
+    		if (/*$mClass[0] == 'T' &&*/ is_subclass_of($mClass, 'System\TObject')) {
+    			$mReflection = new \ReflectionClass($mClass);
+    			$ClassInfo[$mClass] = $mReflection->getFileName();
+
+    			foreach ($mClass::ClassSleep() as $mFieldName) {
+    				$mProperty = $mReflection->getProperty($mFieldName);
+    				$mProperty->setAccessible(true);
+    				$StaticTable[$mClass . $ClassDelimiter . $mFieldName] = $mProperty->getValue();
+    			}
+
+    			//see the PHP BUG #49074 (http://bugs.php.net/bug.php?id=49074).
+    			//pay attention at the comment of [1 Aug 9:10pm UTC] felipe@php.net.
+    		}
+    	}
+    }
+}
+Framework::PreBoot();
 //TODO: use SPL containers to store FClassInfo field.
 //TODO: use get_included_files to collect included files.

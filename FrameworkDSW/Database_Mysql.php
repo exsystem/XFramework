@@ -1,13 +1,12 @@
 <?php
 /**
- * Database_Mysql.php
+ * \FrameworkDSW\Database\Mysql
  * @author	许子健
  * @version	$Id$
  * @since	separate file since reversion 17
  */
 namespace FrameworkDSW\Database\Mysql;
-require_once 'FrameworkDSW/Database.php';
-require_once 'FrameworkDSW/Containers.php';
+
 use FrameworkDSW\System\TObject;
 use FrameworkDSW\Utilities\TType;
 use FrameworkDSW\Database\IDatabaseWarningContext;
@@ -72,20 +71,20 @@ abstract class TBaseMysqlObject extends TObject {
     /**
      *
      * Enter description here ...
-     * @var	TMysqlDriver
+     * @var	\FrameworkDSW\Database\Mysql\TMysqlDriver
      */
     protected $FDriver = null;
     /**
      *
      * Enter description here ...
-     * @var	mysqli
+     * @var	\mysqli
      */
     protected $FMysqli = null;
 
     /**
      *
      * Enter description here ...
-     * @param	TMysqlDriver	$Driver
+     * @param	\FrameworkDSW\Database\Mysql\TMysqlDriver	$Driver
      */
     public function __construct($Driver) {
         TType::Object($Driver, 'TMysqlDriver');
@@ -97,7 +96,7 @@ abstract class TBaseMysqlObject extends TObject {
     /**
      *
      * Enter description here ...
-     * @return	TMysqlDriver
+     * @return	\FrameworkDSW\Database\Mysql\TMysqlDriver
      */
     protected function getDriver() {
         return $this->FDriver;
@@ -205,7 +204,7 @@ class TMysqlWarningContext extends TObject implements IDatabaseWarningContext {
 }
 
 /**
- * TMysqlDriver
+ * \FrameworkDSW\Database\Mysql\TMysqlDriver
  * @author	许子健
  */
 final class TMysqlDriver extends TObject implements IDriver {
@@ -244,7 +243,7 @@ final class TMysqlDriver extends TObject implements IDriver {
     private $FSocket = '';
 
     /**
-     * @var	TMap <K: string, V: string>
+     * @var	\FrameworkDSW\Containers\TMap <K: string, V: string>
      */
     private $FProperties = null;
 
@@ -265,7 +264,7 @@ final class TMysqlDriver extends TObject implements IDriver {
     /**
      *
      * Enter description here ...
-     * @var	mysqli
+     * @var	\mysqli
      */
     private $FMysqli = null;
 
@@ -312,14 +311,16 @@ final class TMysqlDriver extends TObject implements IDriver {
         }
 
         //TODO: observe and add other PDO common available options.
-        $this->FMysqliOptions[MYSQLI_INIT_COMMAND] = 'SET NAMES UTF8';
     }
 
     /**
      * descHere
-     * @param	string	$Url
-     * @param	IMap <K: string, V: string>	$Properties
-     * @return	IConnection
+     * @param    string $Url
+     * @param    \FrameworkDSW\Containers\IMap $Properties <K: string, V: string>
+     * @param string $Url
+     * @throws \FrameworkDSW\Database\EFailedToConnectDb
+     * @throws \FrameworkDSW\Database\EInsufficientProperties
+     * @return    \FrameworkDSW\Database\IConnection
      */
     public function Connect($Url, $Properties) {
         TType::String($Url);
@@ -335,6 +336,7 @@ final class TMysqlDriver extends TObject implements IDriver {
                     $this->FMysqli->options($mKey, $mValue);
                 }
                 $this->FMysqli->real_connect($this->FServer, $this->FProperties['Username'], $this->FProperties['Password'], $this->FDbName, $this->FPort, $this->FSocket, $this->FMysqliFlags);
+                $this->FMysqli->set_charset('utf8');
             }
             catch (EIndexOutOfBounds $Ex) {
                 throw new EInsufficientProperties(EInsufficientProperties::CMsg . 'Username, Password.');
@@ -350,9 +352,10 @@ final class TMysqlDriver extends TObject implements IDriver {
 
     /**
      * descHere
-     * @param	string	$Url
-     * @param	IMap <K: string, V: string>	$Properties
-     * @return	TDriverPropertyInfo[]
+     * @param    string $Url
+     * @param    \FrameworkDSW\Containers\IMap $Properties <K: string, V: string>
+     * @throws \FrameworkDSW\Database\EFailedToGetDbPropertyInfo
+     * @return    \FrameworkDSW\Database\TDriverPropertyInfo[]
      */
     public function GetPropertyInfo($Url, $Properties) {
         TType::String($Url);
@@ -505,7 +508,7 @@ final class TMysqlDriver extends TObject implements IDriver {
 
     /**
      * descHere
-     * @return	TVersion
+     * @return	\FrameworkDSW\Utilities\TVersion
      */
     public function getVersion() {
         $mVer = new TVersion();
@@ -560,8 +563,8 @@ final class TMysqlDriver extends TObject implements IDriver {
     /**
      *
      * Enter description here ...
-     * @param	TBaseMysqlObject	$Request
-     * @return	mysqli
+     * @param	\FrameworkDSW\Database\Mysql\TBaseMysqlObject	$Request
+     * @return	\mysqli
      */
     public function getMysqli($Request) {
         TType::Object($Request, 'TBaseMysqlObject');
@@ -570,7 +573,7 @@ final class TMysqlDriver extends TObject implements IDriver {
 }
 
 /**
- * TMysqlConnection
+ * \FrameworkDSW\Database\Mysql\TMysqlConnection
  * @author	许子健
  */
 final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
@@ -600,13 +603,13 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
     /**
      *
      * Enter description here ...
-     * @var	EDatabaseWarning
+     * @var	\FrameworkDSW\Database\EDatabaseWarning
      */
     private $FWarnings = null;
     /**
      *
      * Enter description here ...
-     * @var	TMysqlDatabaseMetaData
+     * @var	\FrameworkDSW\Database\Mysql\TMysqlDatabaseMetaData
      */
     private $FMetaData = null;
 
@@ -623,8 +626,7 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
     /**
      *
      * Enter description here ...
-     * @param	TMysqlConnection	$Connection
-     * @param	mysqli	$Mysqli
+     * @param	\FrameworkDSW\Database\Mysql\TMysqlConnection	$Connection
      * @param	string	$QueryString
      * @param	string	$ExceptionType
      */
@@ -640,7 +642,8 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
     /**
      *
      * Enter description here ...
-     * @param	TMysqlDriver	$Driver
+     * @param    \FrameworkDSW\Database\Mysql\TMysqlDriver $Driver
+     * @throws \FrameworkDSW\System\EIsNotNullable
      */
     public function __construct($Driver) {
         TType::Object($Driver, 'TMysqlDriver');
@@ -657,7 +660,7 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
 
     /**
      * (non-PHPdoc)
-     * @see TObject::Destroy()
+     * @see \FrameworkDSW\System\TObject::Destroy()
      */
     public function Destroy() {
         if ($this->FIsConnected) {
@@ -669,11 +672,12 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
     /**
      *
      * Enter description here ...
-     * @param	string	$WarningType
-     * @param	string	$SqlState
-     * @param	string	$ErrorCode
-     * @param	string	$ErrorMessage
-     * @param	TMysqlConnection	$Connection
+     * @param    string $WarningType
+     * @param    string $SqlState
+     * @param    string $ErrorCode
+     * @param    string $ErrorMessage
+     * @param    \FrameworkDSW\Database\Mysql\TMysqlConnection $Connection
+     * @throws
      */
     public static function PushWarning($WarningType, $SqlState, $ErrorCode, $ErrorMessage, $Connection) {
         TType::String($WarningType);
@@ -691,8 +695,8 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
     /**
      *
      * @param string $WarningType
-     * @param mysqli_sql_exception $Exception
-     * @param TMysqlConnection $Connection
+     * @param \mysqli_sql_exception $Exception
+     * @param \FrameworkDSW\Database\Mysql\TMysqlConnection $Connection
      */
     public static function PushMysqliExceptionWarning($WarningType, $Exception, $Connection) {
         TType::String($WarningType);
@@ -731,7 +735,7 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
     /**
      * descHere
      * @param	string	$Name
-     * @return	ISavepoint
+     * @return	\FrameworkDSW\Database\ISavepoint
      */
     public function CreateSavepoint($Name = '') {
         TType::String($Name);
@@ -744,9 +748,9 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
 
     /**
      * descHere
-     * @param	TResultSetType	$ResultSetType
-     * @param	TConcurrencyType	$ConcurrencyType
-     * @return	IStatement
+     * @param	\FrameworkDSW\Database\TResultSetType	$ResultSetType
+     * @param	\FrameworkDSW\Database\TConcurrencyType	$ConcurrencyType
+     * @return	\FrameworkDSW\Database\IStatement
      */
     public function CreateStatement($ResultSetType, $ConcurrencyType) {
         TType::Object($ResultSetType, 'TResultSetType');
@@ -792,6 +796,7 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
         catch (\mysqli_sql_exception $Ex) {
             self::PushMysqliExceptionWarning(EExecuteFailed::ClassType(), $Ex, $this);
         }
+        /** @noinspection PhpUndefinedVariableInspection */
         $mRaw = $mRaw->fetch_row();
         return (boolean) $mRaw[0];
     }
@@ -806,7 +811,7 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
 
     /**
      * descHere
-     * @return	THoldability
+     * @return	\FrameworkDSW\Database\THoldability
      */
     public function getHoldability() {
         $this->EnsureConnected();
@@ -823,7 +828,7 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
 
     /**
      * descHere
-     * @return	IDatabaseMetaData
+     * @return	\FrameworkDSW\Database\IDatabaseMetaData
      */
     public function getMetaData() {
         if ($this->FMetaData === null) {
@@ -842,33 +847,36 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
 
     /**
      * descHere
-     * @return	TTransactionIsolationLevel
+     * @return	\FrameworkDSW\Database\TTransactionIsolationLevel
      */
+    /** @noinspection PhpInconsistentReturnPointsInspection */
     public function getTransactionIsolation() {
         try {
             $mLevel = $this->FMysqli->query('SELECT @@tx_isolation');
+            $mLevel = $mLevel->fetch_row();
         }
         catch (\mysqli_sql_exception $Ex) {
             self::PushMysqliExceptionWarning(EExecuteFailed::ClassType(), $Ex, $this);
         }
-        $mLevel = $mLevel->fetch_row();
+
+        /** @noinspection PhpUndefinedVariableInspection */
         $mLevel = (string) $mLevel[0];
 
         switch ($mLevel) {
-        case 'READ-UNCOMMITTED':
-            return TTransactionIsolationLevel::eReadUncommitted();
-        case 'READ-COMMITTED':
-            return TTransactionIsolationLevel::eReadCommitted();
-        case 'REPEATABLE-READ':
-            return TTransactionIsolationLevel::eRepeatableRead();
-        case 'SERIALIZABLE':
-            return TTransactionIsolationLevel::eSerializable();
+            case 'READ-UNCOMMITTED':
+                return TTransactionIsolationLevel::eReadUncommitted();
+            case 'READ-COMMITTED':
+                return TTransactionIsolationLevel::eReadCommitted();
+            case 'REPEATABLE-READ':
+                return TTransactionIsolationLevel::eRepeatableRead();
+            case 'SERIALIZABLE':
+                return TTransactionIsolationLevel::eSerializable();
         }
     }
 
     /**
      * descHere
-     * @return	EDatabaseWarning
+     * @return	\FrameworkDSW\Database\EDatabaseWarning
      */
     public function getWarnings() {
         $this->EnsureConnected();
@@ -877,10 +885,9 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
 
     /**
      * descHere
-     * @param	TResultSetType	$ResultSetType
-     * @param	TConcurrencyType	$ConcurrencyType
-     * @param	THoldability	$Holdability
-     * @return	IPreparedStatement
+     * @param    \FrameworkDSW\Database\TResultSetType $ResultSetType
+     * @param    \FrameworkDSW\Database\TConcurrencyType $ConcurrencyType
+     * @return    \FrameworkDSW\Database\IPreparedStatement
      */
     public function PrepareStatement($ResultSetType, $ConcurrencyType) {
         TType::Object($ResultSetType, 'TResultSetType');
@@ -894,10 +901,9 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
 
     /**
      * descHere
-     * @param	TResultSetType	$ResultSetType
-     * @param	TConcurrencyType	$ConcurrencyType
-     * @param	THoldability	$Holdability
-     * @return	ICallableStatment
+     * @param	\FrameworkDSW\Database\TResultSetType	$ResultSetType
+     * @param	\FrameworkDSW\Database\TConcurrencyType	$ConcurrencyType
+     * @return	\FrameworkDSW\Database\ICallableStatement
      */
     public function PrepareCall($ResultSetType, $ConcurrencyType) {
         TType::Object($ResultSetType, 'TResultSetType');
@@ -906,14 +912,15 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
         $this->EnsureConnected();
 
         //TODO: check if the params are supported first.
-        return new TMysqlCallableStatment($this, $ResultSetType, $ConcurrencyType);
+        return new TMysqlCallableStatement($this, $ResultSetType, $ConcurrencyType);
     }
 
     /**
      * descHere
-     * @param	ISavepoint	$Savepoint
+     * @param	\FrameworkDSW\Database\ISavepoint	$Savepoint
      */
     public function RemoveSavepoint($Savepoint) {
+        /**@var $Savepoint \FrameworkDSW\Database\TSavepoint**/
         TType::Object($Savepoint, 'TSavepoint');
         $mName = $Savepoint->getProperName();
         self::EnsureQuery($this, "RELEASE SAVEPOINT {$mName}", EExecuteFailed::ClassType());
@@ -921,9 +928,10 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
 
     /**
      * descHere
-     * @param	ISavepoint	$Savepoint
+     * @param	\FrameworkDSW\Database\ISavepoint	$Savepoint
      */
     public function Rollback($Savepoint = null) {
+        /**@var $Savepoint \FrameworkDSW\Database\TSavepoint**/
         TType::Object($Savepoint, 'TSavepoint');
         $this->EnsureConnected();
         if ($Savepoint !== null) {
@@ -953,7 +961,8 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
 
     /**
      * descHere
-     * @param	string	$Value
+     * @param    string $Value
+     * @throws \FrameworkDSW\Database\EUnsupportedDbFeature
      */
     public function setCatalog($Value) {
         TType::String($Value);
@@ -962,7 +971,8 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
 
     /**
      * descHere
-     * @param	THoldability	$Value
+     * @param    \FrameworkDSW\Database\THoldability $Value
+     * @throws \FrameworkDSW\Database\EUnsupportedDbFeature
      */
     public function setHoldability($Value) {
         TType::Object($Value, 'THoldability');
@@ -973,7 +983,8 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
 
     /**
      * descHere
-     * @param	boolean	$Value
+     * @param    boolean $Value
+     * @throws \FrameworkDSW\Database\EUnsupportedDbFeature
      */
     public function setReadOnly($Value) {
         TType::Bool($Value);
@@ -982,10 +993,12 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
 
     /**
      * descHere
-     * @param	TTransactionIsolation	$Value
+     * @param    \FrameworkDSW\Database\TTransactionIsolationLevel $Value
+     * @throws \FrameworkDSW\Database\EUnsupportedDbFeature
      */
     public function setTransactionIsolation($Value) {
         TType::Object($Value, 'TTransactionIsolationLevel');
+        /**@var $mSql string**/
         switch ($Value) {
         case TTransactionIsolationLevel::eReadCommitted():
             $mSql = 'SET TRANSACTION ISOLATION LEVEL READ COMMITTED';
@@ -1013,19 +1026,19 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
  */
 abstract class TAbstractMysqlStatement extends TBaseMysqlObject {
     /**
-     * @var	TMysqlConnection
+     * @var	\FrameworkDSW\Database\Mysql\TMysqlConnection
      */
     protected $FConnection = null;
     /**
      *
      * Enter description here ...
-     * @var	TResultSetType
+     * @var	\FrameworkDSW\Database\TResultSetType
      */
     protected $FResultSetType = null;
     /**
      *
      * Enter description here ...
-     * @var	TConcurrencyType
+     * @var	\FrameworkDSW\Database\TConcurrencyType
      */
     protected $FConcurrencyType = null;
     /**
@@ -1037,13 +1050,13 @@ abstract class TAbstractMysqlStatement extends TBaseMysqlObject {
     /**
      *
      * Enter description here ...
-     * @var	TList <T: string>
+     * @var	\FrameworkDSW\Containers\TList <T: string>
      */
     private $FCommands = null;
     /**
      *
      * Enter description here ...
-     * @var	IResultSet
+     * @var	\FrameworkDSW\Database\IResultSet
      */
     protected $FCurrentResultSet = null;
 
@@ -1056,7 +1069,7 @@ abstract class TAbstractMysqlStatement extends TBaseMysqlObject {
     /**
      *
      * Enter description here ...
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     abstract protected function DoQuery();
 
@@ -1080,9 +1093,9 @@ abstract class TAbstractMysqlStatement extends TBaseMysqlObject {
     /**
      *
      * Enter description here ...
-     * @param	TMysqlConnection	$Connection
-     * @param	TResultSetType		$ResultSetType
-     * @param	TConcurrencyType	$ConcurrencyType
+     * @param	\FrameworkDSW\Database\Mysql\TMysqlConnection	$Connection
+     * @param	\FrameworkDSW\Database\TResultSetType		$ResultSetType
+     * @param	\FrameworkDSW\Database\TConcurrencyType	$ConcurrencyType
      */
     public function __construct($Connection, $ResultSetType, $ConcurrencyType) {
         parent::__construct($Connection->getDriver());
@@ -1098,7 +1111,7 @@ abstract class TAbstractMysqlStatement extends TBaseMysqlObject {
 
     /**
      * (non-PHPdoc)
-     * @see TObject::Destroy()
+     * @see \FrameworkDSW\System\TObject::Destroy()
      */
     public function Destroy() {
         Framework::Free($this->FCommands);
@@ -1124,7 +1137,8 @@ abstract class TAbstractMysqlStatement extends TBaseMysqlObject {
 
     /**
      * descHere
-     * @return	integer[]
+     * @throws \FrameworkDSW\Database\EEmptyCommand
+     * @return    integer[]
      */
     public function ExecuteCommands() {
         if ($this->FCommands === null || $this->FCommands->IsEmpty()) {
@@ -1149,7 +1163,7 @@ abstract class TAbstractMysqlStatement extends TBaseMysqlObject {
 
     /**
      * descHere
-     * @return	IParam <T: ?>
+     * @return	\FrameworkDSW\Database\IParam <T: ?>
      */
     public function FetchAsScalar() {
         $mRaw = null;
@@ -1176,7 +1190,7 @@ abstract class TAbstractMysqlStatement extends TBaseMysqlObject {
 
     /**
      * descHere
-     * @return	IList <T: string>
+     * @return	\FrameworkDSW\Containers\IList <T: string>
      */
     public function getCommands() {
         if ($this->FCommands === null) {
@@ -1188,7 +1202,7 @@ abstract class TAbstractMysqlStatement extends TBaseMysqlObject {
 
     /**
      * descHere
-     * @return	IConnection
+     * @return	\FrameworkDSW\Database\IConnection
      */
     public function getConnection() {
         return $this->FConnection;
@@ -1196,7 +1210,7 @@ abstract class TAbstractMysqlStatement extends TBaseMysqlObject {
 
     /**
      * descHere
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetCurrentResult() {
         return $this->FCurrentResultSet;
@@ -1205,7 +1219,7 @@ abstract class TAbstractMysqlStatement extends TBaseMysqlObject {
     /**
      * descHere
      * @param	string	$Command
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function Query($Command = '') {
         TType::String($Command);
@@ -1229,14 +1243,14 @@ abstract class TAbstractMysqlStatement extends TBaseMysqlObject {
 }
 
 /**
- * TMysqlStatement
+ * \FrameworkDSW\Database\Mysql\TMysqlStatement
  * @author	许子健
  */
 class TMysqlStatement extends TAbstractMysqlStatement implements IStatement {
     /**
      *
      * Enter description here ...
-     * @var	mysqli_stmt
+     * @var	\mysqli_stmt
      */
     protected $FMysqliStmt = null;
 
@@ -1254,7 +1268,7 @@ class TMysqlStatement extends TAbstractMysqlStatement implements IStatement {
      *
      * Enter description here ...
      * @param	string	$WarningType
-     * @param   mysqli_sql_exception    $Exception
+     * @param   \mysqli_sql_exception    $Exception
      */
     protected function ResetMysqliStmt($WarningType, $Exception) {
         $this->FMysqliStmt->close();
@@ -1289,7 +1303,7 @@ class TMysqlStatement extends TAbstractMysqlStatement implements IStatement {
     /**
      *
      * Enter description here ...
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     protected function DoQuery() {
         return new TMysqlStmtResultSet($this, $this->FMysqliStmt, $this->FConcurrencyType, $this->FResultSetType);
@@ -1335,9 +1349,9 @@ class TMysqlStatement extends TAbstractMysqlStatement implements IStatement {
     /**
      *
      * Enter description here ...
-     * @param	TMysqlConnection	$Connection
-     * @param	TResultSetType		$ResultSetType
-     * @param	TConcurrencyType	$ConcurrencyType
+     * @param	\FrameworkDSW\Database\Mysql\TMysqlConnection	$Connection
+     * @param	\FrameworkDSW\Database\TResultSetType		$ResultSetType
+     * @param	\FrameworkDSW\Database\TConcurrencyType	$ConcurrencyType
      */
     public function __construct($Connection, $ResultSetType, $ConcurrencyType) {
         parent::__construct($Connection, $ResultSetType, $ConcurrencyType);
@@ -1346,7 +1360,7 @@ class TMysqlStatement extends TAbstractMysqlStatement implements IStatement {
 
     /**
      * (non-PHPdoc)
-     * @see TObject::Destroy()
+     * @see \FrameworkDSW\System\TObject::Destroy()
      */
     public function Destroy() {
         if ($this->FMysqliStmt != null) {
@@ -1360,8 +1374,9 @@ class TMysqlStatement extends TAbstractMysqlStatement implements IStatement {
 
     /**
      * descHere
-     * @param	integer	$Index
-     * @return	IResultSet
+     * @param    integer $Index
+     * @throws \FrameworkDSW\Containers\EIndexOutOfBounds
+     * @return    \FrameworkDSW\Database\IResultSet
      */
     public function getResult($Index) {
         TType::Int($Index);
@@ -1373,7 +1388,7 @@ class TMysqlStatement extends TAbstractMysqlStatement implements IStatement {
 
     /**
      * descHere
-     * @param	TCurrentResultOption	$Options
+     * @param	\FrameworkDSW\Database\TCurrentResultOption	$Options
      */
     public function NextResult($Options) {
         TType::Object($Options, 'TCurrentResultOption');
@@ -1390,7 +1405,7 @@ class TMysqlPreparedStatement extends TMysqlStatement implements IPreparedStatem
     /**
      *
      * Enter description here ...
-     * @var	TMap <K: string, V: IParam<T: ?>>
+     * @var	\FrameworkDSW\Containers\TMap <K: string, V: \FrameworkDSW\Database\IParam<T: ?>>
      */
     private $FParams = null;
     /**
@@ -1410,7 +1425,7 @@ EOD;
 
     /**
      * (non-PHPdoc)
-     * @see TMysqlStatement::DoSetCommand()
+     * @see \FrameworkDSW\Database\TMysqlStatement::DoSetCommand()
      */
     protected function DoSetCommand() {
         $mChunks = preg_split(self::CPattern, $this->FCommand, 0, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
@@ -1461,8 +1476,8 @@ EOD;
 
     /**
      * (non-PHPdoc)
-     * @see TMysqlStatement::DoQuery()
-     * @return	IResultSet
+     * @see \FrameworkDSW\Database\Mysql\TMysqlStatement::DoQuery()
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     protected function DoQuery() {
         $this->BindRawParameters();
@@ -1483,7 +1498,7 @@ EOD;
 
     /**
      * (non-PHPdoc)
-     * @see TMysqlStatement::DoExecute()
+     * @see \FrameworkDSW\Database\Mysql\TMysqlStatement::DoExecute()
      * @param	string	$Command
      * @return	integer
      */
@@ -1500,7 +1515,7 @@ EOD;
 
     /**
      * (non-PHPdoc)
-     * @see TMysqlStatement::Destroy()
+     * @see \FrameworkDSW\Database\Mysql\TMysqlStatement::Destroy()
      */
     public function Destroy() {
         Framework::Free($this->FParams);
@@ -1509,9 +1524,9 @@ EOD;
 
     /**
      * (non-PHPdoc)
-     * @see IPreparedStatement::BindParam()
+     * @see \FrameworkDSW\Database\IPreparedStatement::BindParam()
      * @param	string	$Name
-     * @param	IParam	$Param <T: ?>
+     * @param	\FrameworkDSW\Database\IParam	$Param <T: ?>
      */
     public function BindParam($Name, $Param) {
         TType::Object($Param, 'IParam');
@@ -1526,7 +1541,7 @@ EOD;
 
     /**
      * (non-PHPdoc)
-     * @see IPreparedStatement::ClearParams()
+     * @see \FrameworkDSW\Database\IPreparedStatement::ClearParams()
      */
     public function ClearParams() {
         Framework::Free($this->FParams);
@@ -1539,11 +1554,11 @@ EOD;
  * Enter description here ...
  * @author	许子健
  */
-class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallableStatement {
+class TMysqlCallableStatement extends TAbstractMysqlStatement implements ICallableStatement {
     /**
      *
      * Enter description here ...
-     * @var	TMap <K: string, V: IParam<T: ?>>
+     * @var	\FrameworkDSW\Containers\TMap <K: string, V: \FrameworkDSW\Database\IParam<T: ?>>
      */
     private $FParams = null;
     /**
@@ -1556,7 +1571,7 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
     /**
      *
      * Enter description here ...
-     * @var	TLinkedList <T: TMysqlResultSet>
+     * @var	\FrameworkDSW\Containers\TLinkedList <T: \FrameworkDSW\Database\Mysql\TMysqlResultSet>
      */
     private $FResultSets = null;
     /**
@@ -1569,8 +1584,10 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
     /**
      *
      * Enter description here ...
-     * @return	mysqli_result
+     * @throws \Exception|\FrameworkDSW\Database\EExecuteFailed
+     * @return    \mysqli_result
      */
+    /** @noinspection PhpInconsistentReturnPointsInspection */
     private function FetchRawResult() {
         foreach ($this->FCurrentSetParams as &$mParam) {
             $mParamValue = $this->FMysqli->real_escape_string($this->FParams[substr($mParam, 1)]->getValue());
@@ -1605,7 +1622,7 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
 
     /**
      * (non-PHPdoc)
-     * @see TMysqlStatement::DoSetCommand()
+     * @see \FrameworkDSW\Database\Mysql\TMysqlStatement::DoSetCommand()
      */
     protected function DoSetCommand() {
         $this->FCurrentSetParams = array();
@@ -1628,8 +1645,9 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
 
     /**
      * (non-PHPdoc)
-     * @see TMysqlStatement::DoQuery()
-     * @return	IResultSet
+     * @see \FrameworkDSW\Database\Mysql\TMysqlStatement::DoQuery()
+     * @throws \FrameworkDSW\Database\EUnsupportedDbFeature
+     * @return    \FrameworkDSW\Database\IResultSet
      */
     protected function DoQuery() {
         if ($this->FResultSetType == TResultSetType::eScrollSensitive() || $this->FConcurrencyType == TConcurrencyType::eUpdatable()) {
@@ -1677,7 +1695,7 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
 
     /**
      * (non-PHPdoc)
-     * @see TMysqlStatement::DoExecute()
+     * @see \FrameworkDSW\Database\Mysql\TMysqlStatement::DoExecute()
      * @param	string	$Command
      * @return	integer
      */
@@ -1693,7 +1711,7 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
 
     /**
      * (non-PHPdoc)
-     * @see TAbstractMysqlStatement::Destroy()
+     * @see \FrameworkDSW\Database\Mysql\TAbstractMysqlStatement::Destroy()
      */
     public function Destroy() {
         Framework::Free($this->FResultSets);
@@ -1703,7 +1721,7 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
     /**
      *
      * @param	string			$Name
-     * @return	IParam <T: ?>
+     * @return	\FrameworkDSW\Database\IParam <T: ?>
      */
     public function GetParam($Name) {
         TType::String($Name);
@@ -1714,6 +1732,7 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
         catch (\mysqli_sql_exception $Ex) {
             TMysqlConnection::PushMysqliExceptionWarning(EExecuteFailed::ClassType(), $Ex, $this->FConnection);
         }
+        /** @noinspection PhpUndefinedVariableInspection */
         $mRawRow = $mRawResult->fetch_row();
         if ($mRawRow[0] === null) {
             $this->FParams[$Name] = null;
@@ -1728,9 +1747,9 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
 
     /**
      * (non-PHPdoc)
-     * @see IPreparedStatement::BindParam()
+     * @see \FrameworkDSW\Database\IPreparedStatement::BindParam()
      * @param	string	$Name
-     * @param	IParam	$Param <T: ?>
+     * @param	\FrameworkDSW\Database\IParam	$Param <T: ?>
      */
     public function BindParam($Name, $Param) {
         TType::Object($Param, 'IParam');
@@ -1745,7 +1764,7 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
 
     /**
      * (non-PHPdoc)
-     * @see IPreparedStatement::ClearParams()
+     * @see \FrameworkDSW\Database\IPreparedStatement::ClearParams()
      */
     public function ClearParams() {
         Framework::Free($this->FParams);
@@ -1753,8 +1772,9 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
 
     /**
      * descHere
-     * @param	integer	$Index
-     * @return	IResultSet
+     * @param    integer $Index
+     * @throws \FrameworkDSW\Containers\EIndexOutOfBounds
+     * @return    \FrameworkDSW\Database\IResultSet
      */
     public function getResult($Index) {
         TType::Int($Index);
@@ -1774,7 +1794,8 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
 
     /**
      * descHere
-     * @param	TCurrentResultOption	$Options
+     * @param    \FrameworkDSW\Database\TCurrentResultOption $Options
+     * @throws \FrameworkDSW\System\EException
      */
     public function NextResult($Options) {
         TType::Object($Options, 'TCurrentResultOption');
@@ -1805,6 +1826,7 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
         }
 
         $this->FCurrentResultSetIndex = $this->FResultSets->Size();
+        /** @noinspection PhpUndefinedVariableInspection */
         $this->FCurrentResultSet = new TMysqlResultSet($this, $mRawResult, $this->FConcurrencyType, $this->FResultSetType);
         $this->FResultSets->Add($this->FCurrentResultSet);
     }
@@ -1812,7 +1834,7 @@ class TMysqlCallableStatment extends TAbstractMysqlStatement implements ICallabl
 }
 
 /**
- * TAbstractMysqlResultSet
+ * \FrameworkDSW\Database\Mysql\TAbstractMysqlResultSet
  * @author	许子健
  */
 abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
@@ -1820,13 +1842,13 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
     /**
      *
      * Enter description here ...
-     * @var	TAbstractMysqlStatement
+     * @var	\FrameworkDSW\Database\Mysql\TAbstractMysqlStatement
      */
     protected $FStatement = null;
     /**
      *
      * Enter description here ...
-     * @var TResultSetType
+     * @var \FrameworkDSW\Database\TResultSetType
      */
     protected $FResultSetType = null;
     /**
@@ -1852,19 +1874,19 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
     /**
      *
      * Enter description here ...
-     * @var	TFetchDirection
+     * @var	\FrameworkDSW\Database\TFetchDirection
      */
     private $FFetchDirection = null;
     /**
      *
      * Enter description here ...
-     * @var	TMysqlRow
+     * @var	\FrameworkDSW\Database\Mysql\TMysqlRow
      */
     private $FRow = null;
     /**
      *
      * Enter description here ...
-     * @var	TMysqlInsertRow
+     * @var	\FrameworkDSW\Database\Mysql\TMysqlInsertRow
      */
     private $FInsertRow = null;
     /**
@@ -1929,7 +1951,8 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
     /**
      *
      * Enter description here ...
-     * @param	integer	$RowId
+     * @param    integer $RowId
+     * @throws \FrameworkDSW\Database\EInvalidRowId
      */
     private function EnsureRowId($RowId) {
         if ($RowId < -1) {
@@ -1940,7 +1963,8 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
     /**
      *
      * Enter description here ...
-     * @param	integer	$RowId
+     * @param    integer $RowId
+     * @throws \FrameworkDSW\Database\EInvalidRowId
      */
     private function FetchForward($RowId) {
         $mFetchFlag = null;
@@ -1951,7 +1975,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
                 break;
             }
             if ($mFetchFlag === false) {
-                TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqliStmt->sqlstate, $this->FMysqliStmt->errno, $this->FMysqliStmt->error, $this->FStatement->getConnection());
+                TMysqlConnection::PushWarning(EExecuteFailed::ClassType(), $this->FMysqli->sqlstate, $this->FMysqli->errno, $this->FMysqli->error, $this->FStatement->getConnection());
             }
             ++$mCurrRowId;
         }
@@ -1964,7 +1988,8 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
     /**
      *
      * Enter description here ...
-     * @param	integer	$RowId
+     * @param    integer $RowId
+     * @throws \FrameworkDSW\Database\EInvalidRowId
      */
     private function FetchTo($RowId) {
         if ($RowId == -1) {
@@ -2005,9 +2030,9 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
 
     /**
      * Enter description here ...
-     * @param	TAbstractMysqlStatement	$Statement
-     * @param	TConcurrencyType	$ConcurrencyType
-     * @param	TResultSetType	$ResultSetType
+     * @param	\FrameworkDSW\Database\Mysql\TAbstractMysqlStatement	$Statement
+     * @param	\FrameworkDSW\Database\TConcurrencyType	$ConcurrencyType
+     * @param	\FrameworkDSW\Database\TResultSetType	$ResultSetType
      */
     public function __construct($Statement, $ConcurrencyType, $ResultSetType) {
         $this->PrepareGeneric(array('K' => 'integer', 'V' => 'IRow', 'T' => 'IRow'));
@@ -2030,7 +2055,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
 
     /**
      * (non-PHPdoc)
-     * @see TObject::Destroy()
+     * @see \FrameworkDSW\System\TObject::Destroy()
      */
     public function Destroy() {
         Framework::Free($this->FRow);
@@ -2039,7 +2064,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
 
     /**
      * descHere
-     * @return	IRow
+     * @return	\FrameworkDSW\Database\IRow
      */
     public function current() {
         return $this->FRow;
@@ -2048,7 +2073,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
     /**
      * descHere
      * @param	integer	$RowId
-     * @return	IRow
+     * @return	\FrameworkDSW\Database\IRow
      */
     public function FetchAbsolute($RowId) {
         TType::Int($RowId);
@@ -2061,7 +2086,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
     /**
      * descHere
      * @param	integer	$Offset
-     * @return	IRow
+     * @return	\FrameworkDSW\Database\IRow
      */
     public function FetchRelative($Offset) {
         TType::Int($Offset);
@@ -2076,6 +2101,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
      * descHere
      * @return	integer
      */
+    /** @noinspection PhpInconsistentReturnPointsInspection */
     public function getCount() {
         switch ($this->FResultSetType) {
         case TResultSetType::eForwardOnly():
@@ -2092,7 +2118,8 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
 
     /**
      * descHere
-     * @return	string
+     * @throws \FrameworkDSW\Database\EUnsupportedDbFeature
+     * @return    string
      */
     public function getCursorName() {
         throw new EUnsupportedDbFeature();
@@ -2100,7 +2127,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
 
     /**
      * descHere
-     * @return	TFetchDirection
+     * @return	\FrameworkDSW\Database\TFetchDirection
      */
     public function getFetchDirection() {
         return $this->FFetchDirection;
@@ -2108,8 +2135,8 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
 
     /**
      * (non-PHPdoc)
-     * @see IResultSet::getInsertRow()
-     * @return IRow
+     * @see \FrameworkDSW\Database\IResultSet::getInsertRow()
+     * @return \FrameworkDSW\Database\IRow
      */
     public function getInsertRow() {
         return $this->FInsertRow;
@@ -2125,7 +2152,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
 
     /**
      * descHere
-     * @return	IReusltMetaData
+     * @return	\FrameworkDSW\Database\IResultMetaData
      */
     public function getMetaData() {
         //TODO todo
@@ -2133,7 +2160,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
 
     /**
      * descHere
-     * @return	TResultSetType
+     * @return	\FrameworkDSW\Database\TResultSetType
      */
     public function getType() {
         return $this->FResultSetType;
@@ -2141,7 +2168,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
 
     /**
      * descHere
-     * @return	IStatement
+     * @return	\FrameworkDSW\Database\IStatement
      */
     public function getStatement() {
         return $this->FStatement;
@@ -2190,7 +2217,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
     /**
      * descHere
      * @param	integer	$offset
-     * @return	IRow
+     * @return	\FrameworkDSW\Database\IRow
      */
     public final function offsetGet($offset) {
         TType::Int($offset);
@@ -2200,9 +2227,9 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
     /**
      * descHere
      * @param	integer	$offset
-     * @param	IRow	$value
+     * @param	\FrameworkDSW\Database\IRow	$value
      */
-    public final function offsetSet($offset, $value) {
+    public final function offsetSet($offset, $value) { //TODO problematic!!
         TType::Int($offset);
         $this->FetchAbsolute($offset);
         foreach ($value as $mColumn => $mData) {
@@ -2245,7 +2272,9 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
 
     /**
      * descHere
-     * @param	TFetchDirection	$Value
+     * @param    \FrameworkDSW\Database\TFetchDirection $Value
+     * @throws \FrameworkDSW\Database\EUnsupportedDbFeature
+     * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function setFetchDirection($Value) {
         TType::Object($Value, 'TFetchDirection');
@@ -2260,7 +2289,8 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
 
     /**
      * descHere
-     * @param	integer	$Value
+     * @param    integer $Value
+     * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function setFetchSize($Value) {
         TType::Int($Value);
@@ -2302,20 +2332,20 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
 }
 
 /**
- * TMysqlResultSet
+ * \FrameworkDSW\Database\Mysql\TMysqlResultSet
  * @author	许子健
  */
 class TMysqlResultSet extends TAbstractMysqlResultSet implements IResultSet {
     /**
      *
      * Enter description here ...
-     * @var	mysqli_result
+     * @var	\mysqli_result
      */
     private $FMysqliResult = null;
 
     /**
      * (non-PHPdoc)
-     * @see TAbstractMysqlResultSet::FetchMeta()
+     * @see \FrameworkDSW\Database\Mysql\TAbstractMysqlResultSet::FetchMeta()
      */
     protected function FetchMeta() {
         $this->FMeta = $this->FMysqliResult->fetch_fields();
@@ -2362,7 +2392,8 @@ class TMysqlResultSet extends TAbstractMysqlResultSet implements IResultSet {
 
     /**
      * descHere
-     * @param	integer	$Value
+     * @param    integer $Value
+     * @throws \FrameworkDSW\Database\EUnsupportedDbFeature
      */
     protected function DoSetFetchSize($Value) {
         throw new EUnsupportedDbFeature(); //TODO: unsupported.
@@ -2370,7 +2401,7 @@ class TMysqlResultSet extends TAbstractMysqlResultSet implements IResultSet {
 
     /**
      * (non-PHPdoc)
-     * @see IResultSet::getFetchSize()
+     * @see \FrameworkDSW\Database\IResultSet::getFetchSize()
      * @return	integer
      */
     public function getFetchSize() {
@@ -2379,14 +2410,14 @@ class TMysqlResultSet extends TAbstractMysqlResultSet implements IResultSet {
 
     /**
      *
-     * @param	TMysqlCallableStatment		$Statement
-     * @param	mysqli_result				$MysqliResult
-     * @param	TConcurrencyType			$ConcurrencyType
-     * @param	TResultSetType				$ResultSetType
+     * @param	\FrameworkDSW\Database\Mysql\TMysqlCallableStatement		$Statement
+     * @param	\mysqli_result				$MysqliResult
+     * @param	\FrameworkDSW\Database\TConcurrencyType			$ConcurrencyType
+     * @param	\FrameworkDSW\Database\TResultSetType				$ResultSetType
      * Enter description here ...
      */
     public function __construct($Statement, $MysqliResult, $ConcurrencyType, $ResultSetType) {
-        TType::Object($Statement, 'TMysqlCallableStatment');
+        TType::Object($Statement, 'TMysqlCallableStatement');
         TType::Object($ConcurrencyType, 'TConcurrencyType');
         TType::Object($ResultSetType, 'TResultSetType');
 
@@ -2396,7 +2427,7 @@ class TMysqlResultSet extends TAbstractMysqlResultSet implements IResultSet {
 
     /**
      * (non-PHPdoc)
-     * @see TAbstractMysqlResultSet::Destroy()
+     * @see \FrameworkDSW\Database\Mysql\TAbstractMysqlResultSet::Destroy()
      */
     public function Destroy() {
         if ($this->FMysqliResult != null) {
@@ -2408,7 +2439,7 @@ class TMysqlResultSet extends TAbstractMysqlResultSet implements IResultSet {
 }
 
 /**
- * TMysqlStmtResultSet
+ * \FrameworkDSW\Database\Mysql\TMysqlStmtResultSet
  * @author	许子健
  */
 class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet {
@@ -2420,13 +2451,13 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
     /**
      *
      * Enter description here ...
-     * @var	mysqli_stmt
+     * @var	\mysqli_stmt
      */
     private $FMysqliStmt = null;
 
     /**
      * (non-PHPdoc)
-     * @see TAbstractMysqlResultSet::FetchMeta()
+     * @see \FrameworkDSW\Database\Mysql\TAbstractMysqlResultSet::FetchMeta()
      */
     protected function FetchMeta() {
         try {
@@ -2441,7 +2472,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
 
     /**
      * (non-PHPdoc)
-     * @see TAbstractMysqlResultSet::DoSetFetchSize()
+     * @see \FrameworkDSW\Database\Mysql\TAbstractMysqlResultSet::DoSetFetchSize()
      * @param	integer	$Value
      */
     protected function DoSetFetchSize($Value) {
@@ -2450,7 +2481,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
 
     /**
      * (non-PHPdoc)
-     * @see TAbstractMysqlResultSet::DoGetCount()
+     * @see \FrameworkDSW\Database\Mysql\TAbstractMysqlResultSet::DoGetCount()
      * @return	integer
      */
     protected function DoGetCount() {
@@ -2462,7 +2493,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
 
     /**
      * (non-PHPdoc)
-     * @see TAbstractMysqlResultSet::DoReset()
+     * @see \FrameworkDSW\Database\Mysql\TAbstractMysqlResultSet::DoReset()
      */
     protected function DoReset() {
         try {
@@ -2487,7 +2518,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
 
     /**
      * (non-PHPdoc)
-     * @see TAbstractMysqlResultSet::DoSeekAndFetch()
+     * @see \FrameworkDSW\Database\Mysql\TAbstractMysqlResultSet::DoSeekAndFetch()
      * @param	integer	$RowId
      */
     protected function DoSeekAndFetch($RowId) {
@@ -2502,7 +2533,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
 
     /**
      * (non-PHPdoc)
-     * @see TAbstractMysqlResultSet::DoFetch()
+     * @see \FrameworkDSW\Database\Mysql\TAbstractMysqlResultSet::DoFetch()
      * @return	boolean
      */
     protected function DoFetch() {
@@ -2511,10 +2542,10 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
 
     /**
      *
-     * @param	TMysqlStatement	$Statement
-     * @param	mysqli_stmt		$MysqliStmt
-     * @param	TConcurrencyType	$ConcurrencyType
-     * @param	TResultSetType	$ResultSetType
+     * @param	\FrameworkDSW\Database\Mysql\TMysqlStatement	$Statement
+     * @param	\mysqli_stmt		$MysqliStmt
+     * @param	\FrameworkDSW\Database\TConcurrencyType	$ConcurrencyType
+     * @param	\FrameworkDSW\Database\TResultSetType	$ResultSetType
      * Enter description here ...
      */
     public function __construct($Statement, $MysqliStmt, $ConcurrencyType, $ResultSetType) {
@@ -2541,6 +2572,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
             //TODO: php-cgi doesn't return NO_CURSOR in WINDOWS! MYSQLI_CURSOR_TYPE_READ_ONLY returned.
             $this->FMysqliStmt->store_result();
         }
+        /** @noinspection PhpUndefinedVariableInspection */
         call_user_func_array(array($this->FMysqliStmt, 'bind_result'), $mParams);
     }
 
@@ -2561,8 +2593,9 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
 
     /**
      * (non-PHPdoc)
-     * @see IResultSet::getFetchSize()
-     * @return	integer
+     * @see \FrameworkDSW\Database\IResultSet::getFetchSize()
+     * @throws \FrameworkDSW\Database\EFailedToGetFetchSize
+     * @return    integer
      */
     public function getFetchSize() {
         try {
@@ -2577,19 +2610,19 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
 /**
  *
  * Enter description here ...
- * @author ExSystem
+ * @author 许子健
  */
 abstract class TAbstractMysqlRow extends TBaseMysqlObject {
     /**
      *
      * Enter description here ...
-     * @var	TAbstractMysqlResultSet
+     * @var	\FrameworkDSW\Database\Mysql\TAbstractMysqlResultSet
      */
     protected $FResultSet = null;
     /**
      *
      * Enter description here ...
-     * @var	TConcurrencyType
+     * @var	\FrameworkDSW\Database\TConcurrencyType
      */
     private $FConcurrencyType = null;
     /**
@@ -2651,8 +2684,8 @@ abstract class TAbstractMysqlRow extends TBaseMysqlObject {
     /**
      *
      * Enter description here ...
-     * @param	TAbstractMysqlResultSet	$ResultSet
-     * @param	TConcurrencyType		$ConcurrencyType
+     * @param	\FrameworkDSW\Database\Mysql\TAbstractMysqlResultSet	$ResultSet
+     * @param	\FrameworkDSW\Database\TConcurrencyType		$ConcurrencyType
      * @param	array					$Meta
      * @param	boolean					$WasUpdated
      */
@@ -2703,7 +2736,7 @@ abstract class TAbstractMysqlRow extends TBaseMysqlObject {
 
     /**
      * descHere
-     * @return	TConcurrencyType
+     * @return	\FrameworkDSW\Database\TConcurrencyType
      */
     public function getConcurrencyType() {
         return $this->FConcurrencyType;
@@ -2711,7 +2744,7 @@ abstract class TAbstractMysqlRow extends TBaseMysqlObject {
 
     /**
      * descHere
-     * @return	THoldability
+     * @return	\FrameworkDSW\Database\THoldability
      */
     public function getHoldability() {
         return $this->FResultSet->getStatement()->getConnection()->getHoldability();
@@ -2719,7 +2752,7 @@ abstract class TAbstractMysqlRow extends TBaseMysqlObject {
 
     /**
      * descHere
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function getResultSet() {
         return $this->FResultSet;
@@ -2738,8 +2771,10 @@ abstract class TAbstractMysqlRow extends TBaseMysqlObject {
 
     /**
      * descHere
-     * @param	string	$offset
-     * @param	IParam	$value <T: ?>
+     * @param    string $offset
+     * @param $value
+     * @throws \FrameworkDSW\Database\EInvalidColumnName
+     * @internal param $ \FrameworkDSW\Database\\IParam    $value <T: ?>
      */
     public final function offsetSet($offset, $value) {
         //TType::String($offset);
@@ -2769,7 +2804,8 @@ abstract class TAbstractMysqlRow extends TBaseMysqlObject {
 
     /**
      * descHere
-     * @param	string	$offset
+     * @param    string $offset
+     * @throws \FrameworkDSW\Containers\ENoSuchElement
      */
     public final function offsetUnset($offset) {
         //TType::String($offset);
@@ -2810,7 +2846,7 @@ abstract class TAbstractMysqlRow extends TBaseMysqlObject {
 /**
  *
  * Enter description here ...
- * @author ExSystem
+ * @author 许子健
  */
 final class TMysqlRow extends TAbstractMysqlRow implements IRow {
     /**
@@ -2842,14 +2878,14 @@ final class TMysqlRow extends TAbstractMysqlRow implements IRow {
      * Enter description here ...
      */
     protected function DoUpdate() {
-        $mSetSpinnet = join('=?, ', array_keys($this->FPendingUpdateRow));
-        $mSetSpinnet .= '=?';
-        $mWhereSpinnet = join(' AND ', $this->FPrimaryKeys);
-        $this->FMysqli->query("PREPARE sUpd FROM 'UPDATE {$this->FTableName} SET {$mSetSpinnet} WHERE {$mWhereSpinnet}'");
+        $mSetSpinet = join('=?, ', array_keys($this->FPendingUpdateRow));
+        $mSetSpinet .= '=?';
+        $mWhereSpinet = join(' AND ', $this->FPrimaryKeys);
+        $this->FMysqli->query("PREPARE sUpd FROM 'UPDATE {$this->FTableName} SET {$mSetSpinet} WHERE {$mWhereSpinet}'");
 
         $mCount = -1;
         $mParams = array();
-        foreach ($this->FPendingUpdateRow as $mCol => &$mData) {
+        foreach ($this->FPendingUpdateRow as &$mData) {
             ++$mCount;
             $mParams[] = "@q{$mCount}";
             $mValue = $this->FMysqli->real_escape_string($mData);
@@ -2857,6 +2893,7 @@ final class TMysqlRow extends TAbstractMysqlRow implements IRow {
         }
 
         $mCount = -1;
+        /** @noinspection PhpUnusedLocalVariableInspection */
         foreach ($this->FPrimaryKeys as $mKeyName => &$mDummy) {
             ++$mCount;
             $mParams[] = "@p{$mCount}";
@@ -2870,8 +2907,8 @@ final class TMysqlRow extends TAbstractMysqlRow implements IRow {
     /**
      *
      * Enter description here ...
-     * @param	TAbstractMysqlResultSet	$ResultSet
-     * @param	TConcurrencyType		$ConcurrencyType
+     * @param	\FrameworkDSW\Database\Mysql\TAbstractMysqlResultSet	$ResultSet
+     * @param	\FrameworkDSW\Database\TConcurrencyType		$ConcurrencyType
      * @param	array					$CurrentRow
      * @param	array					$Meta
      * @param	boolean					$WasDeleted
@@ -2893,10 +2930,11 @@ final class TMysqlRow extends TAbstractMysqlRow implements IRow {
     public function Delete() {
         $this->EnsureUpdatable();
 
-        $mSpinnet = join(' AND ', $this->FPrimaryKeys);
-        $this->FMysqli->query("PREPARE sDel FROM 'DELETE FROM {$this->FTableName} WHERE {$mSpinnet}'");
+        $mSpinet = join(' AND ', $this->FPrimaryKeys);
+        $this->FMysqli->query("PREPARE sDel FROM 'DELETE FROM {$this->FTableName} WHERE {$mSpinet}'");
         $mCount = -1;
         $mParams = array();
+        /** @noinspection PhpUnusedLocalVariableInspection */
         foreach ($this->FPrimaryKeys as $mKeyName => &$mDummy) {
             ++$mCount;
             $mParams[] = "@p{$mCount}";
@@ -2912,8 +2950,9 @@ final class TMysqlRow extends TAbstractMysqlRow implements IRow {
 
     /**
      * descHere
-     * @param	string	$offset
-     * @return	IParam	<T: ?>
+     * @param    string $offset
+     * @throws \FrameworkDSW\Database\EInvalidColumnName
+     * @return    \FrameworkDSW\Database\IParam    <T: ?>
      */
     public final function offsetGet($offset) {
         //TType::String($offset);
@@ -2966,17 +3005,17 @@ final class TMysqlInsertRow extends TAbstractMysqlRow implements IRow {
 
     /**
      * (non-PHPdoc)
-     * @see TAbstractMysqlRow::DoExecutePrepareUpdate()
+     * @see \FrameworkDSW\Database\Mysql\TAbstractMysqlRow::DoExecutePrepareUpdate()
      */
     protected function DoUpdate() {
-        $mColumnsSpinnet = join(', ', array_keys($this->FPendingUpdateRow));
-        $mValuesSpinnet = str_repeat('?, ', count($this->FPendingUpdateRow) - 1) . '?';
-        $this->FMysqli->query("PREPARE sIns FROM 'INSERT INTO {$this->FTableName}({$mColumnsSpinnet}) VALUES({$mValuesSpinnet})'");
-        //if using $mStatement->Execute('PREPARE ...'), you would got exception thrown as this is equavelent doing PREPARE x FROM 'PREPARE y ...' in mysql prompt tool, which is not allowed, and mysqli will not give you error description.
+        $mColumnsSpinet = join(', ', array_keys($this->FPendingUpdateRow));
+        $mValuesSpinet = str_repeat('?, ', count($this->FPendingUpdateRow) - 1) . '?';
+        $this->FMysqli->query("PREPARE sIns FROM 'INSERT INTO {$this->FTableName}({$mColumnsSpinet}) VALUES({$mValuesSpinet})'");
+        //if using $mStatement->Execute('PREPARE ...'), you would got exception thrown as this is equivalent doing PREPARE x FROM 'PREPARE y ...' in mysql prompt tool, which is not allowed, and mysqli will not give you error description.
 
         $mCount = -1;
         $mParams = array();
-        foreach ($this->FPendingUpdateRow as $mCol => &$mData) {
+        foreach ($this->FPendingUpdateRow as &$mData) {
             ++$mCount;
             $mParams[] = "@q{$mCount}";
             $mValue = $this->FMysqli->real_escape_string($mData);
@@ -2988,8 +3027,8 @@ final class TMysqlInsertRow extends TAbstractMysqlRow implements IRow {
     /**
      *
      * Enter description here ...
-     * @param	TAbstractMysqlResultSet	$ResultSet
-     * @param	TConcurrencyType		$ConcurrencyType
+     * @param	\FrameworkDSW\Database\Mysql\TAbstractMysqlResultSet	$ResultSet
+     * @param	\FrameworkDSW\Database\TConcurrencyType		$ConcurrencyType
      * @param	array					$Meta
      */
     public function __construct($ResultSet, $ConcurrencyType, &$Meta) {
@@ -3001,8 +3040,9 @@ final class TMysqlInsertRow extends TAbstractMysqlRow implements IRow {
 
     /**
      * descHere
-     * @param	string	$offset
-     * @return	IParam	<T: ?>
+     * @param    string $offset
+     * @throws \FrameworkDSW\Database\EInvalidColumnName
+     * @return    \FrameworkDSW\Database\IParam    <T: ?>
      */
     public final function offsetGet($offset) {
         //TType::String($offset);
@@ -3032,8 +3072,9 @@ final class TMysqlInsertRow extends TAbstractMysqlRow implements IRow {
 
     /**
      * (non-PHPdoc)
-     * @see		IRow::getWasDeleted()
-     * @return	boolean
+     * @see        \FrameworkDSW\Database\IRow::getWasDeleted()
+     * @throws \FrameworkDSW\Database\ECurrentRowIsInsertRow
+     * @return    boolean
      */
     public function getWasDeleted() {
         throw new ECurrentRowIsInsertRow();
@@ -3041,22 +3082,26 @@ final class TMysqlInsertRow extends TAbstractMysqlRow implements IRow {
 
     /**
      * (non-PHPdoc)
-     * @see IRow::Delete()
+     * @see \FrameworkDSW\Database\IRow::Delete()
      */
     public function Delete() {
         throw new ECurrentRowIsInsertRow();
     }
 }
 
-final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData { //TODO: pending...
 /**
  *
- * @var TMysqlConnection
+ * @author 许子健
  */
+final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData { //TODO: pending...
+    /**
+     *
+     * @var \FrameworkDSW\Database\Mysql\TMysqlConnection
+     */
     private $FConnection = null;
 
     /**
-     * @param	TMysqlConnection	$Connection
+     * @param	\FrameworkDSW\Database\Mysql\TMysqlConnection	$Connection
      */
     public function __construct($Connection) {
         parent::__construct();
@@ -3099,7 +3144,7 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TResultSetType	$Type
+     * @param	\FrameworkDSW\Database\TResultSetType	$Type
      * @return	boolean
      */
     public function DeletesAreDetected($Type) {
@@ -3117,11 +3162,12 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TPrimitiveParam $Catalog <T: string>
-     * @param	TPrimitiveParam $SchemaPattern <T: string>
-     * @param	string	$TypeNamePattern
-     * @param	string	$AttributeNamePattern
-     * @return	IResultSet
+     * @param    \FrameworkDSW\Database\TPrimitiveParam $Catalog <T: string>
+     * @param    \FrameworkDSW\Database\TPrimitiveParam $SchemaPattern <T: string>
+     * @param    string $TypeNamePattern
+     * @param    string $AttributeNamePattern
+     * @throws \FrameworkDSW\System\ENotImplemented
+     * @return    \FrameworkDSW\Database\IResultSet
      */
     public function GetAttributes($Catalog, $SchemaPattern, $TypeNamePattern, $AttributeNamePattern) {
         throw new ENotImplemented(); //TODO: todo
@@ -3129,12 +3175,13 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TPrimitiveParam	$Catalog <T: string>
-     * @param	TPrimitiveParam	$Schema <T: string>
-     * @param	string	$Table
-     * @param	TBestRowIdentifierScope	$Scope
-     * @param	boolean	$Nullable
-     * @return	IResultSet
+     * @param    \FrameworkDSW\Database\TPrimitiveParam $Catalog <T: string>
+     * @param    \FrameworkDSW\Database\TPrimitiveParam $Schema <T: string>
+     * @param    string $Table
+     * @param    \FrameworkDSW\Database\TBestRowIdentifierScope $Scope
+     * @param    boolean $Nullable
+     * @throws \FrameworkDSW\System\ENotImplemented
+     * @return    \FrameworkDSW\Database\IResultSet
      */
     public function GetBestRowIdentifier($Catalog, $Schema, $Table, $Scope, $Nullable) {
         throw new ENotImplemented(); //TODO: todo
@@ -3142,7 +3189,8 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @return	IResultSet
+     * @throws \FrameworkDSW\System\ENotImplemented
+     * @return    \FrameworkDSW\Database\IResultSet
      */
     public function getCatalogs() {
         throw new ENotImplemented(); //TODO: todo
@@ -3150,7 +3198,8 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @return	string
+     * @throws \FrameworkDSW\Database\EUnsupportedDbFeature
+     * @return    string
      */
     public function getCatalogTerm() {
         throw new EUnsupportedDbFeature(TAbstractPdoConnection::CCatalogUnsupported);
@@ -3158,49 +3207,49 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TPrimitiveParam	$Catalog <T: string>
-     * @param	TPrimitiveParam	$Schema <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$Catalog <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$Schema <T: string>
      * @param	string	$Table
      * @param	string	$ColumnNamePattern
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetColumnPrivileges($Catalog, $Schema, $Table, $ColumnNamePattern) {
     }
 
     /**
      * descHere
-     * @param	TPrimitiveParam	$Catalog <T: string>
-     * @param	TPrimitiveParam	$SchemaPattern <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$Catalog <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$SchemaPattern <T: string>
      * @param	string	$TableNamePattern
      * @param	string	$ColumnNamePattern
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetColumns($Catalog, $SchemaPattern, $TableNamePattern, $ColumnNamePattern) {
     }
 
     /**
      * descHere
-     * @return	IConnection
+     * @return	\FrameworkDSW\Database\IConnection
      */
     public function getConnection() {
     }
 
     /**
      * descHere
-     * @param	TPrimitiveParam	$PrimaryCatalog <T: string>
-     * @param	TPrimitiveParam	$PrimarySchema <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$PrimaryCatalog <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$PrimarySchema <T: string>
      * @param	string	$PrimaryTable
-     * @param	TPrimitiveParam	$ForeignCatalog <T: string>
-     * @param	TPrimitiveParam	$ForeignSchema <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$ForeignCatalog <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$ForeignSchema <T: string>
      * @param	string	$ForeignTable
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetCrossReference($PrimaryCatalog, $PrimarySchema, $PrimaryTable, $ForeignCatalog, $ForeignSchema, $ForeignTable) {
     }
 
     /**
      * descHere
-     * @return	TVersion
+     * @return	\FrameworkDSW\Utilities\TVersion
      */
     public function getDatabaseVersion() {
     }
@@ -3221,14 +3270,14 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @return	TVersion
+     * @return	\FrameworkDSW\Utilities\TVersion
      */
     public function getDbmsVersion() {
     }
 
     /**
      * descHere
-     * @return	TTransactionIsolationLevel
+     * @return	\FrameworkDSW\Database\TTransactionIsolationLevel
      */
     public function getDefaultTransactionIsolation() {
     }
@@ -3242,17 +3291,17 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @return	TVersion
+     * @return	\FrameworkDSW\Utilities\TVersion
      */
     public function getDriverVersion() {
     }
 
     /**
      * descHere
-     * @param	TPrimitiveParam	$Catalog <T: string>
-     * @param	TPrimitiveParam	$Schema <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$Catalog <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$Schema <T: string>
      * @param	string	$Table
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetExportedKeys($Catalog, $Schema, $Table) {
     }
@@ -3273,22 +3322,22 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TPrimitiveParam	$Catalog <T: string>
-     * @param	TPrimitiveParam	$Schema <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$Catalog <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$Schema <T: string>
      * @param	string	$Table
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetImportedKeys($Catalog, $Schema, $Table) {
     }
 
     /**
      * descHere
-     * @param	TPrimitiveParam	$Catalog <T: string>
-     * @param	TPrimitiveParam	$Schema <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$Catalog <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$Schema <T: string>
      * @param	string	$Table
      * @param	boolean	$Unique
      * @param	boolean	$Approximate
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetIndexInfo($Catalog, $Schema, $Table, $Unique, $Approximate) {
     }
@@ -3442,31 +3491,31 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TPrimitiveParam	$Catalog <T: string>
-     * @param	TPrimitiveParam	$Schema <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$Catalog <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$Schema <T: string>
      * @param	string	$Table
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetPrimaryKeys($Catalog, $Schema, $Table) {
     }
 
     /**
      * descHere
-     * @param	TPrimitiveParam	$Catalog <T: string>
-     * @param	TPrimitiveParam	$SchemaPattern <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$Catalog <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$SchemaPattern <T: string>
      * @param	string	$ProcedureNamePattern
      * @param	string	$ColumnNamePattern
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetProcedureColumns($Catalog, $SchemaPattern, $ProcedureNamePattern, $ColumnNamePattern) {
     }
 
     /**
      * descHere
-     * @param	TPrimitiveParam	$Catalog <T: string>
-     * @param	TPrimitiveParam	$SchemaPattern <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$Catalog <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$SchemaPattern <T: string>
      * @param	string	$ProcedureNamePattern
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetProcedures($Catalog, $SchemaPattern, $ProcedureNamePattern) {
     }
@@ -3487,14 +3536,14 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @return	THoldability
+     * @return	\FrameworkDSW\Database\THoldability
      */
     public function getResultSetHoldability() {
     }
 
     /**
      * descHere
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function getSchemas() {
     }
@@ -3522,7 +3571,7 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @return	TSqlStateType
+     * @return	\FrameworkDSW\Database\TSqlStateType
      */
     public function getSqlStateType() {
     }
@@ -3536,65 +3585,65 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TPrimitiveParam	$Catalog <T: string>
-     * @param	TPrimitiveParam	$SchemaPattern <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$Catalog <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$SchemaPattern <T: string>
      * @param	string	$TableNameSchema
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetSuperTables($Catalog, $SchemaPattern, $TableNameSchema) {
     }
 
     /**
      * descHere
-     * @param	TPrimitiveParam	$Catalog <T: string>
-     * @param	TPrimitiveParam	$SchemaPattern <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$Catalog <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$SchemaPattern <T: string>
      * @param	string	$TypeNamePattern
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetSuperTypes($Catalog, $SchemaPattern, $TypeNamePattern) {
     }
 
     /**
      * descHere
-     * @param	TPrimitiveParam	$Catalog <T: string>
-     * @param	TPrimitiveParam	$SchemaPattern <T: string>
-     * @param	string	$TableNamePatttern
-     * @return	IResultSet
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$Catalog <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$SchemaPattern <T: string>
+     * @param	string	$TableNamePattern
+     * @return	\FrameworkDSW\Database\IResultSet
      */
-    public function GetTablePrivileges($Catalog, $SchemaPattern, $TableNamePatttern) {
+    public function GetTablePrivileges($Catalog, $SchemaPattern, $TableNamePattern) {
     }
 
     /**
      * descHere
-     * @param	TPrimitiveParam	$Catalog <T: string>
-     * @param	TPrimitiveParam	$SchemaPattern <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$Catalog <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$SchemaPattern <T: string>
      * @param	string	$TableNamePattern
      * @param	string[]	$Types
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetTables($Catalog, $SchemaPattern, $TableNamePattern, $Types) {
     }
 
     /**
      * descHere
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function getTableTypes() {
     }
 
     /**
      * descHere
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function getTypeInfo() {
     }
 
     /**
      * descHere
-     * @param	TPrimitiveParam	$Catalog <T: string>
-     * @param	TPrimitiveParam	$SchemaPattern <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$Catalog <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$SchemaPattern <T: string>
      * @param	string	$TypeNamePattern
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetUdts($Catalog, $SchemaPattern, $TypeNamePattern) {
     }
@@ -3615,17 +3664,17 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TPrimitiveParam	$Catalog <T: string>
-     * @param	TPrimitiveParam	$Schema <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$Catalog <T: string>
+     * @param	\FrameworkDSW\Database\TPrimitiveParam	$Schema <T: string>
      * @param	string	$Table
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetVersionColumns($Catalog, $Schema, $Table) {
     }
 
     /**
      * descHere
-     * @param	TResultSetType	$Type
+     * @param	\FrameworkDSW\Database\TResultSetType	$Type
      * @return	boolean
      */
     public function InsertsAreDetected($Type) {
@@ -3675,7 +3724,7 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TResultSetType	$Type
+     * @param	\FrameworkDSW\Database\TResultSetType	$Type
      * @return	boolean
      */
     public function OthersDeletesAreVisible($Type) {
@@ -3683,7 +3732,7 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TResultSetType	$Type
+     * @param	\FrameworkDSW\Database\TResultSetType	$Type
      * @return	boolean
      */
     public function OthersInsertsAreVisible($Type) {
@@ -3691,7 +3740,7 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TResultSetType	$Type
+     * @param	\FrameworkDSW\Database\TResultSetType	$Type
      * @return	boolean
      */
     public function OthersUpdatesAreVisible($Type) {
@@ -3699,7 +3748,7 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TResultSetType	$Type
+     * @param	\FrameworkDSW\Database\TResultSetType	$Type
      * @return	boolean
      */
     public function OwnDeletesAreVisible($Type) {
@@ -3707,7 +3756,7 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TResultSetType	$Type
+     * @param	\FrameworkDSW\Database\TResultSetType	$Type
      * @return	boolean
      */
     public function OwnInsertsAreVisible($Type) {
@@ -3715,7 +3764,7 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TResultSetType	$Type
+     * @param	\FrameworkDSW\Database\TResultSetType	$Type
      * @return	boolean
      */
     public function OwnUpdatesAreVisible($Type) {
@@ -3732,7 +3781,7 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
      * descHere
      * @return	boolean
      */
-    public function StoresLowerCaseQuotedIndentifiers() {
+    public function StoresLowerCaseQuotedIdentifiers() {
     }
 
     /**
@@ -3746,7 +3795,7 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
      * descHere
      * @return	boolean
      */
-    public function StoresMixedCaseQuotedIndentifiers() {
+    public function StoresMixedCaseQuotedIdentifiers() {
     }
 
     /**
@@ -3760,7 +3809,7 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
      * descHere
      * @return	boolean
      */
-    public function StoresUpperCaseQuotedIndentifiers() {
+    public function StoresUpperCaseQuotedIdentifies() {
     }
 
     /**
@@ -4066,8 +4115,8 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TConcurrencyType	$Concurrency
-     * @param	TResultSetType	$Type
+     * @param	\FrameworkDSW\Database\TConcurrencyType	$Concurrency
+     * @param	\FrameworkDSW\Database\TResultSetType	$Type
      * @return	boolean
      */
     public function SupportsResultSetConcurrency($Concurrency, $Type) {
@@ -4082,7 +4131,7 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TResultSetType	$Type
+     * @param	\FrameworkDSW\Database\TResultSetType	$Type
      * @return	boolean
      */
     public function SupportsResultSetType($Type) {
@@ -4188,7 +4237,7 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TTransactionIsolationLevel	$Level
+     * @param	\FrameworkDSW\Database\TTransactionIsolationLevel	$Level
      * @return	boolean
      */
     public function SupportsTransactionIsolationLevel($Level) {
@@ -4217,7 +4266,7 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @param	TResultSetType	$Type
+     * @param	\FrameworkDSW\Database\TResultSetType	$Type
      * @return	boolean
      */
     public function UpdatesAreDetected($Type) {

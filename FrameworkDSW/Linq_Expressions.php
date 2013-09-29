@@ -1,12 +1,12 @@
 <?php
 /**
- * Linq_Expressions.php
+ * \FrameworkDSW\Linq\Expressions
  * @author	许子健
  * @version	$Id$
  * @since	separate file since reversion 30
  */
 namespace FrameworkDSW\Linq\Expressions;
-require_once 'FrameworkDSW/System.php';
+
 use FrameworkDSW\System\TEnum;
 use FrameworkDSW\System\TObject;
 use FrameworkDSW\Utilities\TType;
@@ -22,7 +22,7 @@ use FrameworkDSW\System\TString;
 // FIXME: 暫不支持數組（需要等待反射架構完成<type, dimensions>, int => <int, 0>）
 
 /**
- * TExpressionType
+ * \FrameworkDSW\Linq\Expressions\TExpressionType
  * 表示在表達式樹結點的表達式類型的枚舉類型。
  *
  * @author 许子健
@@ -89,13 +89,13 @@ final class TExpressionType extends TEnum {
      */
     const eConstant = 9;
     /**
-     * 強制轉換，例如：“(inetger) $a”。不會檢測轉換是否有意義。
+     * 強制轉換，例如：“(integer) $a”。不會檢測轉換是否有意義。
      *
      * @var integer
      */
     const eConvert = 10;
     /**
-     * 強制轉換，例如：“(inetger) $a”。檢測轉換是否有意義。
+     * 強制轉換，例如：“(integer) $a”。檢測轉換是否有意義。
      *
      * @var integer
      */
@@ -291,7 +291,7 @@ final class TExpressionType extends TEnum {
 }
 
 /**
- * TExpression
+ * \FrameworkDSW\Linq\Expressions\TExpression
  * 表示一个表达式的结点。
  *
  * @author 许子健
@@ -301,15 +301,15 @@ abstract class TExpression extends TObject {
     /**
      * 表达式结点的类型。
      *
-     * @var TExpressionType
+     * @var \FrameworkDSW\Linq\Expressions\TExpressionType
      */
     protected $FNodeType = null;
 
     /**
      * 移进该结点。
      *
-     * @param $Visitor TExpressionVisitor
-     * @return TExpression 表达式本身，或者替代自己的表达式。
+     * @param \FrameworkDSW\Linq\Expressions\TExpressionVisitor $Visitor
+     * @return \FrameworkDSW\Linq\Expressions\TExpression 表达式本身，或者替代自己的表达式。
      */
     public function Accept($Visitor) {
         $mExpression = $this->VisitChildren($Visitor);
@@ -319,9 +319,9 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function Add($Left, $Right) {
         return self::MakeBinary(TExpressionType::eAdd(), $Left, $Right);
@@ -330,10 +330,10 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $To TExpression
-     * @param $By TExpression
-     * @param $Conversion TLambdaExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $To
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $By
+     * @param \FrameworkDSW\Linq\Expressions\TLambdaExpression $Conversion
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function AddAssign($To, $By, $Conversion = null) {
         return self::MakeBinary(TExpressionType::eAddAssign(), $To, $By, false, $Conversion);
@@ -342,10 +342,10 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $To TExpression
-     * @param $By TExpression
-     * @param $Conversion TLambdaExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $To
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $By
+     * @param \FrameworkDSW\Linq\Expressions\TLambdaExpression $Conversion
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function AddAssignChecked($To, $By, $Conversion = null) {
         return self::MakeBinary(TExpressionType::eAddAssignChecked(), $To, $By, false, $Conversion);
@@ -354,10 +354,10 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @param $Conversion TLambdaExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @param \FrameworkDSW\Linq\Expressions\TLambdaExpression $Conversion
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function AddChecked($Left, $Right, $Conversion = null) {
         return self::MakeBinary(TExpressionType::eAddChecked(), $Left, $Right, false, $Conversion);
@@ -366,9 +366,9 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function AndBitwise($Left, $Right) {
         return self::MakeBinary(TExpressionType::eAnd(), $Left, $Right);
@@ -377,9 +377,9 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function AndAlso($Left, $Right) {
         return self::MakeBinary(TExpressionType::eAndAlso(), $Left, $Right);
@@ -388,10 +388,10 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $To TExpression
-     * @param $By TExpression
-     * @param $Conversion TLambdaExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $To
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $By
+     * @param \FrameworkDSW\Linq\Expressions\TLambdaExpression $Conversion
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function AndAssign($To, $By, $Conversion = null) {
         return self::MakeBinary(TExpressionType::eAndAssign(), $To, $By, false, $Conversion);
@@ -400,9 +400,9 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Array TExpression
-     * @param $Index TExpression
-     * @return TBinaryExpression
+     * @param $Array \FrameworkDSW\Linq\Expressions\TExpression
+     * @param $Index \FrameworkDSW\Linq\Expressions\TExpression
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function ArrayIndexInOneDimensional($Array, $Index) {
         return self::MakeBinary(TExpressionType::eArrayIndex(), $Array, $Index);
@@ -411,7 +411,7 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Array TExpression
+     * @param $Array \FrameworkDSW\Linq\Expressions\TExpression
      * @return TUnaryExpression
      */
     public static function ArrayLength($Array) {
@@ -421,9 +421,9 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $To TExpression
-     * @param $By TExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $To
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $By
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function Assign($To, $By) {
         return self::MakeBinary(TExpressionType::eAssign(), $To, $By);
@@ -432,9 +432,8 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param
-     *            IList<T: TExpression>	$Expressions
-     * @return TBlockExpression
+     * @param \FrameworkDSW\Containers\IList $Expressions <T: \FrameworkDSW\Linq\Expressions\TExpression>
+     * @return \FrameworkDSW\Linq\Expressions\TBlockExpression
      */
     public static function Block($Expressions) {
         TType::Object($Expressions, array (
@@ -451,12 +450,11 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Instance TExpression
-     * @param $Method array
-     * @param $Arguments IIteratorAggregate
-     *            <T: TExpression>
-     * @param $ReturnType mixed
-     * @return TMethodCallExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Instance
+     * @param array $Method
+     * @param \FrameworkDSW\Containers\IIteratorAggregate $Arguments <T: \FrameworkDSW\Linq\Expressions\TExpression>
+     * @param mixed $ReturnType
+     * @return \FrameworkDSW\Linq\Expressions\TMethodCallExpression
      */
     public static function Call($Instance, $Method, $Arguments, $ReturnType = null) {
         TType::Object($Instance, 'TExpression');
@@ -476,10 +474,10 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Test TExpression
-     * @param $IfNotNull TExpression
-     * @param $Conversion TLambdaExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Test
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $IfNotNull
+     * @param \FrameworkDSW\Linq\Expressions\TLambdaExpression $Conversion
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function Coalesce($Test, $IfNotNull, $Conversion = null) {
         return self::MakeBinary(TExpressionType::eCoalesce(), $Test, $IfNotNull, false, $Conversion);
@@ -488,11 +486,11 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Test TExpression
-     * @param $IfTrue TExpression
-     * @param $IfFalse TExpression
+     * @param $Test \FrameworkDSW\Linq\Expressions\TExpression
+     * @param $IfTrue \FrameworkDSW\Linq\Expressions\TExpression
+     * @param $IfFalse \FrameworkDSW\Linq\Expressions\TExpression
      * @param $Type mixed
-     * @return TConditionalExpression
+     * @return \FrameworkDSW\Linq\Expressions\TConditionalExpression
      */
     public static function Condition($Test, $IfTrue, $IfFalse, $Type = null) {
         TType::Object($Test, 'TExpression');
@@ -505,9 +503,9 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Value TObject
-     * @param $Type mixed
-     * @return TConstantExpression
+     * @param \FrameworkDSW\System\TObject $Value
+     * @param mixed $Type
+     * @return \FrameworkDSW\Linq\Expressions\TConstantExpression
      */
     public static function Constant($Value, $Type = null) {
         TType::Object($Value, 'TObject');
@@ -518,9 +516,9 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Expression TExpression
-     * @param $Type mixed
-     * @return TUnaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Expression
+     * @param mixed $Type
+     * @return \FrameworkDSW\Linq\Expressions\TUnaryExpression
      */
     public static function Convert($Expression, $Type) {
         return self::MakeUnary(TExpressionType::eConvert(), $Expression, $Type);
@@ -529,9 +527,9 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Expression TExpression
-     * @param $Type mixed
-     * @return TUnaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Expression
+     * @param mixed $Type
+     * @return \FrameworkDSW\Linq\Expressions\TUnaryExpression
      */
     public static function ConvertChecked($Expression, $Type) {
         return self::MakeUnary(TExpressionType::eConvertChecked(), $Expression, $Type);
@@ -540,8 +538,8 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Type mixed
-     * @return TDefaultExpression
+     * @param mixed $Type
+     * @return \FrameworkDSW\Linq\Expressions\TDefaultExpression
      */
     public static function DefaultValue($Type) {
         return new TDefaultExpression($Type);
@@ -550,9 +548,9 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function Divide($Left, $Right) {
         return self::MakeBinary(TExpressionType::eDivide(), $Left, $Right);
@@ -561,10 +559,10 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $To TExpression
-     * @param $By TExpression
-     * @param $Conversion TLambdaExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $To
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $By
+     * @param \FrameworkDSW\Linq\Expressions\TLambdaExpression $Conversion
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function DivideAssign($To, $By, $Conversion = null) {
         return self::MakeBinary(TExpressionType::eDivideAssign(), $To, $By, false, $Conversion);
@@ -573,7 +571,8 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @return TExpression
+     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     protected function DoReduce() {
         throw new EInvalidParameter();
@@ -582,10 +581,10 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @param $LiftToNull boolean
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @param boolean $LiftToNull
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function Equal($Left, $Right, $LiftToNull = false) {
         return self::MakeBinary(TExpressionType::eEqual(), $Left, $Right, $LiftToNull);
@@ -594,9 +593,9 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpresion
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function ExclusiveOr($Left, $Right) {
         return self::MakeBinary(TExpressionType::eExclusiveOr(), $Left, $Right);
@@ -605,10 +604,10 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $To TExpression
-     * @param $By TExpression
-     * @param $Conversion TLambdaExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $To
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $By
+     * @param \FrameworkDSW\Linq\Expressions\TLambdaExpression $Conversion
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function ExclusiveOrAssign($To, $By, $Conversion = null) {
         return self::MakeBinary(TExpressionType::eExclusiveOrAssign(), $To, $By, false, $Conversion);
@@ -626,7 +625,7 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @return TExpressionType
+     * @return \FrameworkDSW\Linq\Expressions\TExpressionType
      */
     public function getNodeType() {
         return $this->FNodeType;
@@ -642,10 +641,10 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @param $LiftToNull boolean
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @param boolean $LiftToNull
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function GreaterThan($Left, $Right, $LiftToNull = false) {
         return self::MakeBinary(TExpressionType::eGreaterThan(), $Left, $Right, $LiftToNull);
@@ -654,10 +653,10 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @param $LiftToNull boolean
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @param boolean $LiftToNull
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function GreaterThanOrEqual($Left, $Right, $LiftToNull = false) {
         return self::MakeBinary(TExpressionType::eGreaterThanOrEqual(), $Left, $Right, $LiftToNull);
@@ -666,8 +665,8 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Test TExpression
-     * @param $IfTrue TExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Test
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $IfTrue
      * @return TConditionalExpression
      */
     public static function IfThen($Test, $IfTrue) {
@@ -680,10 +679,10 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Test TExpression
-     * @param $IfTrue TExpression
-     * @param $IfFalse TExpression
-     * @return TConditionalExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Test
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $IfTrue
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $IfFalse
+     * @return \FrameworkDSW\Linq\Expressions\TConditionalExpression
      */
     public static function IfThenElse($Test, $IfTrue, $IfFalse) {
         TType::Object($Test, 'TExpression');
@@ -696,23 +695,23 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Body TExpression
-     * @param $Parameters IList
-     *            <T: TParameterExpression>
-     * @param $Name string
-     * @param $DelegateType mixed
-     * @return TLambdaExpresion
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Body
+     * @param \FrameworkDSW\Containers\IList $Parameters <T: \FrameworkDSW\Linq\Expressions\TParameterExpression>
+     * @param string $Name
+     * @param mixed $DelegateType
+     * @return \FrameworkDSW\Linq\Expressions\TLambdaExpression
      */
-    public static function Lambda($Body, $Parameters, $Name = '', $DelegateType = null) {
+    public static function Lambda($Body, $Parameters, $Name = '', /** @noinspection PhpUnusedParameterInspection */
+                                  $DelegateType = null) {
         return new TLambdaExpression($Name, $Body, $Parameters, $Body->getType());
     }
 
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function LeftShift($Left, $Right) {
         return self::MakeBinary(TExpressionType::eLeftShift(), $Left, $Right);
@@ -721,10 +720,10 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $To TExpression
-     * @param $By TExpression
-     * @param $Conversion TLambdaExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $To
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $By
+     * @param \FrameworkDSW\Linq\Expressions\TLambdaExpression $Conversion
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function LeftShiftAssign($To, $By, $Conversion = null) {
         return self::MakeBinary(TExpressionType::eLeftShiftAssign(), $To, $By, false, $Conversion);
@@ -733,10 +732,10 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @param $LiftToNull boolean
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @param boolean $LiftToNull
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function LessThan($Left, $Right, $LiftToNull = false) {
         return self::MakeBinary(TExpressionType::eLessThan(), $Left, $Right, $LiftToNull);
@@ -745,10 +744,10 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @param $LiftToNull boolean
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @param boolean $LiftToNull
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function LessThanOrEqual($Left, $Right, $LiftToNull = false) {
         return self::MakeBinary(TExpressionType::eLessThanOrEqual(), $Left, $Right, $LiftToNull);
@@ -757,12 +756,12 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $ExpressionType TExpressionType
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @param $LiftToNull boolean
-     * @param $Conversion TLambdaExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpressionType $ExpressionType
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @param boolean $LiftToNull
+     * @param \FrameworkDSW\Linq\Expressions\TLambdaExpression $Conversion
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function MakeBinary($ExpressionType, $Left, $Right, $LiftToNull = false, $Conversion = null) {
         return new TBinaryExpression($Left, $Right, $ExpressionType, $Conversion, $LiftToNull);
@@ -770,9 +769,10 @@ abstract class TExpression extends TObject {
 
     /**
      *
-     * @param $Expression TExpression
-     * @param $MemberName string
-     * @param $Type mixed
+     * @param $Expression \FrameworkDSW\Linq\Expressions\TExpression
+     * @param string $MemberName
+     * @param mixed $Type
+     * @return \FrameworkDSW\Linq\Expressions\TMemberExpression
      */
     public static function MakeMember($Expression, $MemberName, $Type) {
         return new TMemberExpression($Expression, $MemberName, $Type);
@@ -781,21 +781,21 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $ExpressionType TExpressionType
-     * @param $Operand TExpression
-     * @param $Type mixed
-     * @return TUnaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpressionType $ExpressionType
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Operand
+     * @param mixed $Type
+     * @return \FrameworkDSW\Linq\Expressions\TUnaryExpression
      */
-    public static function MakeUnary($ExpressionType, $Operand, $Type) {
+    public static function MakeUnary($ExpressionType, $Operand, $Type = null) {
         return new TUnaryExpression($ExpressionType, $Operand, $Type);
     }
 
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function Modulo($Left, $Right) {
         return self::MakeBinary(TExpressionType::eModulo(), $Left, $Right);
@@ -804,10 +804,10 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $To TExpression
-     * @param $By TExpression
-     * @param $Conversion TLambdaExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $To
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $By
+     * @param \FrameworkDSW\Linq\Expressions\TLambdaExpression $Conversion
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function ModuloAssign($To, $By, $Conversion = null) {
         return self::MakeBinary(TExpressionType::eModuloAssign(), $To, $By, false, $Conversion);
@@ -816,9 +816,9 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function Multiply($Left, $Right) {
         return self::MakeBinary(TExpressionType::eMultiply(), $Left, $Right);
@@ -827,10 +827,10 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $To TExpression
-     * @param $By TExpression
-     * @param $Conversion TLambdaExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $To
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $By
+     * @param \FrameworkDSW\Linq\Expressions\TLambdaExpression $Conversion
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function MultiplyAssign($To, $By, $Conversion = null) {
         return self::MakeBinary(TExpressionType::eMultiplyAssign(), $To, $By, false, $Conversion);
@@ -839,10 +839,10 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $To TExpression
-     * @param $By TExpression
-     * @param $Conversion TLambdaExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $To
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $By
+     * @param \FrameworkDSW\Linq\Expressions\TLambdaExpression $Conversion
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function MultiplyAssignChecked($To, $By, $Conversion = null) {
         return self::MakeBinary(TExpressionType::eMultiplyAssignChecked(), $To, $By, false, $Conversion);
@@ -851,9 +851,9 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function MultiplyChecked($Left, $Right) {
         return self::MakeBinary(TExpressionType::eMultiplyChecked(), $Left, $Right);
@@ -862,7 +862,7 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Expression TExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Expression
      * @return TUnaryExpression
      */
     public static function Negate($Expression) {
@@ -872,7 +872,7 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Expression TExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Expression
      * @return TUnaryExpression
      */
     public static function NegateChecked($Expression) {
@@ -882,7 +882,7 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Expression TExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Expression
      * @return TUnaryExpression
      */
     public static function Not($Expression) {
@@ -892,10 +892,10 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @param $LiftToNull boolean
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @param boolean $LiftToNull
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function NotEqual($Left, $Right, $LiftToNull = false) {
         return self::MakeBinary(TExpressionType::eNotEqual(), $Left, $Right, $LiftToNull);
@@ -904,9 +904,9 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function OrBitwise($Left, $Right) {
         return self::MakeBinary(TExpressionType::eOr(), $Left, $Right);
@@ -915,10 +915,10 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $To TExpression
-     * @param $By TExpression
-     * @param $Conversion TLambdaExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $To
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $By
+     * @param \FrameworkDSW\Linq\Expressions\TLambdaExpression $Conversion
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function OrAssign($To, $By, $Conversion = null) {
         return self::MakeBinary(TExpressionType::eOrAssign(), $To, $By, false, $Conversion);
@@ -927,9 +927,9 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function OrElse($Left, $Right) {
         return self::MakeBinary(TExpressionType::eOrElse(), $Left, $Right);
@@ -938,10 +938,10 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Name string
-     * @param $Type mixed
-     * @param $IsByRef boolean
-     * @return TParameterExpression
+     * @param string $Name
+     * @param mixed $Type
+     * @param boolean $IsByRef
+     * @return \FrameworkDSW\Linq\Expressions\TParameterExpression
      */
     public static function Parameter($Name, $Type, $IsByRef = false) {
         return new TParameterExpression($Name, $Type, $IsByRef);
@@ -950,9 +950,9 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function Power($Left, $Right) {
         return self::MakeBinary(TExpressionType::ePower(), $Left, $Right);
@@ -961,10 +961,10 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $To TExpression
-     * @param $By TExpression
-     * @param $Conversion TLambdaExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $To
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $By
+     * @param \FrameworkDSW\Linq\Expressions\TLambdaExpression $Conversion
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function PowerAssign($To, $By, $Conversion = null) {
         return self::MakeBinary(TExpressionType::ePowerAssign(), $To, $By, false, $Conversion);
@@ -973,8 +973,8 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Expression TExpression
-     * @return TUnaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Expression
+     * @return \FrameworkDSW\Linq\Expressions\TUnaryExpression
      */
     public static function Quote($Expression) {
         return self::MakeUnary(TExpressionType::eQuote(), $Expression);
@@ -983,7 +983,8 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @return TExpression
+     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     public function Reduce() {
         if ($this->getCanReduce()) {
@@ -997,7 +998,8 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @return TExpression
+     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     public function ReduceAndCheck() {
         throw new EInvalidParameter();
@@ -1006,9 +1008,9 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function ReferenceEqual($Left, $Right) {
         return self::MakeBinary(TExpressionType::eEqual(), $Left, $Right);
@@ -1017,9 +1019,9 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function ReferenceNotEqual($Left, $Right) {
         return self::MakeBinary(TExpressionType::eNotEqual(), $Left, $Right);
@@ -1028,9 +1030,9 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function RightShift($Left, $Right) {
         return self::MakeBinary(TExpressionType::eRightShift(), $Left, $Right);
@@ -1039,10 +1041,10 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $To TExpression
-     * @param $By TExpression
-     * @param $Conversion TLambdaExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $To
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $By
+     * @param \FrameworkDSW\Linq\Expressions\TLambdaExpression $Conversion
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function RightShiftAssign($To, $By, $Conversion = null) {
         return self::MakeBinary(TExpressionType::eRightShiftAssign(), $To, $By, false, $Conversion);
@@ -1051,9 +1053,9 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function Substract($Left, $Right) {
         return self::MakeBinary(TExpressionType::eSubtract(), $Left, $Right);
@@ -1062,10 +1064,10 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $To TExpression
-     * @param $By TExpression
-     * @param $Conversion TLambdaExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $To
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $By
+     * @param \FrameworkDSW\Linq\Expressions\TLambdaExpression $Conversion
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function SubstractAssign($To, $By, $Conversion = null) {
         return self::MakeBinary(TExpressionType::eSubtractAssign(), $To, $By, false, $Conversion);
@@ -1074,10 +1076,10 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $To TExpression
-     * @param $By TExpression
-     * @param $Conversion TLambdaExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $To
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $By
+     * @param \FrameworkDSW\Linq\Expressions\TLambdaExpression $Conversion
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public static function SubstractAssignChecked($To, $By, $Conversion = null) {
         return self::MakeBinary(TExpressionType::eSubtractAssignChecked(), $To, $By, false, $Conversion);
@@ -1086,34 +1088,34 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @param $Conversion TLambdaExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @param \FrameworkDSW\Linq\Expressions\TLambdaExpression $Conversion
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
-    public static function SubstractChecked($Left, $Right, $Conversion = null) {
+    public static function SubstractChecked($Left, $Right, /** @noinspection PhpUnusedParameterInspection */
+                                            $Conversion = null) {
         return self::MakeBinary(TExpressionType::eSubtractChecked(), $Left, $Right);
     }
 
     /**
      * descHere
      *
-     * @param $Expression TExpression
-     * @param $Type mixed
-     * @return TUnaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Expression
+     * @param mixed $Type
+     * @return \FrameworkDSW\Linq\Expressions\TUnaryExpression
      */
     public static function TypeAs($Expression, $Type) {
-        return self::MakeUnary(TExpressionType::eTypeAs(), $Expression, $Type());
+        return self::MakeUnary(TExpressionType::eTypeAs(), $Expression, $Type);
     }
 
     /**
      * descHere
      *
-     * @param $Body TExpression
-     * @param $Parameters IList
-     *            <T: TParameterExpression>
-     * @param $Name string
-     * @return TTypedExpression <T: T>
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Body
+     * @param \FrameworkDSW\Containers\IList $Parameters <T: \FrameworkDSW\Linq\Expressions\TParameterExpression>
+     * @param string $Name
+     * @return \FrameworkDSW\Linq\Expressions\TTypedExpression <T: T>
      */
     public static function TypedLambda($Body, $Parameters, $Name = '') {
         TTypedExpression::PrepareGeneric(array (
@@ -1124,8 +1126,8 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Expression TExpression
-     * @return TUnaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Expression
+     * @return \FrameworkDSW\Linq\Expressions\TUnaryExpression
      */
     public static function UnaryPlus($Expression) {
         return self::MakeUnary(TExpressionType::eUnaryPlus(), $Expression);
@@ -1134,17 +1136,18 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Visitor TExpressionVisitor
-     * @return TExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpressionVisitor $Visitor
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
-    protected function VisitChildren($Visitor) {
+    protected function VisitChildren(/** @noinspection PhpUnusedParameterInspection */
+        $Visitor) {
         return $this;
     }
 
 }
 
 /**
- * TConstantExpression
+ * \FrameworkDSW\Linq\Expressions\TConstantExpression
  *
  * @author 许子健
  */
@@ -1152,7 +1155,7 @@ final class TConstantExpression extends TExpression {
 
     /**
      *
-     * @var TObject
+     * @var \FrameworkDSW\System\TObject
      */
     private $FValue = null;
     /**
@@ -1164,8 +1167,9 @@ final class TConstantExpression extends TExpression {
     /**
      * descHere
      *
-     * @param $Value TObject
-     * @param $Type mixed
+     * @param \FrameworkDSW\System\TObject $Value
+     * @param mixed $Type
+     * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function __construct($Value, $Type = null) {
         parent::__construct();
@@ -1203,7 +1207,7 @@ final class TConstantExpression extends TExpression {
     /**
      * descHere
      *
-     * @return TObject
+     * @return \FrameworkDSW\System\TObject
      */
     public function getValue() {
         return $this->FValue;
@@ -1212,20 +1216,20 @@ final class TConstantExpression extends TExpression {
 }
 
 /**
- * TUnaryExpression
+ * \FrameworkDSW\Linq\Expressions\TUnaryExpression
  *
  * @author 许子健
  */
 final class TUnaryExpression extends TExpression {
 
+//    /**
+//     *
+//     * @var boolean
+//     */
+//    private $FLiftToNull = false;
     /**
      *
-     * @var boolean
-     */
-    private $FLiftToNull = false;
-    /**
-     *
-     * @var TExpression
+     * @var \FrameworkDSW\Linq\Expressions\TExpression
      */
     private $FOperand = null;
     /**
@@ -1237,9 +1241,10 @@ final class TUnaryExpression extends TExpression {
     /**
      * descHere
      *
-     * @param $ExpressionType TExpressionType
-     * @param $Operand TExpression
-     * @param $Type mixed
+     * @param \FrameworkDSW\Linq\Expressions\TExpressionType $ExpressionType
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Operand
+     * @param mixed $Type
+     * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function __construct($ExpressionType, $Operand, $Type = null) {
         parent::__construct();
@@ -1325,7 +1330,7 @@ final class TUnaryExpression extends TExpression {
     /**
      * descHere
      *
-     * @return TExpression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     protected function DoReduce() {
         // reduce unary plus expression
@@ -1360,7 +1365,7 @@ final class TUnaryExpression extends TExpression {
     /**
      * descHere
      *
-     * @return TExpression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     public function getOperand() {
         return $this->FOperand;
@@ -1371,6 +1376,7 @@ final class TUnaryExpression extends TExpression {
      *
      * @return mixed
      */
+    /** @noinspection PhpInconsistentReturnPointsInspection */
     public function getType() {
         if ($this->FType == null) {
             switch ($this->FNodeType) {
@@ -1394,8 +1400,8 @@ final class TUnaryExpression extends TExpression {
     /**
      * descHere
      *
-     * @param $Operand TExpression
-     * @return TUnaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Operand
+     * @return \FrameworkDSW\Linq\Expressions\TUnaryExpression
      */
     public function Update($Operand) {
         TType::Object($Operand, 'TExpression');
@@ -1405,8 +1411,8 @@ final class TUnaryExpression extends TExpression {
     /**
      * descHere
      *
-     * @param $Visitor TExpressionVisitor
-     * @return TExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpressionVisitor $Visitor
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     protected function VisitChildren($Visitor) {
         $this->FOperand = $this->FOperand->Accept($Visitor);
@@ -1415,7 +1421,7 @@ final class TUnaryExpression extends TExpression {
 }
 
 /**
- * TBinaryExpression
+ * \FrameworkDSW\Linq\Expressions\TBinaryExpression
  *
  * @author 许子健
  */
@@ -1428,28 +1434,29 @@ final class TBinaryExpression extends TExpression {
     private $FLiftToNull = false;
     /**
      *
-     * @var TExpression
+     * @var \FrameworkDSW\Linq\Expressions\TExpression
      */
     private $FLeft = null;
     /**
      *
-     * @var TExpression
+     * @var \FrameworkDSW\Linq\Expressions\TExpression
      */
     private $FRight = null;
     /**
      *
-     * @var TLambdaExpression
+     * @var \FrameworkDSW\Linq\Expressions\TLambdaExpression
      */
     private $FConversion = null;
 
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpresion
-     * @param $NodeType TExpressionType
-     * @param $Conversion TLambdaExpression
-     * @param $LiftToNull boolean
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @param \FrameworkDSW\Linq\Expressions\TExpressionType $NodeType
+     * @param \FrameworkDSW\Linq\Expressions\TLambdaExpression $Conversion
+     * @param boolean $LiftToNull
+     * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function __construct($Left, $Right, $NodeType, $Conversion = null, $LiftToNull = false) {
         parent::__construct();
@@ -1503,7 +1510,9 @@ final class TBinaryExpression extends TExpression {
                     throw new EInvalidParameter();
                 }
                 break;
+            /** @noinspection PhpMissingBreakStatementInspection */
             case TExpressionType::eAndAlso() :
+            /** @noinspection PhpMissingBreakStatementInspection */
             case TExpressionType::eOrElse() :
                 if (($Left->getType() !== 'TBoolean') || ($Right->getType() !== 'TBoolean')) {
                     throw new EInvalidParameter();
@@ -1573,7 +1582,7 @@ final class TBinaryExpression extends TExpression {
     /**
      * descHere
      *
-     * @return TExpression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     protected function DoReduce() {
         $mLeftValue = $this->FLeft->getValue();
@@ -1650,6 +1659,7 @@ final class TBinaryExpression extends TExpression {
                         $mReducedBoolean = ($mLeftValue->Unbox() != $mRightValue->Unbox());
                         break;
                 }
+                /** @noinspection PhpUndefinedVariableInspection */
                 return TExpression::Constant(new TBoolean($mReducedBoolean), 'TBoolean');
                 break;
         }
@@ -1676,7 +1686,7 @@ final class TBinaryExpression extends TExpression {
     /**
      * descHere
      *
-     * @return TLambdaExpression
+     * @return \FrameworkDSW\Linq\Expressions\TLambdaExpression
      */
     public function getConversion() {
         return $this->FConversion;
@@ -1697,13 +1707,13 @@ final class TBinaryExpression extends TExpression {
      * @return boolean
      */
     public function getIsLiftedToNull() {
-        return $this->$FLiftToNull && $this->getIsLifted();
+        return $this->FLiftToNull && $this->getIsLifted();
     }
 
     /**
      * descHere
      *
-     * @return TExpression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     public function getLeft() {
         return $this->FLeft;
@@ -1712,7 +1722,7 @@ final class TBinaryExpression extends TExpression {
     /**
      * descHere
      *
-     * @return TExpression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     public function getRight() {
         return $this->FRight;
@@ -1723,6 +1733,7 @@ final class TBinaryExpression extends TExpression {
      *
      * @return mixed
      */
+    /** @noinspection PhpInconsistentReturnPointsInspection */
     public function getType() {
         switch ($this->FNodeType) {
             case TExpressionType::eAdd() :
@@ -1764,10 +1775,10 @@ final class TBinaryExpression extends TExpression {
     /**
      * descHere
      *
-     * @param $Left TExpression
-     * @param $Right TExpression
-     * @param $Conversion TLambdaExpression
-     * @return TBinaryExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Left
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Right
+     * @param \FrameworkDSW\Linq\Expressions\TLambdaExpression $Conversion
+     * @return \FrameworkDSW\Linq\Expressions\TBinaryExpression
      */
     public function Update($Left, $Right, $Conversion) {
         if ($Left == $this->FLeft && $Right == $this->FRight && $Conversion == $this->FConversion) {
@@ -1781,8 +1792,8 @@ final class TBinaryExpression extends TExpression {
     /**
      * descHere
      *
-     * @param $Visitor TExpressionVisitor
-     * @return TExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpressionVisitor $Visitor
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     protected function VisitChildren($Visitor) {
         $this->FLeft = $Visitor->Visit($this->FLeft);
@@ -1800,17 +1811,17 @@ final class TConditionalExpression extends TExpression {
 
     /**
      *
-     * @var TExpression
+     * @var \FrameworkDSW\Linq\Expressions\TExpression
      */
     private $FIfFalse = null;
     /**
      *
-     * @var TExpression
+     * @var \FrameworkDSW\Linq\Expressions\TExpression
      */
     private $FIfTrue = null;
     /**
      *
-     * @var TExpression
+     * @var \FrameworkDSW\Linq\Expressions\TExpression
      */
     private $FTest = null;
     /**
@@ -1822,10 +1833,10 @@ final class TConditionalExpression extends TExpression {
     /**
      * descHere
      *
-     * @param $Test TExpression
-     * @param $IfTrue TExpression
-     * @param $IfFalse TExpression
-     * @param $Type mixed
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Test
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $IfTrue
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $IfFalse
+     * @param mixed $Type
      */
     public function __construct($Test, $IfTrue, $IfFalse, $Type = null) {
         parent::__construct();
@@ -1849,16 +1860,16 @@ final class TConditionalExpression extends TExpression {
     /**
      * descHere
      *
-     * @return TExpression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
-    public function getIfFlase() {
+    public function getIfFalse() {
         return $this->FIfFalse;
     }
 
     /**
      * descHere
      *
-     * @return TExpression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     public function getIfTrue() {
         return $this->FIfTrue;
@@ -1867,7 +1878,7 @@ final class TConditionalExpression extends TExpression {
     /**
      * descHere
      *
-     * @return TExpression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     public function getTest() {
         return $this->FTest;
@@ -1885,9 +1896,9 @@ final class TConditionalExpression extends TExpression {
     /**
      * descHere
      *
-     * @param $Test TExpression
-     * @param $IfTrue TExpression
-     * @param $IfFalse TExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Test
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $IfTrue
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $IfFalse
      * @return TConditionalExpression
      */
     public function Update($Test, $IfTrue, $IfFalse) {
@@ -1906,8 +1917,8 @@ final class TConditionalExpression extends TExpression {
     /**
      * descHere
      *
-     * @param $Visitor TExpressionVisitor
-     * @return TExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpressionVisitor $Visitor
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     protected function VisitChildren($Visitor) {
         $this->FTest = $this->FTest->Accept($Visitor);
@@ -1918,7 +1929,7 @@ final class TConditionalExpression extends TExpression {
 }
 
 /**
- * TDefaultExpression
+ * \FrameworkDSW\Linq\Expressions\TDefaultExpression
  *
  * @author 许子健
  */
@@ -1933,7 +1944,7 @@ final class TDefaultExpression extends TExpression {
     /**
      * descHere
      *
-     * @param $Type mixed
+     * @param mixed $Type
      */
     public function __construct($Type) {
         parent::__construct();
@@ -1944,7 +1955,7 @@ final class TDefaultExpression extends TExpression {
     /**
      * descHere
      *
-     * @return TExpression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     protected function DoReduce() {
         switch ($this->FType) {
@@ -1973,7 +1984,7 @@ final class TDefaultExpression extends TExpression {
 }
 
 /**
- * TParameterExpression
+ * \FrameworkDSW\Linq\Expressions\TParameterExpression
  *
  * @author 许子健
  */
@@ -1998,9 +2009,10 @@ final class TParameterExpression extends TExpression {
     /**
      * descHere
      *
-     * @param $Name string
-     * @param $Type mixed
-     * @param $IsByRef boolean
+     * @param string $Name
+     * @param mixed $Type
+     * @param boolean $IsByRef
+     * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function __construct($Name, $Type, $IsByRef = false) {
         TType::String($Name);
@@ -2042,7 +2054,7 @@ final class TParameterExpression extends TExpression {
     /**
      * descHere
      *
-     * @return TExpressionType
+     * @return \FrameworkDSW\Linq\Expressions\TExpressionType
      */
     public function getNodeType() {
         return TExpressionType::eParameter(); // ?
@@ -2060,7 +2072,7 @@ final class TParameterExpression extends TExpression {
 }
 
 /**
- * TMemberExpression
+ * \FrameworkDSW\Linq\Expressions\TMemberExpression
  *
  * @author 许子健
  */
@@ -2068,7 +2080,7 @@ final class TMemberExpression extends TExpression {
 
     /**
      *
-     * @var TExpression
+     * @var \FrameworkDSW\Linq\Expressions\TExpression
      */
     private $FExpression = null;
     /**
@@ -2085,9 +2097,10 @@ final class TMemberExpression extends TExpression {
     /**
      * descHere
      *
-     * @param $Expression TExpression
-     * @param $MemberName string
-     * @param $Type mixed
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Expression
+     * @param string $MemberName
+     * @param mixed $Type
+     * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function __construct($Expression, $MemberName, $Type) {
         TType::Type($Expression, 'TExpression');
@@ -2114,7 +2127,7 @@ final class TMemberExpression extends TExpression {
     /**
      * descHere
      *
-     * @return TExpression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     public function getExpression() {
         return $this->FExpression;
@@ -2141,10 +2154,10 @@ final class TMemberExpression extends TExpression {
     /**
      * descHere
      *
-     * @param $Expression TExpression
-     * @param $MemberName string
-     * @param $Type mixed
-     * @return TMemberExprsssion
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Expression
+     * @param string $MemberName
+     * @param mixed $Type
+     * @return \FrameworkDSW\Linq\Expressions\TMemberExpression
      */
     public function Update($Expression, $MemberName, $Type) {
         TType::Object($Expression, 'TExpression');
@@ -2161,8 +2174,8 @@ final class TMemberExpression extends TExpression {
     /**
      * descHere
      *
-     * @param $Visitor TExpressionVisitor
-     * @return TExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpressionVisitor $Visitor
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     protected function VisitChildren($Visitor) {
         $this->FExpression = $this->FExpression->Accept($Visitor);
@@ -2171,7 +2184,7 @@ final class TMemberExpression extends TExpression {
 }
 
 /**
- * TMethodCallExpression
+ * \FrameworkDSW\Linq\Expressions\TMethodCallExpression
  *
  * @author 许子健
  */
@@ -2179,7 +2192,7 @@ final class TMethodCallExpression extends TExpression {
 
     /**
      *
-     * @var IList <T: TExpression>
+     * @var \FrameworkDSW\Containers\IList <T: \FrameworkDSW\Linq\Expressions\TExpression>
      */
     private $FArguments = null;
     /**
@@ -2189,7 +2202,7 @@ final class TMethodCallExpression extends TExpression {
     private $FMethod = array ();
     /**
      *
-     * @var TExpression
+     * @var \FrameworkDSW\Linq\Expressions\TExpression
      */
     private $FObject = null;
     /**
@@ -2201,11 +2214,10 @@ final class TMethodCallExpression extends TExpression {
     /**
      * descHere
      *
-     * @param $Object TExpression
-     * @param $Method array
-     * @param $Arguments IList
-     *            <T: TExpression>
-     * @param $ReturnType mixed
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Object
+     * @param array $Method
+     * @param \FrameworkDSW\Containers\IList $Arguments <T: \FrameworkDSW\Linq\Expressions\TExpression>
+     * @param mixed $ReturnType
      */
     public function __construct($Object, $Method, $Arguments, $ReturnType = null) {
         parent::__construct();
@@ -2236,7 +2248,7 @@ final class TMethodCallExpression extends TExpression {
     /**
      * descHere
      *
-     * @return IList <T: TExpression>
+     * @return \FrameworkDSW\Containers\IList <T: \FrameworkDSW\Linq\Expressions\TExpression>
      */
     public function getArguments() {
         return $this->FArguments;
@@ -2254,7 +2266,7 @@ final class TMethodCallExpression extends TExpression {
     /**
      * descHere
      *
-     * @return TExpression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     public function getObject() {
         return $this->FObject;
@@ -2273,10 +2285,9 @@ final class TMethodCallExpression extends TExpression {
     /**
      * descHere
      *
-     * @param $Object TExpression
-     * @param $Arguments IList
-     *            <T: TParameterExpression>
-     * @return TMethodCallExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Object
+     * @param \FrameworkDSW\Containers\IList $Arguments <T: \FrameworkDSW\Linq\Expressions\TParameterExpression>
+     * @return \FrameworkDSW\Linq\Expressions\TMethodCallExpression
      */
     public function Update($Object, $Arguments) {
         TType::Object($Object, 'TExpression');
@@ -2289,7 +2300,7 @@ final class TMethodCallExpression extends TExpression {
 }
 
 /**
- * TLambdaExpression
+ * \FrameworkDSW\Linq\Expressions\TLambdaExpression
  *
  * @author 许子健
  */
@@ -2297,7 +2308,7 @@ class TLambdaExpression extends TExpression {
 
     /**
      *
-     * @var TExpression
+     * @var \FrameworkDSW\Linq\Expressions\TExpression
      */
     private $FBody = null;
     /**
@@ -2307,7 +2318,7 @@ class TLambdaExpression extends TExpression {
     private $FName = '';
     /**
      *
-     * @var IList <T: TParameterExpression>
+     * @var \FrameworkDSW\Containers\IList <T: \FrameworkDSW\Linq\Expressions\TParameterExpression>
      */
     private $FParameters = null;
     /**
@@ -2319,11 +2330,10 @@ class TLambdaExpression extends TExpression {
     /**
      * descHere
      *
-     * @param $Name string
-     * @param $Body TExpression
-     * @param $Parameters IList
-     *            <T: TParameterExpression>
-     * @param $ReturnType mixed
+     * @param string $Name
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Body
+     * @param \FrameworkDSW\Containers\IList $Parameters <T: \FrameworkDSW\Linq\Expressions\TParameterExpression>
+     * @param mixed $ReturnType
      */
     public function __construct($Name, $Body, $Parameters, $ReturnType) {
         parent::__construct();
@@ -2344,15 +2354,15 @@ class TLambdaExpression extends TExpression {
      * descHere
      */
     public function Destroy() {
-         Framework::Free($this->FParameters);
-         Framework::Free($this->FBody);
+        Framework::Free($this->FParameters);
+        Framework::Free($this->FBody);
         parent::Destroy();
     }
 
     /**
      * descHere
      *
-     * @return IDelegate
+     * @return \FrameworkDSW\System\IDelegate
      */
     public function Compile() {
 
@@ -2361,7 +2371,7 @@ class TLambdaExpression extends TExpression {
     /**
      * descHere
      *
-     * @return TExpression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     public function getBody() {
         return $this->FBody;
@@ -2379,7 +2389,7 @@ class TLambdaExpression extends TExpression {
     /**
      * descHere
      *
-     * @return IList <T: TParameterExpression>
+     * @return \FrameworkDSW\Containers\IList <T: \FrameworkDSW\Linq\Expressions\TParameterExpression>
      */
     public function getParameters() {
         return $this->FParameters;
@@ -2400,14 +2410,14 @@ class TLambdaExpression extends TExpression {
      * @return mixed
      */
     public function getType() {
-        return $this->FType;
+        return $this->FNodeType;
     }
 
     /**
      * descHere
      *
-     * @param $Visitor TExpressionVisitor
-     * @return TExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpressionVisitor $Visitor
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     protected function VisitChildren($Visitor) {
         $this->FBody = $this->FBody->Accept($Visitor);
@@ -2416,8 +2426,8 @@ class TLambdaExpression extends TExpression {
 }
 
 /**
- * TTypedExpression
- * params <T: IDelegate>
+ * \FrameworkDSW\Linq\Expressions\TTypedExpression
+ * params <T: \FrameworkDSW\System\IDelegate>
  *
  * @author 许子健
  */
@@ -2430,10 +2440,19 @@ final class TTypedExpression extends TLambdaExpression {
      */
     public function TypedCompile() {
     }
+
+    /**
+     * descHere
+     *
+     * @return mixed
+     */
+    public function getType() {
+        // TODO: Implement getType() method.
+    }
 }
 
 /**
- * TBlockExpression
+ * \FrameworkDSW\Linq\Expressions\TBlockExpression
  *
  * @author 许子健
  */
@@ -2441,15 +2460,14 @@ final class TBlockExpression extends TExpression {
 
     /**
      *
-     * @var TList <T: TExpression>
+     * @var \FrameworkDSW\Containers\TList <T: \FrameworkDSW\Linq\Expressions\TExpression>
      */
     private $FExpressions = null;
 
     /**
      * descHere
      *
-     * @param $Expressions TList
-     *            <T: TExpression>
+     * @param \FrameworkDSW\Containers\TList $Expressions <T: \FrameworkDSW\Linq\Expressions\TExpression>
      */
     public function __construct($Expressions) {
         parent::__construct();
@@ -2470,7 +2488,7 @@ final class TBlockExpression extends TExpression {
     /**
      * descHere
      *
-     * @return IList <T: TExpression>
+     * @return \FrameworkDSW\Containers\IList <T: \FrameworkDSW\Linq\Expressions\TExpression>
      */
     public function getExpressions() {
         return $this->FExpressions;
@@ -2479,7 +2497,7 @@ final class TBlockExpression extends TExpression {
     /**
      * descHere
      *
-     * @return TExpression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     public function getResult() {
         return $this->FExpressions->Last();
@@ -2497,9 +2515,8 @@ final class TBlockExpression extends TExpression {
     /**
      * descHere
      *
-     * @param $Expressions IList
-     *            <T: TExpression>
-     * @return TBlockExpression
+     * @param \FrameworkDSW\Containers\IList $Expressions <T: \FrameworkDSW\Linq\Expressions\TExpression>
+     * @return \FrameworkDSW\Linq\Expressions\TBlockExpression
      */
     public function Update($Expressions) {
         TType::Object($Expressions, array (
@@ -2510,8 +2527,8 @@ final class TBlockExpression extends TExpression {
     /**
      * descHere
      *
-     * @param TExpressionVisitor $Visitor
-     * @return TExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpressionVisitor $Visitor
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     protected function VisitChildren($Visitor) {
         foreach ($this->FExpressions as $mExpression) {
@@ -2522,7 +2539,7 @@ final class TBlockExpression extends TExpression {
 }
 
 /**
- * TExpressionVisitor
+ * \FrameworkDSW\Linq\Expressions\TExpressionVisitor
  *
  * @author 许子健
  */
@@ -2531,8 +2548,8 @@ abstract class TExpressionVisitor extends TObject {
     /**
      * descHere
      *
-     * @param $Expression TExpression
-     * @return TExpression
+     * @param \FrameworkDSW\Linq\Expressions\TExpression  $Expression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     public function Visit($Expression) {
         TType::Object($Expression, 'TExpression');
@@ -2582,8 +2599,8 @@ abstract class TExpressionVisitor extends TObject {
     /**
      * descHere
      *
-     * @param $Expression TBinaryExpression
-     * @return TExpression
+     * @param \FrameworkDSW\Linq\Expressions\TBinaryExpression $Expression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     protected function VisitBinary($Expression) {
         return $Expression;
@@ -2592,8 +2609,8 @@ abstract class TExpressionVisitor extends TObject {
     /**
      * descHere
      *
-     * @param $Expression TBlockExpression
-     * @return TExpression
+     * @param \FrameworkDSW\Linq\Expressions\TBlockExpression $Expression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     protected function VisitBlock($Expression) {
         return $Expression;
@@ -2602,8 +2619,8 @@ abstract class TExpressionVisitor extends TObject {
     /**
      * descHere
      *
-     * @param $Expression TConditionalExpression
-     * @return TExpression
+     * @param \FrameworkDSW\Linq\Expressions\TConditionalExpression $Expression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     protected function VisitConditional($Expression) {
         return $Expression;
@@ -2612,8 +2629,8 @@ abstract class TExpressionVisitor extends TObject {
     /**
      * descHere
      *
-     * @param $Expression TConstantExpression
-     * @return TExpression
+     * @param \FrameworkDSW\Linq\Expressions\TConstantExpression $Expression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     protected function VisitConstant($Expression) {
         return $Expression;
@@ -2622,8 +2639,8 @@ abstract class TExpressionVisitor extends TObject {
     /**
      * descHere
      *
-     * @param $Expression TDefaultExpression
-     * @return TExpression
+     * @param \FrameworkDSW\Linq\Expressions\TDefaultExpression $Expression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     protected function VisitDefault($Expression) {
         return $Expression;
@@ -2632,8 +2649,8 @@ abstract class TExpressionVisitor extends TObject {
     /**
      * descHere
      *
-     * @param $Expression TLambdaExpression
-     * @return TExpression
+     * @param \FrameworkDSW\Linq\Expressions\TLambdaExpression $Expression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     protected function VisitLambda($Expression) {
         return $Expression;
@@ -2642,8 +2659,8 @@ abstract class TExpressionVisitor extends TObject {
     /**
      * descHere
      *
-     * @param $Expression TMemberExpression
-     * @return TExpression
+     * @param \FrameworkDSW\Linq\Expressions\TMemberExpression $Expression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     protected function VisitMember($Expression) {
         return $Expression;
@@ -2652,8 +2669,8 @@ abstract class TExpressionVisitor extends TObject {
     /**
      * descHere
      *
-     * @param $Expression TMethodCallExpression
-     * @return TExpression
+     * @param \FrameworkDSW\Linq\Expressions\TMethodCallExpression $Expression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     protected function VisitMethodCall($Expression) {
         return $Expression;
@@ -2662,8 +2679,8 @@ abstract class TExpressionVisitor extends TObject {
     /**
      * descHere
      *
-     * @param $Expression TParameterExpression
-     * @return TExpression
+     * @param \FrameworkDSW\Linq\Expressions\TParameterExpression $Expression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     protected function VisitParameter($Expression) {
         return $Expression;
@@ -2672,8 +2689,8 @@ abstract class TExpressionVisitor extends TObject {
     /**
      * descHere
      *
-     * @param $Expression TUnaryExpression
-     * @return TExpression
+     * @param \FrameworkDSW\Linq\Expressions\TUnaryExpression $Expression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     protected function VisitUnary($Expression) {
         return $Expression;

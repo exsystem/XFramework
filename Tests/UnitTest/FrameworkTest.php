@@ -6,6 +6,7 @@
  * @since	separate file since reversion 1
  */
 
+require_once 'FrameworkDSW/Framework.php';
 require_once 'classForTesting.php';
 
 require_once 'PHPUnit/Framework/TestCase.php';

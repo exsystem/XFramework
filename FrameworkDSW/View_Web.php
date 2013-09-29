@@ -1,13 +1,12 @@
 <?php
 /**
- * View_Web.php
+ * \FrameworkDSW\View\Web
  * @author  许子健
  * @version $Id$
  * @since   separate file since reversion 52
  */
 namespace FrameworkDSW\View\Web;
-require_once 'FrameworkDSW/CoreClasses.php';
-require_once 'FrameworkDSW/Containers.php';
+
 use FrameworkDSW\System\TObject;
 use FrameworkDSW\Utilities\TType;
 use FrameworkDSW\CoreClasses\TComponent;
@@ -20,6 +19,7 @@ use FrameworkDSW\System\EInvalidParameter;
 use FrameworkDSW\Containers\IList;
 use FrameworkDSW\Containers\IMap;
 use FrameworkDSW\System\TRecord;
+
 /**
  * TWebTheme
  *
@@ -200,12 +200,12 @@ class TWebPage extends TComponent implements IView {
     private $FTheme = null;
     /**
      *
-     * @var TMap <K: string, V: IInterface>
+     * @var TMap <K: string, V: \IInterface>
      */
     private $FViewData = null;
     /**
      *
-     * @var IUrlRouter
+     * @var \FrameworkDSW\Web\IUrlRouter
      */
     private $FRouter = null;
     /**
@@ -217,7 +217,7 @@ class TWebPage extends TComponent implements IView {
     /**
      * descHere
      *
-     * @param IUrlRouter $Router
+     * @param \FrameworkDSW\Web\IUrlRouter $Router
      * @param string $Template
      * @param TWebTheme $Theme
      * @param string $MasterPage
@@ -287,7 +287,7 @@ class TWebPage extends TComponent implements IView {
      * descHere
      *
      * @param string $Name
-     * @return IIntterface
+     * @return \FrameworkDSW\System\IInterface
      */
     public function Data($Name) {
         TType::String($Name);
@@ -350,6 +350,7 @@ class TWebPage extends TComponent implements IView {
         $this->FViewData = $ViewData;
 
         ob_clean();
+        /** @noinspection PhpIncludeInspection */
         require_once $this->FTemplate;
         ob_end_flush();
     }
@@ -397,6 +398,7 @@ class TJsonView extends TComponent implements IView {
      *  (non-PHPdoc)
      * @see IView::Update()
      * @param IMap $ViewData <K: string, V: IInterface>
+     * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function Update($ViewData) {
         TType::Object($ViewData, array ('IMap' => array ('K' => 'string', 'V' => 'IInterface')));

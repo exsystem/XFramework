@@ -1,12 +1,12 @@
 <?php
 /**
- * Web.php
+ * \FrameworkDSW\Web
  * @author  许子健
  * @version $Id$
  * @since   separate file since reversion 52
  */
 namespace FrameworkDSW\Web;
-require_once 'FrameworkDSW/Containers.php';
+
 use FrameworkDSW\System\EException;
 use FrameworkDSW\System\IInterface;
 use FrameworkDSW\Utilities\TType;
@@ -88,7 +88,7 @@ class EHttpException extends EException {
  *
  * @author 许子健
  */
-class EResolveRquestFailed extends EHttpException {}
+class EResolveRequestFailed extends EHttpException {}
 
 /**
  * IUrlRouter
@@ -108,8 +108,7 @@ interface IUrlRouter extends IInterface {
     /**
      * descHere
      *
-     * @param IMap $Parameters
-     *            <K: string, V: string>
+     * @param \FrameworkDSW\Containers\IMap $Parameters  <K: string, V: string>
      * @param string $Equal
      * @param string $Ampersand
      * @return string
@@ -120,8 +119,7 @@ interface IUrlRouter extends IInterface {
      * descHere
      *
      * @param string $Route
-     * @param IMap $Parameters
-     *            <K: string, V: string>
+     * @param \FrameworkDSW\Containers\IMap $Parameters <K: string, V: string>
      * @param string $Ampersand
      * @return string
      */
@@ -165,7 +163,7 @@ interface IUrlRouter extends IInterface {
     /**
      * descHere
      *
-     * @return IMap <K: string, V: IUrlRouteRule>
+     * @return \FrameworkDSW\Containers\IMap <K: string, V: IUrlRouteRule>
      */
     public function getRules();
 
@@ -258,8 +256,7 @@ interface IUrlRouter extends IInterface {
     /**
      * descHere
      *
-     * @param IMap $Value
-     *            <K: string, V: IUrlRouteRule>
+     * @param \FrameworkDSW\Containers\IMap $Value <K: string, V: \FrameworkDSW\Web\IUrlRouteRule>
      */
     public function setRules($Value);
 
@@ -426,6 +423,7 @@ class THttpCookies extends TMap {
      * @param K $Key
      */
     protected function DoDelete($Key) {
+        /** @noinspection PhpIllegalArrayKeyTypeInspection */
         $mCookie = $this[$Key];
         setcookie($Key, null, 0, $mCookie->Path, $mCookie->Domain, $mCookie->Secure, $mCookie->HttpOnly);
         parent::DoDelete($Key);
@@ -436,6 +434,7 @@ class THttpCookies extends TMap {
      *
      * @param K $Key
      * @param V $Value
+     * @throws \FrameworkDSW\System\EInvalidParameter
      */
     protected function DoPut($Key, $Value) {
         if ($Value == null) {
@@ -585,6 +584,7 @@ class THttpSession extends TAbstractMap {
      * @return	boolean
      */
     protected function DoContainsKey($Key) {
+        /** @noinspection PhpIllegalArrayKeyTypeInspection */
         return isset($_SESSION[$Key]);
     }
 
@@ -593,6 +593,7 @@ class THttpSession extends TAbstractMap {
      * @param	K	$Key
      */
     protected function DoDelete($Key) {
+        /** @noinspection PhpIllegalArrayKeyTypeInspection */
         unset($_SESSION[$Key]);
     }
 
@@ -602,6 +603,7 @@ class THttpSession extends TAbstractMap {
      * @return	V
      */
     protected function DoGet($Key) {
+        /** @noinspection PhpIllegalArrayKeyTypeInspection */
         return $_SESSION[$Key];
     }
 
@@ -611,6 +613,7 @@ class THttpSession extends TAbstractMap {
      * @param	V	$Value
      */
     protected function DoPut($Key, $Value) {
+        /** @noinspection PhpIllegalArrayKeyTypeInspection */
         $_SESSION[$Key] = $Value;
     }
 
@@ -871,7 +874,8 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param	float	$Value
+     * @param    float $Value
+     * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function setGcProbability($Value) {
         TType::Float($Value);
@@ -887,7 +891,8 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param	string	$Value
+     * @param    string $Value
+     * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function setSavePath($Value) {
         TType::String($Value);
@@ -919,7 +924,8 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param	IHttpSessionStorage	$Storage
+     * @param    IHttpSessionStorage $Storage
+     * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function setStorage($Storage) {
         TType::Object($Storage, 'IHttpSessionStorage');
@@ -957,7 +963,7 @@ class THttpSession extends TAbstractMap {
  * @author 许子健
  */
 class THttpRequest extends TObject {
-    // TODO Some features are not implemented now, like RESTful ablity! Do not
+    // TODO Some features are not implemented now, like RESTful ability! Do not
     // call any method with REST.
 
     /**
@@ -995,11 +1001,11 @@ class THttpRequest extends TObject {
      * @var THttpCookies
      */
     private $FCookies = null;
-    /**
-     *
-     * @var string[]
-     */
-    private $FRestParameters = array();
+//    /**
+//     *
+//     * @var string[]
+//     */
+//    private $FRestParameters = array();
     /**
      *
      * @var string
@@ -1120,7 +1126,8 @@ class THttpRequest extends TObject {
      * descHere
      *
      * @param string $UserAgent
-     * @return IMap <K: string, V: string>
+     * @throws EBrowscapNotEnabled
+     * @return \FrameworkDSW\Containers\IMap <K: string, V: string>
      */
     public function GetBrowser($UserAgent = '') {
         TType::String($UserAgent);
@@ -1180,6 +1187,7 @@ class THttpRequest extends TObject {
      * descHere
      *
      * @param string $Name
+     * @throws \FrameworkDSW\System\EInvalidParameter
      * @return string
      */
     public function GetDelete($Name) {
@@ -1200,6 +1208,7 @@ class THttpRequest extends TObject {
      * descHere
      *
      * @param string $Name
+     * @throws \FrameworkDSW\System\EInvalidParameter
      * @return string
      */
     public function GetPut($Name) {
@@ -1241,6 +1250,7 @@ class THttpRequest extends TObject {
     /**
      *
      * @param string $Name
+     * @throws \FrameworkDSW\System\EInvalidParameter
      * @return string
      */
     public function GetParameter($Name) {
@@ -1258,6 +1268,7 @@ class THttpRequest extends TObject {
 
     /**
      *
+     * @throws EDeterminePathInfoFailed
      * @return string
      */
     public function getPathInfo() {
@@ -1314,9 +1325,8 @@ class THttpRequest extends TObject {
                 }
             }
         }
-        else {
-            return $this->FHostInfo;
-        }
+
+        return $this->FHostInfo;
     }
 
     /**
@@ -1412,6 +1422,7 @@ class THttpRequest extends TObject {
 
     /**
      *
+     * @throws EUnableToResolveScriptUrl
      * @return string
      */
     public function getScriptUrl() {
@@ -1443,13 +1454,11 @@ class THttpRequest extends TObject {
      * descHere
      */
     public function ValidateCsrfToken() {
+        $mValid = false;
         if ($this->getIsPostRequest()) {
             $mCookies = $this->getCookies();
             if ($mCookies->ContainsKey($this->FCsrfTokenName) && isset($_POST[$this->FCsrfTokenName])) {
                 $mValid = ($mCookies[$this->FCsrfToken] == (string) $_POST[$this->FCsrfTokenName]);
-            }
-            else {
-                $mValid = false;
             }
         }
         if (!$mValid) {
@@ -1466,7 +1475,7 @@ class THttpRequest extends TObject {
      * @param string $XHeader
      * @param boolean $Terminate
      * @param boolean $ForceDownload
-     * @param IMap $AddHeaders
+     * @param \FrameworkDSW\Containers\IMap $AddHeaders
      *            <K: string, V: string>
      */
     public function XSendFile($FilePath, $SaveName = '', $MimeType = '', $XHeader = 'X-Sendfile', $Terminate = false, $ForceDownload = true, $AddHeaders = null) {
@@ -1514,6 +1523,7 @@ class THttpRequest extends TObject {
 
     /**
      *
+     * @throws EDetermineRequestUriFailed
      * @return string
      */
     public function getRequestUri() {
@@ -1548,6 +1558,7 @@ class THttpRequest extends TObject {
     /**
      *
      * @param string $Name
+     * @throws \FrameworkDSW\System\EInvalidParameter
      * @return string
      */
     public function GetPost($Name) {
@@ -1564,6 +1575,7 @@ class THttpRequest extends TObject {
     /**
      *
      * @param string $Name
+     * @throws \FrameworkDSW\System\EInvalidParameter
      * @return string
      */
     public function GetQuery($Name) {
@@ -1647,7 +1659,7 @@ class THttpRequest extends TObject {
     /**
      *
      * @param string $Url
-     * @param string $StatusCode
+     * @param integer $StatusCode
      */
     public function Redirect($Url, $StatusCode = 302) {
         TType::String($Url);
@@ -1882,7 +1894,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
     /**
      *
      * @param string $Route
-     * @param IMap $Parameters
+     * @param \FrameworkDSW\Containers\IMap $Parameters
      *            <K: string, V: string>
      * @param string $Ampersand
      * @return string
@@ -1929,6 +1941,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
             }
             break;
         }
+        /** @noinspection PhpUndefinedVariableInspection */
         return $mUrl;
     }
 
@@ -1979,7 +1992,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
     /**
      * descHere
      *
-     * @param IMap $Parameters
+     * @param \FrameworkDSW\Containers\IMap $Parameters
      *            <K: string, V: string>
      * @param string $Equal
      * @param string $Ampersand
@@ -2001,7 +2014,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
      * descHere
      *
      * @param string $Route
-     * @param IMap $Parameters
+     * @param \FrameworkDSW\Containers\IMap $Parameters
      *            <K: string, V: string>
      * @param string $Ampersand
      * @return string
@@ -2103,7 +2116,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
     /**
      * descHere
      *
-     * @return IList <T: IUrlRouteRule>
+     * @return \FrameworkDSW\Containers\IList <T: IUrlRouteRule>
      */
     public function getRules() {
         return $this->FRules;
@@ -2155,7 +2168,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
         // pathInfo: Controller/Action/keyN/dataN/... without Controller and
         // Action segments.
         if ($PathInfo == '') {
-            return '';
+            return;
         }
         $mItems = explode('/', "{$PathInfo}/");
         $mBoundHigh = count($mItems) - 1;
@@ -2173,8 +2186,10 @@ class TUrlRouter extends TObject implements IUrlRouter {
     /**
      * descHere
      *
+     * @throws EResolveRequestFailed
      * @return string
      */
+    /** @noinspection PhpInconsistentReturnPointsInspection */
     public function ParseUrl() {
         $mRequest = $this->FRequest;
         switch ($this->FUrlMode) {
@@ -2191,7 +2206,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
                 return $mRoute;
             }
             if ($this->FUseStrictParsing) {
-                throw new EResolveRquestFailed(404);
+                throw new EResolveRequestFailed(404);
             }
             else {
                 return $mPathInfo;
@@ -2205,7 +2220,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
                 return $_POST[$this->FRouteVariableName];
             }
             else {
-                throw new EResolveRquestFailed(404);
+                throw new EResolveRequestFailed(404);
             }
             break;
         }
@@ -2283,8 +2298,9 @@ class TUrlRouter extends TObject implements IUrlRouter {
     /**
      * descHere
      *
-     * @param IList $Value
+     * @param \FrameworkDSW\Containers\IList $Value
      *            <T: IUrlRouteRule>
+     * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function setRules($Value) {
         TType::Object($Value, array('IList' => array('T' => 'IUrlRouteRule')));
@@ -2371,7 +2387,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
     private $FCheckParameters = false;
     /**
      *
-     * @var IMap <K: string, V: string>
+     * @var \FrameworkDSW\Containers\IMap <K: string, V: string>
      */
     private $FDefaultParameters = null;
     /**
@@ -2381,7 +2397,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
     private $FHasHostInfo = false;
     /**
      *
-     * @var IMap <K: string, V: string>
+     * @var \FrameworkDSW\Containers\IMap <K: string, V: string>
      */
     private $FParameters = null;
     /**
@@ -2396,7 +2412,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
     private $FPattern = '';
     /**
      *
-     * @var IMap <K: string, V: string>
+     * @var \FrameworkDSW\Containers\IMap <K: string, V: string>
      */
     private $FReferences = null;
     /**
@@ -2532,6 +2548,8 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
      * @param TMap $Parameters
      *            <K: string, V: string>
      * @param string $Ampersand
+     * @throws EParsingOnlyUrlRule
+     * @throws ECreateUrlFailed
      * @return string
      */
     public function CreateUrl($Router, $Route, $Parameters = null, $Ampersand = '&') {
@@ -2653,7 +2671,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
     /**
      * descHere
      *
-     * @return IMap <K: string, V: string>
+     * @return \FrameworkDSW\Containers\IMap <K: string, V: string>
      */
     public function getDefaultParameters() {
         return $this->FDefaultParameters;
@@ -2671,7 +2689,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
     /**
      * descHere
      *
-     * @return IMap <K: string, V: string>
+     * @return \FrameworkDSW\Containers\IMap <K: string, V: string>
      */
     public function getParameters() {
         return $this->FParameters;
@@ -2698,7 +2716,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
     /**
      * descHere
      *
-     * @return IMap <K: string, V: string>
+     * @return \FrameworkDSW\Containers\IMap <K: string, V: string>
      */
     public function getReferences() {
         return $this->FReferences;
@@ -2791,6 +2809,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
      * @param THttpRequest $Request
      * @param string $PathInfo
      * @param string $RawPathInfo
+     * @throws EParseUrlFailed
      * @return string
      */
     public function ParseUrl($Router, $Request, $PathInfo, $RawPathInfo) {
@@ -2849,8 +2868,8 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
                     $mTr[$this->FReferences[$mKey]] = $mValue;
                 }
                 elseif ($this->FParameters->ContainsKey($mKey)) {
-                    $_REQUEST[$mName] = $mValue;
-                    $_GET[$mName] = $mValue;
+                    $_REQUEST[$mKey] = $mValue;
+                    $_GET[$mKey] = $mValue;
                 }
             }
             if ($PathInfo !== $mMatches[0]) { // there're additional GET params
@@ -2901,7 +2920,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
     /**
      * descHere
      *
-     * @param IMap $Value
+     * @param \FrameworkDSW\Containers\IMap $Value
      *            <K: string, V: string>
      */
     public function setDefaultParameters($Value) {
@@ -2923,7 +2942,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
     /**
      * descHere
      *
-     * @param IMap $Value
+     * @param \FrameworkDSW\Containers\IMap $Value
      *            <K: string, V: string>
      */
     public function setParameters($Value) {
@@ -2955,7 +2974,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
     /**
      * descHere
      *
-     * @param IMap $Value
+     * @param \FrameworkDSW\Containers\IMap $Value
      *            <K: string, V: string>
      */
     public function setReferences($Value) {

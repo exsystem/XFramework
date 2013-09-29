@@ -1,15 +1,12 @@
 <?php
 /**
- * DataObjects.php
+ * \FrameworkDSW\DataObjects
  * @author	许子健
  * @version	$Id$
  * @since	separate file since reversion 30
  */
 namespace FrameworkDSW\DataObjects;
-require_once 'FrameworkDSW/System.php';
-require_once 'FrameworkDSW/Containers.php';
-require_once 'FrameworkDSW/Linq.php';
-require_once 'FrameworkDSW/Linq_Expressions.php';
+
 use FrameworkDSW\System\IInterface;
 use FrameworkDSW\System\TObject;
 use FrameworkDSW\Utilities\TType;
@@ -24,7 +21,7 @@ use FrameworkDSW\System\EException;
 use FrameworkDSW\System\TInteger;
 
 /**
- * IEntity
+ * \FrameworkDSW\DataObjects\IEntity
  *
  * @author 许子健
  */
@@ -33,7 +30,7 @@ interface IEntity extends IInterface {
     /**
      * descHere
      *
-     * @return TObjectContext
+     * @return \FrameworkDSW\DataObjects\TObjectContext
      */
     public function getContext();
 
@@ -62,7 +59,7 @@ interface IEntity extends IInterface {
 }
 
 /**
- * TObjectContext
+ * \FrameworkDSW\DataObjects\TObjectContext
  *
  * @author 许子健
  */
@@ -70,28 +67,28 @@ abstract class TObjectContext extends TObject {
 
     /**
      *
-     * @var IQueryProvider
+     * @var \FrameworkDSW\Linq\IQueryProvider
      */
     protected $FProvider = null;
 
     /**
      * descHere
      *
-     * @param $Entity IEntity
+     * @param \FrameworkDSW\DataObjects\IEntity $Entity
      */
     protected abstract function DoAddObject($Entity);
 
     /**
      * descHere
      *
-     * @param $Entity IEntity
+     * @param \FrameworkDSW\DataObjects\IEntity $Entity
      */
     protected abstract function DoDeleteObject($Entity);
 
     /**
      * descHere
      *
-     * @param $QueryProvider IQueryProvider
+     * @param \FrameworkDSW\Linq\IQueryProvider $QueryProvider
      */
     public function __construct($QueryProvider) {
         parent::__construct();
@@ -103,7 +100,7 @@ abstract class TObjectContext extends TObject {
      * descHere
      *
      *
-     * @param $Entity IEntity
+     * @param \FrameworkDSW\DataObjects\IEntity $Entity
      */
     public function AddObject($Entity) {
         TType::Object($Entity, 'IEntity');
@@ -116,7 +113,7 @@ abstract class TObjectContext extends TObject {
     /**
      * descHere
      *
-     * @return IQueryable <T: T>
+     * @return \FrameworkDSW\Linq\IQueryable <T: T>
      */
     public function CreateQuery() {
         $this->FProvider->PrepareMethodGeneric(array (
@@ -127,7 +124,7 @@ abstract class TObjectContext extends TObject {
     /**
      * descHere
      *
-     * @param $Entity IEntity
+     * @param \FrameworkDSW\DataObjects\IEntity $Entity
      */
     public function DeleteObject($Entity) {
         TType::Object($Entity, 'IEntity');
@@ -140,7 +137,7 @@ abstract class TObjectContext extends TObject {
     /**
      * descHere
      *
-     * @return IQueryProvider
+     * @return \FrameworkDSW\Linq\IQueryProvider
      */
     public function getQueryProvider() {
         return $this->FProvider;
@@ -154,7 +151,7 @@ abstract class TObjectContext extends TObject {
     /**
      * descHere
      *
-     * @param $Entity IEntity
+     * @param \FrameworkDSW\DataObjects\IEntity $Entity
      */
     public function signalPostAdd($Entity) {
     }
@@ -162,8 +159,8 @@ abstract class TObjectContext extends TObject {
     /**
      * descHere
      *
-     * @param $Entity IEntity
-     * @param $Members array
+     * @param \FrameworkDSW\DataObjects\IEntity $Entity
+     * @param array $Members
      */
     public function signalPostChange($Entity, $Members) {
     }
@@ -171,7 +168,7 @@ abstract class TObjectContext extends TObject {
     /**
      * descHere
      *
-     * @param $Entity IEntity
+     * @param  \FrameworkDSW\DataObjects\IEntity $Entity
      */
     public function signalPostDelete($Entity) {
     }
@@ -179,7 +176,7 @@ abstract class TObjectContext extends TObject {
     /**
      * descHere
      *
-     * @param $Entity IEntity
+     * @param  \FrameworkDSW\DataObjects\IEntity $Entity
      */
     public function signalPreAdd($Entity) {
     }
@@ -187,7 +184,7 @@ abstract class TObjectContext extends TObject {
     /**
      * descHere
      *
-     * @param $Entity IEntity
+     * @param  \FrameworkDSW\DataObjects\IEntity $Entity
      * @param $Members array
      */
     public function signalPreChange($Entity, $Members) {
@@ -196,7 +193,7 @@ abstract class TObjectContext extends TObject {
     /**
      * descHere
      *
-     * @param $Entity IEntity
+     * @param  \FrameworkDSW\DataObjects\IEntity $Entity
      */
     public function signalPreDelete($Entity) {
     }
@@ -204,9 +201,9 @@ abstract class TObjectContext extends TObject {
 }
 
 /**
- * TObjectQuery
- * param <T>
- * extends IExpressibleOrderedQueryable<T>
+ * \FrameworkDSW\DataObjects\TObjectQuery
+ * param <T: ?>
+ * extends \FrameworkDSW\Linq\IExpressibleOrderedQueryable<T: T>
  *
  * @author 许子健
  */
@@ -214,19 +211,19 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
 
     /**
      *
-     * @var TObjectContext
+     * @var \FrameworkDSW\DataObjects\TObjectContext
      */
     private $FContext = null;
 
     /**
      *
-     * @var TTypedExpression <T: T>
+     * @var \FrameworkDSW\Linq\Expressions\TTypedExpression <T: T>
      */
     private $FExpression = null;
 
     /**
      *
-     * @var TList <T: TExpression>
+     * @var \FrameworkDSW\Containers\TList <T: \FrameworkDSW\Expressions\TExpression>
      */
     private $FArguments = null;
 
@@ -245,12 +242,13 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
 
     /**
      *
-     * @param $Method array
-     * @param $ReturnType mixed
-     * @param $UseArguments boolean
-     * @return IQueryable <T: T>
+     * @param array $Method
+     * @param mixed $ReturnType
+     * @param boolean $UseArguments
+     * @return \FrameworkDSW\Linq\IQueryable <T: T>
      */
-    private function MakeCallExpression($Method, $ReturnType, $UseArguments = false) {
+    private function MakeCallExpression($Method, /** @noinspection PhpUnusedParameterInspection */
+                                        $ReturnType, $UseArguments = false) {
         $this->EnsureExpression();
         if ($UseArguments) {
             $mExpression = TExpression::Call($this->FExpression->getBody(), $Method, $this->FArguments, array (
@@ -273,7 +271,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
 
     /**
      *
-     * @throws EException
+     * @throws \FrameworkDSW\System\EException
      */
     private function EnsureExpression() {
         if ($this->FExpression === null) {
@@ -312,9 +310,8 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $Context TObjectContext
-     * @param $Expression TTypedExpression
-     *            <T: T>
+     * @param \FrameworkDSW\DataObjects\TObjectContext $Context
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $Expression <T: T>
      */
     public function __construct($Context, $Expression = null) {
         parent::__construct();
@@ -330,7 +327,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * (non-PHPdoc)
      *
-     * @see TObject::Destroy()
+     * @see \FrameworkDSW\System\TObject::Destroy()
      */
     public function Destroy() {
         Framework::Free($this->FArguments); //FIXME !!!!!!!!!!
@@ -341,9 +338,8 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $Expression TTypedExpression
-     *            <T: TAggregateDelegate<A: A, N: T>>
-     * @param $Seed A
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $Expression <T: \FrameworkDSW\Linq\TAggregateDelegate<A: A, N: T>>
+     * @param A $Seed
      * @return A
      */
     public function Aggregate($Expression, $Seed = null) {
@@ -357,6 +353,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
 
         $this->EnsureExpression();
 
+        /**@var $mDelegate callback**/
         $mDelegate = $Expression->TypedCompile();
         foreach ($this->FExpression as $mElement) {
             $Seed = $mDelegate($Seed, $mElement);
@@ -367,12 +364,11 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $Perdicate TTypedExpression
-     *            <T: TPredicateDelegate<E: T>>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $Predicate <T: \FrameworkDSW\Linq\TPredicateDelegate<E: T>>
      * @return boolean
      */
-    public function All($Perdicate) {
-        TType::Object($Perdicate, array (
+    public function All($Predicate) {
+        TType::Object($Predicate, array (
             'TTypedExpression' => array (
                 'T' => array (
                     'TPredicateDelegate' => array (
@@ -380,7 +376,8 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
 
         $this->EnsureExpression();
 
-        $mDelegate = $Perdicate->TypedCompile();
+        /**@var $mDelegate callback**/
+        $mDelegate = $Predicate->TypedCompile();
         foreach ($this->FExpression as $mElement) {
             if (!$mDelegate($mElement)) {
                 return false;
@@ -392,8 +389,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $Predicate TTypedExpression
-     *            <T: TPredicateDelegate<E: T>>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $Predicate <T: \FrameworkDSW\Linq\TPredicateDelegate<E: T>>
      * @return boolean
      */
     public function Any($Predicate = null) {
@@ -406,12 +402,14 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
         $this->EnsureExpression();
 
         if ($Predicate === null) {
+            /** @noinspection PhpUnusedLocalVariableInspection */
             foreach ($this->FExpression as $mElement) {
                 return true;
             }
             return false;
         }
         else {
+            /**@var $mDelegate callback**/
             $mDelegate = $Predicate->TypedCompile();
             foreach ($this->FExpression as $mElement) {
                 if ($mDelegate($mElement)) {
@@ -425,8 +423,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $Selector TTypedExpression
-     *            <T: TSelectorDelegate<S: T, D: D>>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $Selector <T: \FrameworkDSW\Linq\TSelectorDelegate<S: T, D: D>>
      * @return D
      */
     public function Average($Selector = null) {
@@ -447,6 +444,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
             }
         }
         else {
+            /**@var $mDelegate callback**/
             $mDelegate = $Selector->TypedCompile();
             foreach ($this->FExpression as $mElement) {
                 $mResult += $mDelegate($mElement);
@@ -461,9 +459,8 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $With IIteratorAggregate
-     *            <T: T>
-     * @return IQueryable <T: T>
+     * @param \FrameworkDSW\Containers\IIteratorAggregate $With <T: T>
+     * @return \FrameworkDSW\Linq\IQueryable <T: T>
      */
     public function Concat($With) {
         TType::Object($With, array (
@@ -478,7 +475,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $Item T
+     * @param T $Item
      * @return boolean
      */
     public function Contains($Item) {
@@ -497,8 +494,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $Predicate TTypedExpression
-     *            <T: TPredicateDelegate<E: T>>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $Predicate <T: \FrameworkDSW\Linq\TPredicateDelegate<E: T>>
      * @return integer
      */
     public function Count($Predicate = null) {
@@ -512,11 +508,13 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
 
         $mCount = 0;
         if ($Predicate === null) {
+            /** @noinspection PhpUnusedLocalVariableInspection */
             foreach ($this->FExpression as $mElement) {
                 ++$mCount;
             }
         }
         else {
+            /**@var $mDelegate callback**/
             $mDelegate = $Predicate->TypedCompile();
             foreach ($this->FExpression as $mElement) {
                 if ($mDelegate($mElement)) {
@@ -530,7 +528,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @return IQueryable <T: T>
+     * @return \FrameworkDSW\Linq\IQueryable <T: T>
      */
     public function DefaultIfEmpty() {
         return $this->MakeCallExpression(array ('TObjectQuery',
@@ -541,7 +539,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @return IQueryable <T: T>
+     * @return \FrameworkDSW\Linq\IQueryable <T: T>
      */
     public function Distinct() {
         return $this->MakeCallExpression(array ('TObjectQuery', 'Distinct'), array (
@@ -552,7 +550,8 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
      * descHere
      *
      *
-     * @param $Index integer
+     * @param integer $Index
+     * @throws \FrameworkDSW\Containers\EIndexOutOfBounds
      * @return T
      */
     public function ElementAt($Index) {
@@ -572,7 +571,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $Index integer
+     * @param integer $Index
      * @return T
      */
     public function ElementAtOrDefault($Index) {
@@ -593,9 +592,8 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $With IIteratorAggregate
-     *            <T: T>
-     * @return IQueryable <T: T>
+     * @param \FrameworkDSW\Containers\IIteratorAggregate $With <T: T>
+     * @return \FrameworkDSW\Linq\IQueryable <T: T>
      */
     public function Except($With) {
         TType::Object($With, array (
@@ -610,8 +608,8 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $Predicate TTypedExpression
-     *            <T: TPredicateDelegate<E: T>>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $Predicate <T: \FrameworkDSW\Linq\TPredicateDelegate<E: T>>
+     * @throws \FrameworkDSW\Containers\ENoSuchElement
      * @return T
      */
     public function First($Predicate = null) {
@@ -629,6 +627,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
             }
         }
         else {
+            /**@var $mDelegate callback**/
             $mDelegate = $Predicate->TypedCompile();
             foreach ($this->FExpression as $mElement) {
                 if ($mDelegate($mElement)) {
@@ -642,13 +641,12 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $Predicate TTypedExpression
-     *            <T: TPredicateDelegate<E: T>>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $Predicate <T: \FrameworkDSW\Linq\TPredicateDelegate<E: T>>
      * @return T
      */
     public function FirstOrDefault($Predicate = null) {
         try {
-            $this->First($Predicate);
+            return $this->First($Predicate);
         }
         catch (ENoSuchElement $Ex) { // TODO sync type with the method First.
             return $this->MakeDefault();
@@ -684,7 +682,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @return TExpression
+     * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     public function getExpression() {
         $this->EnsureExpression();
@@ -694,7 +692,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @return IQueryProvider
+     * @return \FrameworkDSW\Linq\IQueryProvider
      */
     public function getProvider() {
         return $this->FContext->getQueryProvider();
@@ -703,14 +701,10 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $KeySelector TTypedExpression
-     *            <T: TSelectorDelegate<S: T, D: K>>
-     * @param $ElementSelector TTypedExpression
-     *            <T: TSelectorDelegate<S: T, D: E>>
-     * @param $ResultSelector TTypedExpression
-     *            <T: TGroupByCallbackDelegate: <K: K, C: IIteratorAggregate<T:
-     *            E>, R: R>>
-     * @return IQueryable <T: R>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $KeySelector <T: \FrameworkDSW\Linq\TSelectorDelegate<S: T, D: K>>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $ElementSelector <T: \FrameworkDSW\Linq\TSelectorDelegate<S: T, D: E>>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $ResultSelector <T: \FrameworkDSW\Linq\TGroupByCallbackDelegate: <K: K, C: \FrameworkDSW\Containers\IIteratorAggregate<T: E>, R: R>>
+     * @return \FrameworkDSW\Linq\IQueryable <T: R>
      */
     public function GroupBy($KeySelector, $ElementSelector = null, $ResultSelector = null) {
         TType::Object($KeySelector, array (
@@ -744,16 +738,11 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $Inner IIteratorAggregate
-     *            <T: I>
-     * @param $OuterKeySelector TTypedExpression
-     *            <T: TSelectorDelegate<S: T, D: K>>
-     * @param $InnerKeySelector TTypedExpression
-     *            <T: TSelectorDelegate<S: I, D: K>>
-     * @param $ResultSelector TTypedExpression
-     *            <T: TGroupByCallbackDelegate<K: T, C: IIteratorAggregate<T:
-     *            I>, R: R>>
-     * @return IQueryable <T: R>
+     * @param \FrameworkDSW\Containers\IIteratorAggregate $Inner <T: I>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $OuterKeySelector <T: \FrameworkDSW\Linq\TSelectorDelegate<S: T, D: K>>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $InnerKeySelector <T: \FrameworkDSW\Linq\TSelectorDelegate<S: I, D: K>>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $ResultSelector <T: \FrameworkDSW\Linq\TGroupByCallbackDelegate<K: T, C: \FrameworkDSW\Containers\IIteratorAggregate<T: I>, R: R>>
+     * @return \FrameworkDSW\Linq\IQueryable <T: R>
      */
     public function GroupJoin($Inner, $OuterKeySelector, $InnerKeySelector, $ResultSelector) {
         TType::Object($Inner, array (
@@ -790,9 +779,8 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $With IIteratorAggregate
-     *            <T: T>
-     * @return IQueryable <T: T>
+     * @param \FrameworkDSW\Containers\IIteratorAggregate $With <T: T>
+     * @return \FrameworkDSW\Linq\IQueryable <T: T>
      */
     public function Intersect($With) {
         TType::Object($With, array (
@@ -806,7 +794,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @return IIterator <T>
+     * @return \FrameworkDSW\Containers\IIterator <T: T>
      */
     public function Iterator() {
         $this->EnsureExpression();
@@ -818,15 +806,11 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $Inner IIteratorAggregate
-     *            <T: I>
-     * @param $OuterKeySelector TTypedExpression
-     *            <T: TSelectorDelegate<S: T, D: K>>
-     * @param $InnerKeySelector TTypedExpression
-     *            <T: TSelectorDelegate<S: I, D: K>>
-     * @param $ResultSelector TTypedExpression
-     *            <T: TJoinCallbackDelegate<O: O, I: T, R: R>>
-     * @return IQueryable <T: R>
+     * @param \FrameworkDSW\Containers\IIteratorAggregate $Inner <T: I>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $OuterKeySelector <T: \FrameworkDSW\Linq\TSelectorDelegate<S: T, D: K>>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $InnerKeySelector <T: \FrameworkDSW\Linq\TSelectorDelegate<S: I, D: K>>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $ResultSelector <T: \FrameworkDSW\Linq\TJoinCallbackDelegate<O: O, I: T, R: R>>
+     * @return \FrameworkDSW\Linq\IQueryable <T: R>
      */
     public function Join($Inner, $OuterKeySelector, $InnerKeySelector, $ResultSelector = null) {
         TType::Object($Inner, array (
@@ -861,13 +845,14 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $Predicate TTypedExpression
-     *            <T: TPredicateDelegate<E: T>>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $Predicate <T: \FrameworkDSW\Linq\TPredicateDelegate<E: T>>
+     * @throws \FrameworkDSW\Containers\ENoSuchElement
+     * @throws \Exception|\FrameworkDSW\Containers\ENoSuchElement
      * @return T
      */
     public function Last($Predicate = null) {
         TType::Object($Predicate, array (
-            'TTypedExpresion' => array (
+            'TTypedExpression' => array (
                 'T' => array (
                     'TPredicateDelegate' => array (
                         'E' => $this->GenericArg('T'))))));
@@ -886,6 +871,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
             }
         }
         else {
+            /**@var $mDelegate callback**/
             $mDelegate = $Predicate->TypedCompile();
             $mFound = false;
             foreach ($this->FExpression as $mElement) {
@@ -898,19 +884,19 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
                 throw new ENoSuchElement();
             }
         }
+        /** @noinspection PhpUndefinedVariableInspection */
         return $mResult;
     }
 
     /**
      * descHere
      *
-     * @param $Predicate TTypedExpression
-     *            <T: TPredicateDelegate<E: T>>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $Predicate <T: \FrameworkDSW\Linq\TPredicateDelegate<E: T>>
      * @return T
      */
     public function LastOrDefault($Predicate = null) {
         try {
-            $this->Last($Predicate);
+            return $this->Last($Predicate);
         }
         catch (ENoSuchElement $Ex) {
             return $this->MakeDefault();
@@ -920,8 +906,8 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $Selector TTypedExpression
-     *            <T: TSelectorDelegate<S: T, D: R>>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $Selector <T: \FrameworkDSW\Linq\TSelectorDelegate<S: T, D: R>>
+     * @throws \FrameworkDSW\Utilities\EInvalidTypeCasting
      * @return R
      */
     public function Max($Selector = null) {
@@ -944,6 +930,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
             }
         }
         else {
+            /**@var $mDelegate callback**/
             $mDelegate = $Selector->TypedCompile();
             $mMax = $mDelegate($this->FExpression->getIterator()->current());
             foreach ($this->FExpression as $mElement) {
@@ -958,8 +945,8 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $Selector TTypedExpression
-     *            <T: TSelectorDelegate<S: T, D: R>>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $Selector <T: \FrameworkDSW\Linq\TSelectorDelegate<S: T, D: R>>
+     * @throws \FrameworkDSW\Utilities\EInvalidTypeCasting
      * @return R
      */
     public function Min($Selector = null) {
@@ -982,6 +969,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
             }
         }
         else {
+            /**@var $mDelegate callback**/
             $mDelegate = $Selector->TypedCompile();
             $mMin = $mDelegate($this->FExpression->getIterator()->current());
             foreach ($this->FExpression as $mElement) {
@@ -996,7 +984,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @return IQueryable <T: R>
+     * @return \FrameworkDSW\Linq\IQueryable <T: R>
      */
     public function OfType() {
         return $this->MakeCallExpression(array ('TObjectQuery', 'OfType'), array (
@@ -1006,9 +994,8 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $KeySelector TTypedExpression
-     *            <T: TSelectorDelegate<S: T, D: K>>
-     * @return IExpressibleOrderedQueryable <T: T>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $KeySelector <T: \FrameworkDSW\Linq\TSelectorDelegate<S: T, D: K>>
+     * @return \FrameworkDSW\Linq\IExpressibleOrderedQueryable <T: T>
      */
     public function OrderBy($KeySelector) {
         TType::Object($KeySelector, array (
@@ -1026,9 +1013,8 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $KeySelector TTypedExpression
-     *            <T: TSelectorDelegate<S: T, D: K>>
-     * @return IExpressibleOrderedQueryable <T: T>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $KeySelector <T: \FrameworkDSW\Linq\TSelectorDelegate<S: T, D: K>>
+     * @return \FrameworkDSW\Linq\IExpressibleOrderedQueryable <T: T>
      */
     public function OrderByDescending($KeySelector) {
         TType::Object($KeySelector, array (
@@ -1047,11 +1033,9 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $Expression TTypedExpression
-     *            <T: TAggregateDelegate<A: A, N: T>>
-     * @param $Seed A
-     * @param $Callback TTypedExpression
-     *            <T: TAggregateCallbackDelegate<A: A, R: R>>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $Expression <T: \FrameworkDSW\Linq\TAggregateDelegate<A: A, N: T>>
+     * @param A $Seed
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $Callback <T: \FrameworkDSW\Linq\TAggregateCallbackDelegate<A: A, R: R>>
      * @return R
      */
     public function ProcessedAggregate($Expression, $Seed, $Callback) {
@@ -1059,6 +1043,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
             'TTypedExpression' => array (
                 'TAggregateCallbackDelegate' => array (
                     'A' => $this->GenericArg('A'), 'R' => $this->GenericArg('R')))));
+        /**@var $mDelegate callback**/
         $mDelegate = $Callback->TypedCompile();
         return $mDelegate($this->Aggregate($Expression, $Seed));
     }
@@ -1066,7 +1051,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @return IQueryable <T: T>
+     * @return \FrameworkDSW\Linq\IQueryable <T: T>
      */
     public function Reverse() {
         return $this->MakeCallExpression(array ('TObjectQuery', 'Reverse'), array (
@@ -1076,9 +1061,8 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $Selector TTypedExpression
-     *            <T: TSelectorDelegate<S: TPair<K: integer, V: T>, D: R>>
-     * @return IQueryable <T: R>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $Selector <T: \FrameworkDSW\Linq\TSelectorDelegate<S: \FrameworkDSW\Containers\TPair<K: integer, V: T>, D: R>>
+     * @return \FrameworkDSW\Linq\IQueryable <T: R>
      */
     public function Select($Selector) {
         TType::Object($Selector, array (
@@ -1099,12 +1083,9 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $CollectionSelector TTypedExpression
-     *            <T: TSelectorDelegate<S: TPair<K: integer, V: T>, D:
-     *            IIteratorAggregate<T: C>>>
-     * @param $ResultSelector TTypedExpression
-     *            <T: TSelectorDelegate<S: TPair<K: T, V: C>, R: R>>
-     * @return IQueryable <T: R>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $CollectionSelector <T: \FrameworkDSW\Linq\TSelectorDelegate<S: \FrameworkDSW\Containers\TPair<K: integer, V: T>, D: \FrameworkDSW\Containers\IIteratorAggregate<T: C>>>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $ResultSelector <T: \FrameworkDSW\Linq\TSelectorDelegate<S: \FrameworkDSW\Containers\TPair<K: T, V: C>, R: R>>
+     * @return \FrameworkDSW\Linq\IQueryable <T: R>
      */
     public function SelectMany($CollectionSelector, $ResultSelector) {
         TType::Object($CollectionSelector, array (
@@ -1136,8 +1117,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $With IIteratorAggregate
-     *            <T: T>
+     * @param \FrameworkDSW\Containers\IIteratorAggregate $With <T: T>
      * @return boolean
      */
     public function SequenceEqual($With) {
@@ -1168,8 +1148,8 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $Predicate TTypedExpression
-     *            <T: TPredicateDelegate<E: T>>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $Predicate <T: \FrameworkDSW\Linq\TPredicateDelegate<E: T>>
+     * @throws \FrameworkDSW\System\EException
      * @return T
      */
     public function Single($Predicate = null) {
@@ -1183,6 +1163,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
         $mIterator = $this->FExpression->getIterator();
         $mIterator->rewind();
 
+        $mResult = null;
         if ($Predicate === null) {
             $mIterator->next();
             $mResult = $mIterator->current();
@@ -1193,6 +1174,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
         }
         else {
             $mFound = false;
+            /**@var $mDelegate callback**/
             $mDelegate = $Predicate->TypedCompile();
             while ($mIterator->valid()) {
                 $mIterator->next();
@@ -1206,18 +1188,18 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
                 }
             }
         }
+        return $mResult;
     }
 
     /**
      * descHere
      *
-     * @param $Predicate TTypedExpression
-     *            <T: TPredicateDelegate<E: T>>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $Predicate <T: \FrameworkDSW\Linq\TPredicateDelegate<E: T>>
      * @return T
      */
     public function SingleOrDefault($Predicate = null) {
         try {
-            $this->Single($Predicate);
+            return $this->Single($Predicate);
         }
         catch (EException $Ex) {
             return $this->MakeDefault();
@@ -1227,8 +1209,8 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $Count integer
-     * @return IQueryable <T: T>
+     * @param integer $Count
+     * @return \FrameworkDSW\Linq\IQueryable <T: T>
      */
     public function Skip($Count) {
         TType::Int($Count);
@@ -1242,8 +1224,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $Selector TSelectorDelegate
-     *            <S: T, D: R>
+     * @param \FrameworkDSW\Linq\TSelectorDelegate $Selector <S: T, D: R>
      * @return R
      */
     public function Sum($Selector = null) {
@@ -1275,7 +1256,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
      * descHere
      *
      * @param $Count integer
-     * @return IQueryable <T: T>
+     * @return \FrameworkDSW\Linq\IQueryable <T: T>
      */
     public function Take($Count) {
         TType::Int($Count);
@@ -1289,13 +1270,12 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $Condition TTypedExpression
-     *            <T: TPredicate<E: TPair<K: integer, V: T>>>
-     * @return IQueryable <T: T>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $Condition <T: \FrameworkDSW\Linq\TPredicateDelegate<E: \FrameworkDSW\Containers\TPair<K: integer, V: T>>>
+     * @return \FrameworkDSW\Linq\IQueryable <T: T>
      */
     public function TakeWhile($Condition) {
         TType::Object($Condition, array (
-            'TTypedExpresion' => array (
+            'TTypedExpression' => array (
                 'T' => array (
                     'TPredicateDelegate' => array (
                         'E' => array (
@@ -1311,9 +1291,8 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $KeySelector TTypedExpression
-     *            <T: TSelectorDelegate<S: T, D: K>>
-     * @return IExpressibleOrderedQueryable <T: T>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $KeySelector <T: \FrameworkDSW\Linq\TSelectorDelegate<S: T, D: K>>
+     * @return \FrameworkDSW\Linq\IExpressibleOrderedQueryable <T: T>
      */
     public function ThenBy($KeySelector) {
         TType::Object($KeySelector, array (
@@ -1331,9 +1310,8 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $KeySelector TTypedExpression
-     *            <T: TSelectorDelegate<S: T, D: K>>
-     * @return IExpressibleOrderedQueryable <T: T>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $KeySelector <T: \FrameworkDSW\Linq\TSelectorDelegate<S: T, D: K>>
+     * @return \FrameworkDSW\Linq\IExpressibleOrderedQueryable <T: T>
      */
     public function ThenByDescending($KeySelector) {
         TType::Object($KeySelector, array (
@@ -1352,9 +1330,8 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $With IIteratorAggregate
-     *            <T: T>
-     * @return IQueryable <T: T>
+     * @param \FrameworkDSW\Containers\IIteratorAggregate $With <T: T>
+     * @return \FrameworkDSW\Linq\IQueryable <T: T>
      */
     public function Union($With) {
         TType::Object($With, array (
@@ -1369,9 +1346,8 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $Condition TTypedExpression
-     *            <T: TPredicateDelegate<E: TPair<K: integer, V: T>>>
-     * @return IQueryable <T: T>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $Condition <T: \FrameworkDSW\Linq\TPredicateDelegate<E: \FrameworkDSW\Containers\TPair<K: integer, V: T>>>
+     * @return \FrameworkDSW\Linq\IQueryable <T: T>
      */
     public function Where($Condition) {
         TType::Object($Condition, array (
@@ -1391,11 +1367,9 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @param $With IIteratorAggregate
-     *            <T: Q>
-     * @param $ResultSelector TTypedExpression<T:
-     *            TSelectorDelegate<S: TPair<K: T, V: Q>, D: R>>
-     * @return IQueryable <T: R>
+     * @param \FrameworkDSW\Containers\IIteratorAggregate $With <T: Q>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $ResultSelector <T: \FrameworkDSW\Linq\TSelectorDelegate<S: \FrameworkDSW\Containers\TPair<K: T, V: Q>, D: R>>
+     * @return \FrameworkDSW\Linq\IQueryable <T: R>
      */
     public function Zip($With, $ResultSelector) {
         TType::Object($With, array (

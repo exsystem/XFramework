@@ -1,84 +1,97 @@
 <?php
 /**
- * Utilities
+ * \FrameworkDSW\Utilities
  * @author	许子健
  * @version	$Id$
  * @since	separate file since reversion 1
  */
 namespace FrameworkDSW\Utilities;
-require_once 'FrameworkDSW/System.php';
 use FrameworkDSW\System\ERuntimeException;
 use FrameworkDSW\System\EException;
 use FrameworkDSW\System\TObject;
 use FrameworkDSW\System\TDelegate;
 use FrameworkDSW\System\TRecord;
-/**
- *
- * @author 许子健
- */
-class EInvalidTypeCasting extends ERuntimeException {}
-/**
- *
- * @author 许子健
- */
-class EInvalidBoolCasting extends EInvalidTypeCasting {}
-/**
- *
- * @author 许子健
- */
-class EInvalidIntCasting extends EInvalidTypeCasting {}
-/**
- *
- * @author 许子健
- */
-class EInvalidFloatCasting extends EInvalidTypeCasting {}
-/**
- *
- * @author 许子健
- */
-class EInvalidStringCasting extends EInvalidTypeCasting {}
-/**
- *
- * @author 许子健
- */
-class EInvalidArrayCasting extends EInvalidTypeCasting {}
-/**
- *
- * @author 许子健
- */
-class EInvalidRecordCasting extends EInvalidTypeCasting {}
-/**
- *
- * @author 许子健
- */
-class EInvalidObjectCasting extends EInvalidTypeCasting {}
-/**
- *
- * @author 许子健
- */
-class EInvalidClassCasting extends EInvalidTypeCasting {}
-/**
- *
- * @author 许子健
- */
-class EInvalidInterfaceCasting extends EInvalidTypeCasting {}
-/**
- *
- * @author 许子健
- */
-class EInvalidDelegateCasting extends EInvalidTypeCasting {}
 
 /**
  *
  * @author 许子健
  */
-class EBadProperties extends EException {}
+class EInvalidTypeCasting extends ERuntimeException {
+}
+/**
+ *
+ * @author 许子健
+ */
+class EInvalidBoolCasting extends EInvalidTypeCasting {
+}
+/**
+ *
+ * @author 许子健
+ */
+class EInvalidIntCasting extends EInvalidTypeCasting {
+}
+/**
+ *
+ * @author 许子健
+ */
+class EInvalidFloatCasting extends EInvalidTypeCasting {
+}
+/**
+ *
+ * @author 许子健
+ */
+class EInvalidStringCasting extends EInvalidTypeCasting {
+}
+/**
+ *
+ * @author 许子健
+ */
+class EInvalidArrayCasting extends EInvalidTypeCasting {
+}
+/**
+ *
+ * @author 许子健
+ */
+class EInvalidRecordCasting extends EInvalidTypeCasting {
+}
+/**
+ *
+ * @author 许子健
+ */
+class EInvalidObjectCasting extends EInvalidTypeCasting {
+}
+/**
+ *
+ * @author 许子健
+ */
+class EInvalidClassCasting extends EInvalidTypeCasting {
+}
+/**
+ *
+ * @author 许子健
+ */
+class EInvalidInterfaceCasting extends EInvalidTypeCasting {
+}
+/**
+ *
+ * @author 许子健
+ */
+class EInvalidDelegateCasting extends EInvalidTypeCasting {
+}
 
 /**
  *
  * @author 许子健
  */
-class EInvalidFileName extends EException {}
+class EBadProperties extends EException {
+}
+
+/**
+ *
+ * @author 许子健
+ */
+class EInvalidFileName extends EException {
+}
 
 /**
  *
@@ -97,6 +110,7 @@ final class TType extends TObject {
     /**
      *
      * @param mixed $Var
+     * @throws EInvalidIntCasting
      */
     public static function Int(&$Var) {
         if (is_int($Var)) {
@@ -112,6 +126,7 @@ final class TType extends TObject {
     /**
      *
      * @param mixed $Var
+     * @throws EInvalidFloatCasting
      */
     public static function Float(&$Var) {
         if (is_object($Var)) {
@@ -123,6 +138,7 @@ final class TType extends TObject {
     /**
      *
      * @param mixed $Var
+     * @throws EInvalidStringCasting
      */
     public static function String(&$Var) {
         if (is_array($Var) || is_resource($Var)) {
@@ -146,6 +162,7 @@ final class TType extends TObject {
      *
      * @param object $Var
      * @param mixed $Type
+     * @throws EInvalidObjectCasting
      */
     public static function Object(&$Var, $Type = 'TObject') {
         if (is_null($Var)) {
@@ -161,16 +178,27 @@ final class TType extends TObject {
             if (($mClass == 'TPair') && ($Var instanceof $mClass)) {
                 return;
             }
+            /** @var \FrameworkDSW\System\TObject $Var */
             if (($Var instanceof $mClass) && ($Type[$mClass] + $Var->GenericArgs() != $Var->GenericArgs())) {
                 $mTypeOfClass = $Type[$mClass];
                 array_walk_recursive($mTypeOfClass, function ($mValue, $mIndex) use (&$mTypeOfClass) {
                     switch ($mValue) {
-                        case 'boolean': break;
-                        case 'integer': break;
-                        case 'float': break;
-                        case 'string': break;
-                        case 'array': break;
-                        default: $mTypeOfClass[$mIndex] = "\\{$mValue}"; break;
+                    case 'boolean':
+                        break;
+                    case 'integer':
+                        break;
+                    case 'float':
+                        break;
+                    case 'string':
+                        break;
+                    case 'array':
+                        break;
+                    case null:
+                        unset($mTypeOfClass[$mIndex]);
+                        break;
+                    default:
+                        $mTypeOfClass[$mIndex] = "\\{$mValue}";
+                        break;
                     }
                 });
                 if ($mTypeOfClass + $Var->GenericArgs() != $Var->GenericArgs()) {
@@ -183,6 +211,7 @@ final class TType extends TObject {
     /**
      *
      * @param string $Var
+     * @throws EInvalidClassCasting
      */
     public static function MetaClass(&$Var) {
         $Var = (string) $Var;
@@ -195,6 +224,7 @@ final class TType extends TObject {
     /**
      *
      * @param string $Var
+     * @throws EInvalidInterfaceCasting
      */
     public static function Intf(&$Var) {
         $Var = (string) $Var;
@@ -207,6 +237,7 @@ final class TType extends TObject {
     /**
      *
      * @param TDelegate $Var
+     * @throws EInvalidDelegateCasting
      */
     public static function Delegate($Var) {
         if (!($Var instanceof TDelegate || is_null($Var))) {
@@ -218,35 +249,36 @@ final class TType extends TObject {
      *
      * @param mixed $Var
      * @param mixed $Type
+     * @throws EInvalidObjectCasting
      */
     public static function Type(&$Var, $Type) {
         switch ($Type) {
-            case 'boolean' :
-                TType::Bool($Var);
-                break;
-            case 'integer' :
-                TType::Int($Var);
-                break;
-            case 'float' :
-                TType::Float($Var);
-                break;
-            case 'string' :
-                TType::String($Var);
-                break;
-            case 'array' :
-                TType::Arr($Var);
-                break;
-            case 'TDelegate' :
-                TType::Delegate($Var);
-                break;
-            case 'mixed':
-                break;
-            default : // an array or a compund type string
-                if (is_string($Type) && !(class_exists($Type) || interface_exists($Type))) {
-                    throw new EInvalidObjectCasting();
-                }
-                TType::Object($Var, $Type);
-                break;
+        case 'boolean':
+            TType::Bool($Var);
+            break;
+        case 'integer':
+            TType::Int($Var);
+            break;
+        case 'float':
+            TType::Float($Var);
+            break;
+        case 'string':
+            TType::String($Var);
+            break;
+        case 'array':
+            TType::Arr($Var);
+            break;
+        case 'TDelegate':
+            TType::Delegate($Var);
+            break;
+        case 'mixed':
+            break;
+        default: // an array or a compound type string
+            if (is_string($Type) && !(class_exists($Type) || interface_exists($Type))) {
+                throw new EInvalidObjectCasting();
+            }
+            TType::Object($Var, $Type);
+            break;
         }
     }
 

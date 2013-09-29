@@ -1,14 +1,12 @@
 <?php
 /**
- * Database.php
+ * \FrameworkDSW\Database
  * @author	许子健
  * @version	$Id$
  * @since	separate file since reversion 1
  */
 namespace FrameworkDSW\Database;
-require_once 'FrameworkDSW/System.php';
-require_once 'FrameworkDSW/Utilities.php';
-require_once 'FrameworkDSW/Containers.php';
+
 use FrameworkDSW\System\EException;
 use FrameworkDSW\Utilities\TType;
 use FrameworkDSW\System\TEnum;
@@ -26,7 +24,7 @@ use FrameworkDSW\Framework\Framework;
 use FrameworkDSW\Containers\TList;
 
 /**
- * EDatabaseException
+ * \FrameworkDSW\Database\EDatabaseException
  * @author	许子健
  */
 class EDatabaseException extends EException {}
@@ -61,7 +59,7 @@ class EDisconnected extends EDatabaseException {}
  */
 class EEmptyCommand extends EDatabaseException {}
 /**
- * EFailedToGetDbPropertyInfo
+ * \FrameworkDSW\Database\EFailedToGetDbPropertyInfo
  * @author	许子健
  */
 class EFailedToGetDbPropertyInfo extends EDatabaseException {
@@ -131,24 +129,24 @@ class ECurrentRowIsInsertRow extends EDatabaseException {}
 class EFailedToGetFetchSize extends EDatabaseException {}
 
 /**
- * EDatabaseWarning
+ * \FrameworkDSW\Database\EDatabaseWarning
  * @author	许子健
  */
 class EDatabaseWarning extends EDatabaseException {
     /**
      *
-     * @var	IDatabaseWarningContext
+     * @var	\FrameworkDSW\Database\IDatabaseWarningContext
      */
     private $FContext = null;
     /**
      *
-     * @var	EDatabaseWarning
+     * @var	\FrameworkDSW\Database\EDatabaseWarning
      */
     private $FNextWarning = null;
 
     /**
      *
-     * @param	IDatabaseWarningContext	$Context
+     * @param	\FrameworkDSW\Database\IDatabaseWarningContext	$Context
      */
     public function __construct($Context) {
         parent::__construct();
@@ -172,7 +170,7 @@ class EDatabaseWarning extends EDatabaseException {
     }
 
     /**
-     * @return	EDatabaseWarning
+     * @return	\FrameworkDSW\Database\EDatabaseWarning
      */
     public function getNextWarning() {
         return $this->FNextWarning;
@@ -180,7 +178,7 @@ class EDatabaseWarning extends EDatabaseException {
 
     /**
      *
-     * @param	EDatabaseWarning	$Value
+     * @param	\FrameworkDSW\Database\EDatabaseWarning	$Value
      */
     public function setNextWarning($Value) {
         TType::Object($Value, 'EDatabaseWarning');
@@ -190,7 +188,7 @@ class EDatabaseWarning extends EDatabaseException {
     /**
      *
      * Enter description here ...
-     * @return	IDatabaseWarningContext
+     * @return	\FrameworkDSW\Database\IDatabaseWarningContext
      */
     public function getWarningContext() {
         return $this->FContext;
@@ -251,7 +249,7 @@ class ENoMoreResultSet extends EDatabaseWarning {}
 class EFetchNextResultSetFailed extends EDatabaseWarning {}
 
 /**
- * TConcurrencyType
+ * \FrameworkDSW\Database\TConcurrencyType
  * @author	许子健
  */
 final class TConcurrencyType extends TEnum {
@@ -266,7 +264,7 @@ final class TConcurrencyType extends TEnum {
 }
 
 /**
- * TCurrentResultOption
+ * \FrameworkDSW\Database\TCurrentResultOption
  * @author	许子健
  */
 final class TCurrentResultOption extends TEnum {
@@ -285,7 +283,7 @@ final class TCurrentResultOption extends TEnum {
 }
 
 /**
- * TDriverPropertyInfo
+ * \FrameworkDSW\Database\TDriverPropertyInfo
  * @author	许子健
  */
 final class TDriverPropertyInfo extends TRecord {
@@ -312,7 +310,7 @@ final class TDriverPropertyInfo extends TRecord {
 }
 
 /**
- * TFetchDirection
+ * \FrameworkDSW\Database\TFetchDirection
  * @author	许子健
  */
 final class TFetchDirection extends TEnum {
@@ -331,7 +329,7 @@ final class TFetchDirection extends TEnum {
 }
 
 /**
- * THoldability
+ * \FrameworkDSW\Database\THoldability
  * @author	许子健
  */
 final class THoldability extends TEnum {
@@ -346,7 +344,7 @@ final class THoldability extends TEnum {
 }
 
 /**
- * TResultSetType
+ * \FrameworkDSW\Database\TResultSetType
  * @author	许子健
  */
 final class TResultSetType extends TEnum {
@@ -365,7 +363,7 @@ final class TResultSetType extends TEnum {
 }
 
 /**
- * TTransactionIsolationLevel
+ * \FrameworkDSW\Database\TTransactionIsolationLevel
  * @author	许子健
  */
 final class TTransactionIsolationLevel extends TEnum {
@@ -392,7 +390,7 @@ final class TTransactionIsolationLevel extends TEnum {
 }
 
 /**
- * IDatabaseWarningContext
+ * \FrameworkDSW\Database\IDatabaseWarningContext
  * @author	许子健
  */
 interface IDatabaseWarningContext extends IInterface {
@@ -412,15 +410,15 @@ interface IDatabaseWarningContext extends IInterface {
 }
 
 /**
- * IParam
- * param	<T>
+ * \FrameworkDSW\Database\IParam
+ * param	<T: ?>
  * @author	许子健
  */
 interface IParam extends IInterface {
 
     /**
      * descHere
-     * @return	TObject
+     * @return	\FrameworkDSW\System\TObject
      */
     public function getObjectValue();
 
@@ -438,7 +436,7 @@ interface IParam extends IInterface {
 
     /**
      * descHere
-     * @param	TObject	$Value
+     * @param	\FrameworkDSW\System\TObject	$Value
      */
     public function setObjectValue($Value);
 
@@ -450,7 +448,7 @@ interface IParam extends IInterface {
 }
 
 /**
- * IDriver
+ * \FrameworkDSW\Database\IDriver
  * @author	许子健
  */
 interface IDriver extends IInterface {
@@ -458,22 +456,22 @@ interface IDriver extends IInterface {
     /**
      * descHere
      * @param	string	$Url
-     * @param	TProperties	$Properties
-     * @return	IConnection
+     * @param	\FrameworkDSW\Containers\IMap	$Properties <K: string, V: string>
+     * @return	\FrameworkDSW\Database\IConnection
      */
     public function Connect($Url, $Properties);
 
     /**
      * descHere
      * @param	string					$Url
-     * @param	TProperties				$Properties
-     * @return	TDriverPropertyInfo[]
+     * @param	\FrameworkDSW\Containers\IMap	$Properties <K: string, V: string>
+     * @return	\FrameworkDSW\Database\TDriverPropertyInfo[]
      */
     public function GetPropertyInfo($Url, $Properties);
 
     /**
      * descHere
-     * @return	TVersion
+     * @return	\FrameworkDSW\Utilities\TVersion
      */
     public function getVersion();
 
@@ -486,7 +484,7 @@ interface IDriver extends IInterface {
 }
 
 /**
- * IConnection
+ * \FrameworkDSW\Database\IConnection
  * @author	许子健
  */
 interface IConnection extends IInterface {
@@ -504,15 +502,15 @@ interface IConnection extends IInterface {
     /**
      * descHere
      * @param	string	$Name
-     * @return	ISavepoint
+     * @return	\FrameworkDSW\Database\ISavepoint
      */
     public function CreateSavepoint($Name = '');
 
     /**
      * descHere
-     * @param	TResultSetType	$ResultSetType
-     * @param	TConcurrencyType	$ConcurrencyType
-     * @return	IStatement
+     * @param	\FrameworkDSW\Database\TResultSetType	$ResultSetType
+     * @param	\FrameworkDSW\Database\TConcurrencyType	$ConcurrencyType
+     * @return	\FrameworkDSW\Database\IStatement
      */
     public function CreateStatement($ResultSetType, $ConcurrencyType);
 
@@ -536,7 +534,7 @@ interface IConnection extends IInterface {
 
     /**
      * descHere
-     * @return	THoldability
+     * @return	\FrameworkDSW\Database\THoldability
      */
     public function getHoldability();
 
@@ -553,7 +551,7 @@ interface IConnection extends IInterface {
 
     /**
      * descHere
-     * @return	IDatabaseMetaData
+     * @return	\FrameworkDSW\Database\IDatabaseMetaData
      */
     public function getMetaData();
 
@@ -565,42 +563,42 @@ interface IConnection extends IInterface {
 
     /**
      * descHere
-     * @return	TTransactionIsolationLevel
+     * @return	\FrameworkDSW\Database\TTransactionIsolationLevel
      */
     public function getTransactionIsolation();
 
     /**
      * descHere
-     * @return	EDatabaseWarning
+     * @return	\FrameworkDSW\Database\EDatabaseWarning
      */
     public function getWarnings();
 
     /**
      * descHere
-     * @param	TResultSetType	$ResultSetType
-     * @param	TConcurrencyType	$ConcurrencyType
-     * @return	IPreparedStatement
+     * @param	\FrameworkDSW\Database\TResultSetType	$ResultSetType
+     * @param	\FrameworkDSW\Database\TConcurrencyType	$ConcurrencyType
+     * @return	\FrameworkDSW\Database\IPreparedStatement
      */
     public function PrepareStatement($ResultSetType, $ConcurrencyType);
 
     /**
      *
      * Enter description here ...
-     * @param	TResultSetType		$ResultSetType
-     * @param	TConcurrencyType	$ConcurrencyType
-     * @return	ICallableStatment
+     * @param	\FrameworkDSW\Database\TResultSetType		$ResultSetType
+     * @param	\FrameworkDSW\Database\TConcurrencyType	$ConcurrencyType
+     * @return	\FrameworkDSW\Database\ICallableStatement
      */
     public function PrepareCall($ResultSetType, $ConcurrencyType);
 
     /**
      * descHere
-     * @param	ISavepoint	$Savepoint
+     * @param	\FrameworkDSW\Database\ISavepoint	$Savepoint
      */
     public function RemoveSavepoint($Savepoint);
 
     /**
      * descHere
-     * @param	ISavepoint	$Savepoint
+     * @param	\FrameworkDSW\Database\ISavepoint	$Savepoint
      */
     public function Rollback($Savepoint = null);
 
@@ -618,7 +616,7 @@ interface IConnection extends IInterface {
 
     /**
      * descHere
-     * @param	THoldability	$Value
+     * @param	\FrameworkDSW\Database\THoldability	$Value
      */
     public function setHoldability($Value);
 
@@ -630,13 +628,13 @@ interface IConnection extends IInterface {
 
     /**
      * descHere
-     * @param	TTransactionIsolation	$Value
+     * @param	\FrameworkDSW\Database\TTransactionIsolation	$Value
      */
     public function setTransactionIsolation($Value);
 }
 
 /**
- * ISavepoint
+ * \FrameworkDSW\Database\ISavepoint
  * @author	许子健
  */
 interface ISavepoint extends IInterface {
@@ -655,7 +653,7 @@ interface ISavepoint extends IInterface {
 }
 
 /**
- * IStatement
+ * \FrameworkDSW\Database\IStatement
  * @author	许子健
  */
 interface IStatement extends IInterface {
@@ -674,45 +672,45 @@ interface IStatement extends IInterface {
     public function ExecuteCommands();
 
     /**
-     * @return	IParam <T: ?>
+     * @return	\FrameworkDSW\Database\IParam <T: ?>
      */
     public function FetchAsScalar();
 
     /**
      * descHere
-     * @return	IList <T: string>
+     * @return	\FrameworkDSW\Database\IList <T: string>
      */
     public function getCommands();
 
     /**
      * descHere
-     * @return	IConnection
+     * @return	\FrameworkDSW\Database\IConnection
      */
     public function getConnection();
 
     /**
      * descHere
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetCurrentResult();
 
     /**
      * descHere
      * @param	integer	$Index
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function getResult($Index);
 
     /**
      * descHere
-     * @param	TCurrentResultOption	$Options
+     * @param	\FrameworkDSW\Database\TCurrentResultOption	$Options
      */
     public function NextResult($Options);
 
     /**
      * descHere
      * @param	string	$Command
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function Query($Command = '');
 
@@ -724,7 +722,7 @@ interface IStatement extends IInterface {
 }
 
 /**
- * IPreparedStatement
+ * \FrameworkDSW\Database\IPreparedStatement
  * @author	许子健
  */
 interface IPreparedStatement extends IStatement {
@@ -732,7 +730,7 @@ interface IPreparedStatement extends IStatement {
     /**
      * descHere
      * @param	string	$Name
-     * @param	IParam	$Param <T: ?>
+     * @param	\FrameworkDSW\Database\IParam	$Param <T: ?>
      */
     public function BindParam($Name, $Param);
 
@@ -747,13 +745,13 @@ interface ICallableStatement extends IPreparedStatement {
     /**
      *
      * @param	string			$Name
-     * @return	IParam <T: ?>
+     * @return	\FrameworkDSW\Database\IParam <T: ?>
      */
     public function GetParam($Name);
 }
 
 /**
- * IResultSet
+ * \FrameworkDSW\Database\IResultSet
  * extends IArrayAccess<K: integer, V: IRow>, IIterator<T: IRow>
  * @author	许子健
  */
@@ -762,14 +760,14 @@ interface IResultSet extends IArrayAccess, IIterator {
     /**
      * descHere
      * @param	integer	$RowId
-     * @return	IRow
+     * @return	\FrameworkDSW\Database\IRow
      */
     public function FetchAbsolute($RowId);
 
     /**
      * descHere
      * @param	integer	$Offset
-     * @return	IRow
+     * @return	\FrameworkDSW\Database\IRow
      */
     public function FetchRelative($Offset);
 
@@ -787,7 +785,7 @@ interface IResultSet extends IArrayAccess, IIterator {
 
     /**
      * descHere
-     * @return	TFetchDirection
+     * @return	\FrameworkDSW\Database\TFetchDirection
      */
     public function getFetchDirection();
 
@@ -799,7 +797,7 @@ interface IResultSet extends IArrayAccess, IIterator {
 
     /**
      * descHere
-     * @return	IRow
+     * @return	\FrameworkDSW\Database\IRow
      */
     public function getInsertRow();
 
@@ -811,26 +809,26 @@ interface IResultSet extends IArrayAccess, IIterator {
 
     /**
      * descHere
-     * @return	IReusltMetaData
+     * @return	\FrameworkDSW\Database\IResultMetaData
      */
     public function getMetaData();
 
     /**
      *
      * Enter description here ...
-     * @return	TResultSetType
+     * @return	\FrameworkDSW\Database\TResultSetType
      */
     public function getType();
 
     /**
      * descHere
-     * @return	IStatement
+     * @return	\FrameworkDSW\Database\IStatement
      */
     public function getStatement();
 
     /**
      * descHere
-     * @param	TFetchDirection	$Value
+     * @param	\FrameworkDSW\Database\TFetchDirection	$Value
      */
     public function setFetchDirection($Value);
 
@@ -847,7 +845,7 @@ interface IResultSet extends IArrayAccess, IIterator {
 }
 
 /**
- * IRow
+ * \FrameworkDSW\Database\IRow
  * extends IArrayAccess <K: string, V: IParam<T: ?>>
  * @author	许子健
  */
@@ -860,19 +858,19 @@ interface IRow extends IArrayAccess {
 
     /**
      * descHere
-     * @return	TConcurrencyType
+     * @return	\FrameworkDSW\Database\TConcurrencyType
      */
     public function getConcurrencyType();
 
     /**
      * descHere
-     * @return	THoldability
+     * @return	\FrameworkDSW\Database\THoldability
      */
     public function getHoldability();
 
     /**
      * descHere
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function getResultSet();
 
@@ -890,7 +888,6 @@ interface IRow extends IArrayAccess {
 
     /**
      * descHere
-     * @return	void
      */
     public function UndoUpdates();
 
@@ -901,7 +898,7 @@ interface IRow extends IArrayAccess {
 }
 
 /**
- * IDatabaseMetaData
+ * \FrameworkDSW\Database\IDatabaseMetaData
  * @author	许子健
  */
 interface IDatabaseMetaData extends IInterface {
@@ -932,7 +929,7 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TResultSetType	$Type
+     * @param	\FrameworkDSW\Database\TResultSetType	$Type
      * @return	boolean
      */
     public function DeletesAreDetected($Type);
@@ -945,28 +942,28 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TPrimitiveParam <T: string>	$Catalog
-     * @param	TPrimitiveParam <T: string>	$SchemaPattern
+     * @param	\FrameworkDSW\Database\\FrameworkDSW\Database\TPrimitiveParam <T: string>	$Catalog
+     * @param	\FrameworkDSW\Database\\FrameworkDSW\Database\TPrimitiveParam <T: string>	$SchemaPattern
      * @param	string	$TypeNamePattern
      * @param	string	$AttributeNamePattern
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetAttributes($Catalog, $SchemaPattern, $TypeNamePattern, $AttributeNamePattern);
 
     /**
      * descHere
-     * @param	TPrimitiveParam <T: string>	$Catalog
-     * @param	TPrimitiveParam <T: string>	$Schema
+     * @param	\FrameworkDSW\Database\\FrameworkDSW\Database\TPrimitiveParam <T: string>	$Catalog
+     * @param	\FrameworkDSW\Database\\FrameworkDSW\Database\TPrimitiveParam <T: string>	$Schema
      * @param	string	$Table
-     * @param	TBestRowIdentifierScope	$Scope
+     * @param	\FrameworkDSW\Database\TBestRowIdentifierScope	$Scope
      * @param	boolean	$Nullable
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetBestRowIdentifier($Catalog, $Schema, $Table, $Scope, $Nullable);
 
     /**
      * descHere
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function getCatalogs();
 
@@ -978,21 +975,21 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TPrimitiveParam <T: string>	$Catalog
-     * @param	TPrimitiveParam <T: string>	$Schema
+     * @param	\FrameworkDSW\Database\\FrameworkDSW\Database\TPrimitiveParam <T: string>	$Catalog
+     * @param	\FrameworkDSW\Database\\FrameworkDSW\Database\TPrimitiveParam <T: string>	$Schema
      * @param	string	$Table
      * @param	string	$ColumnNamePattern
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetColumnPrivileges($Catalog, $Schema, $Table, $ColumnNamePattern);
 
     /**
      * descHere
-     * @param	TPrimitiveParam <T: string>	$Catalog
-     * @param	TPrimitiveParam <T: string>	$SchemaPattern
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$Catalog
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$SchemaPattern
      * @param	string	$TableNamePattern
      * @param	string	$ColumnNamePattern
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetColumns($Catalog, $SchemaPattern, $TableNamePattern, $ColumnNamePattern);
 
@@ -1004,19 +1001,19 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TPrimitiveParam <T: string>	$PrimaryCatalog
-     * @param	TPrimitiveParam <T: string>	$PrimarySchema
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$PrimaryCatalog
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$PrimarySchema
      * @param	string	$PrimaryTable
-     * @param	TPrimitiveParam <T: string>	$ForeignCatalog
-     * @param	TPrimitiveParam <T: string>	$ForeignSchema
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$ForeignCatalog
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$ForeignSchema
      * @param	string	$ForeignTable
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetCrossReference($PrimaryCatalog, $PrimarySchema, $PrimaryTable, $ForeignCatalog, $ForeignSchema, $ForeignTable);
 
     /**
      * descHere
-     * @return	TVersion
+     * @return	\FrameworkDSW\Utilities\TVersion
      */
     public function getDatabaseVersion();
 
@@ -1034,7 +1031,7 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @return	TVersion
+     * @return	\FrameworkDSW\Utilities\TVersion
      */
     public function getDbmsVersion();
 
@@ -1052,16 +1049,16 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @return	TVersion
+     * @return	\FrameworkDSW\Utilities\TVersion
      */
     public function getDriverVersion();
 
     /**
      * descHere
-     * @param	TPrimitiveParam <T: string>	$Catalog
-     * @param	TPrimitiveParam <T: string>	$Schema
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$Catalog
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$Schema
      * @param	string	$Table
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetExportedKeys($Catalog, $Schema, $Table);
 
@@ -1079,21 +1076,21 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TPrimitiveParam <T: string>	$Catalog
-     * @param	TPrimitiveParam <T: string>	$Schema
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$Catalog
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$Schema
      * @param	string	$Table
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetImportedKeys($Catalog, $Schema, $Table);
 
     /**
      * descHere
-     * @param	TPrimitiveParam <T: string>	$Catalog
-     * @param	TPrimitiveParam <T: string>	$Schema
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$Catalog
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$Schema
      * @param	string	$Table
      * @param	boolean	$Unique
      * @param	boolean	$Approximate
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetIndexInfo($Catalog, $Schema, $Table, $Unique, $Approximate);
 
@@ -1225,29 +1222,29 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TPrimitiveParam <T: string>	$Catalog
-     * @param	TPrimitiveParam <T: string>	$Schema
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$Catalog
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$Schema
      * @param	string	$Table
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetPrimaryKeys($Catalog, $Schema, $Table);
 
     /**
      * descHere
-     * @param	TPrimitiveParam <T: string>	$Catalog
-     * @param	TPrimitiveParam <T: string>	$SchemaPattern
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$Catalog
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$SchemaPattern
      * @param	string	$ProcedureNamePattern
      * @param	string	$ColumnNamePattern
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetProcedureColumns($Catalog, $SchemaPattern, $ProcedureNamePattern, $ColumnNamePattern);
 
     /**
      * descHere
-     * @param	TPrimitiveParam <T: string>	$Catalog
-     * @param	TPrimitiveParam <T: string>	$SchemaPattern
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$Catalog
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$SchemaPattern
      * @param	string	$ProcedureNamePattern
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetProcedures($Catalog, $SchemaPattern, $ProcedureNamePattern);
 
@@ -1271,7 +1268,7 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function getSchemas();
 
@@ -1295,7 +1292,7 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @return	TSqlStateType
+     * @return	\FrameworkDSW\Database\TSqlStateType
      */
     public function getSqlStateType();
 
@@ -1307,59 +1304,59 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TPrimitiveParam <T: string>	$Catalog
-     * @param	TPrimitiveParam <T: string>	$SchemaPattern
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$Catalog
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$SchemaPattern
      * @param	string	$TableNameSchema
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetSuperTables($Catalog, $SchemaPattern, $TableNameSchema);
 
     /**
      * descHere
-     * @param	TPrimitiveParam <T: string>	$Catalog
-     * @param	TPrimitiveParam <T: string>	$SchemaPattern
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$Catalog
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$SchemaPattern
      * @param	string	$TypeNamePattern
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetSuperTypes($Catalog, $SchemaPattern, $TypeNamePattern);
 
     /**
      * descHere
-     * @param	TPrimitiveParam <T: string>	$Catalog
-     * @param	TPrimitiveParam <T: string>	$SchemaPattern
-     * @param	string	$TableNamePatttern
-     * @return	IResultSet
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$Catalog
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$SchemaPattern
+     * @param	string	$TableNamePattern
+     * @return	\FrameworkDSW\Database\IResultSet
      */
-    public function GetTablePrivileges($Catalog, $SchemaPattern, $TableNamePatttern);
+    public function GetTablePrivileges($Catalog, $SchemaPattern, $TableNamePattern);
 
     /**
      * descHere
-     * @param	TPrimitiveParam <T: string>	$Catalog
-     * @param	TPrimitiveParam <T: string>	$SchemaPattern
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$Catalog
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$SchemaPattern
      * @param	string	$TableNamePattern
      * @param	string[]	$Types
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetTables($Catalog, $SchemaPattern, $TableNamePattern, $Types);
 
     /**
      * descHere
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function getTableTypes();
 
     /**
      * descHere
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function getTypeInfo();
 
     /**
      * descHere
-     * @param	TPrimitiveParam <T: string>	$Catalog
-     * @param	TPrimitiveParam <T: string>	$SchemaPattern
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$Catalog
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$SchemaPattern
      * @param	string	$TypeNamePattern
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetUdts($Catalog, $SchemaPattern, $TypeNamePattern);
 
@@ -1377,16 +1374,16 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TPrimitiveParam <T: string>	$Catalog
-     * @param	TPrimitiveParam <T: string>	$Schema
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$Catalog
+     * @param	\FrameworkDSW\Database\TPrimitiveParam <T: string>	$Schema
      * @param	string	$Table
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetVersionColumns($Catalog, $Schema, $Table);
 
     /**
      * descHere
-     * @param	TResultSetType	$Type
+     * @param	\FrameworkDSW\Database\TResultSetType	$Type
      * @return	boolean
      */
     public function InsertsAreDetected($Type);
@@ -1429,42 +1426,42 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TResultSetType	$Type
+     * @param	\FrameworkDSW\Database\TResultSetType	$Type
      * @return	boolean
      */
     public function OthersDeletesAreVisible($Type);
 
     /**
      * descHere
-     * @param	TResultSetType	$Type
+     * @param	\FrameworkDSW\Database\TResultSetType	$Type
      * @return	boolean
      */
     public function OthersInsertsAreVisible($Type);
 
     /**
      * descHere
-     * @param	TResultSetType	$Type
+     * @param	\FrameworkDSW\Database\TResultSetType	$Type
      * @return	boolean
      */
     public function OthersUpdatesAreVisible($Type);
 
     /**
      * descHere
-     * @param	TResultSetType	$Type
+     * @param	\FrameworkDSW\Database\TResultSetType	$Type
      * @return	boolean
      */
     public function OwnDeletesAreVisible($Type);
 
     /**
      * descHere
-     * @param	TResultSetType	$Type
+     * @param	\FrameworkDSW\Database\TResultSetType	$Type
      * @return	boolean
      */
     public function OwnInsertsAreVisible($Type);
 
     /**
      * descHere
-     * @param	TResultSetType	$Type
+     * @param	\FrameworkDSW\Database\TResultSetType	$Type
      * @return	boolean
      */
     public function OwnUpdatesAreVisible($Type);
@@ -1479,7 +1476,7 @@ interface IDatabaseMetaData extends IInterface {
      * descHere
      * @return	boolean
      */
-    public function StoresLowerCaseQuotedIndentifiers();
+    public function StoresLowerCaseQuotedIdentifiers();
 
     /**
      * descHere
@@ -1491,7 +1488,7 @@ interface IDatabaseMetaData extends IInterface {
      * descHere
      * @return	boolean
      */
-    public function StoresMixedCaseQuotedIndentifiers();
+    public function StoresMixedCaseQuotedIdentifiers();
 
     /**
      * descHere
@@ -1503,7 +1500,7 @@ interface IDatabaseMetaData extends IInterface {
      * descHere
      * @return	boolean
      */
-    public function StoresUpperCaseQuotedIndentifiers();
+    public function StoresUpperCaseQuotedIdentifies();
 
     /**
      * descHere
@@ -1765,8 +1762,8 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TConcurrencyType	$Concurrency
-     * @param	TResultSetType	$Type
+     * @param	\FrameworkDSW\Database\TConcurrencyType	$Concurrency
+     * @param	\FrameworkDSW\Database\TResultSetType	$Type
      * @return	boolean
      */
     public function SupportsResultSetConcurrency($Concurrency, $Type);
@@ -1779,7 +1776,7 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TResultSetType	$Type
+     * @param	\FrameworkDSW\Database\TResultSetType	$Type
      * @return	boolean
      */
     public function SupportsResultSetType($Type);
@@ -1870,7 +1867,7 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TTransactionIsolationLevel	$Level
+     * @param	\FrameworkDSW\Database\TTransactionIsolationLevel	$Level
      * @return	boolean
      */
     public function SupportsTransactionIsolationLevel($Level);
@@ -1895,7 +1892,7 @@ interface IDatabaseMetaData extends IInterface {
 
     /**
      * descHere
-     * @param	TResultSetType	$Type
+     * @param	\FrameworkDSW\Database\TResultSetType	$Type
      * @return	boolean
      */
     public function UpdatesAreDetected($Type);
@@ -1915,19 +1912,19 @@ interface IDatabaseMetaData extends IInterface {
 }
 
 /**
- * TPdoWarningContext
+ * \FrameworkDSW\Database\TPdoWarningContext
  * @author	许子健
  */
 class TPdoWarningContext extends TObject implements IDatabaseWarningContext {
 
     /**
-     * @var	PDOException
+     * @var	\PDOException
      */
     private $FPdoException;
 
     /**
      * descHere
-     * @param	PDOException	$PdoException
+     * @param	\PDOException	$PdoException
      */
     public function __construct($PdoException) {
         parent::__construct();
@@ -1937,7 +1934,7 @@ class TPdoWarningContext extends TObject implements IDatabaseWarningContext {
 
     /**
      * (non-PHPdoc)
-     * @see TObject::Destroy()
+     * @see \FrameworkDSW\System\TObject::Destroy()
      */
     public function Destroy() {
         $this->FPdoException = null;
@@ -1948,20 +1945,20 @@ class TPdoWarningContext extends TObject implements IDatabaseWarningContext {
      * @return	string
      */
     public function getSqlState() {
-        return $this->FException->errorInfo[0];
+        return $this->FPdoException->errorInfo[0];
     }
 
     /**
      * @return	string
      */
     public function getErrorCode() {
-        return $this->FException->errorInfo[1];
+        return $this->FPdoException->errorInfo[1];
     }
 
 }
 
 /**
- * TSavepoint
+ * \FrameworkDSW\Database\TSavepoint
  * @author	许子健
  */
 class TSavepoint extends TObject implements ISavepoint {
@@ -1997,7 +1994,8 @@ class TSavepoint extends TObject implements ISavepoint {
 
     /**
      * descHere
-     * @return	integer
+     * @throws EIllegalSavepointIdentifier
+     * @return    integer
      */
     public function getId() {
         if ($this->FId != -1) {
@@ -2010,7 +2008,8 @@ class TSavepoint extends TObject implements ISavepoint {
 
     /**
      * descHere
-     * @return	string
+     * @throws EIllegalSavepointIdentifier
+     * @return    string
      */
     public function getName() {
         if ($this->FId == -1) {
@@ -2021,6 +2020,10 @@ class TSavepoint extends TObject implements ISavepoint {
         }
     }
 
+    /**
+     *
+     * @return string
+     */
     public function getProperName() {
         if ($this->FId == -1) {
             return $this->FName;
@@ -2032,8 +2035,8 @@ class TSavepoint extends TObject implements ISavepoint {
 }
 
 /**
- * TAbstractParam
- * param	<T>
+ * \FrameworkDSW\Database\TAbstractParam
+ * param	<T: ?>
  * @author	许子健
  */
 abstract class TAbstractParam extends TObject {
@@ -2043,7 +2046,7 @@ abstract class TAbstractParam extends TObject {
     protected $FValue;
 
     //public abstract function getType(); //returns a string.
-    //TODO: SEE http://bugs.php.net/bug.php?id=51826 to know why this method was commentted.
+    //TODO: SEE http://bugs.php.net/bug.php?id=51826 to know why this method was commented.
 
 
     /**
@@ -2066,9 +2069,9 @@ abstract class TAbstractParam extends TObject {
 }
 
 /**
- * TPrimitiveParam
- * param	<T>
- * extends	IParam<T>
+ * \FrameworkDSW\Database\TPrimitiveParam
+ * extends	\FrameworkDSW\Database\IParam<T: T>
+ * param	<T: ?>
  * @author	许子健
  */
 final class TPrimitiveParam extends TAbstractParam implements IParam {
@@ -2096,7 +2099,7 @@ final class TPrimitiveParam extends TAbstractParam implements IParam {
 
     /**
      * descHere
-     * @return	TObject
+     * @return	\FrameworkDSW\System\TObject
      */
     public function getObjectValue() {
         switch ($this->FType) {
@@ -2128,10 +2131,10 @@ final class TPrimitiveParam extends TAbstractParam implements IParam {
 
     /**
      * descHere
-     * @param	TObject	$Value
+     * @param	\FrameworkDSW\System\TObject	$Value
      */
     public function setObjectValue($Value) {
-        TType::Object($Value, 'IPrimitive');
+        TType::Object($Value, '\FrameworkDSW\System\IPrimitive');
         switch ($this->FType) {
             case 'BIT' :
                 $this->FValue = $Value->UnboxToBoolean();
@@ -2150,13 +2153,13 @@ final class TPrimitiveParam extends TAbstractParam implements IParam {
 }
 
 /**
- * TAbstractPdoDriver
+ * \FrameworkDSW\System\TAbstractPdoDriver
  * @author	许子健
  */
 abstract class TAbstractPdoDriver extends TObject {
 
     /**
-     * @var	IMap <K: string, V: string>
+     * @var	\FrameworkDSW\Containers\IMap <K: string, V: string>
      */
     protected $FProperties = null;
     /**
@@ -2199,7 +2202,7 @@ abstract class TAbstractPdoDriver extends TObject {
         }
         if ($this->FProperties->ContainsKey('Case')) {
             switch ($this->FProperties['Case']) {
-                case 'Natrual' :
+                case 'Natural' :
                     $this->FPdoOptions[\PDO::ATTR_CASE] = \PDO::CASE_NATURAL;
                     break;
                 case 'Upper' :
@@ -2218,9 +2221,10 @@ abstract class TAbstractPdoDriver extends TObject {
 
     /**
      * descHere
-     * @param	string		$Url
-     * @param	IMap		$Properties <K: string, V: string>
-     * @return	IConnection
+     * @param    string $Url
+     * @param    \FrameworkDSW\Containers\IMap $Properties <K: string, V: string>
+     * @throws EFailedToConnectDb
+     * @return    \FrameworkDSW\Database\IConnection
      */
     public function Connect($Url, $Properties) {
         TType::String($Url);
@@ -2236,19 +2240,19 @@ abstract class TAbstractPdoDriver extends TObject {
 
     /**
      * descHere
-     * @return	IConnection
+     * @return	\FrameworkDSW\Database\IConnection
      */
     protected abstract function DoConnect();
 
     /**
      * descHere
-     * @return	TDriverPropertyInfo
+     * @return	\FrameworkDSW\Database\TDriverPropertyInfo
      */
     protected abstract function DoGetPropertyInfo();
 
     /**
      * descHere
-     * @return	TVersion
+     * @return	\FrameworkDSW\Utilities\TVersion
      */
     protected abstract function DoGetVersion();
 
@@ -2260,9 +2264,10 @@ abstract class TAbstractPdoDriver extends TObject {
 
     /**
      * descHere
-     * @param	string		$Url
-     * @param	IMap		$Properties <K: string, V: string>
-     * @return	TDriverPropertyInfo[]
+     * @param    string $Url
+     * @param    \FrameworkDSW\Containers\IMap $Properties <K: string, V: string>
+     * @throws EFailedToGetDbPropertyInfo
+     * @return    \FrameworkDSW\System\TDriverPropertyInfo[]
      */
     public function GetPropertyInfo($Url, $Properties) {
         TType::String($Url);
@@ -2306,7 +2311,7 @@ abstract class TAbstractPdoDriver extends TObject {
 
     /**
      * descHere
-     * @return	TVersion
+     * @return	\FrameworkDSW\Utilities\TVersion
      */
     public function getVersion() {
         return $this->DoGetVersion();
@@ -2314,7 +2319,7 @@ abstract class TAbstractPdoDriver extends TObject {
 }
 
 /**
- * TAbstractPdoConnection
+ * \FrameworkDSW\Database\TAbstractPdoConnection
  * @author	许子健
  */
 abstract class TAbstractPdoConnection extends TObject {
@@ -2345,11 +2350,11 @@ abstract class TAbstractPdoConnection extends TObject {
 
     /**
      *
-     * @var	IDriver
+     * @var	\FrameworkDSW\Database\IDriver
      */
     protected $FDriver = null;
     /**
-     * @var	PDO
+     * @var	\PDO
      */
     protected $FPdo = null;
     /**
@@ -2359,7 +2364,7 @@ abstract class TAbstractPdoConnection extends TObject {
     protected $FIsConnected = false;
     /**
      *
-     * @var	EDatabaseWarning
+     * @var	\FrameworkDSW\Database\EDatabaseWarning
      */
     protected $FWarnings = null;
 
@@ -2381,31 +2386,33 @@ abstract class TAbstractPdoConnection extends TObject {
 
     /**
      *
-     * @param	TResultSetType		$ResultSetType
-     * @param 	TConcurrencyType	$ConcurrencyType
-     * @return	IStatement
+     * @param	\FrameworkDSW\Database\TResultSetType		$ResultSetType
+     * @param 	\FrameworkDSW\Database\TConcurrencyType	$ConcurrencyType
+     * @return	\FrameworkDSW\Database\IStatement
      */
     protected abstract function DoCreateStatement($ResultSetType, $ConcurrencyType);
 
     /**
      *
-     * @param	TResultSetType		$ResultSetType
-     * @param	TConcurrencyType	$ConcurrencyType
-     * @return	IPreparedStatement
+     * @param	\FrameworkDSW\Database\TResultSetType		$ResultSetType
+     * @param	\FrameworkDSW\Database\TConcurrencyType	$ConcurrencyType
+     * @return	\FrameworkDSW\Database\IPreparedStatement
      */
     protected abstract function DoPrepareStatement($ResultSetType, $ConcurrencyType);
 
     /**
      *
-     * @param	string	$Name
-     * @return	ISavepoint
+     * @param    string $Name
+     * @throws EUnsupportedDbFeature
+     * @return    \FrameworkDSW\Database\ISavepoint
      */
-    protected function DoCreateSavepoint($Name) {
+    protected function DoCreateSavepoint(/** @noinspection PhpUnusedParameterInspection */
+        $Name) {
         throw new EUnsupportedDbFeature(self::CSavepointsUnsupported);
     }
 
     /**
-     * @return	THoldability
+     * @return	\FrameworkDSW\Database\THoldability
      */
     protected function DoGetHoldability() {
         return THoldability::eHoldCursorsOverCommit();
@@ -2413,15 +2420,18 @@ abstract class TAbstractPdoConnection extends TObject {
 
     /**
      *
-     * @param	ISavepoint	$Savepoint
+     * @param    \FrameworkDSW\Database\ISavepoint $Savepoint
+     * @throws EUnsupportedDbFeature
      */
-    protected function DoRemoveSavepoint($Savepoint) {
+    protected function DoRemoveSavepoint(/** @noinspection PhpUnusedParameterInspection */
+        $Savepoint) {
         throw new EUnsupportedDbFeature(self::CSavepointsUnsupported);
     }
 
     /**
      *
-     * @param	ISavepoint	$Savepoint
+     * @param    \FrameworkDSW\Database\ISavepoint $Savepoint
+     * @throws EUnsupportedDbFeature
      */
     protected function DoRollback($Savepoint = null) {
         if ($Savepoint !== null) {
@@ -2438,32 +2448,39 @@ abstract class TAbstractPdoConnection extends TObject {
 
     /**
      *
-     * @param	THoldability	$Value
+     * @param    \FrameworkDSW\Database\THoldability $Value
+     * @throws EUnsupportedDbFeature
      */
-    protected function DoSetHoldability($Value) {
+    protected function DoSetHoldability(/** @noinspection PhpUnusedParameterInspection */
+        $Value) {
         throw new EUnsupportedDbFeature(self::CHoldabilityUnsupported);
     }
 
     /**
      *
-     * @param	boolean	$Value
+     * @param    boolean $Value
+     * @throws EUnsupportedDbFeature
      */
-    protected function DoSetReadOnly($Value) {
+    protected function DoSetReadOnly(/** @noinspection PhpUnusedParameterInspection */
+        $Value) {
         throw new EUnsupportedDbFeature(self::CReadOnlyUnsupported);
     }
 
     /**
      *
-     * @param	TTransactionIsolation	$Value
+     * @param    \FrameworkDSW\Database\TTransactionIsolation $Value
+     * @throws EUnsupportedDbFeature
      */
-    protected function DoSetTransactionIsolation($Value) {
+    protected function DoSetTransactionIsolation(/** @noinspection PhpUnusedParameterInspection */
+        $Value) {
         throw new EUnsupportedDbFeature(self::CTransactionIsolationUnsupported);
     }
 
     /**
      *
-     * @param	IDriver	$Driver
-     * @param	PDO		$Pdo
+     * @param    \FrameworkDSW\Database\IDriver $Driver
+     * @param    \PDO $Pdo
+     * @throws \FrameworkDSW\System\EIsNotNullable
      */
     public function __construct($Driver, $Pdo) {
         parent::__construct();
@@ -2482,9 +2499,10 @@ abstract class TAbstractPdoConnection extends TObject {
     }
 
     /**
-     * @param	string			$WarningType
-     * @param	PDOException	$PdoException
-     * @param	TAbstractPdoConnection	$Connection
+     * @param    string $WarningType
+     * @param    \PDOException $PdoException
+     * @param    \FrameworkDSW\Database\TAbstractPdoConnection $Connection
+     * @throws
      */
     public static function PushWarning($WarningType, $PdoException, $Connection) {
         TType::String($WarningType);
@@ -2526,7 +2544,7 @@ abstract class TAbstractPdoConnection extends TObject {
     /**
      * descHere
      * @param	string	$Name
-     * @return	ISavepoint
+     * @return	\FrameworkDSW\Database\ISavepoint
      */
     public function CreateSavepoint($Name = '') {
         TType::String($Name);
@@ -2535,9 +2553,9 @@ abstract class TAbstractPdoConnection extends TObject {
 
     /**
      * descHere
-     * @param	TResultSetType		$ResultSetType
-     * @param	TConcurrencyType	$ConcurrencyType
-     * @return	IStatement
+     * @param	\FrameworkDSW\Database\TResultSetType		$ResultSetType
+     * @param	\FrameworkDSW\Database\TConcurrencyType	$ConcurrencyType
+     * @return	\FrameworkDSW\Database\IStatement
      */
     public function CreateStatement($ResultSetType, $ConcurrencyType) {
         TType::Object($ResultSetType, 'TResultSetType');
@@ -2571,6 +2589,7 @@ abstract class TAbstractPdoConnection extends TObject {
         catch (\PDOException $Ex) {
             self::PushWarning(EExecuteFailed::ClassType(), $Ex, $this);
         }
+        /** @noinspection PhpUndefinedVariableInspection */
         return $mResult;
     }
 
@@ -2611,7 +2630,8 @@ abstract class TAbstractPdoConnection extends TObject {
 
     /**
      * descHere
-     * @return	IDatabaseMetaData
+     * @throws EUnsupportedDbFeature
+     * @return    \FrameworkDSW\Database\IDatabaseMetaData
      */
     public function getMetaData() {
         throw new EUnsupportedDbFeature();
@@ -2631,7 +2651,7 @@ abstract class TAbstractPdoConnection extends TObject {
 
     /**
      * descHere
-     * @return	TTransactionIsolationLevel
+     * @return	\FrameworkDSW\Database\TTransactionIsolationLevel
      */
     public function getTransactionIsolation() {
         return TTransactionIsolationLevel::eNone();
@@ -2641,7 +2661,7 @@ abstract class TAbstractPdoConnection extends TObject {
 
     /**
      * descHere
-     * @return	EDatabaseWarning
+     * @return	\FrameworkDSW\Database\EDatabaseWarning
      */
     public function getWarnings() {
         $this->EnsureConnected();
@@ -2650,9 +2670,9 @@ abstract class TAbstractPdoConnection extends TObject {
 
     /**
      * descHere
-     * @param	TResultSetType	$ResultSetType
-     * @param	TConcurrencyType	$ConcurrencyType
-     * @return	IPreparedStatement
+     * @param	\FrameworkDSW\Database\TResultSetType	$ResultSetType
+     * @param	\FrameworkDSW\Database\TConcurrencyType	$ConcurrencyType
+     * @return	\FrameworkDSW\Database\IPreparedStatement
      */
     public function PrepareStatement($ResultSetType, $ConcurrencyType) {
         TType::Object($ResultSetType, 'TResultSetType');
@@ -2665,7 +2685,7 @@ abstract class TAbstractPdoConnection extends TObject {
 
     /**
      * descHere
-     * @param	ISavepoint	$Savepoint
+     * @param	\FrameworkDSW\Database\ISavepoint	$Savepoint
      */
     public function RemoveSavepoint($Savepoint) {
         TType::Object($Savepoint, 'ISavepoint');
@@ -2674,7 +2694,7 @@ abstract class TAbstractPdoConnection extends TObject {
 
     /**
      * descHere
-     * @param	ISavepoint	$Savepoint
+     * @param	\FrameworkDSW\Database\ISavepoint	$Savepoint
      */
     public function Rollback($Savepoint = null) {
         TType::Object($Savepoint, 'ISavepoint');
@@ -2694,7 +2714,8 @@ abstract class TAbstractPdoConnection extends TObject {
 
     /**
      * descHere
-     * @param	string	$Value
+     * @param    string $Value
+     * @throws EUnsupportedDbFeature
      */
     public function setCatalog($Value) {
         TType::String($Value);
@@ -2703,7 +2724,7 @@ abstract class TAbstractPdoConnection extends TObject {
 
     /**
      * descHere
-     * @param	THoldability	$Value
+     * @param	\FrameworkDSW\Database\THoldability	$Value
      */
     public function setHoldability($Value) {
         TType::Object($Value, 'THoldability');
@@ -2721,7 +2742,7 @@ abstract class TAbstractPdoConnection extends TObject {
 
     /**
      * descHere
-     * @param	TTransactionIsolation	$Value
+     * @param	\FrameworkDSW\Database\TTransactionIsolation	$Value
      */
     public function setTransactionIsolation($Value) {
         TType::Object($Value, 'TTransactionIsolationLevel');
@@ -2731,38 +2752,38 @@ abstract class TAbstractPdoConnection extends TObject {
 }
 
 /**
- * TAbstractPdoStatement
+ * \FrameworkDSW\Database\TAbstractPdoStatement
  * @author	许子健
  */
 abstract class TAbstractPdoStatement extends TObject implements IStatement {
     /**
      *
      * Enter description here ...
-     * @var	TAbstractPdoConnection
+     * @var	\FrameworkDSW\Database\TAbstractPdoConnection
      */
     protected $FConnection = null;
     /**
      *
      * Enter description here ...
-     * @var PDO
+     * @var \PDO
      */
     protected $FPdo = null;
     /**
      *
      * Enter description here ...
-     * @var	TResultSetType
+     * @var	\FrameworkDSW\Database\TResultSetType
      */
     protected $FResultSetType = null;
     /**
      *
      * Enter description here ...
-     * @var	TConcurrencyType
+     * @var	\FrameworkDSW\Database\TConcurrencyType
      */
     protected $FConcurrencyType = null;
     /**
      *
      * Enter description here ...
-     * @var	PDOStatement
+     * @var	\PDOStatement
      */
     protected $FPdoStatement = null;
     /**
@@ -2774,34 +2795,34 @@ abstract class TAbstractPdoStatement extends TObject implements IStatement {
     /**
      *
      * Enter description here ...
-     * @var	IList <T: string>
+     * @var	\FrameworkDSW\Containers\IList <T: string>
      */
     private $FCommands = null;
 
-    /**
-     *
-     * Enter description here ...
-     */
-    private function EnsurePdoStatement() {
-        if ($this->FPdoStatement === null) {
-            throw new EEmptyCommand();
-        }
-    }
+//    /**
+//     *
+//     * Enter description here ...
+//     */
+//    private function EnsurePdoStatement() {
+//        if ($this->FPdoStatement === null) {
+//            throw new EEmptyCommand();
+//        }
+//    }
 
     /**
      *
      * Enter description here ...
-     * @return	IParam <T: ?>
+     * @return	\FrameworkDSW\Database\IParam <T: ?>
      */
     protected abstract function DoFetchAsScalar();
 
     /**
      *
      * Enter description here ...
-     * @param TAbstractPdoConnection	$Connection
-     * @param PDO						$Pdo
-     * @param TResultSetType			$ResultSetType
-     * @param TConcurrencyType			$ConcurrencyType
+     * @param \FrameworkDSW\Database\TAbstractPdoConnection	$Connection
+     * @param \PDO						$Pdo
+     * @param \FrameworkDSW\Database\TResultSetType			$ResultSetType
+     * @param \FrameworkDSW\Database\TConcurrencyType			$ConcurrencyType
      */
     public function __construct($Connection, $Pdo, $ResultSetType, $ConcurrencyType) {
         parent::__construct();
@@ -2827,6 +2848,7 @@ abstract class TAbstractPdoStatement extends TObject implements IStatement {
      * @param	string	$Command
      * @return	integer
      */
+    /** @noinspection PhpInconsistentReturnPointsInspection */
     public function Execute($Command = '') {
         TType::String($Command);
 
@@ -2844,8 +2866,9 @@ abstract class TAbstractPdoStatement extends TObject implements IStatement {
 
     /**
      * (non-PHPdoc)
-     * @see IStatement::ExecuteCommands()
-     * @return	integer[]
+     * @see \FrameworkDSW\Database\IStatement::ExecuteCommands()
+     * @throws EEmptyCommand
+     * @return    integer[]
      */
     public function ExecuteCommands() {
         if ($this->FCommands === null || $this->FCommands->IsEmpty()) {
@@ -2869,8 +2892,9 @@ abstract class TAbstractPdoStatement extends TObject implements IStatement {
 
     /**
      * descHere
-     * @return	IParam <T: ?>
+     * @return	\FrameworkDSW\Database\IParam <T: ?>
      */
+    /** @noinspection PhpInconsistentReturnPointsInspection */
     public function FetchAsScalar() {
         try {
             return $this->DoFetchAsScalar();
@@ -2882,7 +2906,7 @@ abstract class TAbstractPdoStatement extends TObject implements IStatement {
 
     /**
      * descHere
-     * @return	IList <T: string>
+     * @return	\FrameworkDSW\Containers\IList <T: string>
      */
     public function getCommands() {
         if ($this->FCommands === null) {
@@ -2894,7 +2918,7 @@ abstract class TAbstractPdoStatement extends TObject implements IStatement {
 
     /**
      * descHere
-     * @return	IConnection
+     * @return	\FrameworkDSW\Database\IConnection
      */
     public function getConnection() {
         return $this->FConnection;
@@ -2902,7 +2926,7 @@ abstract class TAbstractPdoStatement extends TObject implements IStatement {
 
     /**
      * descHere
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function GetCurrentResult() {
     }
@@ -2910,14 +2934,14 @@ abstract class TAbstractPdoStatement extends TObject implements IStatement {
     /**
      * descHere
      * @param	integer	$Index
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function getResult($Index) {
     }
 
     /**
      * descHere
-     * @param	TCurrentResultOption	$Options
+     * @param	\FrameworkDSW\Database\TCurrentResultOption	$Options
      */
     public function NextResult($Options) {
     }
@@ -2925,7 +2949,7 @@ abstract class TAbstractPdoStatement extends TObject implements IStatement {
     /**
      * descHere
      * @param	string	$Command
-     * @return	IResultSet
+     * @return	\FrameworkDSW\Database\IResultSet
      */
     public function Query($Command = '') {
         TType::String($Command);
@@ -2960,7 +2984,7 @@ abstract class TAbstractPdoStatement extends TObject implements IStatement {
 }
 
 /**
- * TAbstractPdoResultSet
+ * \FrameworkDSW\Database\TAbstractPdoResultSet
  * @author	许子健
  */
 abstract class TAbstractPdoResultSet extends TObject {
@@ -2968,42 +2992,42 @@ abstract class TAbstractPdoResultSet extends TObject {
     /**
      *
      * Enter description here ...
-     * @var	TAbstractPdoStatement
+     * @var	\FrameworkDSW\Database\TAbstractPdoStatement
      */
     protected $FStatement = null;
 
     /**
      *
      * Enter description here ...
-     * @var	PDO
+     * @var	\PDO
      */
     protected $FPdo = null;
 
     /**
      *
      * Enter description here ...
-     * @var	PDOStatement
+     * @var	\PDOStatement
      */
     protected $FPdoStatement = null;
 
     /**
      *
      * Enter description here ...
-     * @var	TResultSetType
+     * @var	\FrameworkDSW\Database\TResultSetType
      */
     protected $FResultSetType = null;
 
     /**
      *
      * Enter description here ...
-     * @var	TConcurrencyType
+     * @var	\FrameworkDSW\Database\TConcurrencyType
      */
     protected $FConcurrencyType = null;
 
     /**
      *
      * Enter description here ...
-     * @var	TFetchDirection
+     * @var	\FrameworkDSW\Database\TFetchDirection
      */
     protected $FFetchDirection = null;
 
@@ -3042,12 +3066,12 @@ abstract class TAbstractPdoResultSet extends TObject {
     /**
      *
      * Enter description here ...
-     * @param	TAbstractPdoStatement	$Statement
+     * @param	\FrameworkDSW\Database\TAbstractPdoStatement	$Statement
      * @param	string					$Command
-     * @param	PDO						$Pdo
-     * @param	PDOStatement			$PdoStatement
-     * @param	TResultSetType			$ResultSetType
-     * @param	TConcurrencyType		$ConcurrencyType
+     * @param	\PDO						$Pdo
+     * @param	\PDOStatement			$PdoStatement
+     * @param	\FrameworkDSW\Database\TResultSetType			$ResultSetType
+     * @param	\FrameworkDSW\Database\TConcurrencyType		$ConcurrencyType
      */
     public function __construct($Statement, $Command, $Pdo, $PdoStatement, $ResultSetType, $ConcurrencyType) {
         TType::Object($Statement, 'TAbstractPdoStatement');
@@ -3094,7 +3118,7 @@ abstract class TAbstractPdoResultSet extends TObject {
 
     /**
      * descHere
-     * @return	IRow
+     * @return	\FrameworkDSW\Database\IRow
      */
     public function current() {
     }
@@ -3102,7 +3126,7 @@ abstract class TAbstractPdoResultSet extends TObject {
     /**
      * descHere
      * @param	integer	$RowId
-     * @return	IRow
+     * @return	\FrameworkDSW\Database\IRow
      */
     public function FetchAbsolute($RowId) {
         TType::Int($RowId);
@@ -3113,7 +3137,7 @@ abstract class TAbstractPdoResultSet extends TObject {
                 $this->FCurrentRow = $RowId;
                 break;
             case TResultSetType::eScrollSensitive() :
-                $RawRow = $this->FPdoStatement->fetch(\PDO::FETCH_BOTH, \PDO::FETCH_ORI_ABS, $RowId);
+                $mRawRow = $this->FPdoStatement->fetch(\PDO::FETCH_BOTH, \PDO::FETCH_ORI_ABS, $RowId);
                 //TODO generate the IRow instance.
                 break;
             default : //not supported. eg. forward only mode
@@ -3125,7 +3149,7 @@ abstract class TAbstractPdoResultSet extends TObject {
     /**
      * descHere
      * @param	integer	$Offset
-     * @return	IRow
+     * @return	\FrameworkDSW\Database\IRow
      */
     public function FetchRelative($Offset) {
         TType::Int($Offset);
@@ -3134,18 +3158,18 @@ abstract class TAbstractPdoResultSet extends TObject {
         }
         switch ($this->FResultSetType) {
             case TResultSetType::eScrollInsensitive() :
-                //TODO generate the IRow instance based on the appropriate row inside rawdata.
+                //TODO generate the IRow instance based on the appropriate row inside raw data.
                 $this->FCurrentRow += $Offset;
                 break;
             case TResultSetType::eScrollSensitive() :
                 switch ($this->FFetchDirection) {
                     case TFetchDirection::eForward() :
-                        $RawRow = $this->FPdoStatement->fetch(\PDO::FETCH_BOTH, \PDO::FETCH_ORI_REL, $Offset);
-                        //TODO generate the IRow instance based on $RawRow.
+                        $mRawRow = $this->FPdoStatement->fetch(\PDO::FETCH_BOTH, \PDO::FETCH_ORI_REL, $Offset);
+                        //TODO generate the IRow instance based on $mRawRow.
                         break;
                     case TFetchDirection::eReverse() :
                         if ($this->FCurrentRow == -2) {
-                            $RawRow = $this->FPdoStatement->fetch(\PDO::FETCH_BOTH, \PDO::FETCH_ORI_LAST);
+                            $mRawRow = $this->FPdoStatement->fetch(\PDO::FETCH_BOTH, \PDO::FETCH_ORI_LAST);
                             $this->FCurrentRow = 0;
                             --$Offset;
                         }
@@ -3153,15 +3177,15 @@ abstract class TAbstractPdoResultSet extends TObject {
                             while ($Offset > 1) {
                                 $this->FPdoStatement->fetch(\PDO::FETCH_BOTH, \PDO::FETCH_ORI_PRIOR);
                             }
-                            $RawRow = $this->FPdoStatement->fetch(\PDO::FETCH_BOTH, \PDO::FETCH_ORI_PRIOR);
+                            $mRawRow = $this->FPdoStatement->fetch(\PDO::FETCH_BOTH, \PDO::FETCH_ORI_PRIOR);
                         }
                         else {
                             while ($Offset < -1) {
                                 $this->FPdoStatement->fetch(\PDO::FETCH_BOTH, \PDO::FETCH_ORI_NEXT);
                             }
-                            $RawRow = $this->FPdoStatement->fetch(\PDO::FETCH_BOTH, \PDO::FETCH_ORI_NEXT);
+                            $mRawRow = $this->FPdoStatement->fetch(\PDO::FETCH_BOTH, \PDO::FETCH_ORI_NEXT);
                         }
-                        //TODO generate the IRow instance based on $RawRow.
+                        //TODO generate the IRow instance based on $mRawRow.
                         break;
                 }
                 break;
@@ -3173,7 +3197,8 @@ abstract class TAbstractPdoResultSet extends TObject {
 
     /**
      * descHere
-     * @return	integer
+     * @throws EUnsupportedDbFeature
+     * @return    integer
      */
     public function getCount() {
         if ($this->FResultSetType == TResultSetType::eScrollInsensitive()) {
@@ -3192,7 +3217,7 @@ abstract class TAbstractPdoResultSet extends TObject {
 
     /**
      * descHere
-     * @return	TFetchDirection
+     * @return	\FrameworkDSW\Database\TFetchDirection
      */
     public function getFetchDirection() {
         if ($this->FResultSetType == TResultSetType::eForwardOnly()) {
@@ -3210,7 +3235,7 @@ abstract class TAbstractPdoResultSet extends TObject {
 
     /**
      * descHere
-     * @return	IRow
+     * @return	\FrameworkDSW\Database\IRow
      */
     public function getInsertRow() {
     }
@@ -3231,14 +3256,14 @@ abstract class TAbstractPdoResultSet extends TObject {
 
     /**
      * descHere
-     * @return	IReusltMetaData
+     * @return	\FrameworkDSW\Database\IResultMetaData
      */
     public function getMetaData() {
     }
 
     /**
      * descHere
-     * @return	IStatement
+     * @return	\FrameworkDSW\Database\IStatement
      */
     public function getStatement() {
     }
@@ -3267,7 +3292,7 @@ abstract class TAbstractPdoResultSet extends TObject {
     /**
      * descHere
      * @param	string	$offset
-     * @return	IRow
+     * @return	\FrameworkDSW\Database\IRow
      */
     public function offsetGet($offset) {
     }
@@ -3275,7 +3300,7 @@ abstract class TAbstractPdoResultSet extends TObject {
     /**
      * descHere
      * @param	string	$offset
-     * @param	IRow	$value
+     * @param	\FrameworkDSW\Database\IRow	$value
      */
     public function offsetSet($offset, $value) {
     }
@@ -3295,16 +3320,16 @@ abstract class TAbstractPdoResultSet extends TObject {
 
     /**
      * descHere
-     * @param	TFetchDirection	$Value
+     * @param	\FrameworkDSW\Database\TFetchDirection	$Value
      */
     public function setFetchDirection($Value) {
         TType::Object($Value, 'TFetchDirection');
 
         if ($Value == TFetchDirection::eUnkown()) {
-            //TODO: throw new exception. can not set as unkown.
+            //TODO: throw new exception. can not set as unknown.
         }
         if ($this->FResultSetType == TResultSetType::eForwardOnly()) {
-            //TODO: unsuppoerted. it must be forward, no need to set.
+            //TODO: unsupported. it must be forward, no need to set.
         }
 
         $this->FFetchDirection = $Value;

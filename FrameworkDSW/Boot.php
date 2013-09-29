@@ -36,9 +36,10 @@ final class Boot {
 
     /**
      *
-     * @param  array   $StaticTable
-     * @param  array   $ClassInfo
-     * @param  string  $ClassDelimiter
+     * @param  array $StaticTable
+     * @param  array $ClassInfo
+     * @param  string $ClassDelimiter
+     * @throws Exception
      */
     static public function WriteStaticTable(&$StaticTable, &$ClassInfo, $ClassDelimiter) {
         if (!isset(self::$FDeclaredClasses)) {
@@ -48,11 +49,11 @@ final class Boot {
         self::$FDeclaredClasses = array_slice(get_declared_classes(), self::$FStartAt);
         foreach (self::$FDeclaredClasses as $mClass) {
             if (/*$mClass[0] == 'T' &&*/ is_subclass_of($mClass, 'System\TObject')) {
-                $mReflaction = new ReflectionClass($mClass);
-                $ClassInfo[$mClass] = $mReflaction->getFileName();
-                
+                $mReflection = new ReflectionClass($mClass);
+                $ClassInfo[$mClass] = $mReflection->getFileName();
+
                 foreach ($mClass::ClassSleep() as $mFieldName) {
-                    $mProperty = $mReflaction->getProperty($mFieldName);
+                    $mProperty = $mReflection->getProperty($mFieldName);
                     $mProperty->setAccessible(true);
                     $StaticTable[$mClass . $ClassDelimiter . $mFieldName] = $mProperty->getValue();
                 }

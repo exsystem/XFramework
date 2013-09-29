@@ -5,10 +5,7 @@
  * @version	$Id$
  * @since	separate file since reversion 1
  */
-
-require_once 'FrameworkDSW/Framework.php';
-require_once 'FrameworkDSW/System.php';
-require_once 'FrameworkDSW/Containers.php';
+use FrameworkDSW\System\TObject;
 
 class TTest extends TObject { 
 	private $FPrivate1;

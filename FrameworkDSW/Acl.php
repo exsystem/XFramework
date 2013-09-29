@@ -1,12 +1,12 @@
 <?php
 /**
- * Acl
+ * \FrameworkDSW\Acl
  * @author  许子健
  * @version $Id$
  * @since   separate file since reversion 1
  */
 namespace FrameworkDSW\Acl;
-require_once 'FrameworkDSW/Containers.php';
+
 use FrameworkDSW\System\EException;
 use FrameworkDSW\System\IInterface;
 use FrameworkDSW\System\TObject;
@@ -18,52 +18,51 @@ use FrameworkDSW\Framework\Framework;
 use FrameworkDSW\Containers\TLinkedList;
 use FrameworkDSW\System\EInvalidParameter;
 
-
 /**
- * EAclException
+ * \FrameworkDSW\Acl\EAclException
  *
  * @author 许子健
  */
 class EAclException extends EException {}
 /**
- * EAclResourceExisted
+ * \FrameworkDSW\Acl\EAclResourceExisted
  *
  * @author 许子健
  */
 class EAclResourceExisted extends EAclException {}
 /**
- * EAclNoSuchParentResource
+ * \FrameworkDSW\Acl\EAclNoSuchParentResource
  *
  * @author 许子健
  */
 class EAclNoSuchParentResource extends EAclException {}
 /**
- * EAclRoleExisted
+ * \FrameworkDSW\Acl\EAclRoleExisted
  *
  * @author 许子健
  */
 class EAclRoleExisted extends EAclException {}
 /**
- * EAclNoSuchParentRole
+ * \FrameworkDSW\Acl\EAclNoSuchParentRole
  *
  * @author 许子健
  */
 class EAclNoSuchParentRole extends EAclException {}
 /**
- * EAclNoSuchRole
+ * \FrameworkDSW\Acl\EAclNoSuchRole
  *
  * @author 许子健
  */
 class EAclNoSuchRole extends EAclException {}
 /**
- * EAclNoSuchResource
+ * \FrameworkDSW\Acl\EAclNoSuchResource
  *
  * @author 许子健
  */
 class EAclNoSuchResource extends EAclException {}
 
 /**
- * IAclRole
+ * \FrameworkDSW\Acl\IAclRole
  *
  * @author 许子健
  */
@@ -78,7 +77,7 @@ interface IAclRole extends IInterface {
 }
 
 /**
- * IAclResource
+ * \FrameworkDSW\Acl\IAclResource
  *
  * @author 许子健
  */
@@ -93,7 +92,7 @@ interface IAclResource extends IInterface {
 }
 
 /**
- * IAclAssertion
+ * \FrameworkDSW\Acl\IAclAssertion
  *
  * @author 许子健
  */
@@ -102,9 +101,9 @@ interface IAclAssertion extends IInterface {
     /**
      * descHere
      *
-     * @param TAcl $ACL
-     * @param IAclRole $Role
-     * @param IAclResource $Resource
+     * @param \FrameworkDSW\Acl\TAcl $ACL
+     * @param \FrameworkDSW\Acl\IAclRole $Role
+     * @param \FrameworkDSW\Acl\IAclResource $Resource
      * @param string $Privilege
      * @return boolean
      */
@@ -112,7 +111,7 @@ interface IAclAssertion extends IInterface {
 }
 
 /**
- * IAclStorage
+ * \FrameworkDSW\Acl\IAclStorage
  *
  * @author 许子健
  */
@@ -158,7 +157,7 @@ interface IAclStorage extends IInterface {
      * descHere
      *
      * @param string $Resource
-     * @return IMap <K: string, V: string[]>
+     * @return \FrameworkDSW\Containers\IMap <K: string, V: string[]>
      */
     public function getResources($Resource = '');
 
@@ -166,7 +165,7 @@ interface IAclStorage extends IInterface {
      * descHere
      *
      * @param string $Role
-     * @return IMap <K: string, V: string[]>
+     * @return \FrameworkDSW\Containers\IMap <K: string, V: string[]>
      */
     public function getRoles($Role = '');
 
@@ -233,7 +232,7 @@ interface IAclStorage extends IInterface {
 }
 
 /**
- * TAclRole
+ * \FrameworkDSW\Acl\TAclRole
  *
  * @author 许子健
  */
@@ -269,7 +268,7 @@ class TAclRole extends TObject implements IAclRole {
 }
 
 /**
- * TAclResource
+ * \FrameworkDSW\Acl\TAclResource
  *
  * @author 许子健
  */
@@ -304,7 +303,7 @@ class TAclResource extends TObject implements IAclResource {
 }
 
 /**
- * TRuntimeAclStorage
+ * \FrameworkDSW\Acl\TRuntimeAclStorage
  *
  * @author 许子健
  */
@@ -312,18 +311,17 @@ class TRuntimeAclStorage extends TObject implements IAclStorage {
 
     /**
      *
-     * @var TMap <K: string, V: string[]>
+     * @var \FrameworkDSW\Containers\TMap <K: string, V: string[]>
      */
     private $FResources = null;
     /**
      *
-     * @var TMap <K: string, V: string[]>
+     * @var \FrameworkDSW\Containers\TMap <K: string, V: string[]>
      */
     private $FRoles = null;
     /**
      *
-     * @var TMap <K: TPair<K: string, V: string>, V: TList<T: TPair<K: string,
-     *      V: mixed>>>
+     * @var \FrameworkDSW\Containers\TMap <K: \FrameworkDSW\Containers\TPair<K: string, V: string>, V: \FrameworkDSW\Containers\TList<T: \FrameworkDSW\Containers\TPair<K: string, V: mixed>>>
      */
     private $FRules = null;
 
@@ -343,17 +341,22 @@ class TRuntimeAclStorage extends TObject implements IAclStorage {
         $mPrivilegePair->Key = $Privilege;
         $mPrivilegePair->Value = $Assertion;
 
+        /** @noinspection PhpParamsInspection */
         if ($this->FRules->ContainsKey($mRoleResourcePair)) {
+            /** @noinspection PhpIllegalArrayKeyTypeInspection */
             if (!$this->FRules[$mRoleResourcePair]->Contains($mPrivilegePair)) {
+                /** @noinspection PhpIllegalArrayKeyTypeInspection */
                 $this->FRules[$mRoleResourcePair]->Add($mPrivilegePair);
             }
         }
         else {
             TList::PrepareGeneric(array (
                 'T' => array (
-                    'TPair' => array ('K' => 'string', 'V' => 'mixed'))));
+                    '\FrameworkDSW\Containers\TPair' => array ('K' => 'string', 'V' => 'mixed'))));
             $mRule = new TList();
+            /** @noinspection PhpParamsInspection */
             $mRule->Add($mPrivilegePair);
+            /** @noinspection PhpParamsInspection */
             $this->FRules->Put($mRoleResourcePair, $mRule);
         }
     }
@@ -373,7 +376,9 @@ class TRuntimeAclStorage extends TObject implements IAclStorage {
             $mPrivilegePair = new TPair();
             $mPrivilegePair->Key = $Privilege;
             $mPrivilegePair->Value = $Assertion;
+            /** @noinspection PhpIllegalArrayKeyTypeInspection */
             if ($this->FRules[$mRoleResourcePair]->Contains($mPrivilegePair)) {
+                /** @noinspection PhpIllegalArrayKeyTypeInspection */
                 $this->FRules[$mRoleResourcePair]->Remove($mPrivilegePair);
             }
         }
@@ -473,6 +478,7 @@ class TRuntimeAclStorage extends TObject implements IAclStorage {
         }
         elseif ($Role == '' && $Resource == '') {
             foreach ($this->FRoles as $mRole => $mRolePath) {
+                /** @noinspection PhpUnusedLocalVariableInspection */
                 foreach ($this->FResources as $mResource => &$mResourcePath) {
                     $this->DoAllow($mRole, $mResource, $Privilege, $Assertion);
                 }
@@ -508,6 +514,7 @@ class TRuntimeAclStorage extends TObject implements IAclStorage {
         }
         elseif ($Role == '' && $Resource == '') {
             foreach ($this->FRoles as $mRole => $mRolePath) {
+                /** @noinspection PhpUnusedLocalVariableInspection */
                 foreach ($this->FResources as $mResource => &$mResourcePath) {
                     $this->DoDeny($mRole, $mResource, $Privilege, $Assertion);
                 }
@@ -519,7 +526,7 @@ class TRuntimeAclStorage extends TObject implements IAclStorage {
      * descHere
      *
      * @param string $Resource
-     * @return IMap <K: string, V: string[]>
+     * @return \FrameworkDSW\Containers\IMap <K: string, V: string[]>
      */
     public function getResources($Resource = '') {
         TType::String($Resource);
@@ -544,7 +551,7 @@ class TRuntimeAclStorage extends TObject implements IAclStorage {
      * descHere
      *
      * @param string $Role
-     * @return IMap <K: string, V: string[]>
+     * @return \FrameworkDSW\Containers\IMap <K: string, V: string[]>
      */
     public function getRoles($Role = '') {
         TType::String($Role);
@@ -614,6 +621,7 @@ class TRuntimeAclStorage extends TObject implements IAclStorage {
         if (!$this->FRules->ContainsKey($mResourceRolePair)) {
             foreach ($this->FResources[$Resource] as $mAncestorResource) {
                 $mResourceRolePair->Key = $mAncestorResource;
+                /** @noinspection PhpIllegalArrayKeyTypeInspection */
                 if (($this->FRules->ContainsKey($mResourceRolePair)) && ($this->FRules[$mResourceRolePair]->Contains($mPrivilegePair))) {
                     return true;
                 }
@@ -621,6 +629,7 @@ class TRuntimeAclStorage extends TObject implements IAclStorage {
             return false;
         }
         else {
+            /** @noinspection PhpIllegalArrayKeyTypeInspection */
             if ($this->FRules[$mResourceRolePair]->Contains($mPrivilegePair)) {
                 return true;
             }
@@ -666,7 +675,7 @@ class TRuntimeAclStorage extends TObject implements IAclStorage {
     public function RemoveRole($Role = '') {
         TType::String($Role);
         if ($Role == '') {
-            $this->FRole->Clear();
+            $this->FRoles->Clear();
             $this->FRules->Clear();
         }
         else {
@@ -745,7 +754,7 @@ class TRuntimeAclStorage extends TObject implements IAclStorage {
 }
 
 /**
- * TAcl
+ * \FrameworkDSW\Acl\TAcl
  *
  * @author 许子健
  */
@@ -753,14 +762,14 @@ class TAcl extends TObject {
 
     /**
      *
-     * @var IAclStorage
+     * @var \FrameworkDSW\Acl\IAclStorage
      */
     private $FStorage = null;
 
     /**
      * descHere
      *
-     * @param IAclStorage $Storage
+     * @param \FrameworkDSW\Acl\IAclStorage $Storage
      */
     public function __construct($Storage = null) {
         parent::__construct();
@@ -772,8 +781,10 @@ class TAcl extends TObject {
     /**
      * descHere
      *
-     * @param IAclResource $Resource
-     * @param IAclResource $Parent
+     * @param \FrameworkDSW\Acl\IAclResource $Resource
+     * @param \FrameworkDSW\Acl\IAclResource $Parent
+     * @throws EAclResourceExisted
+     * @throws EAclNoSuchParentResource
      * @return TAcl
      */
     public function AddResource($Resource, $Parent = null) {
@@ -799,8 +810,10 @@ class TAcl extends TObject {
     /**
      * descHere
      *
-     * @param IAclRole $Role
-     * @param IAclRole $Parent
+     * @param \FrameworkDSW\Acl\IAclRole $Role
+     * @param \FrameworkDSW\Acl\IAclRole $Parent
+     * @throws EAclRoleExisted
+     * @throws EAclNoSuchParentRole
      * @return TAcl
      */
     public function AddRole($Role, $Parent = null) {
@@ -826,10 +839,12 @@ class TAcl extends TObject {
     /**
      * descHere
      *
-     * @param IAclRole $Role
-     * @param IAclResource $Resource
+     * @param \FrameworkDSW\Acl\IAclRole $Role
+     * @param \FrameworkDSW\Acl\IAclResource $Resource
      * @param string $Privilege
      * @param mixed $Assertion
+     * @throws EAclNoSuchRole
+     * @throws \FrameworkDSW\System\EInvalidParameter
      * @return TAcl
      */
     public function Allow($Role = null, $Resource = null, $Privilege = '', $Assertion = null) {
@@ -856,6 +871,7 @@ class TAcl extends TObject {
         }
         if ($Role == null) {
             $mRoles = $this->FStorage->getRoles();
+            /** @noinspection PhpUnusedLocalVariableInspection */
             foreach ($mRoles as $mRoleId => &$mPath) {
                 $this->FStorage->Allow($mRoleId, $mResourceId, $Privilege, $Assertion);
             }
@@ -875,10 +891,12 @@ class TAcl extends TObject {
     /**
      * descHere
      *
-     * @param IAclRole $Role
-     * @param IAclResource $Resource
+     * @param \FrameworkDSW\Acl\IAclRole $Role
+     * @param \FrameworkDSW\Acl\IAclResource $Resource
      * @param string $Privilege
      * @param mixed $Assertion
+     * @throws EAclNoSuchRole
+     * @throws \FrameworkDSW\System\EInvalidParameter
      * @return TAcl
      */
     public function Deny($Role = null, $Resource = null, $Privilege = '', $Assertion = null) {
@@ -905,6 +923,7 @@ class TAcl extends TObject {
         }
         if ($Role == null) {
             $mRoles = $this->FStorage->getRoles();
+            /** @noinspection PhpUnusedLocalVariableInspection */
             foreach ($mRoles as $mRoleId => &$mPath) {
                 $this->FStorage->Deny($mRoleId, $mResourceId, $Privilege, $Assertion);
             }
@@ -925,7 +944,8 @@ class TAcl extends TObject {
      * descHere
      *
      * @param string $ResourceId
-     * @return IAclResource
+     * @throws EAclNoSuchResource
+     * @return \FrameworkDSW\Acl\IAclResource
      */
     public function getResourceById($ResourceId) {
         TType::String($ResourceId);
@@ -941,8 +961,9 @@ class TAcl extends TObject {
     /**
      * descHere
      *
-     * @param IAclResource $Resource
-     * @return IMap <K: IAclResource, V: IList<T: IAclResource>>
+     * @param \FrameworkDSW\Acl\IAclResource $Resource
+     * @throws EAclNoSuchResource
+     * @return \FrameworkDSW\Containers\IMap <K: \FrameworkDSW\Acl\IAclResource, V: \FrameworkDSW\Containers\IList<T: \FrameworkDSW\Acl\IAclResource>>
      */
     public function getResources($Resource = null) {
         TType::Object($Resource, 'IAclResource');
@@ -956,7 +977,7 @@ class TAcl extends TObject {
         }
         $mRaw = $this->FStorage->getResources($mResourceId);
         TMap::PrepareGeneric(array ('K' => 'IAclResource',
-            'K' => array ('IList' => array ('T' => 'IAclResource'))));
+            'V' => array ('IList' => array ('T' => 'IAclResource'))));
         $mResult = new TMap(true);
         foreach ($mRaw as $mRawResource => $mRawPath) {
             TList::PrepareGeneric(array ('T' => 'TAclResource'));
@@ -974,7 +995,7 @@ class TAcl extends TObject {
      * descHere
      *
      * @param string $ResourceId
-     * @return IMap <K: IAclResource, V: IList<T: IAclResource>>
+     * @return \FrameworkDSW\Containers\IMap <K: \FrameworkDSW\Acl\IAclResource, V: \FrameworkDSW\Containers\IList<T: \FrameworkDSW\Acl\IAclResource>>
      */
     public function getResourcesById($ResourceId = '') {
         TType::String($ResourceId);
@@ -991,7 +1012,8 @@ class TAcl extends TObject {
      * descHere
      *
      * @param string $RoleId
-     * @return IAclRole
+     * @throws EAclNoSuchRole
+     * @return \FrameworkDSW\Acl\IAclRole
      */
     public function getRoleById($RoleId) {
         TType::String($RoleId);
@@ -1007,8 +1029,9 @@ class TAcl extends TObject {
     /**
      * descHere
      *
-     * @param IAclRole $Role
-     * @return IMap <K: IAclRole, V: IList<T: IAclRole>>
+     * @param \FrameworkDSW\Acl\IAclRole $Role
+     * @throws EAclNoSuchRole
+     * @return \FrameworkDSW\Containers\IMap <K: \FrameworkDSW\Acl\IAclRole, V: IList<T: \FrameworkDSW\Acl\IAclRole>>
      */
     public function getRoles($Role = null) {
         TType::Object($Role, 'IAclResource');
@@ -1022,7 +1045,7 @@ class TAcl extends TObject {
         }
         $mRaw = $this->FStorage->getRoles($mRoleId);
         TMap::PrepareGeneric(array ('K' => 'IAclRole',
-            'K' => array ('IList' => array ('T' => 'IAclRole'))));
+            'V' => array ('IList' => array ('T' => 'IAclRole'))));
         $mResult = new TMap(true);
         foreach ($mRaw as $mRawRole => $mRawPath) {
             TList::PrepareGeneric(array ('T' => 'TAclResource'));
@@ -1040,7 +1063,7 @@ class TAcl extends TObject {
      * descHere
      *
      * @param string $RoleId
-     * @return IMap <K: IAclRole, V: IList<T: IAclRole>>
+     * @return \FrameworkDSW\Containers\IMap <K: \FrameworkDSW\Acl\IAclRole, V: \FrameworkDSW\Containers\IList<T: \FrameworkDSW\Acl\IAclRole>>
      */
     public function getRolesById($RoleId = '') {
         TType::String($RoleId);
@@ -1056,7 +1079,7 @@ class TAcl extends TObject {
     /**
      * descHere
      *
-     * @param IAclResource $Resource
+     * @param \FrameworkDSW\Acl\IAclResource $Resource
      * @return boolean
      */
     public function HasResource($Resource) {
@@ -1068,7 +1091,7 @@ class TAcl extends TObject {
     /**
      * descHere
      *
-     * @param IAclRole $Role
+     * @param \FrameworkDSW\Acl\IAclRole $Role
      * @return boolean
      */
     public function HasRole($Role) {
@@ -1080,10 +1103,13 @@ class TAcl extends TObject {
     /**
      * descHere
      *
-     * @param IAclRole $Role
-     * @param IAclResource $Resource
+     * @param \FrameworkDSW\Acl\IAclRole $Role
+     * @param \FrameworkDSW\Acl\IAclResource $Resource
      * @param string $Privilege
      * @param mixed $Assertion
+     * @throws EAclNoSuchResource
+     * @throws EAclNoSuchRole
+     * @throws \FrameworkDSW\System\EInvalidParameter
      * @return boolean
      */
     public function IsAllowed($Role = null, $Resource = null, $Privilege = '', $Assertion = null) {
@@ -1134,13 +1160,13 @@ class TAcl extends TObject {
     /**
      * descHere
      *
-     * @param IAclResource $Resource
-     * @return TAcl
+     * @param \FrameworkDSW\Acl\IAclResource $Resource
+     * @throws EAclNoSuchResource
+     * @return \FrameworkDSW\Acl\TAcl
      */
     public function RemoveResource($Resource = null) {
         TType::Object($Resource, 'IAclResource');
 
-        $mResourceId = '';
         if ($Resource != null) {
             $mResourceId = $Resource->getResourceId();
             if ($this->FStorage->HasResource($mResourceId)) {
@@ -1158,13 +1184,13 @@ class TAcl extends TObject {
     /**
      * descHere
      *
-     * @param IAclRole $Role
-     * @return TAcl
+     * @param \FrameworkDSW\Acl\IAclRole $Role
+     * @throws EAclNoSuchRole
+     * @return \FrameworkDSW\Acl\TAcl
      */
     public function RemoveRole($Role = null) {
         TType::Object($Role, 'IAclRole');
 
-        $mRoleId = '';
         if ($Role != null) {
             $mRoleId = $Role->getRoleId();
             if ($this->FStorage->HasRole($mRoleId)) {
@@ -1182,9 +1208,10 @@ class TAcl extends TObject {
     /**
      * descHere
      *
-     * @param IAclResource $Resource
-     * @param IAclResource $From
+     * @param \FrameworkDSW\Acl\IAclResource $Resource
+     * @param \FrameworkDSW\Acl\IAclResource $From
      * @param boolean $Directly
+     * @throws EAclNoSuchParentResource
      * @return boolean
      */
     public function ResourceInheritsFrom($Resource, $From = null, $Directly = false) {
@@ -1206,9 +1233,10 @@ class TAcl extends TObject {
     /**
      * descHere
      *
-     * @param IAclRole $Role
-     * @param IAclRole $From
+     * @param \FrameworkDSW\Acl\IAclRole $Role
+     * @param \FrameworkDSW\Acl\IAclRole $From
      * @param boolean $Directly
+     * @throws EAclNoSuchParentRole
      * @return boolean
      */
     public function RoleInheritsFrom($Role, $From = null, $Directly = false) {
