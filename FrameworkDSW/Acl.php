@@ -7,16 +7,17 @@
  */
 namespace FrameworkDSW\Acl;
 
+use FrameworkDSW\Containers\IList;
+use FrameworkDSW\Containers\TLinkedList;
+use FrameworkDSW\Containers\TList;
+use FrameworkDSW\Containers\TMap;
+use FrameworkDSW\Containers\TPair;
+use FrameworkDSW\Framework\Framework;
 use FrameworkDSW\System\EException;
+use FrameworkDSW\System\EInvalidParameter;
 use FrameworkDSW\System\IInterface;
 use FrameworkDSW\System\TObject;
 use FrameworkDSW\Utilities\TType;
-use FrameworkDSW\Containers\TPair;
-use FrameworkDSW\Containers\TList;
-use FrameworkDSW\Containers\TMap;
-use FrameworkDSW\Framework\Framework;
-use FrameworkDSW\Containers\TLinkedList;
-use FrameworkDSW\System\EInvalidParameter;
 
 /**
  * \FrameworkDSW\Acl\EAclException
@@ -350,9 +351,9 @@ class TRuntimeAclStorage extends TObject implements IAclStorage {
             }
         }
         else {
-            TList::PrepareGeneric(array (
-                'T' => array (
-                    '\FrameworkDSW\Containers\TPair' => array ('K' => 'string', 'V' => 'mixed'))));
+            TList::PrepareGeneric([
+                'T' => [
+                    TPair::class => ['K' => 'string', 'V' => null]]]);
             $mRule = new TList();
             /** @noinspection PhpParamsInspection */
             $mRule->Add($mPrivilegePair);
@@ -390,16 +391,16 @@ class TRuntimeAclStorage extends TObject implements IAclStorage {
     public function __construct() {
         parent::__construct();
 
-        TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'array'));
+        TMap::PrepareGeneric(['K' => 'string', 'V' => 'array']);
         $this->FResources = new TMap();
-        TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'array'));
+        TMap::PrepareGeneric(['K' => 'string', 'V' => 'array']);
         $this->FRoles = new TMap();
-        TMap::PrepareGeneric(array (
-            'K' => array ('TPair' => array ('K' => 'string', 'V' => 'string')),
-            'V' => array (
-                'TList' => array (
-                    'T' => array (
-                        'TPair' => array ('K' => 'string', 'V' => 'mixed'))))));
+        TMap::PrepareGeneric([
+            'K' => [TPair::class => ['K' => 'string', 'V' => 'string']],
+            'V' => [
+                TList::class => [
+                    'T' => [
+                        TPair::class => ['K' => 'string', 'V' => null]]]]]);
         $this->FRules = new TMap();
     }
 
@@ -424,7 +425,7 @@ class TRuntimeAclStorage extends TObject implements IAclStorage {
         TType::String($Resource);
         TType::String($Parent);
 
-        $mParentPath = array ();
+        $mParentPath = [];
         if ($Parent != '') {
             $mParentPath = $this->FResources[$Parent];
             $mParentPath[] = $Parent;
@@ -442,7 +443,7 @@ class TRuntimeAclStorage extends TObject implements IAclStorage {
         TType::String($Role);
         TType::String($Parent);
 
-        $mParentPath = array ();
+        $mParentPath = [];
         if ($Parent != '') {
             $mParentPath = $this->FResources[$Parent];
             $mParentPath[] = $Parent;
@@ -535,7 +536,7 @@ class TRuntimeAclStorage extends TObject implements IAclStorage {
             return $this->FResources;
         }
         else {
-            TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'string'));
+            TMap::PrepareGeneric(['K' => 'string', 'V' => 'string']);
             $mResult = new TMap();
             foreach ($this->FResources as $mResource => $mPath) {
                 if (in_array($Resource, $mPath, true)) {
@@ -560,7 +561,7 @@ class TRuntimeAclStorage extends TObject implements IAclStorage {
             return $this->FRoles;
         }
         else {
-            TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'string'));
+            TMap::PrepareGeneric(['K' => 'string', 'V' => 'string']);
             $mResult = new TMap();
             foreach ($this->FRoles as $mRole => $mPath) {
                 if (in_array($Role, $mPath, true)) {
@@ -649,7 +650,7 @@ class TRuntimeAclStorage extends TObject implements IAclStorage {
             $this->FRules->Clear();
         }
         else {
-            TLinkedList::PrepareGeneric(array ('T' => 'string'));
+            TLinkedList::PrepareGeneric(['T' => 'string']);
             $mPendingResources = new TLinkedList();
 
             foreach ($this->FResources as $mResource => &$mPath) {
@@ -679,7 +680,7 @@ class TRuntimeAclStorage extends TObject implements IAclStorage {
             $this->FRules->Clear();
         }
         else {
-            TLinkedList::PrepareGeneric(array ('T' => 'string'));
+            TLinkedList::PrepareGeneric(['T' => 'string']);
             $mPendingRoles = new TLinkedList();
 
             foreach ($this->FRoles as $mRole => &$mPath) {
@@ -713,7 +714,7 @@ class TRuntimeAclStorage extends TObject implements IAclStorage {
         TType::Bool($Directly);
 
         $mPath = $this->FResources[$Resource];
-        if ($From == '' && $mPath === array ()) {
+        if ($From == '' && $mPath === []) {
             return true;
         }
         if ($From != '' && $Directly == true && $From == $mPath[count($mPath) - 1]) {
@@ -739,7 +740,7 @@ class TRuntimeAclStorage extends TObject implements IAclStorage {
         TType::Bool($Directly);
 
         $mPath = $this->FRoles[$Role];
-        if ($From == '' && $mPath === array ()) {
+        if ($From == '' && $mPath === []) {
             return true;
         }
         if ($From != '' && $Directly == true && $From == $mPath[count($mPath) - 1]) {
@@ -773,7 +774,7 @@ class TAcl extends TObject {
      */
     public function __construct($Storage = null) {
         parent::__construct();
-        TType::Object($Storage, 'IAclStorage');
+        TType::Object($Storage, IAclStorage::class);
 
         $this->FStorage = $Storage;
     }
@@ -788,8 +789,8 @@ class TAcl extends TObject {
      * @return TAcl
      */
     public function AddResource($Resource, $Parent = null) {
-        TType::Object($Resource, 'IAclResource');
-        TType::Object($Parent, 'IAclResource');
+        TType::Object($Resource, IAclResource::class);
+        TType::Object($Parent, IAclResource::class);
 
         $mResourceId = $Resource->getResourceId();
         $mParentId = '';
@@ -817,8 +818,8 @@ class TAcl extends TObject {
      * @return TAcl
      */
     public function AddRole($Role, $Parent = null) {
-        TType::Object($Role, 'IAclRole');
-        TType::Object($Parent, 'IAclRole');
+        TType::Object($Role, IAclRole::class);
+        TType::Object($Parent, IAclRole::class);
 
         $mRoleId = $Role->getRoleId();
         $mParentId = '';
@@ -848,8 +849,8 @@ class TAcl extends TObject {
      * @return TAcl
      */
     public function Allow($Role = null, $Resource = null, $Privilege = '', $Assertion = null) {
-        TType::Object($Role, 'IAclRole');
-        TType::Object($Resource, 'IAclResource');
+        TType::Object($Role, IAclRole::class);
+        TType::Object($Resource, IAclResource::class);
         TType::String($Privilege);
 
         if ($Privilege == '' && $Assertion === null) {
@@ -860,7 +861,7 @@ class TAcl extends TObject {
         }
         if ($Assertion !== null) {
             $mReflection = new \ReflectionClass($Assertion);
-            if (!$mReflection->implementsInterface('IAclAssertion')) {
+            if (!$mReflection->implementsInterface(IAclAssertion::class)) {
                 throw new EInvalidParameter();
             }
         }
@@ -900,8 +901,8 @@ class TAcl extends TObject {
      * @return TAcl
      */
     public function Deny($Role = null, $Resource = null, $Privilege = '', $Assertion = null) {
-        TType::Object($Role, 'IAclRole');
-        TType::Object($Resource, 'IAclResource');
+        TType::Object($Role, IAclRole::class);
+        TType::Object($Resource, IAclResource::class);
         TType::String($Privilege);
 
         if ($Privilege == '' && $Assertion === null) {
@@ -912,7 +913,7 @@ class TAcl extends TObject {
         }
         if ($Assertion !== null) {
             $mReflection = new \ReflectionClass($Assertion);
-            if (!$mReflection->implementsInterface('IAclAssertion')) {
+            if (!$mReflection->implementsInterface(IAclAssertion::class)) {
                 throw new EInvalidParameter();
             }
         }
@@ -966,7 +967,7 @@ class TAcl extends TObject {
      * @return \FrameworkDSW\Containers\IMap <K: \FrameworkDSW\Acl\IAclResource, V: \FrameworkDSW\Containers\IList<T: \FrameworkDSW\Acl\IAclResource>>
      */
     public function getResources($Resource = null) {
-        TType::Object($Resource, 'IAclResource');
+        TType::Object($Resource, IAclResource::class);
 
         $mResourceId = '';
         if ($Resource != null) {
@@ -976,11 +977,10 @@ class TAcl extends TObject {
             }
         }
         $mRaw = $this->FStorage->getResources($mResourceId);
-        TMap::PrepareGeneric(array ('K' => 'IAclResource',
-            'V' => array ('IList' => array ('T' => 'IAclResource'))));
+        TMap::PrepareGeneric(['K' => IAclResource::class,          'V' => [IList::class => ['T' => IAclResource::class]]]);
         $mResult = new TMap(true);
         foreach ($mRaw as $mRawResource => $mRawPath) {
-            TList::PrepareGeneric(array ('T' => 'TAclResource'));
+            TList::PrepareGeneric(['T' => TAclResource::class]);
             $mPath = new TList(count($mRawPath), true);
             foreach ($mRawPath as $mRawPathElement) {
                 $mPath->Add(new TAclResource($mRawPathElement));
@@ -1034,7 +1034,7 @@ class TAcl extends TObject {
      * @return \FrameworkDSW\Containers\IMap <K: \FrameworkDSW\Acl\IAclRole, V: IList<T: \FrameworkDSW\Acl\IAclRole>>
      */
     public function getRoles($Role = null) {
-        TType::Object($Role, 'IAclResource');
+        TType::Object($Role, IAclResource::class);
 
         $mRoleId = '';
         if ($Role != null) {
@@ -1044,11 +1044,10 @@ class TAcl extends TObject {
             }
         }
         $mRaw = $this->FStorage->getRoles($mRoleId);
-        TMap::PrepareGeneric(array ('K' => 'IAclRole',
-            'V' => array ('IList' => array ('T' => 'IAclRole'))));
+        TMap::PrepareGeneric(['K' => IAclRole::class, 'V' => [IList::class => ['T' => IAclRole::class]]]);
         $mResult = new TMap(true);
         foreach ($mRaw as $mRawRole => $mRawPath) {
-            TList::PrepareGeneric(array ('T' => 'TAclResource'));
+            TList::PrepareGeneric(['T' => TAclResource::class]);
             $mPath = new TList(count($mRawPath), true);
             foreach ($mRawPath as $mRawPathElement) {
                 $mPath->Add(new TAclRole($mRawPathElement));
@@ -1083,7 +1082,7 @@ class TAcl extends TObject {
      * @return boolean
      */
     public function HasResource($Resource) {
-        TType::Object($Resource, 'IAclResource');
+        TType::Object($Resource, IAclResource::class);
 
         return $this->FStorage->HasResource($Resource->getResourceId());
     }
@@ -1095,7 +1094,7 @@ class TAcl extends TObject {
      * @return boolean
      */
     public function HasRole($Role) {
-        TType::Object($Role, 'IAclRole');
+        TType::Object($Role, IAclRole::class);
 
         return $this->FStorage->HasRole($Role->getRoleId());
     }
@@ -1113,8 +1112,8 @@ class TAcl extends TObject {
      * @return boolean
      */
     public function IsAllowed($Role = null, $Resource = null, $Privilege = '', $Assertion = null) {
-        TType::Object($Role, 'IAclRole');
-        TType::Object($Resource, 'IAclResource');
+        TType::Object($Role, IAclRole::class);
+        TType::Object($Resource, IAclResource::class);
         TType::String($Privilege);
 
         if ($Privilege == '' && $Assertion === null) {
@@ -1125,7 +1124,7 @@ class TAcl extends TObject {
         }
         if ($Assertion !== null) {
             $mReflection = new \ReflectionClass($Assertion);
-            if (!$mReflection->implementsInterface('IAclAssertion')) {
+            if (!$mReflection->implementsInterface(IAclAssertion::class)) {
                 throw new EInvalidParameter();
             }
         }
@@ -1165,7 +1164,7 @@ class TAcl extends TObject {
      * @return \FrameworkDSW\Acl\TAcl
      */
     public function RemoveResource($Resource = null) {
-        TType::Object($Resource, 'IAclResource');
+        TType::Object($Resource, IAclResource::class);
 
         if ($Resource != null) {
             $mResourceId = $Resource->getResourceId();
@@ -1189,7 +1188,7 @@ class TAcl extends TObject {
      * @return \FrameworkDSW\Acl\TAcl
      */
     public function RemoveRole($Role = null) {
-        TType::Object($Role, 'IAclRole');
+        TType::Object($Role, IAclRole::class);
 
         if ($Role != null) {
             $mRoleId = $Role->getRoleId();
@@ -1215,8 +1214,8 @@ class TAcl extends TObject {
      * @return boolean
      */
     public function ResourceInheritsFrom($Resource, $From = null, $Directly = false) {
-        TType::Object($Resource, 'IAclResource');
-        TType::Object($From, 'IAclResource');
+        TType::Object($Resource, IAclResource::class);
+        TType::Object($From, IAclResource::class);
         TType::Bool($Directly);
 
         $mResourceId = $Resource->getResourceId();
@@ -1240,8 +1239,8 @@ class TAcl extends TObject {
      * @return boolean
      */
     public function RoleInheritsFrom($Role, $From = null, $Directly = false) {
-        TType::Object($Role, 'IAclRole');
-        TType::Object($From, 'IAclRole');
+        TType::Object($Role, IAclRole::class);
+        TType::Object($From, IAclRole::class);
         TType::Bool($Directly);
 
         $mRoleId = $Role->getRoleId();

@@ -6,10 +6,11 @@
  * @since	separate file since reversion 1
  */
 namespace FrameworkDSW\Utilities;
-use FrameworkDSW\System\ERuntimeException;
+use FrameworkDSW\Containers\TPair;
 use FrameworkDSW\System\EException;
-use FrameworkDSW\System\TObject;
+use FrameworkDSW\System\ERuntimeException;
 use FrameworkDSW\System\TDelegate;
+use FrameworkDSW\System\TObject;
 use FrameworkDSW\System\TRecord;
 
 /**
@@ -164,7 +165,7 @@ final class TType extends TObject {
      * @param mixed $Type
      * @throws EInvalidObjectCasting
      */
-    public static function Object(&$Var, $Type = 'TObject') {
+    public static function Object(&$Var, $Type = TObject::class) {
         if (is_null($Var)) {
             return;
         }
@@ -175,7 +176,7 @@ final class TType extends TObject {
         elseif (is_array($Type)) { // should be an array then.
             $mClass = array_keys($Type);
             $mClass = (string) $mClass[0];
-            if (($mClass == 'TPair') && ($Var instanceof $mClass)) {
+            if (($mClass == TPair::class) && ($Var instanceof $mClass)) {
                 return;
             }
             /** @var \FrameworkDSW\System\TObject $Var */
@@ -268,7 +269,7 @@ final class TType extends TObject {
         case 'array':
             TType::Arr($Var);
             break;
-        case 'TDelegate':
+        case TDelegate::class:
             TType::Delegate($Var);
             break;
         case 'mixed':

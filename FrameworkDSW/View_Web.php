@@ -7,18 +7,19 @@
  */
 namespace FrameworkDSW\View\Web;
 
-use FrameworkDSW\System\TObject;
-use FrameworkDSW\Utilities\TType;
-use FrameworkDSW\CoreClasses\TComponent;
-use FrameworkDSW\CoreClasses\IView;
-use FrameworkDSW\Containers\TMap;
-use FrameworkDSW\System\IPrimitive;
-use FrameworkDSW\Containers\TPair;
-use FrameworkDSW\System\TString;
-use FrameworkDSW\System\EInvalidParameter;
 use FrameworkDSW\Containers\IList;
 use FrameworkDSW\Containers\IMap;
+use FrameworkDSW\Containers\TMap;
+use FrameworkDSW\Containers\TPair;
+use FrameworkDSW\CoreClasses\IView;
+use FrameworkDSW\CoreClasses\TComponent;
+use FrameworkDSW\System\EInvalidParameter;
+use FrameworkDSW\System\IInterface;
+use FrameworkDSW\System\IPrimitive;
+use FrameworkDSW\System\TObject;
 use FrameworkDSW\System\TRecord;
+use FrameworkDSW\System\TString;
+use FrameworkDSW\Utilities\TType;
 
 /**
  * TWebTheme
@@ -100,7 +101,7 @@ class TWebThemeManager extends TObject {
      *
      * @var string[]
      */
-    private static $FThemes = array ();
+    private static $FThemes = [];
     /**
      *
      * @var string
@@ -223,9 +224,9 @@ class TWebPage extends TComponent implements IView {
      * @param string $MasterPage
      */
     public function Config($Router, $Template, $Theme = null, $MasterPage = '') {
-        TType::Object($Router, 'IUrlRouter');
+        TType::Object($Router, IUrlRouter::class);
         TType::String($Template);
-        TType::Object($Theme, 'TWebTheme');
+        TType::Object($Theme, TWebTheme::class);
         TType::String($MasterPage);
 
         $this->FTemplate = $Template;
@@ -261,8 +262,8 @@ class TWebPage extends TComponent implements IView {
         TType::Arr($Action);
 
         $mParameters = null;
-        if ($Parameters != array ()) {
-            TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'string'));
+        if ($Parameters != []) {
+            TMap::PrepareGeneric(['K' => 'string', 'V' => 'string']);
             $mParameters = new TMap();
             foreach ($Parameters as $mKey => &$mValue) {
                 $mParameters->Put((string) $mKey, (string) $mValue);
@@ -342,11 +343,10 @@ class TWebPage extends TComponent implements IView {
     /**
      * descHere //render.
      *
-     * @param IMap $ViewData
-     *            <K: string, V: IInterface>
+     * @param \FrameworkDSW\Containers\IMap $ViewData <K: string, V: \FrameworkDSW\System\IInterface>
      */
     public function Update($ViewData) {
-        TType::Object($ViewData, array ('IMap' => array ('K' => 'string', 'V' => 'IInterface')));
+        TType::Object($ViewData, [IMap::class => ['K' => 'string', 'V' => IInterface::class]]);
         $this->FViewData = $ViewData;
 
         ob_clean();
@@ -397,15 +397,15 @@ class TJsonView extends TComponent implements IView {
     /**
      *  (non-PHPdoc)
      * @see IView::Update()
-     * @param IMap $ViewData <K: string, V: IInterface>
+     * @param \FrameworkDSW\Containers\IMap $ViewData <K: string, V: \FrameworkDSW\System\IInterface>
      * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function Update($ViewData) {
-        TType::Object($ViewData, array ('IMap' => array ('K' => 'string', 'V' => 'IInterface')));
+        TType::Object($ViewData, [IMap::class => ['K' => 'string', 'V' => IInterface::class]]);
 
         $mResult = null;
-        $mStatusStack = array ();
-        $mStatusStack[] = array (self::CData => $ViewData, self::CInsertionPoint => &$mResult);
+        $mStatusStack = [];
+        $mStatusStack[] = [self::CData => $ViewData, self::CInsertionPoint => &$mResult];
 
         while (count($mStatusStack) > 0) {
             unset($mCurrentStatus);
@@ -432,27 +432,27 @@ class TJsonView extends TComponent implements IView {
                 }
                 unset($mInsertionPoint);
                 $mInsertionPoint = &$mCurrentInsertionPoint[$mCurrentData->Key];
-                $mStatusStack[] = array (self::CData => $mCurrentData->Value, self::CInsertionPoint => &$mInsertionPoint);
+                $mStatusStack[] = [self::CData => $mCurrentData->Value, self::CInsertionPoint => &$mInsertionPoint];
             }
             elseif ($mCurrentData instanceof IList || is_array($mCurrentData)) {
                 unset($mArray);
-                $mArray = array ();
+                $mArray = [];
                 foreach ($mCurrentData as $Item) {
                     unset($mInsertionPoint);
                     $mInsertionPoint = null;
                     $mArray[] = &$mInsertionPoint;
-                    $mStatusStack[] = array (self::CData => $Item, self::CInsertionPoint => &$mInsertionPoint);
+                    $mStatusStack[] = [self::CData => $Item, self::CInsertionPoint => &$mInsertionPoint];
                 }
                 $mCurrentInsertionPoint = $mArray;
             }
-            elseif (($mCurrentData instanceof IMap && in_array($mCurrentData->GenericArg('K'), array ('string', 'TString'))) || $mCurrentData instanceof TRecord) {
+            elseif (($mCurrentData instanceof IMap && in_array($mCurrentData->GenericArg('K'), ['string', TString::class])) || $mCurrentData instanceof TRecord) {
                 unset($mArray);
-                $mArray = array ();
+                $mArray = [];
                 foreach ($mCurrentData as $mItemKey => $mItemData) {
                     unset($mInsertionPoint);
                     $mInsertionPoint = null;
                     $mArray[$mItemKey] = &$mInsertionPoint;
-                    $mStatusStack[] = array (self::CData => $mItemData, self::CInsertionPoint => &$mInsertionPoint);
+                    $mStatusStack[] = [self::CData => $mItemData, self::CInsertionPoint => &$mInsertionPoint];
                 }
                 if (count($mArray) == 0) {
                     $mCurrentInsertionPoint = new \stdClass();

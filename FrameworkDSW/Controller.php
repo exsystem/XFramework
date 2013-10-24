@@ -7,16 +7,17 @@
  */
 namespace FrameworkDSW\Controller;
 
+use FrameworkDSW\Containers\TLinkedList;
+use FrameworkDSW\Containers\TMap;
+use FrameworkDSW\Containers\TPair;
+use FrameworkDSW\CoreClasses\IView;
+use FrameworkDSW\Framework\Framework;
+use FrameworkDSW\System\EInvalidParameter;
 use FrameworkDSW\System\IDelegate;
 use FrameworkDSW\System\IInterface;
-use FrameworkDSW\System\TObject;
-use FrameworkDSW\Containers\TMap;
-use FrameworkDSW\Framework\Framework;
-use FrameworkDSW\Utilities\TType;
-use FrameworkDSW\System\EInvalidParameter;
 use FrameworkDSW\System\TDelegate;
-use FrameworkDSW\Containers\TLinkedList;
-use FrameworkDSW\Containers\TPair;
+use FrameworkDSW\System\TObject;
+use FrameworkDSW\Utilities\TType;
 
 /**
  * \FrameworkDSW\Controller\TOnControllerUpdate
@@ -173,10 +174,10 @@ class TControllerManager extends TObject implements IControllerManager {
      */
     public function __construct() {
         parent::__construct();
-        TMap::PrepareGeneric(array ('K' => 'array', 'V' => 'IModel'));
+        TMap::PrepareGeneric(['K' => 'array', 'V' => IModel::class]);
         $this->FBinding = new TMap();
-        TMap::PrepareGeneric(array ('K' => 'array',
-            'V' => array ('TLinkedList' => array ('T' => 'IView'))));
+        TMap::PrepareGeneric(['K' => 'array',
+            'V' => [TLinkedList::class => ['T' => IView::class]]]);
         $this->FRegistration = new TMap();
     }
 
@@ -202,7 +203,7 @@ class TControllerManager extends TObject implements IControllerManager {
      * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function Bind($Action, $Model) {
-        TType::Object($Model, 'IModel');
+        TType::Object($Model, IModel::class);
         $mController = (string) $Action[0];
         $mAction = (string) $Action[1];
 
@@ -220,7 +221,7 @@ class TControllerManager extends TObject implements IControllerManager {
         else {
             $this->FBinding->Put($Action, $Model);
         }
-        $Model->setNotify(new TDelegate(array ($this, 'Notify'), 'TOnModelNotify'));
+        $Model->setNotify(new TDelegate([$this, 'Notify'], TOnModelNotify::class));
     }
 
     /**
@@ -231,7 +232,7 @@ class TControllerManager extends TObject implements IControllerManager {
      * @return boolean
      */
     public function IsBind($Action, $Model) {
-        TType::Object($Model, 'IModel');
+        TType::Object($Model, IModel::class);
         if (!$this->FBinding->ContainsKey($Action)) {
             return false;
         }
@@ -248,7 +249,7 @@ class TControllerManager extends TObject implements IControllerManager {
      * @return boolean
      */
     public function IsRegistered($Action, $View) {
-        TType::Object($View, 'IView');
+        TType::Object($View, IView::class);
         if (!$this->FRegistration->ContainsKey($Action)) {
             return false;
         }
@@ -263,13 +264,13 @@ class TControllerManager extends TObject implements IControllerManager {
      * @param \FrameworkDSW\Controller\IModel $Model
      */
     public function Notify($Model) {
-        TType::Object($Model, 'IModel');
+        TType::Object($Model, IModel::class);
         foreach ($this->FBinding as $mAction => $mModel) {
             if ($mModel === $Model) {
                 $mController = $mAction[0];
                 $mNotifyMethod = "Notify{$mAction[1]}";
                 $mNotify = false;
-                if (is_callable(array ($mController, $mNotifyMethod))) {
+                if (is_callable([$mController, $mNotifyMethod])) {
                     $mNotify = $mController::$mNotifyMethod($Model);
                 }
                 if ($mNotify) {
@@ -287,7 +288,7 @@ class TControllerManager extends TObject implements IControllerManager {
      * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function Register($Action, $View) {
-        TType::Object($View, 'IView');
+        TType::Object($View, IView::class);
         $mController = (string) $Action[0];
         $mAction = (string) $Action[1];
 
@@ -303,11 +304,11 @@ class TControllerManager extends TObject implements IControllerManager {
             $this->FRegistration[$Action]->Add($View);
         }
         else {
-            TLinkedList::PrepareGeneric(array ('T' => 'IView'));
-            $this->FRegistration->Put($Action, new TLinkedList(false, array (
-                $View)));
+            TLinkedList::PrepareGeneric(['T' => IView::class]);
+            $this->FRegistration->Put($Action, new TLinkedList(false, [
+                $View]));
         }
-        $mController::setUpdate(new TDelegate(array ($this, 'Update'), 'TOnControllerUpdate'));
+        $mController::setUpdate(new TDelegate([$this, 'Update'], TOnControllerUpdate::class));
     }
 
     /**
@@ -318,7 +319,7 @@ class TControllerManager extends TObject implements IControllerManager {
      * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function Unbind($Action, $Model) {
-        TType::Object($Model, 'IModel');
+        TType::Object($Model, IModel::class);
         $mController = (string) $Action[0];
         $mAction = (string) $Action[1];
 
@@ -350,7 +351,7 @@ class TControllerManager extends TObject implements IControllerManager {
      * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function Unregister($Action, $View) {
-        TType::Object($View, 'IView');
+        TType::Object($View, IView::class);
         $mController = (string) $Action[0];
         $mAction = (string) $Action[1];
 

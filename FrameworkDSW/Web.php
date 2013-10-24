@@ -7,17 +7,20 @@
  */
 namespace FrameworkDSW\Web;
 
-use FrameworkDSW\System\EException;
-use FrameworkDSW\System\IInterface;
-use FrameworkDSW\Utilities\TType;
-use FrameworkDSW\System\TRecord;
-use FrameworkDSW\Containers\TMap;
-use FrameworkDSW\System\EInvalidParameter;
-use FrameworkDSW\System\TEnum;
+use FrameworkDSW\Containers\IList;
+use FrameworkDSW\Containers\IMap;
 use FrameworkDSW\Containers\TAbstractMap;
-use FrameworkDSW\System\TObject;
 use FrameworkDSW\Containers\TLinkedList;
+use FrameworkDSW\Containers\TMap;
+use FrameworkDSW\Containers\TPair;
 use FrameworkDSW\Framework\Framework;
+use FrameworkDSW\System\EException;
+use FrameworkDSW\System\EInvalidParameter;
+use FrameworkDSW\System\IInterface;
+use FrameworkDSW\System\TEnum;
+use FrameworkDSW\System\TObject;
+use FrameworkDSW\System\TRecord;
+use FrameworkDSW\Utilities\TType;
 
 /**
  *
@@ -401,11 +404,11 @@ class THttpCookies extends TMap {
     /**
      * descHere
      *
-     * @param THttpRequest $Request
+     * @param \FrameworkDSW\Web\THttpRequest $Request
      */
     public function __construct($Request) {
-        TType::Object($Request, 'THttpRequest');
-        self::PrepareGeneric(array('K' => 'string', 'V' => 'THttpCookie'));
+        TType::Object($Request, THttpRequest::class);
+        self::PrepareGeneric(['K' => 'string', 'V' => THttpCookie::class]);
         parent::__construct();
 
         $this->FRequest = $Request;
@@ -537,13 +540,13 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param    boolean $AutoStart
-     * @param	IHttpSessionStorage	$Storage
+     * @param boolean $AutoStart
+     * @param \FrameworkDSW\Web\IHttpSessionStorage	$Storage
      */
     public function __construct($AutoStart = true, $Storage = null) {
         TType::Bool($AutoStart);
-        TType::Object($Storage, 'IHttpSessionStorage');
-        $this->PrepareMethodGeneric(array('K' => 'string', 'V' => 'mixed', 'T' => array('TPair' => array('K' => 'string', 'V' => 'mixed'))));
+        TType::Object($Storage, IHttpSessionStorage::class);
+        $this->PrepareMethodGeneric(array('K' => 'string', 'V' => null, 'T' => [TPair::class => ['K' => 'string', 'V' => null]]));
         parent::__construct(false);
         ini_set('session.gc_probability', 1);
         ini_set('session.gc_divisor', 100);
@@ -841,10 +844,10 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param	TSessionCookieMode	$Value
+     * @param \FrameworkDSW\Web\TSessionCookieMode	$Value
      */
     public function setCookieMode($Value) {
-        TType::Object($Value, 'TSessionCookieMode');
+        TType::Object($Value, TSessionCookieMode::class);
 
         switch ($Value) {
         case TSessionCookieMode::eNone():
@@ -864,7 +867,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param	string	$Value
+     * @param string $Value
      */
     public function setCookiePath($Value) {
         TType::Int($Value);
@@ -924,11 +927,11 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param    IHttpSessionStorage $Storage
+     * @param  \FrameworkDSW\Web\IHttpSessionStorage $Storage
      * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function setStorage($Storage) {
-        TType::Object($Storage, 'IHttpSessionStorage');
+        TType::Object($Storage, IHttpSessionStorage::class);
         if ($this->getIsStarted()) {
             throw new EInvalidParameter();
         }
@@ -1475,8 +1478,7 @@ class THttpRequest extends TObject {
      * @param string $XHeader
      * @param boolean $Terminate
      * @param boolean $ForceDownload
-     * @param \FrameworkDSW\Containers\IMap $AddHeaders
-     *            <K: string, V: string>
+     * @param \FrameworkDSW\Containers\IMap $AddHeaders  <K: string, V: string>
      */
     public function XSendFile($FilePath, $SaveName = '', $MimeType = '', $XHeader = 'X-Sendfile', $Terminate = false, $ForceDownload = true, $AddHeaders = null) {
         TType::String($FilePath);
@@ -1485,7 +1487,7 @@ class THttpRequest extends TObject {
         TType::String($XHeader);
         TType::Bool($Terminate);
         TType::Bool($ForceDownload);
-        TType::Object($AddHeaders, array('IMap' => array('K' => 'string', 'V' => 'string')));
+        TType::Object($AddHeaders, [IMap::class => ['K' => 'string', 'V' => 'string']]);
 
         if ($ForceDownload) {
             $mDisposition = 'attachment';
@@ -1857,7 +1859,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
     private $FRouteVariableName = '';
     /**
      *
-     * @var TLinkedList <T: IUrlRouteRule>
+     * @var \FrameworkDSW\Containers\TLinkedList <T: \FrameworkDSW\Web\IUrlRouteRule>
      */
     private $FRules = null;
     /**
@@ -1872,7 +1874,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
     private $FSuffix = '';
     /**
      *
-     * @var TUrlMode
+     * @var \FrameworkDSW\Web\TUrlMode
      */
     private $FUrlMode = null;
     /**
@@ -1887,21 +1889,20 @@ class TUrlRouter extends TObject implements IUrlRouter {
     private $FAppendParameters = true;
     /**
      *
-     * @var THttpRequest
+     * @var \FrameworkDSW\Web\THttpRequest
      */
     private $FRequest = null;
 
     /**
      *
      * @param string $Route
-     * @param \FrameworkDSW\Containers\IMap $Parameters
-     *            <K: string, V: string>
+     * @param \FrameworkDSW\Containers\IMap $Parameters <K: string, V: string>
      * @param string $Ampersand
      * @return string
      */
     protected function CreateDefaultUrl($Route, $Parameters = null, $Ampersand = '&') {
         TType::String($Route);
-        TType::Object($Parameters, array('IMap' => array('K' => 'string', 'V' => 'string')));
+        TType::Object($Parameters, [IMap::class => ['K' => 'string', 'V' => 'string']]);
         TType::String($Ampersand);
 
         $mQueryString = $this->CreatePathInfo($Parameters, '=', $Ampersand);
@@ -1948,16 +1949,16 @@ class TUrlRouter extends TObject implements IUrlRouter {
     /**
      * descHere
      *
-     * @param THttpRequest $HttpRequest
+     * @param \FrameworkDSW\Web\THttpRequest $HttpRequest
      */
     public function __construct($HttpRequest) {
         parent::__construct();
 
-        TType::Object($HttpRequest, 'THttpRequest');
+        TType::Object($HttpRequest, THttpRequest::class);
 
         $this->FUrlMode = TUrlMode::ePath();
 
-        TLinkedList::PrepareGeneric(array('T' => 'IUrlRouteRule'));
+        TLinkedList::PrepareGeneric(['T' => IUrlRouteRule::class]);
         $this->FRules = new TLinkedList(true);
         $this->FRequest = $HttpRequest;
     }
@@ -1974,11 +1975,11 @@ class TUrlRouter extends TObject implements IUrlRouter {
     /**
      * descHere
      *
-     * @param IUrlRouteRule $Rule
+     * @param \FrameworkDSW\Web\IUrlRouteRule $Rule
      * @param boolean $Append
      */
     public function AddRule($Rule, $Append = true) {
-        TType::Object($Rule, 'IUrlRouteRule');
+        TType::Object($Rule, IUrlRouteRule::class);
         TType::Bool($Append);
 
         if ($Append) {
@@ -1992,18 +1993,17 @@ class TUrlRouter extends TObject implements IUrlRouter {
     /**
      * descHere
      *
-     * @param \FrameworkDSW\Containers\IMap $Parameters
-     *            <K: string, V: string>
+     * @param \FrameworkDSW\Containers\IMap $Parameters <K: string, V: string>
      * @param string $Equal
      * @param string $Ampersand
      * @return string
      */
     public function CreatePathInfo($Parameters, $Equal = '=', $Ampersand = '&') {
-        TType::Object($Parameters, array('IMap' => array('K' => 'string', 'V' => 'string')));
+        TType::Object($Parameters, [IMap::class => ['K' => 'string', 'V' => 'string']]);
         TType::String($Equal);
         TType::String($Ampersand);
 
-        $mPairs = array();
+        $mPairs = [];
         foreach ($Parameters as $mKey => $mValue) {
             $mPairs[] = urlencode($mKey) . $Equal . urlencode($mValue);
         }
@@ -2014,17 +2014,16 @@ class TUrlRouter extends TObject implements IUrlRouter {
      * descHere
      *
      * @param string $Route
-     * @param \FrameworkDSW\Containers\IMap $Parameters
-     *            <K: string, V: string>
+     * @param \FrameworkDSW\Containers\IMap $Parameters <K: string, V: string>
      * @param string $Ampersand
      * @return string
      */
     public function CreateUrl($Route, $Parameters = null, $Ampersand = '&') {
         TType::String($Route);
-        TType::Object($Parameters, array('IMap' => array('K' => 'string', 'V' => 'string')));
+        TType::Object($Parameters, [IMap::class => ['K' => 'string', 'V' => 'string']]);
         TType::String($Ampersand);
 
-        TMap::PrepareGeneric(array('K' => 'string', 'V' => 'string'));
+        TMap::PrepareGeneric(['K' => 'string', 'V' => 'string']);
         $mParameters = new TMap();
         if ($Parameters != null) {
             $mParameters->PutAll($Parameters);
@@ -2298,12 +2297,11 @@ class TUrlRouter extends TObject implements IUrlRouter {
     /**
      * descHere
      *
-     * @param \FrameworkDSW\Containers\IList $Value
-     *            <T: IUrlRouteRule>
+     * @param \FrameworkDSW\Containers\IList $Value <T: \FrameworkDSW\Web\IUrlRouteRule>
      * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function setRules($Value) {
-        TType::Object($Value, array('IList' => array('T' => 'IUrlRouteRule')));
+        TType::Object($Value, [IList::class => ['T' => IUrlRouteRule::class]]);
         if ($Value == null) {
             throw new EInvalidParameter();
         }
@@ -2327,10 +2325,10 @@ class TUrlRouter extends TObject implements IUrlRouter {
     /**
      * descHere
      *
-     * @param TUrlMode $Value
+     * @param \FrameworkDSW\Web\TUrlMode $Value
      */
     public function setUrlMode($Value) {
-        TType::Object($Value, 'TUrlMode');
+        TType::Object($Value, TUrlMode::class);
         $this->FUrlMode = $Value;
     }
 
@@ -2543,19 +2541,18 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
     /**
      * descHere
      *
-     * @param TUrlRouter $Router
+     * @param \FrameworkDSW\Web\TUrlRouter $Router
      * @param string $Route
-     * @param TMap $Parameters
-     *            <K: string, V: string>
+     * @param \FrameworkDSW\Containers\TMap $Parameters <K: string, V: string>
      * @param string $Ampersand
      * @throws EParsingOnlyUrlRule
      * @throws ECreateUrlFailed
      * @return string
      */
     public function CreateUrl($Router, $Route, $Parameters = null, $Ampersand = '&') {
-        TType::Object($Router, 'TUrlRouter');
+        TType::Object($Router, TUrlRouter::class);
         TType::String($Route);
-        TType::Object($Parameters, array('IMap' => array('K' => 'string', 'V' => 'string')));
+        TType::Object($Parameters, [IMap::class => ['K' => 'string', 'V' => 'string']]);
         TType::String($Ampersand);
 
         if ($this->FParsingOnly) {
@@ -2805,16 +2802,16 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
     /**
      * descHere
      *
-     * @param IUrlRouter $Router
-     * @param THttpRequest $Request
+     * @param \FrameworkDSW\Web\IUrlRouter $Router
+     * @param \FrameworkDSW\Web\THttpRequest $Request
      * @param string $PathInfo
      * @param string $RawPathInfo
      * @throws EParseUrlFailed
      * @return string
      */
     public function ParseUrl($Router, $Request, $PathInfo, $RawPathInfo) {
-        TType::Object($Router, 'IUrlRouter');
-        TType::Object($Request, 'THttpRequest');
+        TType::Object($Router, IUrlRouter::class);
+        TType::Object($Request, THttpRequest::class);
         TType::String($PathInfo);
         TType::String($RawPathInfo);
 
@@ -2855,11 +2852,11 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
             $mTr = array();
 
             if ($this->FReferences == null) {
-                TMap::PrepareGeneric(array('K' => 'string', 'V' => 'string'));
+                TMap::PrepareGeneric(['K' => 'string', 'V' => 'string']);
                 $this->FReferences = new TMap();
             }
             if ($this->FParameters == null) {
-                TMap::PrepareGeneric(array('K' => 'string', 'V' => 'string'));
+                TMap::PrepareGeneric(['K' => 'string', 'V' => 'string']);
                 $this->FParameters = new TMap();
             }
 
@@ -2920,11 +2917,10 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
     /**
      * descHere
      *
-     * @param \FrameworkDSW\Containers\IMap $Value
-     *            <K: string, V: string>
+     * @param \FrameworkDSW\Containers\IMap $Value <K: string, V: string>
      */
     public function setDefaultParameters($Value) {
-        TType::Object($Value, array('IMap' => array('K' => 'string', 'V' => 'string')));
+        TType::Object($Value, [IMap::class => ['K' => 'string', 'V' => 'string']]);
         Framework::Free($this->FDefaultParameters);
         $this->FDefaultParameters = $Value;
     }
@@ -2942,11 +2938,10 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
     /**
      * descHere
      *
-     * @param \FrameworkDSW\Containers\IMap $Value
-     *            <K: string, V: string>
+     * @param \FrameworkDSW\Containers\IMap $Value <K: string, V: string>
      */
     public function setParameters($Value) {
-        TType::Object($Value, array('IMap' => array('K' => 'string', 'V' => 'string')));
+        TType::Object($Value, [IMap::class => ['K' => 'string', 'V' => 'string']]);
         Framework::Free($this->FParameters);
         $this->FParameters = $Value;
     }
@@ -2974,11 +2969,10 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
     /**
      * descHere
      *
-     * @param \FrameworkDSW\Containers\IMap $Value
-     *            <K: string, V: string>
+     * @param \FrameworkDSW\Containers\IMap $Value <K: string, V: string>
      */
     public function setReferences($Value) {
-        TType::Object($Value, array('IMap' => array('K' => 'string', 'V' => 'string')));
+        TType::Object($Value, [IMap::class => ['K' => 'string', 'V' => 'string']]);
         Framework::Free($this->FReferences);
         $this->FReferences = $Value;
     }

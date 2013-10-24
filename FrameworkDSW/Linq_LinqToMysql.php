@@ -8,20 +8,28 @@
  */
 namespace FrameworkDSW\Linq\LinqToMysql;
 
-use FrameworkDSW\Linq\Expressions\TExpressionVisitor;
-use FrameworkDSW\Linq\IQueryProvider;
-use FrameworkDSW\Utilities\TType;
-use FrameworkDSW\Framework\Framework;
-use FrameworkDSW\Containers\TMap;
 use FrameworkDSW\Containers\TList;
-use FrameworkDSW\DataObjects\TObjectQuery;
+use FrameworkDSW\Containers\TMap;
+use FrameworkDSW\Database\Mysql\TMysqlConnection;
 use FrameworkDSW\Database\TConcurrencyType;
 use FrameworkDSW\Database\TResultSetType;
-use FrameworkDSW\Linq\Expressions\TExpressionType;
-use FrameworkDSW\System\EException;
-use FrameworkDSW\Database\TPrimitiveParam;
-use FrameworkDSW\Linq\Expressions\TParameterExpression;
+use FrameworkDSW\DataObjects\IEntity;
+use FrameworkDSW\DataObjects\TObjectContext;
+use FrameworkDSW\DataObjects\TObjectQuery;
+use FrameworkDSW\Framework\Framework;
 use FrameworkDSW\Linq\Expressions\TExpression;
+use FrameworkDSW\Linq\Expressions\TExpressionType;
+use FrameworkDSW\Linq\Expressions\TExpressionVisitor;
+use FrameworkDSW\Linq\Expressions\TParameterExpression;
+use FrameworkDSW\Linq\Expressions\TTypedExpression;
+use FrameworkDSW\Linq\IQueryProvider;
+use FrameworkDSW\System\EException;
+use FrameworkDSW\System\IInterface;
+use FrameworkDSW\System\TBoolean;
+use FrameworkDSW\System\TFloat;
+use FrameworkDSW\System\TInteger;
+use FrameworkDSW\System\TString;
+use FrameworkDSW\Utilities\TType;
 
 /**
  * \FrameworkDSW\Linq\LinqToMysql\TMysqlQueryProvider
@@ -57,7 +65,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
     private $FMembers = null;
     /**
      *
-     * @var \FrameworkDSW\Containers\TMap <K: string, V: IParam<T: ?>>
+     * @var \FrameworkDSW\Containers\TMap <K: string, V: \FrameworkDSW\System\IInterface>
      */
     private static $FParameters = null;
     /**
@@ -214,16 +222,16 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
             // TODO how to handle <T: ? > -- i can not put ? and > together
             // since
             // the combination is the ending mark of php. Or just omit it?
-            TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'IParam'));
+                    TMap::PrepareGeneric(['K' => 'string', 'V' => IInterface::class]);
             self::$FParameters = new TMap(true);
         }
 
         if (self::$FVarAliasMapping === null) {
-            TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'string'));
+            TMap::PrepareGeneric(['K' => 'string', 'V' => 'string']);
             self::$FVarAliasMapping = new TMap();
         }
 
-        TList::PrepareGeneric(array ('T' => 'string'));
+        TList::PrepareGeneric(['T' => 'string']);
         $this->FMembers = new TList();
     }
 
@@ -245,7 +253,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
      * @return \FrameworkDSW\Linq\IQueryable <T: T>
      */
     public function CreateQuery($Expression = null) {
-        TObjectQuery::PrepareGeneric(array ('T' => $this->GenericArg('T')));
+        TObjectQuery::PrepareGeneric(['T' => $this->GenericArg('T')]);
         return new TObjectQuery($Expression);
     }
 
@@ -256,8 +264,8 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
      * @return R
      */
     public function Execute($Expression) {
-        TType::Object($Expression, array (
-            'TTypedExpression' => array ('T' => $this->GenericArg('R'))));
+        TType::Object($Expression, [
+            TTypedExpression::class => ['T' => $this->GenericArg('R')]]);
 
         $mStmt = $this->FConnection->PrepareStatement(TResultSetType::eScrollInsensitive(), TConcurrencyType::eReadOnly());
 
@@ -303,29 +311,29 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
         self::$FParameterNameCounter = 0;
 
         if (is_array($this->FResultType)) {
-            TList::PrepareGeneric($this->FResultType['IQueryable']);
-            $mClass = 'TList';
+            TList::PrepareGeneric($this->FResultType[IQueryable::class]);
+            $mClass = TList::class;
         }
         else {
             $mClass = $this->FResultType;
         }
-        $mElementClass = $this->FResultType['IQueryable']['T'];
+        $mElementClass = $this->FResultType[IQueryable::class]['T'];
         $mResultCollection = new $mClass();
 
-        if (in_array($mElementClass, array ('boolean', 'integer', 'float',
-            'string'))) {
+        if (in_array($mElementClass, ['boolean', 'integer', 'float',
+            'string'])) {
             foreach ($mResultSet as $mRow) {
                 foreach (self::$FVarAliasMapping as $mAlias => $mVariable) {
                     $mResultCollection->Add($mRow[$mAlias]);
                 }
             }
             if ($this->FDefaultIfEmpty && $mResultSet->getCount() == 0) {
-                $mDefaults = array ('boolean' => false, 'integer' => 0,
-                    'float' => 0.0, 'string' => '');
+                $mDefaults = ['boolean' => false, 'integer' => 0,
+                    'float' => 0.0, 'string' => ''];
                 $mResultCollection->Add($mDefaults[$mElementClass]);
             }
         }
-        elseif (in_array('IEntity', class_implements($mElementClass))) {
+        elseif (in_array(IEntity::class, class_implements($mElementClass))) {
             // TODO interface comparing is not supported -- InheritsFrom()
             /** @noinspection PhpUnusedLocalVariableInspection */
             foreach ($mResultSet as $mRow) {
@@ -481,7 +489,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
      * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     protected function VisitBlock($Expression) {
-        TList::PrepareGeneric(array ('T' => 'string'));
+        TList::PrepareGeneric(['T' => 'string']);
         $mColumns = new TList();
         foreach ($Expression->getExpressions() as $mExpression) {
             // $this->FAlias = 'col' . self::$FParameterNameCounter;
@@ -523,8 +531,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
     protected function VisitConstant($Expression) {
         $this->FSql .= (':param_' . self::$FParameterNameCounter);
 
-        TPrimitiveParam::PrepareGeneric(array ('T' => $Expression->getType()));
-        $mParameter = new TPrimitiveParam($Expression->getValue());
+        $mParameter = $Expression->getValue();
         self::$FParameters->Put(':param_' . self::$FParameterNameCounter, $mParameter);
         self::$FParameterNameCounter++;
 
@@ -540,10 +547,9 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
     protected function VisitDefault($Expression) {
         $this->FSql .= ':param_' . self::FParameterNameCounter;
 
-        TPrimitiveParam::PrepareGeneric(array ('T' => $Expression->getType()));
-        $mValues = array ('boolean' => false, 'integer' => 0, 'float' => 0.0,
-            'string' => '');
-        $mParameter = new TPrimitiveParam($mValues[$Expression->getType()]);
+        $mValues = ['boolean' => TBoolean::class, 'integer' => TInteger::class, 'float' => TFloat::class,
+            'string' => TString::class];
+        $mParameter = new $mValues[$Expression->getType()]();
         self::$FParameters->Put(':param_' . self::FParameterNameCounter, $mParameter);
         ++self::$FParameterNameCounter;
 
@@ -600,7 +606,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
         $mMethod = $Expression->getMethod();
         $mArgs = $Expression->getArguments();
 
-        if ($mMethod === array ('TObjectQuery', 'Average')) {
+        if ($mMethod === [TObjectQuery::class, 'Average']) {
             $this->FAlias = 'col'. self::FParameterNameCounter;
             ++self::$FParameterNameCounter;
             self::$FVarAliasMapping->Put($this->FAlias, '');
@@ -611,7 +617,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
             return $Expression;
         }
 
-        if ($mMethod === array ('TObjectQuery', 'Concat')) {
+        if ($mMethod === [TObjectQuery::class, 'Concat']) {
             // UNION ALL
             // TODO [solved--using static] how to sync parameters and aliases &
             // variables information?
@@ -619,7 +625,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
             return $Expression;
         }
 
-        if ($mMethod === array ('TObjectQuery', 'Count')) {
+        if ($mMethod === [TObjectQuery::class, 'Count']) {
             $this->FAlias = 'col' . self::$FParameterNameCounter;
             ++self::$FParameterNameCounter;
             self::$FVarAliasMapping->Put($this->FAlias, '');
@@ -635,19 +641,19 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
             return $Expression;
         }
 
-        if ($mMethod === array ('TObjectQuery', 'DefaultIfEmpty')) {
+        if ($mMethod === [TObjectQuery::class, 'DefaultIfEmpty']) {
             $this->FDefaultIfEmpty = true;
             return $Expression;
         }
 
-        if ($mMethod === array ('TObjectQuery', 'Distinct')) {
+        if ($mMethod === [TObjectQuery::class, 'Distinct']) {
             $this->FDistinct = true;
             return $Expression;
         }
 
         // SELECT DISTINCT t.key, ... FROM T AS t LEFT JOIN S AS s USING (key,
         // ...) WHERE s.key IS NULL
-        if ($mMethod === array ('TObjectQuery', 'Except')) {
+        if ($mMethod === [TObjectQuery::class, 'Except']) {
             $this->FDistinct = true;
             $mMembers = $this->FMembers->ToArray();
             $mFirstMember = $mMembers[0];
@@ -662,7 +668,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
             return $Expression;
         }
 
-        if ($mMethod === array ('TObjectQuery', 'First')) {
+        if ($mMethod === [TObjectQuery::class, 'First']) {
             $this->FLimit = '1';
             $this->FSql = '';
             $this->Visit($mArgs[0]);
@@ -673,7 +679,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
             return $Expression;
         }
 
-        if ($mMethod === array ('TObjectQuery', 'FirstOrDefault')) {
+        if ($mMethod === [TObjectQuery::class, 'FirstOrDefault']) {
             $this->FDefaultIfEmpty = true;
             $this->FLimit = '1';
             $this->FSql = '';
@@ -687,7 +693,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
             return $Expression;
         }
 
-        if ($mMethod === array ('TObjectQuery', 'GroupBy')) {
+        if ($mMethod === [TObjectQuery::class, 'GroupBy']) {
             $this->FSql = '';
             $this->Visit($mArgs[0]);
             $this->FGroupBy = $this->FSql;
@@ -710,7 +716,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
 
         // SELECT ... FROM T AS t JOIN S AS s ON t.key = s.key GROUP BY t.key
         // HAVING result_selector
-        if ($mMethod === array ('TObjectQuery', 'GroupJoin')) {
+        if ($mMethod === [TObjectQuery::class, 'GroupJoin']) {
             // Inner --yields something such as '(SELECT ...) AS s' or 'S AS s'
             $this->FFrom = "JOIN ({$this->GenerateSubQuerySql($mArgs[0])}) ON ";
             $this->FSql = '';
@@ -725,7 +731,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
             return $Expression;
         }
 
-        if ($mMethod === array ('TObjectQuery', 'Intersect')) {
+        if ($mMethod === [TObjectQuery::class, 'Intersect']) {
             $mMembers = implode(', ', $this->FMembers->ToArray());
             $this->FFrom = "INNER JOIN {$this->GenerateSubQuerySql($mArgs[0])} USING ({$mMembers})";
             return $Expression;
@@ -733,7 +739,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
 
         // SELECT ... FROM T as t JOIN S AS s ON t.key = s.key HAVING
         // result_selector
-        if ($mMethod === array ('TObjectQuery', 'Join')) {
+        if ($mMethod === [TObjectQuery::class, 'Join']) {
             $this->FFrom = "JOIN {$this->GenerateSubQuerySql($mArgs[0])} ON ";
             $this->FSql = '';
             $this->Visit($mArgs[1]); // OuterKeySelector
@@ -746,15 +752,15 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
             return $Expression;
         }
 
-        if ($mMethod === array ('TObjectQuery', 'Last')) {
+        if ($mMethod === [TObjectQuery::class, 'Last']) {
             throw new EException(); // TODO unsupported --Last
         }
 
-        if ($mMethod === array ('TObjectQuery', 'LastOrDefault')) {
+        if ($mMethod === [TObjectQuery::class, 'LastOrDefault']) {
             throw new EException(); // TODO unsupported --LastOrDefault
         }
 
-        if ($mMethod === array ('TObjectQuery', 'Max')) {
+        if ($mMethod === [TObjectQuery::class, 'Max']) {
             $this->FAlias = 'col' . self::$FParameterNameCounter;
             ++self::$FParameterNameCounter;
             self::$FVarAliasMapping->Put($this->FAlias, '');
@@ -765,7 +771,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
             return $Expression;
         }
 
-        if ($mMethod === array ('TObjectQuery', 'Min')) {
+        if ($mMethod === [TObjectQuery::class, 'Min']) {
             $this->FAlias = 'col' . self::$FParameterNameCounter;
             ++self::$FParameterNameCounter;
             self::$FVarAliasMapping->Put($this->FAlias, '');
@@ -776,42 +782,42 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
             return $Expression;
         }
 
-        if ($mMethod === array ('TObjectQuery', 'OfType')) {
+        if ($mMethod === [TObjectQuery::class, 'OfType']) {
             throw new EException(); // TODO unsupported --OfType
         }
 
-        if ($mMethod === array ('TObjectQuery', 'OrderBy')) {
+        if ($mMethod === [TObjectQuery::class, 'OrderBy']) {
             $this->FSql = '';
             $this->Visit($mArgs[0]);
             $this->FOrderBy = $this->FSql;
             return $Expression;
         }
 
-        if ($mMethod === array ('TObjectQuery', 'OrderByDescending')) {
+        if ($mMethod === [TObjectQuery::class, 'OrderByDescending']) {
             $this->FSql = '';
             $this->Visit($mArgs[0]);
             $this->FOrderBy = "{$this->FSql} DESC";
             return $Expression;
         }
 
-        if ($mMethod === array ('TObjectQuery', 'Reverse')) {
+        if ($mMethod === [TObjectQuery::class, 'Reverse']) {
             throw new EException(); // TODO unsupported. --Reverse
         }
 
-        if ($mMethod === array ('TObjectQuery', 'Select')) {
+        if ($mMethod === [TObjectQuery::class, 'Select']) {
             if ($this->FDistinct) {
                 $this->FSql = 'DISTINCT ';
             }
             else {
                 $this->FSql = '';
             }
-            if (get_class($mArgs[0]) == 'TTypedExpression' && $mArgs[0]->getBody()->ObjectType() === 'TParameterExpression') {
+            if (get_class($mArgs[0]) == TTypedExpression::class && $mArgs[0]->getBody()->ObjectType() === TParameterExpression::class) {
                 $mParameter = $mArgs[0]->getBody();
                 if ($mParameter instanceof TParameterExpression) {
                     $mEntityClass = $mParameter->getType();
                     $mMembers = $mEntityClass::getColumnsType();
 
-                    TList::PrepareGeneric(array ('T' => 'TExpression'));
+                    TList::PrepareGeneric(['T' => TExpression::class]);
                     $mExpressions = new TList();
                     foreach ($mMembers as $mMember => $mType) {
                         // $mExpressions->Add(TExpression::MakeMember($mParameter,
@@ -831,7 +837,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
         }
 
         // SELECT s.key, ... FROM T AS t INNER JOIN S AS s ON T.s = s.key
-        if ($mMethod === array ('TObjectQuery', 'SelectMany')) {
+        if ($mMethod === [TObjectQuery::class, 'SelectMany']) {
             $this->FSql = '';
             $this->Visit($mArgs[0]); // modify FSelect directly.
             $this->FFrom = $this->FSql;
@@ -847,13 +853,13 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
             return $Expression;
         }
 
-        if ($mMethod === array ('TObjectQuery', 'Skip')) {
+        if ($mMethod === [TObjectQuery::class, 'Skip']) {
             $mValue = $mArgs[0]->getValue()->UnboxToInteger(); // TConstantExpression->TInteger
             $this->FLimit = "{$mValue}, -1";
             return $Expression;
         }
 
-        if ($mMethod === array ('TObjectQuery', 'Sum')) {
+        if ($mMethod === [TObjectQuery::class, 'Sum']) {
             $this->FAlias = 'col' . self::$FParameterNameCounter;
             ++self::$FParameterNameCounter;
             self::$FVarAliasMapping->Put($this->FAlias, '');
@@ -864,7 +870,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
             return $Expression;
         }
 
-        if ($mMethod === array ('TObjectQuery', 'Take')) {
+        if ($mMethod === [TObjectQuery::class, 'Take']) {
             $mTemp = strstr($this->FLimit, ' ', true); // search ' ' for
                                                        // including ','
             if ($mTemp !== false) {
@@ -878,8 +884,8 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
             return $Expression;
         }
 
-        if (($mMethod === array ('TObjectQuery', 'TakeWhile') || ($mMethod === array (
-            'TObjectQuery', 'Where')))) {
+        if (($mMethod === [TObjectQuery::class, 'TakeWhile'] || ($mMethod === [
+            TObjectQuery::class, 'Where']))) {
             $this->FSql = '';
             $this->Visit($mArgs[0]);
             if ($this->FWhere == '') {
@@ -892,21 +898,21 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
             return $Expression;
         }
 
-        if ($mMethod === array ('TObjectQuery', 'ThenBy')) {
+        if ($mMethod === [TObjectQuery::class, 'ThenBy']) {
             $this->FSql = '';
             $this->Visit($mArgs[0]);
             $this->FOrderBy .= ", {$this->FSql}";
             return $Expression;
         }
 
-        if ($mMethod === array ('TObjectQuery', 'OrderByDescending')) {
+        if ($mMethod === [TObjectQuery::class, 'OrderByDescending']) {
             $this->FSql = '';
             $this->Visit($mArgs[0]);
             $this->FOrderBy .= ", {$this->FSql} DESC";
             return $Expression;
         }
 
-        if ($mMethod === array ('TObjectQuery', 'Zip')) {
+        if ($mMethod === [TObjectQuery::class, 'Zip']) {
             throw new EException(); // TODO unsupported. --Zip
         }
 
@@ -946,8 +952,8 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
                     break;
                 case TExpressionType::eConvert() :
                 case TExpressionType::eConvertChecked() :
-                    $mMapping = array ('string' => 'CHAR', 'float' => 'DECIMAL',
-                        'integer' => 'SIGNED');
+                    $mMapping = ['string' => 'CHAR', 'float' => 'DECIMAL',
+                        'integer' => 'SIGNED'];
                     if (array_key_exists($Expression->getType(), $mMapping)) {
                         throw new EException(); // TODO unsupported operation.
                     }
@@ -1013,7 +1019,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
      * @param \FrameworkDSW\Database\Mysql\TMysqlConnection $Connection
      */
     public function UseConnection($Connection) {
-        TType::Object($Connection, 'TMysqlConnection');
+        TType::Object($Connection, TMysqlConnection::class);
         $this->FConnection = $Connection;
     }
 
@@ -1022,7 +1028,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
      * @param \FrameworkDSW\DataObjects\TObjectContext $Context
      */
     public function UseContext($Context) {
-        TType::Object($Context, 'TObjectContext');
+        TType::Object($Context, TObjectContext::class);
         $this->FContext = $Context;
     }
 }

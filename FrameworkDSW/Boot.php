@@ -48,7 +48,7 @@ final class Boot {
         
         self::$FDeclaredClasses = array_slice(get_declared_classes(), self::$FStartAt);
         foreach (self::$FDeclaredClasses as $mClass) {
-            if (/*$mClass[0] == 'T' &&*/ is_subclass_of($mClass, 'System\TObject')) {
+            if (/*$mClass[0] == 'T' &&*/ is_subclass_of($mClass, TObject::class)) {
                 $mReflection = new ReflectionClass($mClass);
                 $ClassInfo[$mClass] = $mReflection->getFileName();
 

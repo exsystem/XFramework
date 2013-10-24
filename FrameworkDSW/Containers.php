@@ -7,15 +7,15 @@
  */
 namespace FrameworkDSW\Containers;
 
-use FrameworkDSW\System\ERuntimeException;
-use FrameworkDSW\System\EException;
-use FrameworkDSW\System\IInterface;
-use FrameworkDSW\System\TObject;
-use FrameworkDSW\Utilities\TType;
-use FrameworkDSW\System\ENotImplemented;
-use FrameworkDSW\System\TRecord;
 use FrameworkDSW\Framework\Framework;
+use FrameworkDSW\System\EException;
+use FrameworkDSW\System\ENotImplemented;
+use FrameworkDSW\System\ERuntimeException;
+use FrameworkDSW\System\IInterface;
 use FrameworkDSW\System\TEnum;
+use FrameworkDSW\System\TObject;
+use FrameworkDSW\System\TRecord;
+use FrameworkDSW\Utilities\TType;
 
 /**
  *
@@ -411,7 +411,7 @@ class TStdMapMapIterator extends TObject implements IIterator {
      *
      * @var array
      */
-    private $FMapData = array ();
+    private $FMapData = [];
 
     /**
      * descHere
@@ -422,7 +422,7 @@ class TStdMapMapIterator extends TObject implements IIterator {
     public function __construct($MapData, $KeyType) {
         parent::__construct();
         TType::Arr($MapData);
-        TType::Object($KeyType, 'FrameworkDSW\Containers\TMapKeyType');
+        TType::Object($KeyType, TMapKeyType::class);
 
         if ($KeyType == TMapKeyType::eRecord()) {
             $this->FKeyType = TMapKeyType::eObject();
@@ -622,8 +622,8 @@ class TStdListIterator extends TObject implements IIterator {
      */
     public function __construct($List) {
         parent::__construct();
-        TType::Type($List, array (
-            'TAbstractList' => array ('T' => $this->GenericArg('T'))));
+        TType::Object($List, [
+            TAbstractList::class => ['T' => $this->GenericArg('T')]]);
 
         $this->FList = $List;
     }
@@ -711,8 +711,8 @@ class TStdListListIterator extends TStdListIterator implements IListIterator {
      * @see FrameworkDSW/TStdListIterator#Create($List)
      */
     public function __construct($List, $StartAt) {
-        TType::Type($List, array (
-            'TAbstractList' => array ('T' => self::StaticGenericArg('T'))));
+        TType::Object($List, [
+            TAbstractList::class => ['T' => self::StaticGenericArg('T')]]);
         TType::Int($StartAt);
 
         parent::__construct($List);
@@ -840,8 +840,8 @@ abstract class TAbstractCollection extends TObject implements ICollection {
      * @param \FrameworkDSW\Containers\ICollection $Collection <T: T>
      */
     public function AddAll($Collection) {
-        TType::Type($Collection, array (
-            'ICollection' => array ('T' => $this->GenericArg('T'))));
+        TType::Object($Collection, [
+            ICollection::class => ['T' => $this->GenericArg('T')]]);
         $this->CheckReadOnly();
 
         foreach ($Collection as $mElement) {
@@ -899,8 +899,8 @@ abstract class TAbstractCollection extends TObject implements ICollection {
      * @return boolean
      */
     public function ContainsAll($Collection) {
-        TType::Type($Collection, array (
-            'ICollection' => array ('T' => $this->GenericArg('T'))));
+        TType::Object($Collection, [
+            ICollection::class => ['T' => $this->GenericArg('T')]]);
 
         foreach ($Collection as $mElement) {
             if (!$this->Contains($mElement)) {
@@ -956,8 +956,8 @@ abstract class TAbstractCollection extends TObject implements ICollection {
      * @throws ECollectionNotExisted
      */
     public function RemoveAll($Collection) {
-        TType::Type($Collection, array (
-            'ICollection' => array ('T' => $this->GenericArg('T'))));
+        TType::Object($Collection, [
+            ICollection::class => ['T' => $this->GenericArg('T')]]);
 
         $this->CheckReadOnly();
         $mItr = $this->Iterator();
@@ -981,8 +981,8 @@ abstract class TAbstractCollection extends TObject implements ICollection {
      * @return boolean
      */
     public function RetainAll($Collection) {
-        TType::Type($Collection, array (
-            'ICollection' => array ('T' => $this->GenericArg('T'))));
+        TType::Object($Collection, [
+            ICollection::class => ['T' => $this->GenericArg('T')]]);
 
         $mModified = false;
         $mItr = $this->Iterator();
@@ -1002,7 +1002,7 @@ abstract class TAbstractCollection extends TObject implements ICollection {
      * @return T[]
      */
     public function ToArray() {
-        $mResult = array ();
+        $mResult = [];
         foreach ($this as $mValue) {
             $mResult[] = $mValue;
         }
@@ -1220,8 +1220,8 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
      */
     public final function InsertAll($Index, $Collection) {
         TType::Int($Index);
-        TType::Type($Collection, array (
-            'ICollection' => array ('T' => $this->GenericArg('T'))));
+        TType::Object($Collection, [
+            ICollection::class => ['T' => $this->GenericArg('T')]]);
 
         $this->CheckReadOnly();
         $this->CheckIndexForAdd($Index);
@@ -1282,7 +1282,7 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
      * @see FrameworkDSW/TAbstractCollection#Iterator()
      */
     public function Iterator() {
-        TStdListIterator::PrepareGeneric(array ('T' => $this->GenericArg('T')));
+        TStdListIterator::PrepareGeneric(['T' => $this->GenericArg('T')]);
         return new TStdListIterator($this);
     }
 
@@ -1325,8 +1325,8 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
         TType::Int($Index);
 
         $this->CheckIndexForAdd($Index);
-        TStdListListIterator::PrepareGeneric(array (
-            'T' => $this->GenericArg('T')));
+        TStdListListIterator::PrepareGeneric([
+            'T' => $this->GenericArg('T')]);
         return new TStdListListIterator($this, $Index);
     }
 
@@ -1544,8 +1544,8 @@ abstract class TAbstractStack extends TAbstractCollection {
      * @param \FrameworkDSW\Containers\ICollection $Collection <T: T>
      */
     public final function AddAll($Collection) {
-        TType::Object($Collection, array (
-            'ICollection' => array ('T' => $this->GenericArg('T'))));
+        TType::Object($Collection, [
+            ICollection::class => ['T' => $this->GenericArg('T')]]);
         $this->CheckReadOnly();
 
         foreach ($Collection as $Element) {
@@ -1577,7 +1577,7 @@ abstract class TAbstractStack extends TAbstractCollection {
      * @throws EFailedToRemove
      */
     public final function RemoveAll($Collection) {
-        TType::Object($Collection, ['ICollection'=>['T' => $this->GenericArg('T')]]);
+        TType::Object($Collection, [ICollection::class=>['T' => $this->GenericArg('T')]]);
         throw new EFailedToRemove();
     }
 
@@ -1632,9 +1632,9 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      * @param \FrameworkDSW\Containers\TPair $Element <K: K, V: V>
      */
     public function Add($Element) {
-        TType::Type($Element, array (
-            'TPair' => array ('K' => $this->GenericArg('K'),
-                'V' => $this->GenericArg('V'))));
+        TType::Type($Element, [
+            TPair::class => ['K' => $this->GenericArg('K'),
+                'V' => $this->GenericArg('V')]]);
         $this->CheckReadOnly();
         $this->DoPut($Element->Key, $Element->Value);
     }
@@ -1916,9 +1916,9 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      * @param \FrameworkDSW\Containers\IMap $Map <K: K, V: V>
      */
     public function PutAll($Map) {
-        TType::Type($Map, array (
-            'IMap' => array ('K' => $this->GenericArg('K'),
-                'V' => $this->GenericArg('V'))));
+        TType::Object($Map, [
+            IMap::class => ['K' => $this->GenericArg('K'),
+                'V' => $this->GenericArg('V')]]);
         $this->CheckReadOnly();
         $this->DoPutAll($Map);
     }
@@ -2183,8 +2183,8 @@ final class TList extends TAbstractList {
      * @param \FrameworkDSW\Containers\TList $List <T: T>
      */
     public function Swap($List) {
-        TType::Object($List, array (
-            'TList' => array ('T' => $this->GenericArg('T'))));
+        TType::Object($List, [
+            TList::class => ['T' => $this->GenericArg('T')]]);
 
         $mTempList = $this->FList;
         $mTempCapacity = $this->FCapacity;
@@ -2627,7 +2627,7 @@ final class TLinkedList extends TAbstractList {
         TType::Arr($Array);
         TType::Bool($KeepOrder);
 
-        self::PrepareGeneric(array ('T' => self::StaticGenericArg('T')));
+        self::PrepareGeneric(['T' => self::StaticGenericArg('T')]);
         return new TLinkedList($ElementsOwned, $Array, $KeepOrder);
     }
 
@@ -2636,8 +2636,8 @@ final class TLinkedList extends TAbstractList {
      * @param \FrameworkDSW\Containers\TLinkedList $LinkedList <T: T>
      */
     public function Swap($LinkedList) {
-        TType::Object($LinkedList, array (
-            'TLinkedList' => array ('T' => $this->GenericArg('T'))));
+        TType::Object($LinkedList, [
+            TLinkedList::class => ['T' => $this->GenericArg('T')]]);
         $this->CheckReadOnly();
         $LinkedList->CheckReadOnly();
 
@@ -2673,7 +2673,7 @@ final class TLinkedList extends TAbstractList {
      * @return T[]
      */
     public function ToArray() {
-        $mResult = array ();
+        $mResult = [];
         foreach ($this as $mElement) {
             $mResult[] = $mElement;
         }
@@ -2764,7 +2764,7 @@ final class TStack extends TAbstractStack implements IStack {
      * @return T[]
      */
     public function ToArray() {
-        $mResult = array ();
+        $mResult = [];
         foreach ($this->FStack as $mElement) {
             $mResult[] = $mElement;
         }
@@ -2822,7 +2822,7 @@ class TMap extends TAbstractMap {
      *
      * @var array
      */
-    private $FMap = array ();
+    private $FMap = [];
     /**
      *
      * @var boolean
@@ -2865,10 +2865,10 @@ class TMap extends TAbstractMap {
      * @param boolean $ElementsOwned
      */
     public function __construct($ElementsOwned = false) {
-    	$this->PrepareMethodGeneric(array (
-    			'T' => array (
-    					'TPair' => array ('K' => self::StaticGenericArg('K'),
-    							'V' => self::StaticGenericArg('V')))));
+    	$this->PrepareMethodGeneric([
+    			'T' => [
+    					TPair::class => ['K' => self::StaticGenericArg('K'),
+    							'V' => self::StaticGenericArg('V')]]]);
     	parent::__construct($ElementsOwned);
         TType::Bool($ElementsOwned);
 
@@ -2877,7 +2877,7 @@ class TMap extends TAbstractMap {
             $mKClassType = array_keys($mKClassType);
             $mKClassType = $mKClassType[0];
         }
-        if (class_exists($mKClassType, false) && is_subclass_of($mKClassType, 'TRecord')) {
+        if (class_exists($mKClassType, false) && is_subclass_of($mKClassType, TRecord::class)) {
             $this->FKeyType = TMapKeyType::eRecord();
             $this->FDirectKey = false;
             return;
@@ -2924,7 +2924,7 @@ class TMap extends TAbstractMap {
                 }
             }
         }
-        $this->FMap = array ();
+        $this->FMap = [];
     }
 
     /**
@@ -3075,7 +3075,7 @@ class TMap extends TAbstractMap {
         if (empty($this->FMap)) {
             return null;
         }
-        TList::PrepareGeneric(array ('T' => $this->GenericArg('V')));
+        TList::PrepareGeneric(['T' => $this->GenericArg('V')]);
         if (($this->FKeyType == TMapKeyType::eObject()) || ($this->FKeyType == TMapKeyType::eRecord())) {
             $mResult = new TList(count($this->FMap), $this->FElementsOwned);
             foreach ($this->FMap as $mValue) {
@@ -3110,11 +3110,11 @@ class TMap extends TAbstractMap {
      * @return \FrameworkDSW\Containers\IIterator <T: \FrameworkDSW\Containers\TPair<K: K, V: V>>
      */
     public function Iterator() {
-        TStdMapMapIterator::PrepareGeneric(array (
+        TStdMapMapIterator::PrepareGeneric([
             'K' => $this->GenericArg('K'), 'V' => $this->GenericArg('V'),
-            'T' => array (
-                'TPair' => array ('K' => $this->GenericArg('K'),
-                    'V' => $this->GenericArg('V')))));
+            'T' => [
+                TPair::class => ['K' => $this->GenericArg('K'),
+                    'V' => $this->GenericArg('V')]]]);
         return new TStdMapMapIterator($this->FMap, $this->FKeyType);
     }
 }

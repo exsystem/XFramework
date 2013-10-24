@@ -7,10 +7,9 @@
  */
 namespace FrameworkDSW\Linq;
 
+use FrameworkDSW\Containers\IIteratorAggregate;
 use FrameworkDSW\System\IDelegate;
 use FrameworkDSW\System\IInterface;
-use FrameworkDSW\Containers\IIteratorAggregate;
-use FrameworkDSW\System\TObject;
 
 /**
  * \FrameworkDSW\Linq\TAggregateDelegate

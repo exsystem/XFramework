@@ -8,14 +8,15 @@
 namespace FrameworkDSW\Framework;
 
 require_once 'FrameworkDSW/System.php';
+use FrameworkDSW\System\EError;
 use FrameworkDSW\System\EInvalidParameter;
-use FrameworkDSW\System\ESysException;
 use FrameworkDSW\System\TObject;
+
 /**
  * Serialization exception.
  * @author  许子健
  */
-class ESerializationException extends ESysException {
+class ESerializationException extends EError {
 }
 /**
  *
@@ -77,18 +78,18 @@ class Framework extends TObject {
     /**
      * @var    array
      */
-    private static $FStaticTable = array();
+    private static $FStaticTable = [];
     /**
      * @var    array
      */
-    private static $FClassInfo = array();
+    private static $FClassInfo = [];
 
     /**
      * Data Structure:
      * {<TypeNameWithNamespace, UnitPath>} + <*, {UnitPath}>
      * @var array
      */
-    private static $FExternalUnits = array();
+    private static $FExternalUnits = [];
 
     /**
      * Serialize a variable or a class into a string.
@@ -124,8 +125,8 @@ class Framework extends TObject {
             }
         };
 
-        self::$FStaticTable = array();
-        self::$FClassInfo = array();
+        self::$FStaticTable = [];
+        self::$FClassInfo = [];
 
         if (is_resource($Var)) {
             throw new ESerializeResource();
@@ -157,15 +158,15 @@ class Framework extends TObject {
         //        [CLASS_NAME_n => FILE_PATH_OF_CLASS_n]]]]
         //    );
         $mResult = serialize(
-                array(self::CVar => $Var,
-                        self::CStaticTable => self::$FStaticTable));
+                [self::CVar => $Var,
+                        self::CStaticTable => self::$FStaticTable]);
         $mResult = serialize(
-                array(
-                        array(self::CClassInfo => self::$FClassInfo,
-                                self::CContent => $mResult)));
+                [
+                        [self::CClassInfo => self::$FClassInfo,
+                                self::CContent => $mResult]]);
 
-        self::$FStaticTable = array();
-        self::$FClassInfo = array();
+        self::$FStaticTable = [];
+        self::$FClassInfo = [];
 
         return $mResult;
     }
@@ -235,7 +236,7 @@ class Framework extends TObject {
 
     /**
      * Act like FreeAndNil() in VCL.
-     * @param	\FrameworkDSW\System\TObject	$Object
+     * @param \FrameworkDSW\System\TObject $Object
      */
     public static final function Free(&$Object) {
         if ($Object !== null) {
@@ -305,12 +306,12 @@ class Framework extends TObject {
 
     /**
      *
-     * @var    integer
+     * @var integer
      */
     private static $FStartAt = null;
     /**
      *
-     * @var    array
+     * @var array
      */
     private static $FDeclaredClasses = null;
 
@@ -330,9 +331,9 @@ class Framework extends TObject {
 
     /**
      *
-     * @param  array $StaticTable
-     * @param  array $ClassInfo
-     * @param  string $ClassDelimiter
+     * @param array $StaticTable
+     * @param array $ClassInfo
+     * @param string $ClassDelimiter
      * @throws \Exception
      */
     static public function WriteStaticTable(&$StaticTable, &$ClassInfo, $ClassDelimiter) {
@@ -342,7 +343,7 @@ class Framework extends TObject {
 
     	self::$FDeclaredClasses = array_slice(get_declared_classes(), self::$FStartAt);
     	foreach (self::$FDeclaredClasses as $mClass) {
-    		if (/*$mClass[0] == 'T' &&*/ is_subclass_of($mClass, 'System\TObject')) {
+    		if (/*$mClass[0] == 'T' &&*/ is_subclass_of($mClass, TObject::class)) {
     			$mReflection = new \ReflectionClass($mClass);
     			$ClassInfo[$mClass] = $mReflection->getFileName();
 

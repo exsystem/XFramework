@@ -7,20 +7,20 @@
  */
 namespace FrameworkDSW\Reflection;
 
+use FrameworkDSW\Containers\TMap;
+use FrameworkDSW\Database\TPrimitiveParam;
 use FrameworkDSW\Framework\Framework;
-use FrameworkDSW\System\TRecord;
-use FrameworkDSW\System\TString;
+use FrameworkDSW\System\EBadGenericArgsStructure;
+use FrameworkDSW\System\EInvalidParameter;
+use FrameworkDSW\System\IInterface;
+use FrameworkDSW\System\TBoolean;
 use FrameworkDSW\System\TFloat;
 use FrameworkDSW\System\TInteger;
-use FrameworkDSW\System\TBoolean;
-use FrameworkDSW\Database\TPrimitiveParam;
-use FrameworkDSW\System\EBadGenericArgsStructure;
-use FrameworkDSW\Containers\TMap;
-use FrameworkDSW\System\TSet;
-use FrameworkDSW\System\EInvalidParameter;
-use FrameworkDSW\Utilities\EInvalidObjectCasting;
-use FrameworkDSW\System\IInterface;
 use FrameworkDSW\System\TObject;
+use FrameworkDSW\System\TRecord;
+use FrameworkDSW\System\TSet;
+use FrameworkDSW\System\TString;
+use FrameworkDSW\Utilities\EInvalidObjectCasting;
 use FrameworkDSW\Utilities\TType;
 
 /**
@@ -388,7 +388,7 @@ class TClass extends TObject implements IType {
      * @return    T
      */
     public function Cast($Object) {
-        TType::Object($Object, 'FrameworkDSW\System\IInterface');
+        TType::Object($Object, IInterface::class);
         $this->EnsureType();
         if ($Object === null || $Object->IsInstanceOf($this->GenericArg('T'))) {
             return $Object;
@@ -1052,7 +1052,7 @@ final class TField extends TAbstractMember implements IMember {
      * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function __construct($Class, $Name) {
-        TType::Object($Class, ['FrameworkDSW\Reflection\TClass' => ['T'=>null]]); //FIXME !!!!!
+        TType::Object($Class, [TClass::class => ['T'=>null]]); //FIXME !!!!!
         TType::String($Name);
 
         try {
@@ -1148,7 +1148,7 @@ final class TField extends TAbstractMember implements IMember {
      * @return    \FrameworkDSW\System\IInterface
      */
     public function GetValue($Object) {
-        TType::Object($Object, 'FrameworkDSW\System\IInterface');
+        TType::Object($Object, IInterface::class);
         try {
             $mRaw = $this->FMetaInfo->getValue($Object);
             $mType = $this->getType()->getName();
@@ -1187,35 +1187,35 @@ final class TField extends TAbstractMember implements IMember {
      * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function SetValue($Object, $Value) {
-        TType::Object($Object, 'FrameworkDSW\System\IInterface');
-        TType::Object($Value, 'FrameworkDSW\System\IInterface');
+        TType::Object($Object, IInterface::class);
+        TType::Object($Value, IInterface::class);
         try {
             $mType = $this->getType();
             switch ($mType->getName()) {
             case 'boolean':
                 /**@var $Value \FrameworkDSW\System\TBoolean**/
-                TType::Object($Value, 'FrameworkDSW\System\TBoolean');
+                TType::Object($Value, TBoolean::class);
                 $this->FMetaInfo->setValue($Object, $Value->Unbox());
                 break;
             case 'integer':
                 /**@var $Value \FrameworkDSW\System\TInteger**/
-                TType::Object($Value, 'FrameworkDSW\System\TInteger');
+                TType::Object($Value, TInteger::class);
                 $this->FMetaInfo->setValue($Object, $Value->Unbox());
                 break;
             case 'float':
                 /**@var $Value \FrameworkDSW\System\TFloat**/
-                TType::Object($Value, 'FrameworkDSW\System\TFloat');
+                TType::Object($Value, TFloat::class);
                 $this->FMetaInfo->setValue($Object, $Value->Unbox());
                 break;
             case 'string':
                 /**@var $Value \FrameworkDSW\System\TString**/
-                TType::Object($Value, 'FrameworkDSW\System\TString');
+                TType::Object($Value, TString::class);
                 $this->FMetaInfo->setValue($Object, $Value->Unbox());
                 break;
             default:
                 if ($this->getType()->IsArray()) {
                     /**@var $Value \FrameworkDSW\Reflection\TArray**/
-                    TType::Object($Value, 'FrameworkDSW\Reflection\TArray');
+                    TType::Object($Value, TArray::class);
                     $this->FMetaInfo->setValue($Object, $Value->Array);
                 }
                 else {
@@ -1253,7 +1253,7 @@ final class TProperty extends TAbstractMember implements IMember {
      * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function __construct($Class, $Name) {
-        TType::Object($Class, ['FrameworkDSW\Reflection\TClass' => ['T'=>null]]); //FIXME !!!!!
+        TType::Object($Class, [TClass::class => ['T'=>null]]); //FIXME !!!!!
         TType::String($Name);
 
         try {
@@ -1373,7 +1373,7 @@ final class TProperty extends TAbstractMember implements IMember {
      * @return    \FrameworkDSW\System\IInterface
      */
     public function GetValue($Object) {
-        TType::Object($Object, 'FrameworkDSW\System\IInterface');
+        TType::Object($Object, IInterface::class);
         try {
             $mRaw = $this->FGetterMetaInfo->invoke($Object);
             $mType = $this->getType()->getName();
@@ -1412,19 +1412,19 @@ final class TProperty extends TAbstractMember implements IMember {
      * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function SetValue($Object, $Value) {
-        TType::Object($Object, 'FrameworkDSW\System\IInterface');
-        TType::Object($Value, 'FrameworkDSW\System\IInterface');
+        TType::Object($Object, IInterface::class);
+        TType::Object($Value, IInterface::class);
         try {
             $mType = $this->getType();
             switch ($mType->getName()) {
                 case 'boolean':
                     /**@var $Value \FrameworkDSW\System\TBoolean**/
-                    TType::Object($Value, 'FrameworkDSW\System\TBoolean');
+                    TType::Object($Value, TBoolean::class);
                     $this->FSetterMetaInfo->invoke($Object, $Value->Unbox());
                     break;
                 case 'integer':
                     /**@var $Value \FrameworkDSW\System\TInteger**/
-                    TType::Object($Value, 'FrameworkDSW\System\TInteger');
+                    TType::Object($Value, TInteger::class);
                     $this->FSetterMetaInfo->invoke($Object, $Value->Unbox());
                     break;
                 case 'float':
@@ -1434,7 +1434,7 @@ final class TProperty extends TAbstractMember implements IMember {
                     break;
                 case 'string':
                     /**@var $Value \FrameworkDSW\System\TString**/
-                    TType::Object($Value, 'FrameworkDSW\System\TString');
+                    TType::Object($Value, TString::class);
                     $this->FSetterMetaInfo->invoke($Object, $Value->Unbox());
                     break;
                 default:
@@ -1563,27 +1563,27 @@ class TConstructor extends TAbstractMember implements IMember {
             switch ($mType) {
             case 'boolean':
                 /** @var $Parameters \FrameworkDSW\System\TBoolean[] **/
-                TType::Object($Parameters[$mIndex], 'FrameworkDSW\System\TBoolean');
+                TType::Object($Parameters[$mIndex], TBoolean::class);
                 $mRawParameters[$mIndex] = $Parameters[$mIndex]->Unbox();
                 break;
             case 'integer':
                 /** @var $Parameters \FrameworkDSW\System\TInteger[] **/
-                TType::Object($Parameters[$mIndex], 'FrameworkDSW\System\TInteger');
+                TType::Object($Parameters[$mIndex], TInteger::class);
                 $mRawParameters[$mIndex] = $Parameters[$mIndex]->Unbox();
                 break;
             case 'float':
                 /** @var $Parameters \FrameworkDSW\System\TFloat[] **/
-                TType::Object($Parameters[$mIndex], 'FrameworkDSW\System\TFloat');
+                TType::Object($Parameters[$mIndex], TFloat::class);
                 $mRawParameters[$mIndex] = $Parameters[$mIndex]->Unbox();
                 break;
             case 'string':
                 /** @var $Parameters \FrameworkDSW\System\TString[] **/
-                TType::Object($Parameters[$mIndex], 'FrameworkDSW\System\TString');
+                TType::Object($Parameters[$mIndex], TString::class);
                 $mRawParameters[$mIndex] = $Parameters[$mIndex]->Unbox();
                 break;
             case 'array':
                 /** @var $Parameters \FrameworkDSW\Reflection\TArray[] **/
-                TType::Object($Parameters[$mIndex], 'FrameworkDSW\Reflection\TArray');
+                TType::Object($Parameters[$mIndex], TArray::class);
                 $mRawParameters[$mIndex] = $Parameters[$mIndex]->Array;
                 break;
             default:
@@ -1618,7 +1618,7 @@ final class TMethod extends TAbstractMember implements IMember {
      */
     public function __construct($Class, $Name) {
         parent::__construct();
-        TType::Object($Class, ['FrameworkDSW\Reflection\TClass' => ['T' => null]]);
+        TType::Object($Class, [TClass::class => ['T' => null]]);
         TType::String($Name);
 
         $mTemp = $this->SetClass($Class);
@@ -1704,7 +1704,7 @@ final class TMethod extends TAbstractMember implements IMember {
      * @return    \FrameworkDSW\System\IInterface
      */
     public function Invoke($Object, $Parameters) {
-        TType::Object($Object, 'FrameworkDSW\System\IInterface');
+        TType::Object($Object, IInterface::class);
         TType::Arr($Parameters);
 
         $mRawParameters = [];
@@ -1718,27 +1718,27 @@ final class TMethod extends TAbstractMember implements IMember {
             switch ($mType) {
             case 'boolean':
                 /**@var $Parameters \FrameworkDSW\System\TBoolean[]**/
-                TType::Object($Parameters[$mIndex], 'FrameworkDSW\System\TBoolean');
+                TType::Object($Parameters[$mIndex], TBoolean::class);
                 $mRawParameters[$mIndex] = $Parameters[$mIndex]->Unbox();
                 break;
             case 'integer':
                 /**@var $Parameters \FrameworkDSW\System\TInteger[]**/
-                TType::Object($Parameters[$mIndex], 'FrameworkDSW\System\TInteger');
+                TType::Object($Parameters[$mIndex], TInteger::class);
                 $mRawParameters[$mIndex] = $Parameters[$mIndex]->Unbox();
                 break;
             case 'float':
                 /**@var $Parameters \FrameworkDSW\System\TFloat[]**/
-                TType::Object($Parameters[$mIndex], 'FrameworkDSW\System\TFloat');
+                TType::Object($Parameters[$mIndex], TFloat::class);
                 $mRawParameters[$mIndex] = $Parameters[$mIndex]->Unbox();
                 break;
             case 'string':
                 /**@var $Parameters \FrameworkDSW\System\TString[]**/
-                TType::Object($Parameters[$mIndex], 'FrameworkDSW\System\TString');
+                TType::Object($Parameters[$mIndex], TString::class);
                 $mRawParameters[$mIndex] = $Parameters[$mIndex]->Unbox();
                 break;
             case 'array':
                 /**@var $Parameters \FrameworkDSW\Reflection\TArray[]**/
-                TType::Object($Parameters[$mIndex], 'FrameworkDSW\Reflection\TArray');
+                TType::Object($Parameters[$mIndex], TArray::class);
                 $mRawParameters[$mIndex] = $Parameters[$mIndex]->Array;
                 break;
             default:
@@ -1800,7 +1800,7 @@ final class TSignal extends TAbstractMember implements IMember {
      */
     public function __construct($Class, $Name) {
         parent::__construct();
-        TType::Object($Class, ['FrameworkDSW\Reflection\TClass' => ['T' => 'mixed']]);
+        TType::Object($Class, [TClass::class => ['T' => null]]);
         TType::String($Name);
 
         $mClassName = $this->SetClass($Class);
@@ -1858,7 +1858,7 @@ final class TSignal extends TAbstractMember implements IMember {
      * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function DispatchSignal($Object, $Parameters) {
-        TType::PrepareGeneric($Object, 'FrameworkDSW\System\IInterface');
+        TType::PrepareGeneric($Object, IInterface::class);
         TType::Arr($Parameters);
 
         $mRawParameters = [];
@@ -1872,27 +1872,27 @@ final class TSignal extends TAbstractMember implements IMember {
             switch ($mType) {
             case 'boolean':
                 /**@var $Parameters \FrameworkDSW\System\TBoolean[]**/
-                TType::Object($Parameters[$mIndex], 'FrameworkDSW\System\TBoolean');
+                TType::Object($Parameters[$mIndex], TBoolean::class);
                 $mRawParameters[$mIndex] = $Parameters[$mIndex]->Unbox();
                 break;
             case 'integer':
                 /**@var $Parameters \FrameworkDSW\System\TInteger[]**/
-                TType::Object($Parameters[$mIndex], 'FrameworkDSW\System\TInteger');
+                TType::Object($Parameters[$mIndex], TInteger::class);
                 $mRawParameters[$mIndex] = $Parameters[$mIndex]->Unbox();
                 break;
             case 'float':
                 /**@var $Parameters \FrameworkDSW\System\TFloat[]**/
-                TType::Object($Parameters[$mIndex], 'FrameworkDSW\System\TFloat');
+                TType::Object($Parameters[$mIndex], TFloat::class);
                 $mRawParameters[$mIndex] = $Parameters[$mIndex]->Unbox();
                 break;
             case 'string':
                 /**@var $Parameters \FrameworkDSW\System\TString[]**/
-                TType::Object($Parameters[$mIndex], 'FrameworkDSW\System\TString');
+                TType::Object($Parameters[$mIndex], TString::class);
                 $mRawParameters[$mIndex] = $Parameters[$mIndex]->Unbox();
                 break;
             case 'array':
                 /**@var $Parameters \FrameworkDSW\Reflection\TArray[]**/
-                TType::Object($Parameters[$mIndex], 'FrameworkDSW\Reflection\TArray');
+                TType::Object($Parameters[$mIndex], TArray::class);
                 $mRawParameters[$mIndex] = $Parameters[$mIndex]->Array;
                 break;
             default:
@@ -1925,7 +1925,7 @@ final class TSlot extends TAbstractMember implements IMember {
      */
     public function __construct($Class, $Name) {
         parent::__construct();
-        TType::Object($Class, ['FrameworkDSW\Reflection\TClass' => ['T' => 'mixed']]);
+        TType::Object($Class, [TClass::class => ['T' => null]]);
         TType::String($Name);
 
         $mClassName = $this->SetClass($Class);

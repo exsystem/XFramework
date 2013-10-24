@@ -7,17 +7,17 @@
  */
 namespace FrameworkDSW\CoreClasses;
 
+use FrameworkDSW\Containers\EIndexOutOfBounds;
+use FrameworkDSW\Containers\TList;
+use FrameworkDSW\Framework\Framework;
 use FrameworkDSW\System\EException;
+use FrameworkDSW\System\IDelegate;
+use FrameworkDSW\System\IInterface;
 use FrameworkDSW\System\TEnum;
 use FrameworkDSW\System\TObject;
 use FrameworkDSW\System\TSet;
-use FrameworkDSW\System\IDelegate;
-use FrameworkDSW\System\IInterface;
 use FrameworkDSW\Utilities\TSize;
 use FrameworkDSW\Utilities\TType;
-use FrameworkDSW\Containers\TList;
-use FrameworkDSW\Framework\Framework;
-use FrameworkDSW\Containers\EIndexOutOfBounds;
 
 class EComponentErr extends EException {}
 class EInvalidComponentName extends EComponentErr {}
@@ -359,7 +359,7 @@ abstract class TComponent extends TObject implements IComponent {
      */
     public function __construct($Owner = null) {
         parent::__construct();
-        TType::Object($Owner, 'TComponent');
+        TType::Object($Owner, TComponent::class);
 
         if (isset($Owner)) {
             $Owner->InsertComponent($this);
@@ -419,8 +419,8 @@ abstract class TComponent extends TObject implements IComponent {
      * @param	\FrameworkDSW\CoreClasses\TOperation	$Operation
      */
     protected function Notify($Component, $Operation) {
-        TType::Object($Component, 'TComponent');
-        TType::Object($Operation, 'TOperation');
+        TType::Object($Component, TComponent::class);
+        TType::Object($Operation, TOperation::class);
 
         if (isset($this->FComponents)) {
             foreach ($this->FComponents as $mComponent) {
@@ -434,7 +434,7 @@ abstract class TComponent extends TObject implements IComponent {
      * @param	\FrameworkDSW\CoreClasses\IComponent	$Component
      */
     public function InsertComponent($Component) {
-        TType::Object($Component, 'TComponent');
+        TType::Object($Component, TComponent::class);
 
         if (isset($Component->FOwner)) {
             $Component->FOwner->Remove($Component);
@@ -448,7 +448,7 @@ abstract class TComponent extends TObject implements IComponent {
      * @param	\FrameworkDSW\CoreClasses\IComponent	$Component
      */
     public function RemoveComponent($Component) {
-        TType::Object($Component, 'TComponent');
+        TType::Object($Component, TComponent::class);
 
         $this->Notify($Component, TOperation::eRemove());
         $this->Remove($Component);
