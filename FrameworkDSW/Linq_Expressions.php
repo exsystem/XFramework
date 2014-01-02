@@ -2214,7 +2214,7 @@ final class TMethodCallExpression extends TExpression {
      *
      * @var array
      */
-    private $FMethod = array();
+    private $FMethod = [];
     /**
      *
      * @var \FrameworkDSW\Linq\Expressions\TExpression

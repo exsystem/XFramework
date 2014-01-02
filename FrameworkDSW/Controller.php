@@ -7,12 +7,13 @@
  */
 namespace FrameworkDSW\Controller;
 
+use FrameworkDSW\Containers\ENoSuchKey;
 use FrameworkDSW\Containers\TLinkedList;
 use FrameworkDSW\Containers\TMap;
 use FrameworkDSW\Containers\TPair;
 use FrameworkDSW\CoreClasses\IView;
 use FrameworkDSW\Framework\Framework;
-use FrameworkDSW\System\EInvalidParameter;
+use FrameworkDSW\System\EException;
 use FrameworkDSW\System\IDelegate;
 use FrameworkDSW\System\IInterface;
 use FrameworkDSW\System\TDelegate;
@@ -152,6 +153,186 @@ interface IControllerManager extends IInterface {
 }
 
 /**
+ * ENoSuchAction
+ * @author 许子健
+ */
+class ENoSuchAction extends EException {
+
+    /**
+     * @var string
+     */
+    private $FActionName = '';
+    /**
+     * @var string
+     */
+    private $FControllerName = '';
+
+    /**
+     * descHere
+     * @param string $Message
+     * @param \FrameworkDSW\System\EException $Previous
+     * @param string $ControllerName
+     * @param string $ActionName
+     */
+    public function __construct($Message, $Previous = null, $ControllerName, $ActionName) {
+        parent::__construct($Message, $Previous);
+        TType::String($Message);
+        TType::Object($Previous, EException::class);
+        TType::String($ControllerName);
+        TType::String($ActionName);
+
+        $this->FControllerName = $ControllerName;
+        $this->FActionName     = $ActionName;
+    }
+
+    /**
+     * descHere
+     * @return string
+     */
+    public function getActionName() {
+        return $this->FActionName;
+    }
+
+    /**
+     * descHere
+     * @return string
+     */
+    public function getControllerName() {
+        return $this->FControllerName;
+    }
+}
+
+/**
+ * ENoSuchActionModelPair
+ * @author 许子健
+ */
+class ENoSuchActionModelPair extends EException {
+
+    /**
+     * @var string
+     */
+    private $FActionName = '';
+    /**
+     * @var string
+     */
+    private $FControllerName = '';
+    /**
+     * @var \FrameworkDSW\Controller\IModel
+     */
+    private $FModel = null;
+
+    /**
+     * descHere
+     * @param string $Message
+     * @param \FrameworkDSW\System\EException $Previous
+     * @param string $ControllerName
+     * @param string $ActionName
+     * @param \FrameworkDSW\Controller\IModel $Model
+     */
+    public function __construct($Message, $Previous = null, $ControllerName, $ActionName, $Model) {
+        parent::__construct($Message, $Previous);
+        TType::String($Message);
+        TType::Object($Previous, EException::class);
+        TType::String($ControllerName);
+        TType::String($ActionName);
+        TType::Object($Model, IModel::class);
+
+        $this->FControllerName = $ControllerName;
+        $this->FActionName     = $ActionName;
+        $this->FModel          = $Model;
+    }
+
+    /**
+     * descHere
+     * @return string
+     */
+    public function getActionName() {
+        return $this->FActionName;
+    }
+
+    /**
+     * descHere
+     * @return string
+     */
+    public function getControllerName() {
+        return $this->FControllerName;
+    }
+
+    /**
+     * descHere
+     * @return \FrameworkDSW\Controller\IModel
+     */
+    public function getModel() {
+        return $this->FModel;
+    }
+}
+
+/**
+ * ENoSuchActionViewPair
+ * @author 许子健
+ */
+class ENoSuchActionViewPair extends EException {
+
+    /**
+     * @var string
+     */
+    private $FActionName = '';
+    /**
+     * @var string
+     */
+    private $FControllerName = '';
+    /**
+     * @var \FrameworkDSW\CoreClasses\IView
+     */
+    private $FView = null;
+
+    /**
+     * descHere
+     * @param string $Message
+     * @param \FrameworkDSW\System\EException $Previous
+     * @param string $ControllerName
+     * @param string $ActionName
+     * @param \FrameworkDSW\CoreClasses\IView $View
+     */
+    public function __construct($Message, $Previous = null, $ControllerName, $ActionName, $View) {
+        parent::__construct($Message, $Previous);
+        TType::String($Message);
+        TType::Object($Previous, EException::class);
+        TType::String($ControllerName);
+        TType::String($ActionName);
+        TType::Object($View, IView::class);
+
+        $this->FControllerName = $ControllerName;
+        $this->FActionName     = $ActionName;
+        $this->FView           = $View;
+    }
+
+    /**
+     * descHere
+     * @return string
+     */
+    public function getActionName() {
+        return $this->FActionName;
+    }
+
+    /**
+     * descHere
+     * @return string
+     */
+    public function getControllerName() {
+        return $this->FControllerName;
+    }
+
+    /**
+     * descHere
+     * @return \FrameworkDSW\CoreClasses\IView
+     */
+    public function getView() {
+        return $this->FView;
+    }
+}
+
+/**
  * \FrameworkDSW\Controller\TControllerManager
  *
  * @author 许子健
@@ -177,7 +358,7 @@ class TControllerManager extends TObject implements IControllerManager {
         TMap::PrepareGeneric(['K' => 'array', 'V' => IModel::class]);
         $this->FBinding = new TMap();
         TMap::PrepareGeneric(['K' => 'array',
-            'V' => [TLinkedList::class => ['T' => IView::class]]]);
+                              'V' => [TLinkedList::class => ['T' => IView::class]]]);
         $this->FRegistration = new TMap();
     }
 
@@ -200,25 +381,25 @@ class TControllerManager extends TObject implements IControllerManager {
      *
      * @param mixed $Action
      * @param \FrameworkDSW\Controller\IModel $Model
-     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @throws ENoSuchAction
      */
     public function Bind($Action, $Model) {
         TType::Object($Model, IModel::class);
-        $mController = (string) $Action[0];
-        $mAction = (string) $Action[1];
+        $mController = (string)$Action[0];
+        $mAction     = (string)$Action[1];
 
         TType::MetaClass($mController);
         try {
             new \ReflectionMethod($mController, "Action{$mAction}");
         }
         catch (\ReflectionException $Ex) {
-            throw new EInvalidParameter();
+            throw new ENoSuchAction(sprintf('No such action: action %s in controller %s is undefined. Model binding failed.', $mAction, $mController), null, $mController, $mAction);
         }
 
-        if ($this->FBinding->ContainsKey($Action)) {
+        try {
             $this->FBinding[$Action] = $Model;
         }
-        else {
+        catch (ENoSuchKey $Ex) {
             $this->FBinding->Put($Action, $Model);
         }
         $Model->setNotify(new TDelegate([$this, 'Notify'], TOnModelNotify::class));
@@ -267,9 +448,9 @@ class TControllerManager extends TObject implements IControllerManager {
         TType::Object($Model, IModel::class);
         foreach ($this->FBinding as $mAction => $mModel) {
             if ($mModel === $Model) {
-                $mController = $mAction[0];
+                $mController   = $mAction[0];
                 $mNotifyMethod = "Notify{$mAction[1]}";
-                $mNotify = false;
+                $mNotify       = false;
                 if (is_callable([$mController, $mNotifyMethod])) {
                     $mNotify = $mController::$mNotifyMethod($Model);
                 }
@@ -284,26 +465,48 @@ class TControllerManager extends TObject implements IControllerManager {
      * descHere
      *
      * @param mixed $Action
+     * @throws ENoSuchActionViewPair
+     */
+    public function Update($Action) {
+        $mController   = $Action[0];
+        $mActionMethod = "Action{$Action[1]}";
+        try {
+            $mRegistration = $this->FRegistration[$Action];
+            $mViewData     = $mController::$mActionMethod($this->FBinding[$Action]);
+            foreach ($mRegistration as $mView) {
+                $mView->Update($mViewData);
+            }
+            Framework::Free($mViewData);
+        }
+        catch (ENoSuchKey $Ex) {
+            throw new ENoSuchActionViewPair(sprintf('No such action registered: action %s in controller %s. Update failed.', $Action[1], $Action[0]), $Ex, $Action[0], $Action[1], null);
+        }
+    }
+
+    /**
+     * descHere
+     *
+     * @param mixed $Action
      * @param \FrameworkDSW\CoreClasses\IView $View
-     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @throws ENoSuchAction
      */
     public function Register($Action, $View) {
         TType::Object($View, IView::class);
-        $mController = (string) $Action[0];
-        $mAction = (string) $Action[1];
+        $mController = (string)$Action[0];
+        $mAction     = (string)$Action[1];
 
         TType::MetaClass($mController);
         try {
             new \ReflectionMethod($mController, "Action{$mAction}");
         }
         catch (\ReflectionException $Ex) {
-            throw new EInvalidParameter();
+            throw new ENoSuchAction(sprintf('No such action: action %s in controller %s is undefined. View registration failed.', $mAction, $mController), null, $mController, $mAction);
         }
 
-        if ($this->FRegistration->ContainsKey($Action)) {
+        try {
             $this->FRegistration[$Action]->Add($View);
         }
-        else {
+        catch (ENoSuchKey $Ex) {
             TLinkedList::PrepareGeneric(['T' => IView::class]);
             $this->FRegistration->Put($Action, new TLinkedList(false, [
                 $View]));
@@ -316,30 +519,31 @@ class TControllerManager extends TObject implements IControllerManager {
      *
      * @param mixed $Action
      * @param \FrameworkDSW\Controller\IModel $Model
-     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @throws ENoSuchAction
+     * @throws ENoSuchActionModelPair
      */
     public function Unbind($Action, $Model) {
         TType::Object($Model, IModel::class);
-        $mController = (string) $Action[0];
-        $mAction = (string) $Action[1];
+        $mController = (string)$Action[0];
+        $mAction     = (string)$Action[1];
 
         TType::MetaClass($mController);
         try {
             new \ReflectionMethod($mController, "Action{$mAction}");
         }
         catch (\ReflectionException $Ex) {
-            throw new EInvalidParameter();
+            throw new ENoSuchAction(sprintf('No such action: action %s in controller %s is undefined. Model unbinding failed.', $mAction, $mController), null, $mController, $mAction);
         }
 
-        $mPair = new TPair();
-        $mPair->Key = $Action;
+        $mPair        = new TPair();
+        $mPair->Key   = $Action;
         $mPair->Value = $Model;
 
-        if ($this->FBinding->Contains($mPair)) {
+        try {
             $this->FBinding->Delete($Action);
         }
-        else {
-            throw new EInvalidParameter();
+        catch (ENoSuchKey $Ex) {
+            throw new ENoSuchActionModelPair(sprintf('No such action model pair: action %s in controller %s is unbind with the model. Model unbinding failed.', $mAction, $mController), $Ex, $mController, $mAction, $Model);
         }
     }
 
@@ -348,48 +552,27 @@ class TControllerManager extends TObject implements IControllerManager {
      *
      * @param mixed $Action
      * @param \FrameworkDSW\CoreClasses\IView $View
-     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @throws ENoSuchAction
+     * @throws ENoSuchActionViewPair
      */
     public function Unregister($Action, $View) {
         TType::Object($View, IView::class);
-        $mController = (string) $Action[0];
-        $mAction = (string) $Action[1];
+        $mController = (string)$Action[0];
+        $mAction     = (string)$Action[1];
 
         TType::MetaClass($mController);
         try {
             new \ReflectionMethod($mController, "Action{$mAction}");
         }
         catch (\ReflectionException $Ex) {
-            throw new EInvalidParameter();
+            throw new ENoSuchAction(sprintf('No such action: action %s in controller %s is undefined. View unregistration failed.', $mAction, $mController), null, $mController, $mAction);
         }
 
-        if ($this->FRegistration->ContainsKey($Action)) {
+        try {
             $this->FRegistration[$Action]->Remove($View);
         }
-        else {
-            throw new EInvalidParameter();
-        }
-    }
-
-    /**
-     * descHere
-     *
-     * @param mixed $Action
-     * @throws \FrameworkDSW\System\EInvalidParameter
-     */
-    public function Update($Action) {
-        $mController = $Action[0];
-        $mActionMethod = "Action{$Action[1]}";
-        if ($this->FRegistration->ContainsKey($Action)) {
-            $mRegistration = $this->FRegistration[$Action];
-            $mViewData = $mController::$mActionMethod($this->FBinding[$Action]);
-            foreach ($mRegistration as $mView) {
-                $mView->Update($mViewData);
-            }
-            Framework::Free($mViewData);
-        }
-        else {
-            throw new EInvalidParameter();
+        catch (ENoSuchKey $Ex) {
+            throw new ENoSuchActionViewPair(sprintf('No such action view pair: action %s in controller %s is unregistered with the view. ', $mAction, $mController), $Ex, $mController, $mAction, $View);
         }
     }
 }

@@ -57,9 +57,9 @@ class TWebTheme extends TObject {
         TType::String($ThemePath);
         TType::String($ThemeUrl);
 
-        $this->FName = $Name;
+        $this->FName      = $Name;
         $this->FThemePath = $ThemePath;
-        $this->FThemeUrl = $ThemeUrl;
+        $this->FThemeUrl  = $ThemeUrl;
     }
 
     /**
@@ -121,6 +121,7 @@ class TWebThemeManager extends TObject {
      */
     public static function getTheme($Name) {
         TType::String($Name);
+
         //if (in_array($Name, self::$FThemes, true)) {
         return new TWebTheme($Name, self::$FThemesPath . $Name . '/', self::$FThemesUrl . $Name . '/');
         //}
@@ -229,10 +230,10 @@ class TWebPage extends TComponent implements IView {
         TType::Object($Theme, TWebTheme::class);
         TType::String($MasterPage);
 
-        $this->FTemplate = $Template;
-        $this->FTheme = $Theme;
+        $this->FTemplate   = $Template;
+        $this->FTheme      = $Theme;
         $this->FMasterPage = $MasterPage;
-        $this->FRouter = $Router;
+        $this->FRouter     = $Router;
 
         if ($Theme != null) {
             $this->FThemeUrl = $this->FTheme->getThemeUrl();
@@ -258,7 +259,7 @@ class TWebPage extends TComponent implements IView {
      *            array('key0' => 'value0', ...)
      * @return string
      */
-    public function Action($Action, $Parameters = array()) {
+    public function Action($Action, $Parameters = []) {
         TType::Arr($Action);
 
         $mParameters = null;
@@ -266,7 +267,7 @@ class TWebPage extends TComponent implements IView {
             TMap::PrepareGeneric(['K' => 'string', 'V' => 'string']);
             $mParameters = new TMap();
             foreach ($Parameters as $mKey => &$mValue) {
-                $mParameters->Put((string) $mKey, (string) $mValue);
+                $mParameters->Put((string)$mKey, (string)$mValue);
             }
         }
 
@@ -281,6 +282,7 @@ class TWebPage extends TComponent implements IView {
      */
     public function Css($Name) {
         TType::String($Name);
+
         return "{$this->FThemeUrl}Style/{$Name}.css";
     }
 
@@ -337,6 +339,7 @@ class TWebPage extends TComponent implements IView {
      */
     public function Js($Name) {
         TType::String($Name);
+
         return "{$this->FThemeUrl}Script/{$Name}.js";
     }
 
@@ -403,16 +406,16 @@ class TJsonView extends TComponent implements IView {
     public function Update($ViewData) {
         TType::Object($ViewData, [IMap::class => ['K' => 'string', 'V' => IInterface::class]]);
 
-        $mResult = null;
-        $mStatusStack = [];
+        $mResult        = null;
+        $mStatusStack   = [];
         $mStatusStack[] = [self::CData => $ViewData, self::CInsertionPoint => &$mResult];
 
         while (count($mStatusStack) > 0) {
             unset($mCurrentStatus);
             $mCurrentStatus = array_pop($mStatusStack);
 
-            $mCurrentData = &$mCurrentStatus[self::CData];
-            $mCurrentInsertionPoint = &$mCurrentStatus[self::CInsertionPoint];
+            $mCurrentData           = & $mCurrentStatus[self::CData];
+            $mCurrentInsertionPoint = & $mCurrentStatus[self::CInsertionPoint];
 
             if (is_scalar($mCurrentData) || $mCurrentData === null) {
                 $mCurrentInsertionPoint = $mCurrentData;
@@ -431,8 +434,8 @@ class TJsonView extends TComponent implements IView {
                     throw new EInvalidParameter();
                 }
                 unset($mInsertionPoint);
-                $mInsertionPoint = &$mCurrentInsertionPoint[$mCurrentData->Key];
-                $mStatusStack[] = [self::CData => $mCurrentData->Value, self::CInsertionPoint => &$mInsertionPoint];
+                $mInsertionPoint = & $mCurrentInsertionPoint[$mCurrentData->Key];
+                $mStatusStack[]  = [self::CData => $mCurrentData->Value, self::CInsertionPoint => &$mInsertionPoint];
             }
             elseif ($mCurrentData instanceof IList || is_array($mCurrentData)) {
                 unset($mArray);
@@ -440,8 +443,8 @@ class TJsonView extends TComponent implements IView {
                 foreach ($mCurrentData as $Item) {
                     unset($mInsertionPoint);
                     $mInsertionPoint = null;
-                    $mArray[] = &$mInsertionPoint;
-                    $mStatusStack[] = [self::CData => $Item, self::CInsertionPoint => &$mInsertionPoint];
+                    $mArray[]        = & $mInsertionPoint;
+                    $mStatusStack[]  = [self::CData => $Item, self::CInsertionPoint => &$mInsertionPoint];
                 }
                 $mCurrentInsertionPoint = $mArray;
             }
@@ -450,9 +453,9 @@ class TJsonView extends TComponent implements IView {
                 $mArray = [];
                 foreach ($mCurrentData as $mItemKey => $mItemData) {
                     unset($mInsertionPoint);
-                    $mInsertionPoint = null;
-                    $mArray[$mItemKey] = &$mInsertionPoint;
-                    $mStatusStack[] = [self::CData => $mItemData, self::CInsertionPoint => &$mInsertionPoint];
+                    $mInsertionPoint   = null;
+                    $mArray[$mItemKey] = & $mInsertionPoint;
+                    $mStatusStack[]    = [self::CData => $mItemData, self::CInsertionPoint => &$mInsertionPoint];
                 }
                 if (count($mArray) == 0) {
                     $mCurrentInsertionPoint = new \stdClass();

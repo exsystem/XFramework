@@ -1,14 +1,24 @@
 <?php
-require_once 'FrameworkDSW/Database_Mysql.php';
 
-require_once 'PHPUnit/Framework/TestCase.php';
+set_include_path(get_include_path() . PATH_SEPARATOR . '../../');
+
+use FrameworkDSW\Containers\TMap;
+use FrameworkDSW\Database\EExecuteFailed;
+use FrameworkDSW\Database\Mysql\TMysqlConnection;
+use FrameworkDSW\Database\Mysql\TMysqlDriver;
+use FrameworkDSW\Database\TConcurrencyType;
+use FrameworkDSW\Database\TResultSetType;
+use FrameworkDSW\Framework\Framework;
+use FrameworkDSW\System\TString;
+
+require_once 'FrameworkDSW/Framework.php';
 require_once 'Tests/UnitTest/helper.php';
 
 /**
  * TMysqlConnection test case.
  */
 class TMysqlConnectionTest extends PHPUnit_Framework_TestCase {
-    
+
     /**
      * @var TMysqlConnection
      */
@@ -19,20 +29,20 @@ class TMysqlConnectionTest extends PHPUnit_Framework_TestCase {
      */
     protected function setUp() {
         parent::setUp();
-        
+
         $mDriver = new TMysqlDriver();
-        TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'string'));
-        $mConfig = new TMap();
-        $mConfig['Username'] = 'root';
-        $mConfig['Password'] = '';
+        TMap::PrepareGeneric(array('K' => 'string', 'V' => 'string'));
+        $mConfig                   = new TMap();
+        $mConfig['Username']       = 'root';
+        $mConfig['Password']       = '';
         $mConfig['ConnectTimeout'] = '2';
-        
+
         $this->TMysqlConnection = $mDriver->Connect('MySQL://localhost/test', $mConfig);
-        
-        $mDropDDL = <<<'EOD'
+
+        $mDropDDL     = <<<'EOD'
 DROP TABLE IF EXISTS `tmysqlconnectiontest`
 EOD;
-        $mCreateDDL = <<<'EOD'
+        $mCreateDDL   = <<<'EOD'
 CREATE TABLE IF NOT EXISTS `tmysqlconnectiontest` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `_int` int(11) NOT NULL,
@@ -46,7 +56,7 @@ EOD;
         $mTruncateDDL = <<<'EOD'
 TRUNCATE TABLE `tmysqlconnectiontest`
 EOD;
-        
+
         $this->TMysqlConnection->Execute($mDropDDL);
         $this->TMysqlConnection->Execute($mCreateDDL);
         $this->TMysqlConnection->Execute($mTruncateDDL);
@@ -73,9 +83,9 @@ EOD;
     public function testPushWarning() {
         // TODO Auto-generated TMysqlConnectionTest::testPushWarning()
         $this->markTestIncomplete("PushWarning test not implemented");
-        
-        TMysqlConnection::PushWarning(/* parameters */);
-    
+
+        TMysqlConnection::PushWarning( /* parameters */);
+
     }
 
     /**
@@ -99,8 +109,8 @@ EOD;
         $mWarning = $this->TMysqlConnection->getWarnings()->getNextWarning();
         $this->TMysqlConnection->ClearWarnings();
         $this->assertNull($this->TMysqlConnection->getWarnings());
-    
-     //$this->assertNull($mWarning); this will lead into a dead loop, print_r($mWarning) is called by PHPUnit.
+
+        //$this->assertNull($mWarning); this will lead into a dead loop, print_r($mWarning) is called by PHPUnit.
     }
 
     /**
@@ -113,23 +123,23 @@ EOD;
         $this->TMysqlConnection->Commit();
         $mStmt = $this->TMysqlConnection->CreateStatement(TResultSetType::eForwardOnly(), TConcurrencyType::eReadOnly());
         $mStmt->setCommand("select `_vchar` from `tmysqlconnectiontest`");
-        $mData = $mStmt->FetchAsScalar();
-        $mResult = $mData->getValue();
+        $mData   = $mStmt->FetchAsScalar();
+        $mResult = $mData->Unbox();
         logging($mResult);
-        
+
         $this->TMysqlConnection->setAutoCommit(false);
         $mNum = $this->TMysqlConnection->Execute("update `tmysqlconnectiontest` set `_vchar` = 'FAILED!' where `id` = 10");
         logging($mNum);
         $mStmt = $this->TMysqlConnection->CreateStatement(TResultSetType::eForwardOnly(), TConcurrencyType::eReadOnly());
         $mStmt->setCommand("select `_vchar` from `tmysqlconnectiontest`");
-        $mData = $mStmt->FetchAsScalar();
-        $mResult = $mData->getValue();
+        $mData   = $mStmt->FetchAsScalar();
+        $mResult = $mData->Unbox();
         logging($mResult);
         $this->TMysqlConnection->Rollback();
         $mStmt = $this->TMysqlConnection->CreateStatement(TResultSetType::eForwardOnly(), TConcurrencyType::eReadOnly());
         $mStmt->setCommand("select `_vchar` from `tmysqlconnectiontest`");
-        $mData = $mStmt->FetchAsScalar();
-        $mResult = $mData->getValue();
+        $mData   = $mStmt->FetchAsScalar();
+        $mResult = $mData->Unbox();
         logging($mResult);
     }
 
@@ -143,11 +153,11 @@ EOD;
         $this->TMysqlConnection->Execute("update `tmysqlconnectiontest` set `_vchar`='CHINA' where `id`=10");
         $mSvpt2 = $this->TMysqlConnection->CreateSavepoint('NamedSvpt');
         $this->TMysqlConnection->Rollback($mSvpt);
-        
+
         $mStmt = $this->TMysqlConnection->CreateStatement(TResultSetType::eForwardOnly(), TConcurrencyType::eReadOnly());
         $mStmt->setCommand("select `_vchar` from `tmysqlconnectiontest`");
-        $mData = $mStmt->FetchAsScalar();
-        $mResult = $mData->getValue();
+        $mData   = $mStmt->FetchAsScalar();
+        $mResult = $mData->Unbox();
         logging($mResult);
         Framework::Free($mStmt);
     }
@@ -159,29 +169,28 @@ EOD;
         for ($i = 1; $i < 5; ++$i) {
             $this->TMysqlConnection->Execute("insert into `tmysqlconnectiontest` values({$i}, 10, 1, '中国hi', 20.5)");
         }
-        
+
         $mStmt = $this->TMysqlConnection->CreateStatement(TResultSetType::eScrollSensitive(), TConcurrencyType::eUpdatable());
-        $mRs = $mStmt->Query('select * from tmysqlconnectiontest');
+        $mRs   = $mStmt->Query('select * from tmysqlconnectiontest');
         logging("<<<<");
-        
+
         foreach ($mRs as $mRow) {
-            $mRow['id']->getValue();
-            $mRow['_int']->getValue();
-            $mRow['_bool']->getValue();
-            $mRow['_vchar']->getValue();
-            $mRow['_float']->getValue();
-            
-            TPrimitiveParam::PrepareGeneric(array ('T' => 'string'));
-            $mRow['_vchar'] = new TPrimitiveParam('修改过了！Modified');
-            $mRow->Update();            
-        /*
-                logging($mRow['id']->getValue());
-                logging($mRow['_int']->getValue());
-                logging($mRow['_bool']->getValue());
-                logging($mRow['_vchar']->getValue());
-                logging(">>{$mRow['_vchar']->getValue()}<<");
-                logging($mRow['_float']->getValue());
-                */
+            $mRow['id']->Unbox();
+            $mRow['_int']->Unbox();
+            $mRow['_bool']->Unbox();
+            $mRow['_vchar']->Unbox();
+            $mRow['_float']->Unbox();
+
+            $mRow['_vchar'] = new TString('修改过了！Modified');
+            $mRow->Update();
+            /*
+                    logging($mRow['id']->getValue());
+                    logging($mRow['_int']->getValue());
+                    logging($mRow['_bool']->getValue());
+                    logging($mRow['_vchar']->getValue());
+                    logging(">>{$mRow['_vchar']->getValue()}<<");
+                    logging($mRow['_float']->getValue());
+                    */
         }
         logging(">>>>");
         Framework::Free($mRs);
@@ -194,9 +203,9 @@ EOD;
     public function testDisconnect() {
         // TODO Auto-generated TMysqlConnectionTest->testDisconnect()
         $this->markTestIncomplete("Disconnect test not implemented");
-        
-        $this->TMysqlConnection->Disconnect(/* parameters */);
-    
+
+        $this->TMysqlConnection->Disconnect( /* parameters */);
+
     }
 
     /**
@@ -205,9 +214,9 @@ EOD;
     public function testExecute() {
         // TODO Auto-generated TMysqlConnectionTest->testExecute()
         $this->markTestIncomplete("Execute test not implemented");
-        
-        $this->TMysqlConnection->Execute(/* parameters */);
-    
+
+        $this->TMysqlConnection->Execute( /* parameters */);
+
     }
 
     /**
@@ -216,9 +225,9 @@ EOD;
     public function testGetAutoCommit() {
         // TODO Auto-generated TMysqlConnectionTest->testGetAutoCommit()
         $this->markTestIncomplete("getAutoCommit test not implemented");
-        
-        $this->TMysqlConnection->getAutoCommit(/* parameters */);
-    
+
+        $this->TMysqlConnection->getAutoCommit( /* parameters */);
+
     }
 
     /**
@@ -227,9 +236,9 @@ EOD;
     public function testGetCatalog() {
         // TODO Auto-generated TMysqlConnectionTest->testGetCatalog()
         $this->markTestIncomplete("getCatalog test not implemented");
-        
-        $this->TMysqlConnection->getCatalog(/* parameters */);
-    
+
+        $this->TMysqlConnection->getCatalog( /* parameters */);
+
     }
 
     /**
@@ -238,9 +247,9 @@ EOD;
     public function testGetHoldability() {
         // TODO Auto-generated TMysqlConnectionTest->testGetHoldability()
         $this->markTestIncomplete("getHoldability test not implemented");
-        
-        $this->TMysqlConnection->getHoldability(/* parameters */);
-    
+
+        $this->TMysqlConnection->getHoldability( /* parameters */);
+
     }
 
     /**
@@ -249,9 +258,9 @@ EOD;
     public function testGetIsConnected() {
         // TODO Auto-generated TMysqlConnectionTest->testGetIsConnected()
         $this->markTestIncomplete("getIsConnected test not implemented");
-        
-        $this->TMysqlConnection->getIsConnected(/* parameters */);
-    
+
+        $this->TMysqlConnection->getIsConnected( /* parameters */);
+
     }
 
     /**
@@ -260,9 +269,9 @@ EOD;
     public function testGetMetaData() {
         // TODO Auto-generated TMysqlConnectionTest->testGetMetaData()
         $this->markTestIncomplete("getMetaData test not implemented");
-        
-        $this->TMysqlConnection->getMetaData(/* parameters */);
-    
+
+        $this->TMysqlConnection->getMetaData( /* parameters */);
+
     }
 
     /**
@@ -271,9 +280,9 @@ EOD;
     public function testGetReadOnly() {
         // TODO Auto-generated TMysqlConnectionTest->testGetReadOnly()
         $this->markTestIncomplete("getReadOnly test not implemented");
-        
-        $this->TMysqlConnection->getReadOnly(/* parameters */);
-    
+
+        $this->TMysqlConnection->getReadOnly( /* parameters */);
+
     }
 
     /**
@@ -290,9 +299,9 @@ EOD;
     public function testGetWarnings() {
         // TODO Auto-generated TMysqlConnectionTest->testGetWarnings()
         $this->markTestIncomplete("getWarnings test not implemented");
-        
-        $this->TMysqlConnection->getWarnings(/* parameters */);
-    
+
+        $this->TMysqlConnection->getWarnings( /* parameters */);
+
     }
 
     /**
@@ -301,9 +310,9 @@ EOD;
     public function testPrepareStatement() {
         // TODO Auto-generated TMysqlConnectionTest->testPrepareStatement()
         $this->markTestIncomplete("PrepareStatement test not implemented");
-        
-        $this->TMysqlConnection->PrepareStatement(/* parameters */);
-    
+
+        $this->TMysqlConnection->PrepareStatement( /* parameters */);
+
     }
 
     /**
@@ -312,9 +321,9 @@ EOD;
     public function testRemoveSavepoint() {
         // TODO Auto-generated TMysqlConnectionTest->testRemoveSavepoint()
         $this->markTestIncomplete("RemoveSavepoint test not implemented");
-        
-        $this->TMysqlConnection->RemoveSavepoint(/* parameters */);
-    
+
+        $this->TMysqlConnection->RemoveSavepoint( /* parameters */);
+
     }
 
     /**
@@ -323,8 +332,8 @@ EOD;
     public function testRollback() {
         // TODO Auto-generated TMysqlConnectionTest->testRollback()
         $this->markTestIncomplete("Rollback test not implemented");
-        
-        $this->TMysqlConnection->Rollback(/* parameters */);
+
+        $this->TMysqlConnection->Rollback( /* parameters */);
     }
 
     /**
@@ -333,9 +342,9 @@ EOD;
     public function testSetAutoCommit() {
         // TODO Auto-generated TMysqlConnectionTest->testSetAutoCommit()
         $this->markTestIncomplete("setAutoCommit test not implemented");
-        
-        $this->TMysqlConnection->setAutoCommit(/* parameters */);
-    
+
+        $this->TMysqlConnection->setAutoCommit( /* parameters */);
+
     }
 
     /**
@@ -344,9 +353,9 @@ EOD;
     public function testSetCatalog() {
         // TODO Auto-generated TMysqlConnectionTest->testSetCatalog()
         $this->markTestIncomplete("setCatalog test not implemented");
-        
-        $this->TMysqlConnection->setCatalog(/* parameters */);
-    
+
+        $this->TMysqlConnection->setCatalog( /* parameters */);
+
     }
 
     /**
@@ -355,9 +364,9 @@ EOD;
     public function testSetHoldability() {
         // TODO Auto-generated TMysqlConnectionTest->testSetHoldability()
         $this->markTestIncomplete("setHoldability test not implemented");
-        
-        $this->TMysqlConnection->setHoldability(/* parameters */);
-    
+
+        $this->TMysqlConnection->setHoldability( /* parameters */);
+
     }
 
     /**
@@ -366,9 +375,9 @@ EOD;
     public function testSetReadOnly() {
         // TODO Auto-generated TMysqlConnectionTest->testSetReadOnly()
         $this->markTestIncomplete("setReadOnly test not implemented");
-        
-        $this->TMysqlConnection->setReadOnly(/* parameters */);
-    
+
+        $this->TMysqlConnection->setReadOnly( /* parameters */);
+
     }
 
     /**
@@ -377,9 +386,9 @@ EOD;
     public function testSetTransactionIsolation() {
         // TODO Auto-generated TMysqlConnectionTest->testSetTransactionIsolation()
         $this->markTestIncomplete("setTransactionIsolation test not implemented");
-        
-        $this->TMysqlConnection->setTransactionIsolation(/* parameters */);
-    
+
+        $this->TMysqlConnection->setTransactionIsolation( /* parameters */);
+
     }
 
 }

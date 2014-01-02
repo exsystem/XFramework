@@ -6,10 +6,9 @@
  * @since   separate file since reversion 1
  */
 namespace FrameworkDSW\System;
+
 use FrameworkDSW\Reflection\TClass;
-use FrameworkDSW\Utilities\EInvalidDelegateCasting;
 use FrameworkDSW\Utilities\EInvalidStringCasting;
-use FrameworkDSW\Utilities\EInvalidTypeCasting;
 use FrameworkDSW\Utilities\TType;
 
 /**
@@ -46,6 +45,7 @@ class EException extends \Exception {
     public function Destroy() {
     }
 }
+
 /**
  * System exception.
  *
@@ -53,6 +53,7 @@ class EException extends \Exception {
  */
 class EError extends EException {
 }
+
 /**
  * Runtime Exception.
  * Never catch ERuntimeException, since it will thrown for wrong code. Fix your
@@ -62,6 +63,7 @@ class EError extends EException {
  */
 class ERuntimeException extends EError {
 }
+
 /**
  * EAccessViolation
  *
@@ -77,6 +79,7 @@ class EAccessViolation extends EError {
  */
 class ENotImplemented extends ERuntimeException {
 }
+
 /**
  *
  * Enter description here ...
@@ -85,6 +88,7 @@ class ENotImplemented extends ERuntimeException {
  */
 class EInvalidParameter extends ERuntimeException {
 }
+
 /**
  * Field not existed exception.
  * It will be thrown for visiting object's field that is not existed.
@@ -116,14 +120,14 @@ class ENoSuchField extends EError {
         parent::__construct($Message, $Previous);
 
         TType::String($Message);
-        TType::Object($Previous, EEException::class);
+        TType::Object($Previous, EException::class);
         TType::Object($Object, IInterface::class);
         TType::String($FieldName);
         TType::Object($Class, [TClass::class => ['T' => null]]);
 
-        $this->FObject = $Object;
+        $this->FObject    = $Object;
         $this->FFieldName = $FieldName;
-        $this->FClass = $Class;
+        $this->FClass     = $Class;
     }
 
     /**
@@ -147,6 +151,41 @@ class ENoSuchField extends EError {
         return $this->FObject;
     }
 }
+
+/**
+ * ENoSuchType
+ * @author 许子健
+ */
+class ENoSuchType extends EError {
+    /**
+     * @var mixed
+     */
+    private $FType = '';
+
+    /**
+     * descHere
+     * @param string $Message
+     * @param \FrameworkDSW\System\EException $Previous
+     * @param mixed $Type
+     */
+    public function __construct($Message, $Previous = null, $Type) {
+        parent::__construct($Message, $Previous);
+
+        TType::String($Message);
+        TType::Object($Previous, EException::class);
+
+        $this->FType = $Type;
+    }
+
+    /**
+     * descHere
+     * @return mixed
+     */
+    public function getType() {
+        return $this->FType;
+    }
+}
+
 /**
  * Method not existed exception.
  * It will be thrown for calling object's method that is not existed.
@@ -183,9 +222,9 @@ class ENoSuchMethod extends ERuntimeException {
         TType::String($MethodName);
         TType::Object($Class, [TClass::class => ['T' => null]]);
 
-        $this->FObject = $Object;
+        $this->FObject     = $Object;
         $this->FMethodName = $MethodName;
-        $this->FClass = $Class;
+        $this->FClass      = $Class;
     }
 
     /**
@@ -209,6 +248,7 @@ class ENoSuchMethod extends ERuntimeException {
         return $this->FObject;
     }
 }
+
 /**
  *
  * @author 许子健
@@ -237,7 +277,7 @@ class ENoSuchEnumElement extends EError {
         TType::Object($Enum, [TClass::class => ['T' => TEnum::class]]);
         TType::String($ElementName);
 
-        $this->FEnum = $Enum;
+        $this->FEnum        = $Enum;
         $this->FElementName = $ElementName;
     }
 
@@ -255,6 +295,7 @@ class ENoSuchEnumElement extends EError {
         return $this->FEnum;
     }
 }
+
 /**
  *
  * @author 许子健
@@ -283,7 +324,7 @@ class ENoSuchSetElement extends EError {
         TType::Object($Set, [TClass::class => ['T' => TSet::class]]);
         TType::String($ElementName);
 
-        $this->FSet = $Set;
+        $this->FSet         = $Set;
         $this->FElementName = $ElementName;
     }
 
@@ -301,6 +342,7 @@ class ENoSuchSetElement extends EError {
         return $this->FSet;
     }
 }
+
 /**
  *
  * @author 许子健
@@ -354,11 +396,11 @@ class ELinkFailed extends EError {
         TType::Object($SlotClass, [TClass::class => ['T' => null]]);
 
         $this->FSignalObject = $SignalObject;
-        $this->FSignalName = $SignalName;
-        $this->FSignalClass = $SignalClass;
-        $this->FSlotObject = $SlotObject;
-        $this->FSlotName = $SlotName;
-        $this->FSlotClass = $SlotClass;
+        $this->FSignalName   = $SignalName;
+        $this->FSignalClass  = $SignalClass;
+        $this->FSlotObject   = $SlotObject;
+        $this->FSlotName     = $SlotName;
+        $this->FSlotClass    = $SlotClass;
     }
 
     /**
@@ -381,6 +423,7 @@ class ELinkFailed extends EError {
     public function getSignalName() {
         return $this->FSignalName;
     }
+
     /**
      * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
@@ -402,6 +445,7 @@ class ELinkFailed extends EError {
         return $this->FSlotName;
     }
 }
+
 /**
  *
  * @author 许子健
@@ -455,11 +499,11 @@ class EUnlinkFailed extends EError {
         TType::Object($SlotClass, [TClass::class => ['T' => null]]);
 
         $this->FSignalObject = $SignalObject;
-        $this->FSignalName = $SignalName;
-        $this->FSignalClass = $SignalClass;
-        $this->FSlotObject = $SlotObject;
-        $this->FSlotName = $SlotName;
-        $this->FSlotClass = $SlotClass;
+        $this->FSignalName   = $SignalName;
+        $this->FSignalClass  = $SignalClass;
+        $this->FSlotObject   = $SlotObject;
+        $this->FSlotName     = $SlotName;
+        $this->FSlotClass    = $SlotClass;
     }
 
     /**
@@ -482,6 +526,7 @@ class EUnlinkFailed extends EError {
     public function getSignalName() {
         return $this->FSignalName;
     }
+
     /**
      * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
@@ -503,6 +548,7 @@ class EUnlinkFailed extends EError {
         return $this->FSlotName;
     }
 }
+
 /**
  *
  * @author 许子健
@@ -537,9 +583,9 @@ class EDispatchFailed extends EError {
         TType::String($SignalName);
         TType::Object($Class, [TClass::class => ['T' => null]]);
 
-        $this->FObject = $Object;
+        $this->FObject     = $Object;
         $this->FSignalName = $SignalName;
-        $this->FClass = $Class;
+        $this->FClass      = $Class;
     }
 
     /**
@@ -565,17 +611,98 @@ class EDispatchFailed extends EError {
 }
 
 /**
+ * EIncompatibleTypeAssignment
+ * @author 许子健
+ */
+class EIncompatibleTypeAssignment extends EError {
+    /**
+     * @var \FrameworkDSW\Reflection\TClass <T: ?>
+     */
+    private $FExpected = null;
+    /**
+     * @var \FrameworkDSW\Reflection\TClass <T: ?>
+     */
+    private $FFound = null;
+
+    /**
+     * descHere
+     * @param string $Message
+     * @param \FrameworkDSW\System\EException $Previous
+     * @param \FrameworkDSW\Reflection\TClass $Expected <T: ?>
+     * @param \FrameworkDSW\Reflection\TClass $Found <T: ?>
+     */
+    public function __construct($Message, $Previous = null, $Expected, $Found) {
+        parent::__construct($Message, $Previous);
+
+        TType::String($Message);
+        TType::Object($Previous, EException::class);
+        TType::Object($Expected, [TClass::class => ['T' => null]]);
+        TType::Object($Found, [TClass::class => ['T' => null]]);
+
+        $this->FExpected = $Expected;
+        $this->FFound    = $Found;
+    }
+
+    /**
+     * descHere
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
+     */
+    public function getExpected() {
+        return $this->FExpected;
+    }
+
+    /**
+     * descHere
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
+     */
+    public function getFound() {
+        return $this->FFound;
+    }
+}
+
+/**
  *
  * @author 许子健
  */
 class EGenericException extends ERuntimeException {
 }
+
 /**
  *
  * @author 许子健
  */
 class ENoSuchGenericArg extends EGenericException {
+    /**
+     * @var string
+     */
+    private $FArgName = '';
+    /**
+     * @var \FrameworkDSW\Reflection\TClass <T: ?>
+     */
+    private $FClass = null;
+
+    /**
+     * descHere
+     * @param string $Message
+     * @param \FrameworkDSW\System\EException $Previous
+     * @param string $ArgName
+     */
+    public function __construct($Message, $Previous, $ArgName) {
+        parent::__construct($Message, $Previous);
+        TType::String($ArgName);
+
+        $this->FArgName = $ArgName;
+    }
+
+    /**
+     * descHere
+     * @return string
+     */
+    public function getArgName() {
+        return $this->FArgName;
+    }
 }
+
 /**
  *
  * @author 许子健
@@ -814,17 +941,17 @@ class TObject implements IInterface {
      *
      * @var array
      */
-    private static $FConnected = array();
+    private static $FConnected = [];
     /**
      *
      * @var array
      */
-    private static $FNextGenericArgs = array();
+    private static $FNextGenericArgs = [];
     /**
      *
      * @var array
      */
-    private $FGenericArgs = array();
+    private $FGenericArgs = [];
 
     /**
      * Default constructor used in FrameworkDSW.
@@ -837,7 +964,7 @@ class TObject implements IInterface {
         if (count(self::$FNextGenericArgs) != 0) {
             $this->FGenericArgs = array_replace($this->FGenericArgs, self::$FNextGenericArgs);
         }
-        self::$FNextGenericArgs = array();
+        self::$FNextGenericArgs = [];
     }
 
     /**
@@ -858,6 +985,7 @@ class TObject implements IInterface {
      */
     public function Equals($Obj) {
         TType::Object($Obj);
+
         return $this === $Obj;
     }
 
@@ -870,6 +998,7 @@ class TObject implements IInterface {
      */
     public final function Supports($AInterface) {
         TType::Intf($AInterface);
+
         return $this instanceof $AInterface;
     }
 
@@ -882,6 +1011,7 @@ class TObject implements IInterface {
         if (empty($this->FGenericArgs)) {
             return get_class($this);
         }
+
         return array(get_class($this) => $this->FGenericArgs);
     }
 
@@ -906,6 +1036,7 @@ class TObject implements IInterface {
         if (empty($this->FGenericArgs)) {
             return $mClass;
         }
+
         return array($mClass => $this->FGenericArgs);
     }
 
@@ -920,6 +1051,7 @@ class TObject implements IInterface {
         if ($mResult == false) {
             return null;
         }
+
         return $mResult;
     }
 
@@ -934,6 +1066,7 @@ class TObject implements IInterface {
         }
         else {
             $mType = array_keys($Type)[0];
+
             return $this instanceof $mType;
         } //TODO !!! Incorrect implementation. FOR GENERICS PARAMETERS.
     }
@@ -961,6 +1094,7 @@ class TObject implements IInterface {
         if (count($this->FGenericArgs) == 0) {
             return null;
         }
+
         return $this->FGenericArgs;
     }
 
@@ -972,8 +1106,9 @@ class TObject implements IInterface {
      */
     public final function GenericArg($ArgName) {
         if (!array_key_exists($ArgName, $this->FGenericArgs)) {
-            throw new ENoSuchGenericArg();
+            throw new ENoSuchGenericArg(sprintf('No such generic arg: %s.', $ArgName), null, $ArgName);
         }
+
         return $this->FGenericArgs[$ArgName];
     }
 
@@ -985,6 +1120,7 @@ class TObject implements IInterface {
         if (count(self::$FNextGenericArgs) == 0) {
             return null;
         }
+
         return self::$FNextGenericArgs;
     }
 
@@ -996,8 +1132,9 @@ class TObject implements IInterface {
      */
     public final static function StaticGenericArg($ArgName) {
         if (!array_key_exists($ArgName, self::$FNextGenericArgs)) {
-            throw new ENoSuchGenericArg();
+            throw new ENoSuchGenericArg(sprintf('No such generic arg: %s.', $ArgName), null, $ArgName);
         }
+
         return self::$FNextGenericArgs[$ArgName];
     }
 
@@ -1008,6 +1145,7 @@ class TObject implements IInterface {
      */
     public final static function DeclaredIn() {
         $mInfo = new \ReflectionClass(self::ClassType());
+
         return $mInfo->getFileName();
     }
 
@@ -1062,7 +1200,7 @@ class TObject implements IInterface {
      * @see Framework::Unserialize()
      */
     public static function ClassSleep() {
-        return array();
+        return [];
     }
 
     /**
@@ -1076,25 +1214,31 @@ class TObject implements IInterface {
         TType::Arr($Slot);
 
         if (!method_exists($Signal[0], 'signal' . $Signal[1]) || !method_exists($Slot[0], 'slot' . $Slot[1])) {
+            /**@var IInterface $mSignalObject * */
             $mSignalObject = null;
-            $mSignalClass = null;
+            $mSignalClass  = null;
+            /**@var IInterface $mSlotObject * */
             $mSlotObject = null;
-            $mSlotClass = null;
+            $mSlotClass  = null;
             if (is_string($Signal[0])) {
                 TClass::PrepareGeneric(['T' => $Signal[0]]);
-                $mSignalClass = new TClass();
+                $mSignalClass   = new TClass();
+                $mSignalMessage = sprintf('%s::%s', $mSignalClass->getName(), $Signal[1]);
             }
             else {
-                $mSignalObject = $Signal[0];
+                $mSignalObject  = $Signal[0];
+                $mSignalMessage = sprintf('%s->%s', $mSignalObject->ClassType(), $Signal[1]);
             }
             if (is_string($Slot[0])) {
                 TClass::PrepareGeneric(['T' => $Slot[0]]);
-                $mSlotClass = new TClass();
+                $mSlotClass   = new TClass();
+                $mSlotMessage = sprintf('%s::%s', $mSlotClass->getName(), $Slot[1]);
             }
             else {
-                $mSlotObject = $Slot[0];
+                $mSlotObject  = $Slot[0];
+                $mSlotMessage = sprintf('%s::%s', $mSlotObject->ClassType(), $Slot[1]);
             }
-            throw new ELinkFailed('Link failed.', null, $mSignalObject, $Signal[1], $mSignalClass, $mSlotObject, $Slot[1], $mSlotClass);
+            throw new ELinkFailed("Link failed: signal {$mSignalMessage} with slot {$mSlotMessage}.", null, $mSignalObject, $Signal[1], $mSignalClass, $mSlotObject, $Slot[1], $mSlotClass);
         }
 
         if (is_string($Signal[0])) {
@@ -1105,7 +1249,8 @@ class TObject implements IInterface {
         }
 
         if (!isset(self::$FConnected[$mSignal])
-                || !in_array($Slot, self::$FConnected[$mSignal])) {
+            || !in_array($Slot, self::$FConnected[$mSignal])
+        ) {
             self::$FConnected[$mSignal][] = $Slot;
         }
     }
@@ -1120,25 +1265,31 @@ class TObject implements IInterface {
         TType::Arr($Signal);
 
         if (!method_exists($Signal[0], 'signal' . $Signal[1]) || !method_exists($Slot[0], 'slot' . $Slot[1])) {
+            /**@var IInterface $mSignalObject * */
             $mSignalObject = null;
-            $mSignalClass = null;
+            $mSignalClass  = null;
+            /**@var IInterface $mSlotObject * */
             $mSlotObject = null;
-            $mSlotClass = null;
+            $mSlotClass  = null;
             if (is_string($Signal[0])) {
                 TClass::PrepareGeneric(['T' => $Signal[0]]);
-                $mSignalClass = new TClass();
+                $mSignalClass   = new TClass();
+                $mSignalMessage = sprintf('%s::%s', $mSignalClass->getName(), $Signal[1]);
             }
             else {
-                $mSignalObject = $Signal[0];
+                $mSignalObject  = $Signal[0];
+                $mSignalMessage = sprintf('%s->%s', $mSignalObject->ClassType(), $Signal[1]);
             }
             if (is_string($Slot[0])) {
                 TClass::PrepareGeneric(['T' => $Slot[0]]);
-                $mSlotClass = new TClass();
+                $mSlotClass   = new TClass();
+                $mSlotMessage = sprintf('%s::%s', $mSlotClass->getName(), $Slot[1]);
             }
             else {
-                $mSlotObject = $Slot[0];
+                $mSlotObject  = $Slot[0];
+                $mSlotMessage = sprintf('%s::%s', $mSlotObject->ClassType(), $Slot[1]);
             }
-            throw new EUnlinkFailed('Unlink failed.', null, $mSignalObject, $Signal[1], $mSignalClass, $mSlotObject, $Slot[1], $mSlotClass);
+            throw new EUnlinkFailed("Unlink failed: signal {$mSignalMessage} with slot {$mSlotMessage}.", null, $mSignalObject, $Signal[1], $mSignalClass, $mSlotObject, $Slot[1], $mSlotClass);
         }
 
         if (is_string($Signal[0])) {
@@ -1171,16 +1322,19 @@ class TObject implements IInterface {
         TType::Arr($Param);
 
         if (!method_exists($Signal[0], 'signal' . $Signal[1])) {
+            /**@var IInterface $mSignalObject * */
             $mSignalObject = null;
-            $mSignalClass = null;
+            $mSignalClass  = null;
             if (is_string($Signal[0])) {
                 TClass::PrepareGeneric(['T' => $Signal[0]]);
-                $mSignalClass = new TClass();
+                $mSignalClass   = new TClass();
+                $mSignalMessage = sprintf('%s::%s', $mSignalClass->getName(), $Signal[1]);
             }
             else {
-                $mSignalObject = $Signal[0];
+                $mSignalObject  = $Signal[0];
+                $mSignalMessage = sprintf('%s->%s', $mSignalObject->ClassType(), $Signal[1]);
             }
-            throw new EDispatchFailed('Dispatch failed.', null, $mSignalObject, $Signal[1], $mSignalClass);
+            throw new EDispatchFailed("Dispatch failed: {$mSignalMessage}.", null, $mSignalObject, $Signal[1], $mSignalClass);
         }
 
         if (is_string($Signal[0])) {
@@ -1206,26 +1360,31 @@ class TObject implements IInterface {
      */
     public final static function PrepareGeneric($Args) {
         /** @noinspection PhpUnusedParameterInspection */
+        if ($Args === null) {
+            return;
+        }
+
         array_walk_recursive($Args,
-                function (&$Value, $Key) {
-                    // if (is_array($Value) && !(class_exists($Key) ||
-                    // interface_exists($Key))) {
-                    // throw new Exception('error');
-                    // }
-                    // else
-                    if (is_string($Value)
-                            && !($Value == 'boolean' || $Value == 'integer'
-                                    || $Value == 'float' || $Value == 'string'
-                                    || $Value == 'array'
-                                    || class_exists($Value)
-                                    || interface_exists($Value)
-                                    || $Value == 'mixed')) {
-                        throw new EInvalidTypeCasting();
-                    }
-                    elseif (!is_string($Value)) {
-                        throw new EBadGenericArgsStructure();
-                    }
-                });
+            function (&$Value, $Key) {
+                // if (is_array($Value) && !(class_exists($Key) ||
+                // interface_exists($Key))) {
+                // throw new Exception('error');
+                // }
+                // else
+                if (is_string($Value)
+                    && !($Value == 'boolean' || $Value == 'integer'
+                        || $Value == 'float' || $Value == 'string'
+                        || $Value == 'array'
+                        || class_exists($Value)
+                        || interface_exists($Value)
+                        || $Value == 'mixed')
+                ) {
+                    throw new ENoSuchType(sprintf('No such type: %s.', $Value), null, $Value);
+                }
+                elseif (!is_string($Value)) {
+                    throw new EBadGenericArgsStructure('Bad generic args structure.');
+                }
+            });
         self::$FNextGenericArgs = $Args;
     }
 
@@ -1236,29 +1395,34 @@ class TObject implements IInterface {
      */
     public final function PrepareMethodGeneric($Args) {
         /** @noinspection PhpUnusedParameterInspection */
+        if ($Args === null) {
+            return;
+        }
+
         array_walk_recursive($Args,
-                function (&$Value, $Key) {
-                    // if (is_array($Value) && !(class_exists($Key) ||
-                    // interface_exists($Key))) {
-                    // throw new Exception('error');
-                    // }
-                    // else
-                    if (is_string($Value)
-                            && !($Value == 'boolean' || $Value == 'integer'
-                                    || $Value == 'float' || $Value == 'string'
-                                    || $Value == 'array'
-                                    || class_exists($Value)
-                                    || interface_exists($Value)
-                                    || $Value == 'mixed')) {
-                        throw new EInvalidTypeCasting();
-                    }
-                    elseif (!is_string($Value)) {
-                        throw new EBadGenericArgsStructure();
-                    }
-                });
+            function (&$Value, $Key) {
+                // if (is_array($Value) && !(class_exists($Key) ||
+                // interface_exists($Key))) {
+                // throw new Exception('error');
+                // }
+                // else
+                if (is_string($Value)
+                    && !($Value == 'boolean' || $Value == 'integer'
+                        || $Value == 'float' || $Value == 'string'
+                        || $Value == 'array'
+                        || class_exists($Value)
+                        || interface_exists($Value)
+                        || $Value == 'mixed')
+                ) {
+                    throw new ENoSuchType(sprintf('No such type: %s.', $Value), null, $Value);
+                }
+                elseif (!is_string($Value)) {
+                    throw new EBadGenericArgsStructure('Bad generic args structure.');
+                }
+            });
         $this->FGenericArgs = array_replace($Args, $this->FGenericArgs);
         if ($this->FGenericArgs === null) {
-            throw new EBadGenericArgsStructure();
+            throw new EBadGenericArgsStructure('Bad generic args structure.');
         }
     }
 
@@ -1271,7 +1435,7 @@ class TObject implements IInterface {
      * @throws ENoSuchMethod
      */
     public final function __call($name, $arguments) {
-        throw new ENoSuchMethod(sprintf('No such method: %s', $name), null, $this, $name);
+        throw new ENoSuchMethod(sprintf('No such method: %s->%s.', get_class(), $name), null, $this, $name);
     }
 
     /**
@@ -1286,13 +1450,13 @@ class TObject implements IInterface {
      * @return mixed
      */
     public static final function __callStatic($name, $arguments) {
-        $mReflection = new \ReflectionClass(get_called_class());
+        $mReflection  = new \ReflectionClass(get_called_class());
         $mIsEnumOrSet = true;
-        $mIsEnum = true;
-        if (!$mReflection->isSubclassOf(new \ReflectionClass('FrameworkDSW\System\TEnum'))) {
-            $mIsEnum = false;
+        $mIsEnum      = true;
+        if (!$mReflection->isSubclassOf(new \ReflectionClass(TEnum::class))) {
+            $mIsEnum      = false;
             $mIsEnumOrSet = false;
-            if (!$mReflection->isSubclassOf(new \ReflectionClass('FrameworkDSW\System\TSet'))) {
+            if (!$mReflection->isSubclassOf(new \ReflectionClass(TSet::class))) {
                 TClass::PrepareGeneric(['T' => self::ClassType()]);
                 $mClass = new TClass();
                 throw new ENoSuchMethod(sprintf('No such method: %s::%s().', self::ClassType(), $name), null, null, $name, $mClass);
@@ -1303,14 +1467,15 @@ class TObject implements IInterface {
                 if ($mIsEnum) {
                     TClass::PrepareGeneric(['T' => $mReflection->getName()]);
                     $mClass = new TClass();
-                    throw new ENoSuchEnumElement(sprintf('No such enum element: %s::%s()', $mReflection->getName(), $name), null, $mClass, $name);
+                    throw new ENoSuchEnumElement(sprintf('No such enum element: %s::%s().', $mReflection->getName(), $name), null, $mClass, $name);
                 }
                 else {
                     TClass::PrepareGeneric(['T' => $mReflection->getName()]);
                     $mClass = new TClass();
-                    throw new ENoSuchSetElement(sprintf('No such set element: %s::%s()', $mReflection->getName(), $name), null, $mClass, $name);
+                    throw new ENoSuchSetElement(sprintf('No such set element: %s::%s().', $mReflection->getName(), $name), null, $mClass, $name);
                 }
             }
+
             return $mReflection->newInstance($mReflection->getConstant($name));
         }
         else {
@@ -1449,6 +1614,7 @@ abstract class TRecord extends TObject {
                 return false;
             }
         }
+
         return true;
     }
 
@@ -1543,7 +1709,7 @@ abstract class TSet extends TObject {
      *
      * @var array
      */
-    private $FSet = array();
+    private $FSet = [];
 
     /**
      * constructor.
@@ -1603,6 +1769,7 @@ abstract class TSet extends TObject {
             $mSet = new TClass();
             throw new ENoSuchSetElement(sprintf('No such set element: %s::%s.', get_class($this), $Element), null, $mSet, $Element);
         }
+
         return $this->FSet[$Element];
     }
 
@@ -1651,6 +1818,7 @@ abstract class TSet extends TObject {
                 return false;
             }
         }
+
         return true;
     }
 
@@ -1666,6 +1834,7 @@ abstract class TSet extends TObject {
                 return false;
             }
         }
+
         return true;
     }
 
@@ -1715,17 +1884,17 @@ final class TDelegate {
      *
      * @param mixed $Callback string or closure
      * @param string $Type
-     * @throws \FrameworkDSW\Utilities\EInvalidDelegateCasting
+     * @throws ENoSuchType
      */
     public final function __construct($Callback, $Type) {
         try {
-            $mPrototype = new \ReflectionMethod($Type, 'Invoke');
-            $this->FAtLeast = $mPrototype->getNumberOfRequiredParameters();
+            $mPrototype        = new \ReflectionMethod($Type, 'Invoke');
+            $this->FAtLeast    = $mPrototype->getNumberOfRequiredParameters();
             $this->FNoMoreThan = $mPrototype->getNumberOfParameters();
             $this->setDelegate($Callback);
         }
         catch (\ReflectionException $e) {
-            throw new EInvalidDelegateCasting();
+            throw new ENoSuchType(sprintf('No such type: %s.', $Type), null, $Type);
         }
     }
 
@@ -1748,7 +1917,7 @@ final class TDelegate {
     /**
      *
      * @param mixed $Callback
-     * @throws \FrameworkDSW\Utilities\EInvalidDelegateCasting
+     * @throws EIncompatibleTypeAssignment
      */
     public final function setDelegate($Callback) {
         if (is_callable($Callback)) {
@@ -1764,18 +1933,18 @@ final class TDelegate {
                 $this->FDelegate = $Callback;
             }
             else {
-                throw new EInvalidDelegateCasting();
+                throw new EIncompatibleTypeAssignment('Incompatible type assignment.', null, null, null);
             }
         }
         else {
-            throw new EInvalidDelegateCasting();
+            throw new EIncompatibleTypeAssignment('Incompatible type assignment.', null, null, null);
         }
     }
 }
 
 /**
  * IPrimitive
- * param	T
+ * param    T
  *
  * @author 许子健
  */
@@ -1841,7 +2010,7 @@ interface IPrimitive extends IInterface {
 
 /**
  * IComparable
- * param	T
+ * param    T
  *
  * @author 许子健
  */
@@ -1915,7 +2084,7 @@ final class TBoolean extends TObject implements IPrimitive, IComparable {
      * @return mixed
      */
     public static function ConvertFrom($Value) {
-        return (boolean) $Value;
+        return (boolean)$Value;
     }
 
     /**
@@ -2020,6 +2189,7 @@ final class TInteger extends TObject implements IComparable, IPrimitive {
      */
     public function CompareTo($Value) {
         TType::Object($Value, TInteger::class);
+
         return $this->FValue - $Value->Unbox();
     }
 
@@ -2030,7 +2200,7 @@ final class TInteger extends TObject implements IComparable, IPrimitive {
      * @return integer
      */
     public static function ConvertFrom($Value) {
-        return (integer) $Value;
+        return (integer)$Value;
     }
 
     /**
@@ -2057,7 +2227,7 @@ final class TInteger extends TObject implements IComparable, IPrimitive {
      * @return float
      */
     public function UnboxToFloat() {
-        return (float) $this->FValue;
+        return (float)$this->FValue;
     }
 
     /**
@@ -2075,13 +2245,13 @@ final class TInteger extends TObject implements IComparable, IPrimitive {
      * @return string
      */
     public function UnboxToString() {
-        return (string) $this->FValue;
+        return (string)$this->FValue;
     }
 }
 
 /**
  * TFloat
- * extends	\FrameworkDSW\System\IPrimitive<T: float>, \FrameworkDSW\System\IComparable<T: \FrameworkDSW\System\TFloat>
+ * extends    \FrameworkDSW\System\IPrimitive<T: float>, \FrameworkDSW\System\IComparable<T: \FrameworkDSW\System\TFloat>
  *
  * @author 许子健
  */
@@ -2120,7 +2290,8 @@ final class TFloat extends TObject implements IPrimitive, IComparable {
      */
     public function CompareTo($Value) {
         TType::Object($Value, TFloat::class);
-        return (float) ($this->FValue - $Value->Unbox());
+
+        return (float)($this->FValue - $Value->Unbox());
     }
 
     /**
@@ -2130,7 +2301,7 @@ final class TFloat extends TObject implements IPrimitive, IComparable {
      * @return float
      */
     public static function ConvertFrom($Value) {
-        return (float) $Value;
+        return (float)$Value;
     }
 
     /**
@@ -2148,7 +2319,7 @@ final class TFloat extends TObject implements IPrimitive, IComparable {
      * @return boolean
      */
     public function UnboxToBoolean() {
-        return (boolean) $this->FValue;
+        return (boolean)$this->FValue;
     }
 
     /**
@@ -2166,7 +2337,7 @@ final class TFloat extends TObject implements IPrimitive, IComparable {
      * @return integer
      */
     public function UnboxToInteger() {
-        return (integer) $this->FValue;
+        return (integer)$this->FValue;
     }
 
     /**
@@ -2175,13 +2346,13 @@ final class TFloat extends TObject implements IPrimitive, IComparable {
      * @return string
      */
     public function UnboxToString() {
-        return (string) $this->FValue;
+        return (string)$this->FValue;
     }
 }
 
 /**
  * \FrameworkDSW\System\TString
- * extends	\FrameworkDSW\System\IComparable<T: \FrameworkDSW\System\TString>, \FrameworkDSW\System\IPrimitive<T: string>
+ * extends    \FrameworkDSW\System\IComparable<T: \FrameworkDSW\System\TString>, \FrameworkDSW\System\IPrimitive<T: string>
  *
  * @author 许子健
  */
@@ -2229,7 +2400,7 @@ final class TString extends TObject implements IComparable, IPrimitive {
      * @return string
      */
     public static function ConvertFrom($Value) {
-        return (string) $Value;
+        return (string)$Value;
     }
 
     /**
@@ -2247,7 +2418,7 @@ final class TString extends TObject implements IComparable, IPrimitive {
      * @return boolean
      */
     public function UnboxToBoolean() {
-        return (boolean) $this->FValue;
+        return (boolean)$this->FValue;
     }
 
     /**
@@ -2256,7 +2427,7 @@ final class TString extends TObject implements IComparable, IPrimitive {
      * @return float
      */
     public function UnboxToFloat() {
-        return (float) $this->FValue;
+        return (float)$this->FValue;
     }
 
     /**
@@ -2265,7 +2436,7 @@ final class TString extends TObject implements IComparable, IPrimitive {
      * @return integer
      */
     public function UnboxToInteger() {
-        return (integer) $this->FValue;
+        return (integer)$this->FValue;
     }
 
     /**

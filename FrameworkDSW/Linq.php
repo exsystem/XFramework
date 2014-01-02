@@ -1,9 +1,9 @@
 <?php
 /**
  * \FrameworkDSW\Linq
- * @author	许子健
- * @version	$Id$
- * @since	separate file since reversion 30
+ * @author    许子健
+ * @version    $Id$
+ * @since    separate file since reversion 30
  */
 namespace FrameworkDSW\Linq;
 

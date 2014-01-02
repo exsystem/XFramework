@@ -26,38 +26,51 @@ use FrameworkDSW\Utilities\TType;
  *
  * @author 许子健
  */
-class EUnableToResolveScriptUrl extends EException {}
-/**
- *
- * @author 许子健
- */
-class EBrowscapNotEnabled extends EException {}
-/**
- *
- * @author 许子健
- */
-class EDetermineRequestUriFailed extends EException {}
+class EUnableToResolveScriptUrl extends EException {
+}
 
 /**
  *
  * @author 许子健
  */
-class EDeterminePathInfoFailed extends EException {}
+class EBrowscapNotEnabled extends EException {
+}
+
 /**
  *
  * @author 许子健
  */
-class EParsingOnlyUrlRule extends EException {}
+class EDetermineRequestUriFailed extends EException {
+}
+
 /**
  *
  * @author 许子健
  */
-class ECreateUrlFailed extends EException {}
+class EDeterminePathInfoFailed extends EException {
+}
+
+/**
+ *
+ * @author 许子健
+ */
+class EParsingOnlyUrlRule extends EException {
+}
+
+/**
+ *
+ * @author 许子健
+ */
+class ECreateUrlFailed extends EException {
+}
+
 /**
  *
  * @author 子健
  */
-class EParseUrlFailed extends EException {}
+class EParseUrlFailed extends EException {
+}
+
 /**
  *
  * @author 许子健
@@ -87,11 +100,13 @@ class EHttpException extends EException {
         $this->FStatusCode = $StatusCode;
     }
 }
+
 /**
  *
  * @author 许子健
  */
-class EResolveRequestFailed extends EHttpException {}
+class EResolveRequestFailed extends EHttpException {
+}
 
 /**
  * IUrlRouter
@@ -111,7 +126,7 @@ interface IUrlRouter extends IInterface {
     /**
      * descHere
      *
-     * @param \FrameworkDSW\Containers\IMap $Parameters  <K: string, V: string>
+     * @param \FrameworkDSW\Containers\IMap $Parameters <K: string, V: string>
      * @param string $Equal
      * @param string $Ampersand
      * @return string
@@ -413,9 +428,9 @@ class THttpCookies extends TMap {
 
         $this->FRequest = $Request;
         foreach ($_COOKIE as $mName => $mValue) {
-            $mCookie = new THttpCookie();
-            $mCookie->Name = (string) $mName;
-            $mCookie->Value = (string) $mValue;
+            $mCookie        = new THttpCookie();
+            $mCookie->Name  = (string)$mName;
+            $mCookie->Value = (string)$mValue;
             $this->Put($mCookie->Name, $mCookie);
         }
     }
@@ -460,7 +475,7 @@ class THttpCookies extends TMap {
 
 /**
  * IHttpSessionStorage
- * @author	许子健
+ * @author    许子健
  */
 interface IHttpSessionStorage extends IInterface {
 
@@ -471,34 +486,34 @@ interface IHttpSessionStorage extends IInterface {
 
     /**
      * descHere
-     * @param	string	$SessionId
+     * @param    string $SessionId
      */
     public function Delete($SessionId);
 
     /**
      * descHere
-     * @param	string	$SavePath
-     * @param	string	$Name
+     * @param    string $SavePath
+     * @param    string $Name
      */
     public function Open($SavePath, $Name);
 
     /**
      * descHere
-     * @param	string	$MaxLifeTime
+     * @param    string $MaxLifeTime
      */
     public function Purge($MaxLifeTime);
 
     /**
      * descHere
-     * @param	string	$SessionId
+     * @param    string $SessionId
      * @return string
      */
     public function Read($SessionId);
 
     /**
      * descHere
-     * @param	string	$SessionId
-     * @param	string	$SessionData
+     * @param    string $SessionId
+     * @param    string $SessionData
      */
     public function Write($SessionId, $SessionData);
 
@@ -506,20 +521,20 @@ interface IHttpSessionStorage extends IInterface {
 
 /**
  * TSessionCookieMode
- * @author	许子健
+ * @author    许子健
  */
 class TSessionCookieMode extends TEnum {
 
     /**
-     * @var	integer
+     * @var    integer
      */
     const eNone = 0;
     /**
-     * @var	integer
+     * @var    integer
      */
     const eAllow = 1;
     /**
-     * @var	integer
+     * @var    integer
      */
     const eOnly = 2;
 
@@ -528,7 +543,7 @@ class TSessionCookieMode extends TEnum {
 /**
  * THttpSession
  * extends TAbstractMap<K: string, V: mixed>
- * @author	许子健
+ * @author    许子健
  */
 class THttpSession extends TAbstractMap {
 
@@ -541,7 +556,7 @@ class THttpSession extends TAbstractMap {
     /**
      * descHere
      * @param boolean $AutoStart
-     * @param \FrameworkDSW\Web\IHttpSessionStorage	$Storage
+     * @param \FrameworkDSW\Web\IHttpSessionStorage $Storage
      */
     public function __construct($AutoStart = true, $Storage = null) {
         TType::Bool($AutoStart);
@@ -583,8 +598,8 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param	K	$Key
-     * @return	boolean
+     * @param    K $Key
+     * @return    boolean
      */
     protected function DoContainsKey($Key) {
         /** @noinspection PhpIllegalArrayKeyTypeInspection */
@@ -593,7 +608,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param	K	$Key
+     * @param    K $Key
      */
     protected function DoDelete($Key) {
         /** @noinspection PhpIllegalArrayKeyTypeInspection */
@@ -602,8 +617,8 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param	K	$Key
-     * @return	V
+     * @param    K $Key
+     * @return    V
      */
     protected function DoGet($Key) {
         /** @noinspection PhpIllegalArrayKeyTypeInspection */
@@ -612,8 +627,8 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param	K	$Key
-     * @param	V	$Value
+     * @param    K $Key
+     * @param    V $Value
      */
     protected function DoPut($Key, $Value) {
         /** @noinspection PhpIllegalArrayKeyTypeInspection */
@@ -622,7 +637,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @return	string
+     * @return    string
      */
     public function getCookieDomain() {
         return session_get_cookie_params()['domain'];
@@ -630,7 +645,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @return	boolean
+     * @return    boolean
      */
     public function getCookieHttpOnly() {
         return session_get_cookie_params()['httponly'];
@@ -638,7 +653,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @return	integer
+     * @return    integer
      */
     public function getCookieLifeTime() {
         return session_get_cookie_params()['lifetime'];
@@ -646,7 +661,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @return	TSessionCookieMode
+     * @return    TSessionCookieMode
      */
     public function getCookieMode() {
         if (ini_get('session.use_cookies') === '0') {
@@ -662,7 +677,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @return	string
+     * @return    string
      */
     public function getCookiePath() {
         return session_get_cookie_params()['path'];
@@ -670,15 +685,15 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @return	float
+     * @return    float
      */
     public function getGcProbability() {
-        return (float) (ini_get('session.gc_probability') / ini_get('session.gc_divisor') * 100);
+        return (float)(ini_get('session.gc_probability') / ini_get('session.gc_divisor') * 100);
     }
 
     /**
      * descHere
-     * @return	boolean
+     * @return    boolean
      */
     public function getIsStarted() {
         return session_id() !== '';
@@ -686,7 +701,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @return	string
+     * @return    string
      */
     public function getSavePath() {
         return session_save_path();
@@ -694,7 +709,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @return	string
+     * @return    string
      */
     public function getSessionId() {
         return session_id();
@@ -702,7 +717,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @return	string
+     * @return    string
      */
     public function getSessionName() {
         return session_name();
@@ -710,7 +725,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @return	IHttpSessionStorage
+     * @return    IHttpSessionStorage
      */
     public function getStorage() {
         return $this->FStorage;
@@ -718,15 +733,15 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @return	integer
+     * @return    integer
      */
     public function getTimeout() {
-        return (integer) ini_get('session.gc_maxlifetime');
+        return (integer)ini_get('session.gc_maxlifetime');
     }
 
     /**
      * descHere
-     * @return	boolean
+     * @return    boolean
      */
     public function getUseTransparentSessionId() {
         return ini_get('session.use_trans_sid') === '1';
@@ -741,6 +756,7 @@ class THttpSession extends TAbstractMap {
             session_set_save_handler(function ($SavePath, $Name) use ($mSelf) {
                 try {
                     $mSelf->FStorage->Open($SavePath, $Name);
+
                     return true;
                 }
                 catch (EException $Ex) {
@@ -749,6 +765,7 @@ class THttpSession extends TAbstractMap {
             }, function () use ($mSelf) {
                 try {
                     $mSelf->FStorage->Close();
+
                     return true;
                 }
                 catch (EException $Ex) {
@@ -764,6 +781,7 @@ class THttpSession extends TAbstractMap {
             }, function ($SessionId, $SessionData) use ($mSelf) {
                 try {
                     $mSelf->FStorage->Write($SessionId, $SessionData);
+
                     return true;
                 }
                 catch (EException $Ex) {
@@ -772,6 +790,7 @@ class THttpSession extends TAbstractMap {
             }, function ($SessionId) use ($mSelf) {
                 try {
                     $mSelf->FStorage->Delete($SessionId);
+
                     return true;
                 }
                 catch (EException $Ex) {
@@ -780,6 +799,7 @@ class THttpSession extends TAbstractMap {
             }, function ($MaxLifeTime) use ($mSelf) {
                 try {
                     $mSelf->FStorage->Purge($MaxLifeTime);
+
                     return true;
                 }
                 catch (EException $Ex) {
@@ -789,7 +809,7 @@ class THttpSession extends TAbstractMap {
         }
         session_start();
         if (session_id() === '') {
-            throw new EException();//TODO detail info here.
+            throw new EException(); //TODO detail info here.
         }
     }
 
@@ -805,7 +825,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param	boolean	$DeleteOldSession
+     * @param    boolean $DeleteOldSession
      */
     public function RegenerateId($DeleteOldSession = false) {
         TType::Bool($DeleteOldSession);
@@ -814,7 +834,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param	string	$Value
+     * @param    string $Value
      */
     public function setCookieDomain($Value) {
         TType::String($Value);
@@ -824,7 +844,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param	boolean	$Value
+     * @param    boolean $Value
      */
     public function setCookieHttpOnly($Value) {
         TType::Bool($Value);
@@ -834,7 +854,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param	integer	$Value
+     * @param    integer $Value
      */
     public function setCookieLifeTime($Value) {
         TType::Int($Value);
@@ -844,24 +864,24 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param \FrameworkDSW\Web\TSessionCookieMode	$Value
+     * @param \FrameworkDSW\Web\TSessionCookieMode $Value
      */
     public function setCookieMode($Value) {
         TType::Object($Value, TSessionCookieMode::class);
 
         switch ($Value) {
-        case TSessionCookieMode::eNone():
-            ini_set('session.use_cookies', '0');
-            ini_set('session.use_only_cookies', '0');
-            break;
-        case TSessionCookieMode::eAllow():
-            ini_set('session.use_cookies', '1');
-            ini_set('session.use_only_cookies', '0');
-            break;
-        case TSessionCookieMode::eOnly():
-            ini_set('session.use_cookies', '1');
-            ini_set('session.use_only_cookies', '1');
-            break;
+            case TSessionCookieMode::eNone():
+                ini_set('session.use_cookies', '0');
+                ini_set('session.use_only_cookies', '0');
+                break;
+            case TSessionCookieMode::eAllow():
+                ini_set('session.use_cookies', '1');
+                ini_set('session.use_only_cookies', '0');
+                break;
+            case TSessionCookieMode::eOnly():
+                ini_set('session.use_cookies', '1');
+                ini_set('session.use_only_cookies', '1');
+                break;
         }
     }
 
@@ -909,7 +929,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param	string	$Value
+     * @param    string $Value
      */
     public function setSessionId($Value) {
         TType::String($Value);
@@ -918,7 +938,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param	string	$Value
+     * @param    string $Value
      */
     public function setSessionName($Value) {
         TType::String($Value);
@@ -942,7 +962,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param	integer	$Value
+     * @param    integer $Value
      */
     public function setTimeout($Value) {
         TType::Int($Value);
@@ -951,7 +971,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param	boolean	$Value
+     * @param    boolean $Value
      */
     public function setUseTransparentSessionId($Value) {
         TType::Bool($Value);
@@ -973,12 +993,12 @@ class THttpRequest extends TObject {
      *
      * @var string[]
      */
-    private $FPutParameters = array();
+    private $FPutParameters = [];
     /**
      *
      * @var string[]
      */
-    private $FDeleteParameters = array();
+    private $FDeleteParameters = [];
     /**
      *
      * @var string
@@ -1008,7 +1028,7 @@ class THttpRequest extends TObject {
 //     *
 //     * @var string[]
 //     */
-//    private $FRestParameters = array();
+//    private $FRestParameters = [];
     /**
      *
      * @var string
@@ -1045,10 +1065,11 @@ class THttpRequest extends TObject {
      * @return THttpCookie
      */
     protected function CreateCsrfCookie() {
-        $mCsrfTokenCookie = new THttpCookie();
-        $mCsrfTokenCookie->Value = sha1(uniqid((string) mt_rand(), true));
+        $mCsrfTokenCookie        = new THttpCookie();
+        $mCsrfTokenCookie->Value = sha1(uniqid((string)mt_rand(), true));
         $this->getCookies()->Put($this->FCsrfTokenName, $mCsrfTokenCookie);
         $this->FCsrfToken = $mCsrfTokenCookie->Value;
+
         return $mCsrfTokenCookie;
     }
 
@@ -1071,7 +1092,8 @@ class THttpRequest extends TObject {
      | \xF0[\x90-\xBF][\x80-\xBF]{2}      # planes 1-3
      | [\xF1-\xF3][\x80-\xBF]{3}          # planes 4-15
      | \xF4[\x80-\x8F][\x80-\xBF]{2}      # plane 16
-    )*$%xs', $PathInfo)) {
+    )*$%xs', $PathInfo)
+        ) {
             return $PathInfo;
         }
         else {
@@ -1104,7 +1126,7 @@ class THttpRequest extends TObject {
      * @return string
      */
     public function getAcceptTypes() {
-        return (string) $_SERVER['HTTP_ACCEPT'];
+        return (string)$_SERVER['HTTP_ACCEPT'];
     }
 
     /**
@@ -1152,8 +1174,9 @@ class THttpRequest extends TObject {
             if (is_bool($mValue)) {
                 $mValue = $mValue ? 'true' : 'false';
             }
-            $mResult->Put($mKey, (string) $mValue);
+            $mResult->Put($mKey, (string)$mValue);
         }
+
         return $mResult;
     }
 
@@ -1166,6 +1189,7 @@ class THttpRequest extends TObject {
         if ($this->FCookies == null) {
             $this->FCookies = new THttpCookies($this);
         }
+
         return $this->FCookies;
     }
 
@@ -1196,8 +1220,8 @@ class THttpRequest extends TObject {
     public function GetDelete($Name) {
         TType::String($Name);
 
-        if ($this->FDeleteParameters == array()) {
-            $this->FDeleteParameters = $this->getIsDeleteRequest() ? $this->FDeleteParameters : array();
+        if ($this->FDeleteParameters == []) {
+            $this->FDeleteParameters = $this->getIsDeleteRequest() ? $this->FDeleteParameters : [];
         }
         if (isset($this->FDeleteParameters[$Name])) {
             return $this->FDeleteParameters[$Name];
@@ -1217,8 +1241,8 @@ class THttpRequest extends TObject {
     public function GetPut($Name) {
         TType::String($Name);
 
-        if ($this->FPutParameters == array()) {
-            $this->FPutParameters = $this->getIsPutRequest() ? $this->FPutParameters : array();
+        if ($this->FPutParameters == []) {
+            $this->FPutParameters = $this->getIsPutRequest() ? $this->FPutParameters : [];
         }
         if (isset($this->FPutParameters[$Name])) {
             return $this->FPutParameters[$Name];
@@ -1232,13 +1256,14 @@ class THttpRequest extends TObject {
      * @return string[]
      */
     protected function getRestParameters() {
-        $mResult = array();
+        $mResult = [];
         if (function_exists('mb_parse_str')) {
             mb_parse_str(file_get_contents('php://input'), $mResult);
         }
         else {
             parse_str(file_get_contents('php://input'), $mResult);
         }
+
         return $mResult;
     }
 
@@ -1259,10 +1284,10 @@ class THttpRequest extends TObject {
     public function GetParameter($Name) {
         TType::String($Name);
         if (isset($_GET[$Name])) {
-            return (string) $_GET[$Name];
+            return (string)$_GET[$Name];
         }
         elseif (isset($_POST[$Name])) {
-            return (string) $_POST[$Name];
+            return (string)$_POST[$Name];
         }
         else {
             throw new EInvalidParameter();
@@ -1276,7 +1301,7 @@ class THttpRequest extends TObject {
      */
     public function getPathInfo() {
         if ($this->FPathInfo == '') {
-            $mPathInfo = $this->getRequestUri();
+            $mPathInfo        = $this->getRequestUri();
             $mQuestionMarkPos = strpos($mPathInfo, '?');
             if ($mQuestionMarkPos !== false) {
                 $mPathInfo = substr($mPathInfo, 0, $mQuestionMarkPos);
@@ -1285,7 +1310,7 @@ class THttpRequest extends TObject {
             $mPathInfo = $this->DecodePathInfo($mPathInfo);
 
             $mScriptUrl = $this->getScriptUrl();
-            $mBaseUrl = $this->GetBaseUrl();
+            $mBaseUrl   = $this->GetBaseUrl();
             if (strpos($mPathInfo, $mScriptUrl) === 0) {
                 $mPathInfo = substr($mPathInfo, strlen($mScriptUrl));
             }
@@ -1300,6 +1325,7 @@ class THttpRequest extends TObject {
             }
             $this->FPathInfo = trim($mPathInfo, '/');
         }
+
         return $this->FPathInfo;
     }
 
@@ -1322,7 +1348,7 @@ class THttpRequest extends TObject {
             }
             else {
                 $this->FHostInfo = "{$mSchema}://{$_SERVER['SERVER_NAME']}";
-                $mPort = $mIsSecureConnection ? $this->getSecurePort() : $this->getPort();
+                $mPort           = $mIsSecureConnection ? $this->getSecurePort() : $this->getPort();
                 if (($mPort !== 80 && !$mIsSecureConnection) || ($mPort !== 443 && $mIsSecureConnection)) {
                     $this->FHostInfo .= ":{$mPort}";
                 }
@@ -1340,6 +1366,7 @@ class THttpRequest extends TObject {
         if ($this->FPort == -1) {
             $this->FPort = !$this->getIsSecureConnection() && isset($_SERVER['SERVER_PORT']) ? $_SERVER['SERVER_PORT'] : 80;
         }
+
         return $this->FPort;
     }
 
@@ -1365,6 +1392,7 @@ class THttpRequest extends TObject {
         if ($this->FSecurePort == -1) {
             $this->FSecurePort = $this->getIsSecureConnection() && isset($_SERVER['SERVER_PORT']) ? $_SERVER['SERVER_PORT'] : 443;
         }
+
         return $this->FSecurePort;
     }
 
@@ -1450,6 +1478,7 @@ class THttpRequest extends TObject {
                 throw new EUnableToResolveScriptUrl();
             }
         }
+
         return $this->FScriptUrl;
     }
 
@@ -1461,7 +1490,7 @@ class THttpRequest extends TObject {
         if ($this->getIsPostRequest()) {
             $mCookies = $this->getCookies();
             if ($mCookies->ContainsKey($this->FCsrfTokenName) && isset($_POST[$this->FCsrfTokenName])) {
-                $mValid = ($mCookies[$this->FCsrfToken] == (string) $_POST[$this->FCsrfTokenName]);
+                $mValid = ($mCookies[$this->FCsrfToken] == (string)$_POST[$this->FCsrfTokenName]);
             }
         }
         if (!$mValid) {
@@ -1478,7 +1507,7 @@ class THttpRequest extends TObject {
      * @param string $XHeader
      * @param boolean $Terminate
      * @param boolean $ForceDownload
-     * @param \FrameworkDSW\Containers\IMap $AddHeaders  <K: string, V: string>
+     * @param \FrameworkDSW\Containers\IMap $AddHeaders <K: string, V: string>
      */
     public function XSendFile($FilePath, $SaveName = '', $MimeType = '', $XHeader = 'X-Sendfile', $Terminate = false, $ForceDownload = true, $AddHeaders = null) {
         TType::String($FilePath);
@@ -1501,7 +1530,7 @@ class THttpRequest extends TObject {
         }
 
         if ($MimeType == '') { // TODO FIXME should replace with the correct way
-        // of detecting mime type of the file.
+            // of detecting mime type of the file.
             $MimeType = 'text/plain';
         }
 
@@ -1554,6 +1583,7 @@ class THttpRequest extends TObject {
                 throw new EDetermineRequestUriFailed();
             }
         }
+
         return $this->FRequestUri;
     }
 
@@ -1567,7 +1597,7 @@ class THttpRequest extends TObject {
         TType::String($Name);
 
         if (isset($_POST[$Name])) {
-            return (string) $_POST[$Name];
+            return (string)$_POST[$Name];
         }
         else {
             throw new EInvalidParameter();
@@ -1584,7 +1614,7 @@ class THttpRequest extends TObject {
         TType::String($Name);
 
         if (isset($_GET[$Name])) {
-            return (string) $_GET[$Name];
+            return (string)$_GET[$Name];
         }
         else {
             throw new EInvalidParameter();
@@ -1607,6 +1637,7 @@ class THttpRequest extends TObject {
         if ($this->FScriptFile == '') {
             $this->FScriptFile = realpath($_SERVER['SCRIPT_FILENAME']);
         }
+
         return $this->FScriptFile;
     }
 
@@ -1745,8 +1776,9 @@ class THttpMethod extends TRecord {
      * @return THttpMethod
      */
     public static function Delete() {
-        $mResult = new THttpMethod();
+        $mResult         = new THttpMethod();
         $mResult->Method = 'DELETE';
+
         return $mResult;
     }
 
@@ -1755,8 +1787,9 @@ class THttpMethod extends TRecord {
      * @return THttpMethod
      */
     public static function Get() {
-        $mResult = new THttpMethod();
+        $mResult         = new THttpMethod();
         $mResult->Method = 'GET';
+
         return $mResult;
     }
 
@@ -1765,8 +1798,9 @@ class THttpMethod extends TRecord {
      * @return THttpMethod
      */
     public static function Head() {
-        $mResult = new THttpMethod();
+        $mResult         = new THttpMethod();
         $mResult->Method = 'HEAD';
+
         return $mResult;
     }
 
@@ -1775,8 +1809,9 @@ class THttpMethod extends TRecord {
      * @return THttpMethod
      */
     public static function Options() {
-        $mResult = new THttpMethod();
+        $mResult         = new THttpMethod();
         $mResult->Method = 'OPTIONS';
+
         return $mResult;
     }
 
@@ -1785,8 +1820,9 @@ class THttpMethod extends TRecord {
      * @return THttpMethod
      */
     public static function Post() {
-        $mResult = new THttpMethod();
+        $mResult         = new THttpMethod();
         $mResult->Method = 'POST';
+
         return $mResult;
     }
 
@@ -1795,8 +1831,9 @@ class THttpMethod extends TRecord {
      * @return THttpMethod
      */
     public static function Put() {
-        $mResult = new THttpMethod();
+        $mResult         = new THttpMethod();
         $mResult->Method = 'PUT';
+
         return $mResult;
     }
 
@@ -1805,8 +1842,9 @@ class THttpMethod extends TRecord {
      * @return THttpMethod
      */
     public static function Trace() {
-        $mResult = new THttpMethod();
+        $mResult         = new THttpMethod();
         $mResult->Method = 'TRACE';
+
         return $mResult;
     }
 }
@@ -1907,42 +1945,44 @@ class TUrlRouter extends TObject implements IUrlRouter {
 
         $mQueryString = $this->CreatePathInfo($Parameters, '=', $Ampersand);
         switch ($this->getUrlMode()) {
-        case TUrlMode::ePath():
-            $mUrl = rtrim($this->getBaseUrl() . "/{$Route}");
-            if ($this->FAppendParameters) {
-                $mUrl = rtrim("{$mUrl}/" . $this->CreatePathInfo($Parameters, '/', '/'), '/');
-                if ($Route != '') {
-                    $mUrl .= $this->getUrlSuffix();
+            case TUrlMode::ePath():
+                $mUrl = rtrim($this->getBaseUrl() . "/{$Route}");
+                if ($this->FAppendParameters) {
+                    $mUrl = rtrim("{$mUrl}/" . $this->CreatePathInfo($Parameters, '/', '/'), '/');
+                    if ($Route != '') {
+                        $mUrl .= $this->getUrlSuffix();
+                    }
                 }
-            }
-            else {
-                if ($Route != '') {
-                    $mUrl .= $this->getUrlSuffix();
+                else {
+                    if ($Route != '') {
+                        $mUrl .= $this->getUrlSuffix();
+                    }
+                    if ($mQueryString != '') {
+                        $mUrl .= "?{$mQueryString}";
+                    }
                 }
-                if ($mQueryString != '') {
+
+                break;
+            case TUrlMode::eGet():
+                $mUrl = $this->getBaseUrl();
+                if (!$this->getShowScriptName()) {
+                    $mUrl .= '/';
+                }
+                if ($Route != '') {
+                    $mUrl .= "?{$this->FRouteVariableName}={$Route}";
+
+                    if ($mQueryString != '') {
+                        $mUrl .= "{$Ampersand}{$mQueryString}";
+                    }
+                }
+                elseif ($mQueryString != '') {
                     $mUrl .= "?{$mQueryString}";
                 }
-            }
-
-            break;
-        case TUrlMode::eGet():
-            $mUrl = $this->getBaseUrl();
-            if (!$this->getShowScriptName()) {
-                $mUrl .= '/';
-            }
-            if ($Route != '') {
-                $mUrl .= "?{$this->FRouteVariableName}={$Route}";
-
-                if ($mQueryString != '') {
-                    $mUrl .= "{$Ampersand}{$mQueryString}";
-                }
-            }
-            elseif ($mQueryString != '') {
-                $mUrl .= "?{$mQueryString}";
-            }
-            break;
+                break;
         }
+
         /** @noinspection PhpUndefinedVariableInspection */
+
         return $mUrl;
     }
 
@@ -1959,7 +1999,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
         $this->FUrlMode = TUrlMode::ePath();
 
         TLinkedList::PrepareGeneric(['T' => IUrlRouteRule::class]);
-        $this->FRules = new TLinkedList(true);
+        $this->FRules   = new TLinkedList(true);
         $this->FRequest = $HttpRequest;
     }
 
@@ -2007,6 +2047,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
         foreach ($Parameters as $mKey => $mValue) {
             $mPairs[] = urlencode($mKey) . $Equal . urlencode($mValue);
         }
+
         return implode($Ampersand, $mPairs);
     }
 
@@ -2055,6 +2096,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
 
         $mResult = $this->CreateDefaultUrl($Route, $mParameters, $Ampersand) . $mAnchor;
         Framework::Free($mParameters);
+
         return $mResult;
     }
 
@@ -2081,6 +2123,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
                 $this->FBaseUrl = $this->FRequest->GetBaseUrl();
             }
         }
+
         return $this->FBaseUrl;
     }
 
@@ -2169,16 +2212,16 @@ class TUrlRouter extends TObject implements IUrlRouter {
         if ($PathInfo == '') {
             return;
         }
-        $mItems = explode('/', "{$PathInfo}/");
+        $mItems     = explode('/', "{$PathInfo}/");
         $mBoundHigh = count($mItems) - 1;
         for ($i = 0; $i < $mBoundHigh; $i += 2) {
             $mKey = $mItems[$i];
             if ($mKey == '') {
                 continue;
             }
-            $mValue = $mItems[$i + 1];
+            $mValue          = $mItems[$i + 1];
             $_REQUEST[$mKey] = $mValue;
-            $_GET[$mKey] = $mValue;
+            $_GET[$mKey]     = $mValue;
         }
     }
 
@@ -2192,36 +2235,37 @@ class TUrlRouter extends TObject implements IUrlRouter {
     public function ParseUrl() {
         $mRequest = $this->FRequest;
         switch ($this->FUrlMode) {
-        case TUrlMode::ePath():
-            $mRawPathInfo = $mRequest->getPathInfo();
-            $mPathInfo = $this->RemoveUrlSuffix($mRawPathInfo, $this->getUrlSuffix());
-            foreach ($this->FRules as $mRule) {
-                try {
-                    $mRoute = $mRule->ParseUrl($this, $mRequest, $mPathInfo, $mRawPathInfo);
+            case TUrlMode::ePath():
+                $mRawPathInfo = $mRequest->getPathInfo();
+                $mPathInfo    = $this->RemoveUrlSuffix($mRawPathInfo, $this->getUrlSuffix());
+                foreach ($this->FRules as $mRule) {
+                    try {
+                        $mRoute = $mRule->ParseUrl($this, $mRequest, $mPathInfo, $mRawPathInfo);
+                    }
+                    catch (EParseUrlFailed $Ex) {
+                        continue;
+                    }
+
+                    return $mRoute;
                 }
-                catch (EParseUrlFailed $Ex) {
-                    continue;
+                if ($this->FUseStrictParsing) {
+                    throw new EResolveRequestFailed(404);
                 }
-                return $mRoute;
-            }
-            if ($this->FUseStrictParsing) {
-                throw new EResolveRequestFailed(404);
-            }
-            else {
-                return $mPathInfo;
-            }
-            break;
-        case TUrlMode::eGet():
-            if (isset($_GET[$this->FRouteVariableName])) {
-                return $_GET[$this->FRouteVariableName];
-            }
-            elseif (isset($_POST[$this->FRouteVariableName])) {
-                return $_POST[$this->FRouteVariableName];
-            }
-            else {
-                throw new EResolveRequestFailed(404);
-            }
-            break;
+                else {
+                    return $mPathInfo;
+                }
+                break;
+            case TUrlMode::eGet():
+                if (isset($_GET[$this->FRouteVariableName])) {
+                    return $_GET[$this->FRouteVariableName];
+                }
+                elseif (isset($_POST[$this->FRouteVariableName])) {
+                    return $_POST[$this->FRouteVariableName];
+                }
+                else {
+                    throw new EResolveRequestFailed(404);
+                }
+                break;
         }
     }
 
@@ -2457,7 +2501,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
      *
      * @var THttpMethod[]
      */
-    private $FVerb = array();
+    private $FVerb = [];
 
     /**
      * descHere
@@ -2478,7 +2522,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
         // )
         $this->FRoute = trim($Route, '/');
 
-        $mTr['/'] = '\\/';
+        $mTr['/']  = '\\/';
         $mTr2['/'] = '\\/';
 
         if (strpos($Route, '<') !== false && preg_match_all('/<(\w+)>/', $Route, $mReferences)) {
@@ -2510,11 +2554,11 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
             }
         }
 
-        $mPattern = rtrim($Pattern, '*');
-        $this->FAppend = ($mPattern != $Pattern);
-        $mPattern = trim($mPattern, '/');
+        $mPattern        = rtrim($Pattern, '*');
+        $this->FAppend   = ($mPattern != $Pattern);
+        $mPattern        = trim($mPattern, '/');
         $this->FTemplate = preg_replace('/<(\w+):?.*?>/', '<$1>', $mPattern);
-        $this->FPattern = '/^' . strtr($this->FTemplate, $mTr) . '\/';
+        $this->FPattern  = '/^' . strtr($this->FTemplate, $mTr) . '\/';
         if ($this->FAppend) {
             $this->FPattern .= '/u';
         }
@@ -2565,7 +2609,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
         else {
             $mCaseSensitive = 'i';
         }
-        $mTr = array();
+        $mTr = [];
         if ($Route != $this->FRoute) {
             if ($this->FRoutePattern != '' && preg_match("{$this->FRoutePattern}{$mCaseSensitive}", $Route, $mMatches) && $this->FReferences != null) {
                 foreach ($this->FReferences as $mKey => $mName) {
@@ -2845,11 +2889,11 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
                 foreach ($this->FDefaultParameters as $mName => $mValue) {
                     if (!isset($_GET[$mName])) {
                         $_REQUEST[$mName] = $mValue;
-                        $_GET[$mName] = $mValue;
+                        $_GET[$mName]     = $mValue;
                     }
                 }
             }
-            $mTr = array();
+            $mTr = [];
 
             if ($this->FReferences == null) {
                 TMap::PrepareGeneric(['K' => 'string', 'V' => 'string']);
@@ -2866,7 +2910,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
                 }
                 elseif ($this->FParameters->ContainsKey($mKey)) {
                     $_REQUEST[$mKey] = $mValue;
-                    $_GET[$mKey] = $mValue;
+                    $_GET[$mKey]     = $mValue;
                 }
             }
             if ($PathInfo !== $mMatches[0]) { // there're additional GET params

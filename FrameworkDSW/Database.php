@@ -12,6 +12,7 @@ use FrameworkDSW\Containers\IIterator;
 use FrameworkDSW\Containers\IMap;
 use FrameworkDSW\Containers\TList;
 use FrameworkDSW\Framework\Framework;
+use FrameworkDSW\Reflection\TClass;
 use FrameworkDSW\System\EAccessViolation;
 use FrameworkDSW\System\EException;
 use FrameworkDSW\System\IInterface;
@@ -19,372 +20,6 @@ use FrameworkDSW\System\TEnum;
 use FrameworkDSW\System\TObject;
 use FrameworkDSW\System\TRecord;
 use FrameworkDSW\Utilities\TType;
-
-/**
- * \FrameworkDSW\Database\EDatabaseException
- * @author 许子健
- */
-class EDatabaseException extends EException {}
-/**
- *
- * @author 许子健
- */
-class EFailedToConnectDb extends EDatabaseException {
-    /**
-     * @var string
-     */
-    const CMsg = 'Failed to connect the database: ';
-}
-/**
- * @author 许子健
- */
-class EInsufficientProperties extends EDatabaseException {
-    /**
-     * @var string
-     */
-    const CMsg = 'The following fields are required: ';
-}
-/**
- *
- * @author 许子健
- */
-class EDisconnected extends EDatabaseException {}
-/**
- *
- * Enter description here ...
- * @author 许子健
- */
-class EEmptyCommand extends EDatabaseException {}
-/**
- * \FrameworkDSW\Database\EFailedToGetDbPropertyInfo
- * @author 许子健
- */
-class EFailedToGetDbPropertyInfo extends EDatabaseException {
-    /**
-     * @var string
-     */
-    const CMsg = 'Failed to get property info.';
-}
-/**
- *
- * @author 许子健
- */
-class EUnsupportedDbFeature extends EDatabaseException {}
-/**
- *
- * Enter description here ...
- * @author 许子健
- */
-class EIllegalSavepointIdentifier extends EDatabaseException {}
-/**
- *
- * Enter description here ...
- * @author 许子健
- */
-class EUnableToUpdateNonSingleTableResultSet extends EDatabaseException {}
-/**
- *
- * Enter description here ...
- * @author 许子健
- */
-class EResultSetIsNotUpdatable extends EDatabaseException {}
-/**
- *
- * Enter description here ...
- * @author 许子健
- */
-class ERowHasBeenDeleted extends EDatabaseException {}
-/**
- *
- * Enter description here ...
- * @author 许子健
- */
-class ENothingToUpdate extends EDatabaseException {}
-/**
- *
- * Enter description here ...
- * @author 许子健
- */
-class EInvalidRowId extends EDatabaseException {}
-/**
- *
- * Enter description here ...
- * @author 许子健
- */
-class EInvalidColumnName extends EDatabaseException {}
-/**
- *
- * Enter description here ...
- * @author 许子健
- */
-class ECurrentRowIsInsertRow extends EDatabaseException {}
-/**
- *
- * Enter description here ...
- * @author 许子健
- */
-class EFailedToGetFetchSize extends EDatabaseException {}
-
-/**
- * \FrameworkDSW\Database\EDatabaseWarning
- * @author 许子健
- */
-class EDatabaseWarning extends EDatabaseException {
-    /**
-     *
-     * @var \FrameworkDSW\Database\IDatabaseWarningContext
-     */
-    private $FContext = null;
-    /**
-     *
-     * @var \FrameworkDSW\Database\EDatabaseWarning
-     */
-    private $FNextWarning = null;
-
-    /**
-     *
-     * @param \FrameworkDSW\Database\IDatabaseWarningContext $Context
-     */
-    public function __construct($Context) {
-        parent::__construct();
-        TType::Object($Context, IDatabaseWarningContext::class);
-
-        $this->FContext = $Context;
-    }
-
-    /**
-     * @return string
-     */
-    public function getSqlState() {
-        return $this->FContext->getSqlState();
-    }
-
-    /**
-     * @return string
-     */
-    public function getErrorCode() {
-        return $this->FContext->getErrorCode();
-    }
-
-    /**
-     * @return \FrameworkDSW\Database\EDatabaseWarning
-     */
-    public function getNextWarning() {
-        return $this->FNextWarning;
-    }
-
-    /**
-     *
-     * @param \FrameworkDSW\Database\EDatabaseWarning  $Value
-     */
-    public function setNextWarning($Value) {
-        TType::Object($Value, EDatabaseWarning::class);
-        $this->FNextWarning = $Value;
-    }
-
-    /**
-     *
-     * Enter description here ...
-     * @return \FrameworkDSW\Database\IDatabaseWarningContext
-     */
-    public function getWarningContext() {
-        return $this->FContext;
-    }
-
-}
-/**
- *
- * @author  许子健
- */
-class ECommitFailed extends EDatabaseWarning {}
-/**
- *
- * @author  许子健
- */
-class ECreateSavepointFailed extends EDatabaseWarning {}
-/**
- *
- * @author  许子健
- */
-class ERollbackFailed extends EDatabaseWarning {}
-/**
- *
- * @author  许子健
- */
-class EExecuteFailed extends EDatabaseWarning {}
-/**
- *
- * Enter description here ...
- * @author  许子健
- */
-class EFetchAsScalarFailed extends EDatabaseWarning {}
-/**
- *
- * Enter description here ...
- * @author  许子健
- */
-class ESetCommandFailed extends EDatabaseWarning {}
-/**
- *
- * Enter description here ...
- * @author  许子健
- */
-class EFetchRowFailed extends EDatabaseWarning {}
-/**
- *
- * Enter description here ...
- * @author  许子健
- *
- */
-class ENoMoreResultSet extends EDatabaseWarning {}
-/**
- *
- * Enter description here ...
- * @author  许子健
- *
- */
-class EFetchNextResultSetFailed extends EDatabaseWarning {}
-
-/**
- * \FrameworkDSW\Database\TConcurrencyType
- * @author 许子健
- */
-final class TConcurrencyType extends TEnum {
-    /**
-     * @var integer
-     */
-    const eReadOnly = 0;
-    /**
-     * @var integer
-     */
-    const eUpdatable = 1;
-}
-
-/**
- * \FrameworkDSW\Database\TCurrentResultOption
- * @author 许子健
- */
-final class TCurrentResultOption extends TEnum {
-    /**
-     * @var integer
-     */
-    const eCloseCurrentResult = 0;
-    /**
-     * @var integer
-     */
-    const eKeepCurrentResult = 1;
-    /**
-     * @var integer
-     */
-    const eCloseAllResults = 2;
-}
-
-/**
- * \FrameworkDSW\Database\TDriverPropertyInfo
- * @author 许子健
- */
-final class TDriverPropertyInfo extends TRecord {
-    /**
-     * @var string[]
-     */
-    public $Choices = [];
-    /**
-     * @var string
-     */
-    public $Description;
-    /**
-     * @var string
-     */
-    public $Name;
-    /**
-     * @var boolean
-     */
-    public $Required;
-    /**
-     * @var string
-     */
-    public $Value;
-}
-
-/**
- * \FrameworkDSW\Database\TFetchDirection
- * @author 许子健
- */
-final class TFetchDirection extends TEnum {
-    /**
-     * @var integer
-     */
-    const eReverse = 1;
-    /**
-     * @var integer
-     */
-    const eForward = 0;
-    /**
-     * @var integer
-     */
-    const eUnkown = 2;
-}
-
-/**
- * \FrameworkDSW\Database\THoldability
- * @author 许子健
- */
-final class THoldability extends TEnum {
-    /**
-     * @var integer
-     */
-    const eHoldCursorsOverCommit = 0;
-    /**
-     * @var integer
-     */
-    const eCloseCursorsAtCommit = 1;
-}
-
-/**
- * \FrameworkDSW\Database\TResultSetType
- * @author 许子健
- */
-final class TResultSetType extends TEnum {
-    /**
-     * @var integer
-     */
-    const eForwardOnly = 0;
-    /**
-     * @var integer
-     */
-    const eScrollInsensitive = 1;
-    /**
-     * @var integer
-     */
-    const eScrollSensitive = 2;
-}
-
-/**
- * \FrameworkDSW\Database\TTransactionIsolationLevel
- * @author 许子健
- */
-final class TTransactionIsolationLevel extends TEnum {
-    /**
-     * @var integer
-     */
-    const eNone = 0;
-    /**
-     * @var integer
-     */
-    const eReadUncommitted = 1;
-    /**
-     * @var integer
-     */
-    const eReadCommitted = 2;
-    /**
-     * @var integer
-     */
-    const eRepeatableRead = 3;
-    /**
-     * @var integer
-     */
-    const eSerializable = 4;
-}
 
 /**
  * \FrameworkDSW\Database\IDatabaseWarningContext
@@ -404,44 +39,6 @@ interface IDatabaseWarningContext extends IInterface {
      */
     public function getSqlState();
 
-}
-
-/**
- * \FrameworkDSW\Database\IParam
- * param <T: ?>
- * @author 许子健
- */
-interface IParam extends IInterface {
-
-    /**
-     * descHere
-     * @return \FrameworkDSW\System\TObject
-     */
-    public function getObjectValue();
-
-    /**
-     * descHere
-     * @return string
-     */
-    public function getType();
-
-    /**
-     * descHere
-     * @return T
-     */
-    public function getValue();
-
-    /**
-     * descHere
-     * @param \FrameworkDSW\System\TObject $Value
-     */
-    public function setObjectValue($Value);
-
-    /**
-     * descHere
-     * @param T $Value
-     */
-    public function setValue($Value);
 }
 
 /**
@@ -625,7 +222,7 @@ interface IConnection extends IInterface {
 
     /**
      * descHere
-     * @param \FrameworkDSW\Database\TTransactionIsolation $Value
+     * @param \FrameworkDSW\Database\TTransactionIsolationLevel $Value
      */
     public function setTransactionIsolation($Value);
 }
@@ -1330,7 +927,7 @@ interface IDatabaseMetaData extends IInterface {
      * descHere
      * @param string $Catalog
      * @param string $SchemaPattern
-     * @param string TableNamePattern
+     * @param string $TableNamePattern
      * @param string[] Types
      * @return \FrameworkDSW\Database\IResultSet
      */
@@ -1352,7 +949,7 @@ interface IDatabaseMetaData extends IInterface {
      * descHere
      * @param string $Catalog
      * @param string $SchemaPattern
-     * @param string TypeNamePattern
+     * @param string $TypeNamePattern
      * @return \FrameworkDSW\Database\IResultSet
      */
     public function GetUdts($Catalog, $SchemaPattern, $TypeNamePattern);
@@ -1909,6 +1506,463 @@ interface IDatabaseMetaData extends IInterface {
 }
 
 /**
+ * \FrameworkDSW\Database\EDatabaseException
+ * @author 许子健
+ */
+class EDatabaseException extends EException {
+}
+
+/**
+ *
+ * @author 许子健
+ */
+class EFailedToConnectDb extends EDatabaseException {
+    /**
+     * @var string
+     */
+    private $FUrl = '';
+
+    /**
+     * @param string $Message
+     * @param \FrameworkDSW\System\EException $Previous
+     * @param string $Url
+     */
+    public function __construct($Message, $Previous = null, $Url) {
+        parent::__construct($Message, $Previous);
+
+        TType::String($Message);
+        TType::Object($Previous, EException::class);
+        TType::String($Url);
+
+        $this->FUrl = $Url;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUrl() {
+        return $this->FUrl;
+    }
+}
+
+/**
+ * @author 许子健
+ */
+class EInsufficientProperties extends EDatabaseException {
+    /**
+     * @var string
+     */
+    const CMsg = 'The following fields are required: ';
+}
+
+/**
+ *
+ * @author 许子健
+ */
+class EDisconnected extends EDatabaseException {
+}
+
+/**
+ *
+ * Enter description here ...
+ * @author 许子健
+ */
+class EEmptyCommand extends EDatabaseException {
+}
+
+/**
+ * \FrameworkDSW\Database\EFailedToGetDbPropertyInfo
+ * @author 许子健
+ */
+class EFailedToGetDbPropertyInfo extends EDatabaseException {
+    /**
+     * @var string
+     */
+    private $FUrl = '';
+
+    /**
+     * descHere
+     * @param string $Message
+     * @param \FrameworkDSW\System\EException $Previous
+     * @param string $Url
+     */
+    public function __construct($Message, $Previous = null, $Url) {
+        parent::__construct($Message, $Previous);
+        TType::String($Message);
+        TType::Object($Previous, EException::class);
+        TType::String($Url);
+
+        $this->FUrl = $Url;
+    }
+
+    /**
+     * descHere
+     * @return string
+     */
+    public function getUrl() {
+        return $this->FUrl;
+    }
+}
+
+/**
+ *
+ * @author 许子健
+ */
+class EUnsupportedDbFeature extends EDatabaseException {
+}
+
+/**
+ *
+ * Enter description here ...
+ * @author 许子健
+ */
+class EIllegalSavepointIdentifier extends EDatabaseException {
+}
+
+/**
+ *
+ * Enter description here ...
+ * @author 许子健
+ */
+class EUnableToUpdateNonSingleTableResultSet extends EDatabaseException {
+}
+
+/**
+ *
+ * Enter description here ...
+ * @author 许子健
+ */
+class EResultSetIsNotUpdatable extends EDatabaseException {
+}
+
+/**
+ *
+ * Enter description here ...
+ * @author 许子健
+ */
+class ERowHasBeenDeleted extends EDatabaseException {
+}
+
+/**
+ *
+ * Enter description here ...
+ * @author 许子健
+ */
+class ENothingToUpdate extends EDatabaseException {
+}
+
+/**
+ *
+ * Enter description here ...
+ * @author 许子健
+ */
+class EInvalidRowId extends EDatabaseException {
+}
+
+/**
+ *
+ * Enter description here ...
+ * @author 许子健
+ */
+class EInvalidColumnName extends EDatabaseException {
+}
+
+/**
+ *
+ * Enter description here ...
+ * @author 许子健
+ */
+class ECurrentRowIsInsertRow extends EDatabaseException {
+}
+
+/**
+ *
+ * Enter description here ...
+ * @author 许子健
+ */
+class EFailedToGetFetchSize extends EDatabaseException {
+}
+
+/**
+ * \FrameworkDSW\Database\EDatabaseWarning
+ * @author 许子健
+ */
+class EDatabaseWarning extends EDatabaseException {
+    /**
+     *
+     * @var \FrameworkDSW\Database\IDatabaseWarningContext
+     */
+    private $FContext = null;
+    /**
+     *
+     * @var \FrameworkDSW\Database\EDatabaseWarning
+     */
+    private $FNextWarning = null;
+
+    /**
+     *
+     * @param \FrameworkDSW\Database\IDatabaseWarningContext $Context
+     */
+    public function __construct($Context) {
+        parent::__construct();
+        TType::Object($Context, IDatabaseWarningContext::class);
+
+        $this->FContext = $Context;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSqlState() {
+        return $this->FContext->getSqlState();
+    }
+
+    /**
+     * @return string
+     */
+    public function getErrorCode() {
+        return $this->FContext->getErrorCode();
+    }
+
+    /**
+     * @return \FrameworkDSW\Database\EDatabaseWarning
+     */
+    public function getNextWarning() {
+        return $this->FNextWarning;
+    }
+
+    /**
+     *
+     * @param \FrameworkDSW\Database\EDatabaseWarning $Value
+     */
+    public function setNextWarning($Value) {
+        TType::Object($Value, EDatabaseWarning::class);
+        $this->FNextWarning = $Value;
+    }
+
+    /**
+     *
+     * Enter description here ...
+     * @return \FrameworkDSW\Database\IDatabaseWarningContext
+     */
+    public function getWarningContext() {
+        return $this->FContext;
+    }
+
+}
+
+/**
+ *
+ * @author  许子健
+ */
+class ECommitFailed extends EDatabaseWarning {
+}
+
+/**
+ *
+ * @author  许子健
+ */
+class ECreateSavepointFailed extends EDatabaseWarning {
+}
+
+/**
+ *
+ * @author  许子健
+ */
+class ERollbackFailed extends EDatabaseWarning {
+}
+
+/**
+ *
+ * @author  许子健
+ */
+class EExecuteFailed extends EDatabaseWarning {
+}
+
+/**
+ *
+ * Enter description here ...
+ * @author  许子健
+ */
+class EFetchAsScalarFailed extends EDatabaseWarning {
+}
+
+/**
+ *
+ * Enter description here ...
+ * @author  许子健
+ */
+class ESetCommandFailed extends EDatabaseWarning {
+}
+
+/**
+ *
+ * Enter description here ...
+ * @author  许子健
+ */
+class EFetchRowFailed extends EDatabaseWarning {
+}
+
+/**
+ *
+ * Enter description here ...
+ * @author  许子健
+ *
+ */
+class ENoMoreResultSet extends EDatabaseWarning {
+}
+
+/**
+ *
+ * Enter description here ...
+ * @author  许子健
+ *
+ */
+class EFetchNextResultSetFailed extends EDatabaseWarning {
+}
+
+/**
+ * \FrameworkDSW\Database\TConcurrencyType
+ * @author 许子健
+ */
+final class TConcurrencyType extends TEnum {
+    /**
+     * @var integer
+     */
+    const eReadOnly = 0;
+    /**
+     * @var integer
+     */
+    const eUpdatable = 1;
+}
+
+/**
+ * \FrameworkDSW\Database\TCurrentResultOption
+ * @author 许子健
+ */
+final class TCurrentResultOption extends TEnum {
+    /**
+     * @var integer
+     */
+    const eCloseCurrentResult = 0;
+    /**
+     * @var integer
+     */
+    const eKeepCurrentResult = 1;
+    /**
+     * @var integer
+     */
+    const eCloseAllResults = 2;
+}
+
+/**
+ * \FrameworkDSW\Database\TDriverPropertyInfo
+ * @author 许子健
+ */
+final class TDriverPropertyInfo extends TRecord {
+    /**
+     * @var string[]
+     */
+    public $Choices = [];
+    /**
+     * @var string
+     */
+    public $Description;
+    /**
+     * @var string
+     */
+    public $Name;
+    /**
+     * @var boolean
+     */
+    public $Required;
+    /**
+     * @var string
+     */
+    public $Value;
+}
+
+/**
+ * \FrameworkDSW\Database\TFetchDirection
+ * @author 许子健
+ */
+final class TFetchDirection extends TEnum {
+    /**
+     * @var integer
+     */
+    const eReverse = 1;
+    /**
+     * @var integer
+     */
+    const eForward = 0;
+    /**
+     * @var integer
+     */
+    const eUnknown = 2;
+}
+
+/**
+ * \FrameworkDSW\Database\THoldability
+ * @author 许子健
+ */
+final class THoldability extends TEnum {
+    /**
+     * @var integer
+     */
+    const eHoldCursorsOverCommit = 0;
+    /**
+     * @var integer
+     */
+    const eCloseCursorsAtCommit = 1;
+}
+
+/**
+ * \FrameworkDSW\Database\TResultSetType
+ * @author 许子健
+ */
+final class TResultSetType extends TEnum {
+    /**
+     * @var integer
+     */
+    const eForwardOnly = 0;
+    /**
+     * @var integer
+     */
+    const eScrollInsensitive = 1;
+    /**
+     * @var integer
+     */
+    const eScrollSensitive = 2;
+}
+
+/**
+ * \FrameworkDSW\Database\TTransactionIsolationLevel
+ * @author 许子健
+ */
+final class TTransactionIsolationLevel extends TEnum {
+    /**
+     * @var integer
+     */
+    const eNone = 0;
+    /**
+     * @var integer
+     */
+    const eReadUncommitted = 1;
+    /**
+     * @var integer
+     */
+    const eReadCommitted = 2;
+    /**
+     * @var integer
+     */
+    const eRepeatableRead = 3;
+    /**
+     * @var integer
+     */
+    const eSerializable = 4;
+}
+
+/**
  * \FrameworkDSW\Database\TPdoWarningContext
  * @author 许子健
  */
@@ -1959,7 +2013,10 @@ class TPdoWarningContext extends TObject implements IDatabaseWarningContext {
  * @author 许子健
  */
 class TSavepoint extends TObject implements ISavepoint {
-
+    /**
+     * @var integer
+     */
+    private static $FNextId = 0;
     /**
      * @var integer
      */
@@ -1968,10 +2025,6 @@ class TSavepoint extends TObject implements ISavepoint {
      * @var string
      */
     private $FName = '';
-    /**
-     * @var integer
-     */
-    private static $FNextId = 0;
 
     /**
      * descHere
@@ -1992,14 +2045,14 @@ class TSavepoint extends TObject implements ISavepoint {
     /**
      * descHere
      * @throws EIllegalSavepointIdentifier
-     * @return   integer
+     * @return integer
      */
     public function getId() {
         if ($this->FId != -1) {
             return $this->FId;
         }
         else {
-            throw new EIllegalSavepointIdentifier();
+            throw new EIllegalSavepointIdentifier(sprintf('No such savepoint ID: use name "%s" instead.', $this->FName));
         }
     }
 
@@ -2013,7 +2066,7 @@ class TSavepoint extends TObject implements ISavepoint {
             return $this->FName;
         }
         else {
-            throw new EIllegalSavepointIdentifier();
+            throw new EIllegalSavepointIdentifier(sprintf('No such savepoint name: use ID "%s" instead.', $this->FId));
         }
     }
 
@@ -2026,43 +2079,9 @@ class TSavepoint extends TObject implements ISavepoint {
             return $this->FName;
         }
         else {
-            return 'Svpt' . (string) $this->FId;
+            return 'Svpt' . (string)$this->FId;
         }
     }
-}
-
-/**
- * \FrameworkDSW\Database\TAbstractParam
- * param <T: ?>
- * @author 许子健
- */
-abstract class TAbstractParam extends TObject {
-    /**
-     * @var T
-     */
-    protected $FValue;
-
-    //public abstract function getType(); //returns a string.
-    //TODO: SEE http://bugs.php.net/bug.php?id=51826 to know why this method was commented.
-
-
-    /**
-     * descHere
-     * @return T
-     */
-    public function getValue() {
-        return $this->FValue;
-    }
-
-    /**
-     * descHere
-     * @param T $Value
-     */
-    public function setValue($Value) {
-        TType::Type($Value, $this->GenericArg('T'));
-        $this->FValue = $Value;
-    }
-
 }
 
 /**
@@ -2097,42 +2116,6 @@ abstract class TAbstractPdoDriver extends TObject {
     protected $FDbName = '';
 
     /**
-     *
-     * Enter description here ...
-     */
-    protected function ConvertProperties() {
-        if ($this->FProperties === null) {
-            return;
-        }
-        if ($this->FProperties->ContainsKey('AutoCommit')) {
-            $this->FPdoOptions[\PDO::ATTR_AUTOCOMMIT] = (boolean) $this->FProperties['AutoCommit'];
-        }
-        if ($this->FProperties->ContainsKey('Timeout')) {
-            $this->FPdoOptions[\PDO::ATTR_TIMEOUT] = (integer) $this->FProperties['Timeout'];
-        }
-        if ($this->FProperties->ContainsKey('Prefetch')) {
-            $this->FPdoOptions[\PDO::ATTR_PREFETCH] = (integer) $this->FProperties['Prefetch'];
-        }
-        if ($this->FProperties->ContainsKey('Case')) {
-            switch ($this->FProperties['Case']) {
-                case 'Natural' :
-                    $this->FPdoOptions[\PDO::ATTR_CASE] = \PDO::CASE_NATURAL;
-                    break;
-                case 'Upper' :
-                    $this->FPdoOptions[\PDO::ATTR_CASE] = \PDO::CASE_UPPER;
-                    break;
-                case 'Lower' :
-                    $this->FPdoOptions[\PDO::ATTR_CASE] = \PDO::CASE_LOWER;
-                    break;
-                default :
-                    break;
-            }
-        }
-
-     //TODO: observe and add other PDO common available options.
-    }
-
-    /**
      * descHere
      * @param string $Url
      * @param \FrameworkDSW\Containers\IMap $Properties <K: string, V: string>
@@ -2148,50 +2131,7 @@ abstract class TAbstractPdoDriver extends TObject {
         if ($this->ValidateUrl($Url)) {
             return $this->DoConnect();
         }
-        throw new EFailedToConnectDb(EFailedToConnectDb::CMsg . $Url);
-    }
-
-    /**
-     * descHere
-     * @return \FrameworkDSW\Database\IConnection
-     */
-    protected abstract function DoConnect();
-
-    /**
-     * descHere
-     * @return \FrameworkDSW\Database\TDriverPropertyInfo
-     */
-    protected abstract function DoGetPropertyInfo();
-
-    /**
-     * descHere
-     * @return \FrameworkDSW\Utilities\TVersion
-     */
-    protected abstract function DoGetVersion();
-
-    /**
-     * descHere
-     * @return boolean
-     */
-    protected abstract function DoValidateUrl();
-
-    /**
-     * descHere
-     * @param string $Url
-     * @param \FrameworkDSW\Containers\IMap $Properties <K: string, V: string>
-     * @throws EFailedToGetDbPropertyInfo
-     * @return \FrameworkDSW\System\TDriverPropertyInfo[]
-     */
-    public function GetPropertyInfo($Url, $Properties) {
-        TType::String($Url);
-        TType::Type($Properties, [
-            IMap::class => ['K' => 'string', 'V' => 'string']]);
-
-        if ($this->ValidateUrl($Url)) {
-            $this->FProperties = $Properties;
-            return $this->DoGetPropertyInfo();
-        }
-        throw new EFailedToGetDbPropertyInfo(EFailedToGetDbPropertyInfo::CMsg);
+        throw new EFailedToConnectDb(sprintf('Connect database failed: "%s" is an invalid database connection URL.', $Url), null, $Url);
     }
 
     /**
@@ -2215,12 +2155,52 @@ abstract class TAbstractPdoDriver extends TObject {
         list ($mServer, $mDbName) = $mTemp;
         if ($mProtocol != '' && $mServer != '' && $mDbName != '') {
             $this->FProtocol = $mProtocol;
-            $this->FServer = $mServer;
-            $this->FDbName = $mDbName;
+            $this->FServer   = $mServer;
+            $this->FDbName   = $mDbName;
+
             return $this->DoValidateUrl();
         }
+
         return false;
     }
+
+    /**
+     * descHere
+     * @return boolean
+     */
+    protected abstract function DoValidateUrl();
+
+    /**
+     * descHere
+     * @return \FrameworkDSW\Database\IConnection
+     */
+    protected abstract function DoConnect();
+
+    /**
+     * descHere
+     * @param string $Url
+     * @param \FrameworkDSW\Containers\IMap $Properties <K: string, V: string>
+     * @throws EFailedToGetDbPropertyInfo
+     * @return \FrameworkDSW\Database\TDriverPropertyInfo[]
+     */
+    public function GetPropertyInfo($Url, $Properties) {
+        TType::String($Url);
+        TType::Type($Properties, [
+            IMap::class => ['K' => 'string', 'V' => 'string']]);
+
+        if ($this->ValidateUrl($Url)) {
+            $this->FProperties = $Properties;
+
+            return $this->DoGetPropertyInfo();
+        }
+        throw new EFailedToGetDbPropertyInfo(sprintf('Get database property information failed: "%s" is an invalid database connection URL.', $Url), null, $Url);
+    }
+
+    /**
+     * descHere
+     * @return \FrameworkDSW\Database\TDriverPropertyInfo
+     */
+    protected abstract function DoGetPropertyInfo();
 
     /**
      * descHere
@@ -2229,6 +2209,48 @@ abstract class TAbstractPdoDriver extends TObject {
     public function getVersion() {
         return $this->DoGetVersion();
     }
+
+    /**
+     * descHere
+     * @return \FrameworkDSW\Utilities\TVersion
+     */
+    protected abstract function DoGetVersion();
+
+    /**
+     *
+     * Enter description here ...
+     */
+    protected function ConvertProperties() {
+        if ($this->FProperties === null) {
+            return;
+        }
+        if ($this->FProperties->ContainsKey('AutoCommit')) {
+            $this->FPdoOptions[\PDO::ATTR_AUTOCOMMIT] = (boolean)$this->FProperties['AutoCommit'];
+        }
+        if ($this->FProperties->ContainsKey('Timeout')) {
+            $this->FPdoOptions[\PDO::ATTR_TIMEOUT] = (integer)$this->FProperties['Timeout'];
+        }
+        if ($this->FProperties->ContainsKey('Prefetch')) {
+            $this->FPdoOptions[\PDO::ATTR_PREFETCH] = (integer)$this->FProperties['Prefetch'];
+        }
+        if ($this->FProperties->ContainsKey('Case')) {
+            switch ($this->FProperties['Case']) {
+                case 'Natural' :
+                    $this->FPdoOptions[\PDO::ATTR_CASE] = \PDO::CASE_NATURAL;
+                    break;
+                case 'Upper' :
+                    $this->FPdoOptions[\PDO::ATTR_CASE] = \PDO::CASE_UPPER;
+                    break;
+                case 'Lower' :
+                    $this->FPdoOptions[\PDO::ATTR_CASE] = \PDO::CASE_LOWER;
+                    break;
+                default :
+                    break;
+            }
+        }
+
+        //TODO: observe and add other PDO common available options.
+    }
 }
 
 /**
@@ -2236,31 +2258,6 @@ abstract class TAbstractPdoDriver extends TObject {
  * @author 许子健
  */
 abstract class TAbstractPdoConnection extends TObject {
-    /**
-     * @var string
-     */
-    const CCatalogUnsupported = 'Catalog is not supported by this driver.';
-    /**
-     * @var string
-     */
-    const CHoldabilityUnsupported = 'Holdability is not supported by this driver.';
-    /**
-     * @var string
-     */
-    const CNullDriverOrPdoObj = 'The driver or/and the PDO object given is null.';
-    /**
-     * @var string
-     */
-    const CReadOnlyUnsupported = 'ReadOnly is not supported by this driver.';
-    /**
-     * @var string
-     */
-    const CSavepointsUnsupported = 'Savepoints is not supported by this driver.';
-    /**
-     * @var string
-     */
-    const CTransactionIsolationUnsupported = 'Transaction isolation is not supported by this driver.';
-
     /**
      *
      * @var \FrameworkDSW\Database\IDriver
@@ -2283,114 +2280,6 @@ abstract class TAbstractPdoConnection extends TObject {
 
     /**
      *
-     */
-    protected function EnsureConnected() {
-        if (!$this->FIsConnected) {
-            throw new EDisconnected();
-        }
-    }
-
-    /**
-     *
-     */
-    protected function DoCommit() {
-        $this->FPdo->commit();
-    }
-
-    /**
-     *
-     * @param \FrameworkDSW\Database\TResultSetType $ResultSetType
-     * @param \FrameworkDSW\Database\TConcurrencyType $ConcurrencyType
-     * @return \FrameworkDSW\Database\IStatement
-     */
-    protected abstract function DoCreateStatement($ResultSetType, $ConcurrencyType);
-
-    /**
-     *
-     * @param \FrameworkDSW\Database\TResultSetType $ResultSetType
-     * @param \FrameworkDSW\Database\TConcurrencyType $ConcurrencyType
-     * @return \FrameworkDSW\Database\IPreparedStatement
-     */
-    protected abstract function DoPrepareStatement($ResultSetType, $ConcurrencyType);
-
-    /**
-     *
-     * @param string $Name
-     * @throws EUnsupportedDbFeature
-     * @return \FrameworkDSW\Database\ISavepoint
-     */
-    protected function DoCreateSavepoint(/** @noinspection PhpUnusedParameterInspection */
-        $Name) {
-        throw new EUnsupportedDbFeature(self::CSavepointsUnsupported);
-    }
-
-    /**
-     * @return \FrameworkDSW\Database\THoldability
-     */
-    protected function DoGetHoldability() {
-        return THoldability::eHoldCursorsOverCommit();
-    }
-
-    /**
-     *
-     * @param    \FrameworkDSW\Database\ISavepoint $Savepoint
-     * @throws EUnsupportedDbFeature
-     */
-    protected function DoRemoveSavepoint(/** @noinspection PhpUnusedParameterInspection */
-        $Savepoint) {
-        throw new EUnsupportedDbFeature(self::CSavepointsUnsupported);
-    }
-
-    /**
-     *
-     * @param \FrameworkDSW\Database\ISavepoint $Savepoint
-     * @throws EUnsupportedDbFeature
-     */
-    protected function DoRollback($Savepoint = null) {
-        if ($Savepoint !== null) {
-            throw new EUnsupportedDbFeature(self::CSavepointsUnsupported);
-        }
-
-        try {
-            $this->FPdo->rollBack();
-        }
-        catch (\PDOException $Ex) {
-            self::PushWarning(ERollbackFailed::ClassType(), $Ex, $this);
-        }
-    }
-
-    /**
-     *
-     * @param \FrameworkDSW\Database\THoldability $Value
-     * @throws EUnsupportedDbFeature
-     */
-    protected function DoSetHoldability(/** @noinspection PhpUnusedParameterInspection */
-        $Value) {
-        throw new EUnsupportedDbFeature(self::CHoldabilityUnsupported);
-    }
-
-    /**
-     *
-     * @param boolean $Value
-     * @throws EUnsupportedDbFeature
-     */
-    protected function DoSetReadOnly(/** @noinspection PhpUnusedParameterInspection */
-        $Value) {
-        throw new EUnsupportedDbFeature(self::CReadOnlyUnsupported);
-    }
-
-    /**
-     *
-     * @param \FrameworkDSW\Database\TTransactionIsolationLevel $Value
-     * @throws EUnsupportedDbFeature
-     */
-    protected function DoSetTransactionIsolation(/** @noinspection PhpUnusedParameterInspection */
-        $Value) {
-        throw new EUnsupportedDbFeature(self::CTransactionIsolationUnsupported);
-    }
-
-    /**
-     *
      * @param \FrameworkDSW\Database\IDriver $Driver
      * @param \PDO $Pdo
      * @throws \FrameworkDSW\System\EAccessViolation
@@ -2401,31 +2290,14 @@ abstract class TAbstractPdoConnection extends TObject {
 
         if ($Driver !== null && $Pdo !== null) {
             $this->FDriver = $Driver;
-            $this->FPdo = $Pdo;
+            $this->FPdo    = $Pdo;
             $this->FPdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
             $this->FIsConnected = true;
         }
         else {
             $this->FIsConnected = false;
-            throw new EAccessViolation(self::CNullDriverOrPdoObj);
+            throw new EAccessViolation(sprintf('Unsupported database feature: the driver or/and the PDO object given is null.'));
         }
-    }
-
-    /**
-     * @param string $WarningType
-     * @param \PDOException $PdoException
-     * @param \FrameworkDSW\Database\TAbstractPdoConnection $Connection
-     * @throws
-     */
-    public static function PushWarning($WarningType, $PdoException, $Connection) {
-        TType::String($WarningType);
-        TType::Object($Connection, TAbstractPdoConnection::class);
-
-        //$WarningType::InheritsFrom('EDatabaseWarning');
-        $mWarning = new $WarningType(new TPdoWarningContext($PdoException));
-        $mWarning->setNextWarning($Connection->FWarnings);
-        $Connection->FWarnings = $mWarning;
-        throw $mWarning;
     }
 
     /**
@@ -2437,6 +2309,15 @@ abstract class TAbstractPdoConnection extends TObject {
             $mCurr = $this->FWarnings->getNextWarning();
             Framework::Free($this->FWarnings);
             $this->FWarnings = $mCurr;
+        }
+    }
+
+    /**
+     *
+     */
+    protected function EnsureConnected() {
+        if (!$this->FIsConnected) {
+            throw new EDisconnected('No database connected.');
         }
     }
 
@@ -2454,13 +2335,49 @@ abstract class TAbstractPdoConnection extends TObject {
     }
 
     /**
+     *
+     */
+    protected function DoCommit() {
+        $this->FPdo->commit();
+    }
+
+    /**
+     * @param \FrameworkDSW\Reflection\TClass $WarningType <T: ?>
+     * @param \PDOException $PdoException
+     * @param \FrameworkDSW\Database\TAbstractPdoConnection $Connection
+     * @throws EDatabaseWarning
+     */
+    public static function PushWarning($WarningType, $PdoException, $Connection) {
+        TType::String($WarningType);
+        TType::Object($Connection, TAbstractPdoConnection::class);
+
+        /**@var \FrameworkDSW\Database\EDatabaseWarning $mWarning */
+        $mWarning = $WarningType->NewInstance([new TPdoWarningContext($PdoException)]);
+        $mWarning->setNextWarning($Connection->FWarnings);
+        $Connection->FWarnings = $mWarning;
+        throw $mWarning;
+    }
+
+    /**
      * descHere
      * @param string $Name
      * @return \FrameworkDSW\Database\ISavepoint
      */
     public function CreateSavepoint($Name = '') {
         TType::String($Name);
+
         return $this->DoCreateSavepoint($Name);
+    }
+
+    /**
+     *
+     * @param string $Name
+     * @throws EUnsupportedDbFeature
+     * @return \FrameworkDSW\Database\ISavepoint
+     */
+    protected function DoCreateSavepoint(/** @noinspection PhpUnusedParameterInspection */
+        $Name) {
+        throw new EUnsupportedDbFeature(sprintf('Unsupported database feature: savepoints is not supported by this driver.'));
     }
 
     /**
@@ -2474,9 +2391,18 @@ abstract class TAbstractPdoConnection extends TObject {
         TType::Object($ConcurrencyType, TConcurrencyType::class);
 
         $this->EnsureConnected();
+
         //TODO: check if params are supported first.
         return $this->DoCreateStatement($ResultSetType, $ConcurrencyType);
     }
+
+    /**
+     *
+     * @param \FrameworkDSW\Database\TResultSetType $ResultSetType
+     * @param \FrameworkDSW\Database\TConcurrencyType $ConcurrencyType
+     * @return \FrameworkDSW\Database\IStatement
+     */
+    protected abstract function DoCreateStatement($ResultSetType, $ConcurrencyType);
 
     /**
      * descHere
@@ -2499,9 +2425,12 @@ abstract class TAbstractPdoConnection extends TObject {
             $mResult = $this->FPdo->exec($SqlStatement);
         }
         catch (\PDOException $Ex) {
-            self::PushWarning(EExecuteFailed::ClassType(), $Ex, $this);
+            TClass::PrepareGeneric(['T' => EExecuteFailed::class]);
+            self::PushWarning(new TClass(), $Ex, $this);
         }
+
         /** @noinspection PhpUndefinedVariableInspection */
+
         return $mResult;
     }
 
@@ -2511,7 +2440,8 @@ abstract class TAbstractPdoConnection extends TObject {
      */
     public function getAutoCommit() {
         $this->EnsureConnected();
-        return (boolean) $this->FPdo->getAttribute(\PDO::ATTR_AUTOCOMMIT);
+
+        return (boolean)$this->FPdo->getAttribute(\PDO::ATTR_AUTOCOMMIT);
     }
 
     /**
@@ -2520,7 +2450,7 @@ abstract class TAbstractPdoConnection extends TObject {
     public function getCatalog() {
         return '';
 
-     //override this in subclasses if capable.
+        //override this in subclasses if capable.
     }
 
     /**
@@ -2529,7 +2459,15 @@ abstract class TAbstractPdoConnection extends TObject {
      */
     public function getHoldability() {
         $this->EnsureConnected();
+
         return $this->DoGetHoldability();
+    }
+
+    /**
+     * @return \FrameworkDSW\Database\THoldability
+     */
+    protected function DoGetHoldability() {
+        return THoldability::eHoldCursorsOverCommit();
     }
 
     /**
@@ -2548,7 +2486,7 @@ abstract class TAbstractPdoConnection extends TObject {
     public function getMetaData() {
         throw new EUnsupportedDbFeature();
 
-     //TODO: metadata
+        //TODO: metadata
     }
 
     /**
@@ -2558,7 +2496,7 @@ abstract class TAbstractPdoConnection extends TObject {
     public function getReadOnly() {
         return false;
 
-     //override this if capable.
+        //override this if capable.
     }
 
     /**
@@ -2568,7 +2506,7 @@ abstract class TAbstractPdoConnection extends TObject {
     public function getTransactionIsolation() {
         return TTransactionIsolationLevel::eNone();
 
-     //override this if capable.
+        //override this if capable.
     }
 
     /**
@@ -2577,6 +2515,7 @@ abstract class TAbstractPdoConnection extends TObject {
      */
     public function getWarnings() {
         $this->EnsureConnected();
+
         return $this->FWarnings;
     }
 
@@ -2591,9 +2530,18 @@ abstract class TAbstractPdoConnection extends TObject {
         TType::Object($ConcurrencyType, TConcurrencyType::class);
 
         $this->EnsureConnected();
+
         //TODO: check if the params are supported first.
         return $this->DoPrepareStatement($ResultSetType, $ConcurrencyType);
     }
+
+    /**
+     *
+     * @param \FrameworkDSW\Database\TResultSetType $ResultSetType
+     * @param \FrameworkDSW\Database\TConcurrencyType $ConcurrencyType
+     * @return \FrameworkDSW\Database\IPreparedStatement
+     */
+    protected abstract function DoPrepareStatement($ResultSetType, $ConcurrencyType);
 
     /**
      * descHere
@@ -2605,6 +2553,16 @@ abstract class TAbstractPdoConnection extends TObject {
     }
 
     /**
+     *
+     * @param    \FrameworkDSW\Database\ISavepoint $Savepoint
+     * @throws EUnsupportedDbFeature
+     */
+    protected function DoRemoveSavepoint(/** @noinspection PhpUnusedParameterInspection */
+        $Savepoint) {
+        throw new EUnsupportedDbFeature(sprintf('Unsupported database feature: savepoints is not supported by this driver.'));
+    }
+
+    /**
      * descHere
      * @param \FrameworkDSW\Database\ISavepoint Savepoint
      */
@@ -2612,6 +2570,25 @@ abstract class TAbstractPdoConnection extends TObject {
         TType::Object($Savepoint, ISavepoint::class);
         $this->EnsureConnected();
         $this->DoRollback($Savepoint);
+    }
+
+    /**
+     *
+     * @param \FrameworkDSW\Database\ISavepoint $Savepoint
+     * @throws EUnsupportedDbFeature
+     */
+    protected function DoRollback($Savepoint = null) {
+        if ($Savepoint !== null) {
+            throw new EUnsupportedDbFeature(sprintf('Unsupported database feature: savepoints is not supported by this driver.'));
+        }
+
+        try {
+            $this->FPdo->rollBack();
+        }
+        catch (\PDOException $Ex) {
+            TClass::PrepareGeneric(['T' => ERollbackFailed::class]);
+            self::PushWarning(new TClass(), $Ex, $this);
+        }
     }
 
     /**
@@ -2631,7 +2608,7 @@ abstract class TAbstractPdoConnection extends TObject {
      */
     public function setCatalog($Value) {
         TType::String($Value);
-        throw new EUnsupportedDbFeature(self::CCatalogUnsupported);
+        throw new EUnsupportedDbFeature(sprintf('Unsupported database feature: catalog is not supported by this driver.'));
     }
 
     /**
@@ -2644,6 +2621,16 @@ abstract class TAbstractPdoConnection extends TObject {
     }
 
     /**
+     *
+     * @param \FrameworkDSW\Database\THoldability $Value
+     * @throws EUnsupportedDbFeature
+     */
+    protected function DoSetHoldability(/** @noinspection PhpUnusedParameterInspection */
+        $Value) {
+        throw new EUnsupportedDbFeature(sprintf('Unsupported database feature: holdability is not supported by this driver.'));
+    }
+
+    /**
      * descHere
      * @param boolean $Value
      */
@@ -2653,12 +2640,32 @@ abstract class TAbstractPdoConnection extends TObject {
     }
 
     /**
+     *
+     * @param boolean $Value
+     * @throws EUnsupportedDbFeature
+     */
+    protected function DoSetReadOnly(/** @noinspection PhpUnusedParameterInspection */
+        $Value) {
+        throw new EUnsupportedDbFeature(sprintf('Unsupported database feature: readOnly is not supported by this driver.'));
+    }
+
+    /**
      * descHere
-     * @param \FrameworkDSW\Database\TTransactionIsolation $Value
+     * @param \FrameworkDSW\Database\TTransactionIsolationLevel $Value
      */
     public function setTransactionIsolation($Value) {
         TType::Object($Value, TTransactionIsolationLevel::class);
         $this->DoSetTransactionIsolation($Value);
+    }
+
+    /**
+     *
+     * @param \FrameworkDSW\Database\TTransactionIsolationLevel $Value
+     * @throws EUnsupportedDbFeature
+     */
+    protected function DoSetTransactionIsolation(/** @noinspection PhpUnusedParameterInspection */
+        $Value) {
+        throw new EUnsupportedDbFeature(sprintf('Unsupported database feature: transaction isolation is not supported by this driver.'));
     }
 
 }
@@ -2711,23 +2718,6 @@ abstract class TAbstractPdoStatement extends TObject implements IStatement {
      */
     private $FCommands = null;
 
-//    /**
-//     *
-//     * Enter description here ...
-//     */
-//    private function EnsurePdoStatement() {
-//        if ($this->FPdoStatement === null) {
-//            throw new EEmptyCommand();
-//        }
-//    }
-
-    /**
-     *
-     * Enter description here ...
-     * @return \FrameworkDSW\System\IInterface
-     */
-    protected abstract function DoFetchAsScalar();
-
     /**
      *
      * Enter description here ...
@@ -2738,27 +2728,22 @@ abstract class TAbstractPdoStatement extends TObject implements IStatement {
      */
     public function __construct($Connection, $Pdo, $ResultSetType, $ConcurrencyType) {
         parent::__construct();
-        TType::Object($Connection, TAbstractPdoConnection::class);;
+        TType::Object($Connection, TAbstractPdoConnection::class);
         TType::Object($ResultSetType, TResultSetType::class);
         TType::Object($ConcurrencyType, TConcurrencyType::class);
 
-        $this->FConnection = $Connection;
-        $this->FPdo = $Pdo;
+        $this->FConnection    = $Connection;
+        $this->FPdo           = $Pdo;
         $this->FResultSetType = $ResultSetType;
         //eForwardOnly 只能向前滚动row
         //eScrollInsensitive 对其他对象作出的数据修改不敏感，直接装入全部数据到内存
         //eScrollSensitive   ----------------------敏感，每次调用数据库某一行
         $this->FConcurrencyType = $ConcurrencyType;
 
-     //eReadOnly 不能修改数据
-    //eUpdatable 可以修改数据
+        //eReadOnly 不能修改数据
+        //eUpdatable 可以修改数据
     }
 
-    /**
-     * descHere
-     * @param string $Command
-     * @return integer
-     */
     /** @noinspection PhpInconsistentReturnPointsInspection */
     public function Execute($Command = '') {
         TType::String($Command);
@@ -2768,12 +2753,20 @@ abstract class TAbstractPdoStatement extends TObject implements IStatement {
         }
         try {
             $mStmt = $this->FPdo->query($this->FCommand);
+
             return $mStmt->rowCount();
         }
         catch (\PDOException $Ex) {
-            TAbstractPdoConnection::PushWarning(EExecuteFailed::ClassType(), $Ex, $this->FConnection);
+            TClass::PrepareGeneric(['T' => EExecuteFailed::class]);
+            TAbstractPdoConnection::PushWarning(new TClass(), $Ex, $this->FConnection);
         }
     }
+
+    /**
+     * descHere
+     * @param string $Command
+     * @return integer
+     */
 
     /**
      * (non-PHPdoc)
@@ -2783,37 +2776,48 @@ abstract class TAbstractPdoStatement extends TObject implements IStatement {
      */
     public function ExecuteCommands() {
         if ($this->FCommands === null || $this->FCommands->IsEmpty()) {
-            throw new EEmptyCommand();
+            throw new EEmptyCommand('Execute commands failed: Empty command.');
         }
         $mRows = [];
         try {
             $this->FConnection->setAutoCommit(false);
             foreach ($this->FCommands as $mCmd) {
-                $mStmt = $this->FPdo->query($mCmd);
+                $mStmt   = $this->FPdo->query($mCmd);
                 $mRows[] = $mStmt->rowCount();
             }
             $this->FConnection->Commit();
         }
         catch (\PDOException $Ex) {
             $this->FConnection->Rollback();
-            TAbstractPdoConnection::PushWarning(EExecuteFailed::ClassType(), $Ex, $this->FConnection);
+            TClass::PrepareGeneric(['T' => EExecuteFailed::class]);
+            TAbstractPdoConnection::PushWarning(new TClass(), $Ex, $this->FConnection);
         }
+
         return $mRows;
     }
 
-    /**
-     * descHere
-     * @return \FrameworkDSW\System\IInterface
-     */
     /** @noinspection PhpInconsistentReturnPointsInspection */
     public function FetchAsScalar() {
         try {
             return $this->DoFetchAsScalar();
         }
         catch (\PDOException $Ex) {
-            TAbstractPdoConnection::PushWarning(EFetchAsScalarFailed::ClassType(), $Ex, $this->FConnection);
+            TClass::PrepareGeneric(['T' => EFetchAsScalarFailed::class]);
+            TAbstractPdoConnection::PushWarning(new TClass(), $Ex, $this->FConnection);
         }
     }
+
+    /**
+     * descHere
+     * @return \FrameworkDSW\System\IInterface
+     */
+
+    /**
+     *
+     * Enter description here ...
+     * @return \FrameworkDSW\System\IInterface
+     */
+    protected abstract function DoFetchAsScalar();
 
     /**
      * descHere
@@ -2824,6 +2828,7 @@ abstract class TAbstractPdoStatement extends TObject implements IStatement {
             TList::PrepareGeneric(['T' => 'string']);
             $this->FCommands = new TList();
         }
+
         return $this->FCommands;
     }
 
@@ -2868,7 +2873,7 @@ abstract class TAbstractPdoStatement extends TObject implements IStatement {
             $this->setCommand($Command);
         }
 
-     //TODO: ...
+        //TODO: ...
     }
 
     /**
@@ -2888,7 +2893,8 @@ abstract class TAbstractPdoStatement extends TObject implements IStatement {
             $this->FPdoStatement = $this->FPdo->prepare($this->FCommand, $mAttr);
         }
         catch (\PDOException $Ex) {
-            TAbstractPdoConnection::PushWarning(ESetCommandFailed::ClassType(), $Ex, $this->FConnection);
+            TClass::PrepareGeneric(['T' => ESetCommandFailed::class]);
+            TAbstractPdoConnection::PushWarning(new TClass(), $Ex, $this->FConnection);
         }
     }
 
@@ -2906,56 +2912,48 @@ abstract class TAbstractPdoResultSet extends TObject {
      * @var \FrameworkDSW\Database\TAbstractPdoStatement
      */
     protected $FStatement = null;
-
     /**
      *
      * Enter description here ...
      * @var \PDO
      */
     protected $FPdo = null;
-
     /**
      *
      * Enter description here ...
      * @var \PDOStatement
      */
     protected $FPdoStatement = null;
-
     /**
      *
      * Enter description here ...
      * @var \FrameworkDSW\Database\TResultSetType
      */
     protected $FResultSetType = null;
-
     /**
      *
      * Enter description here ...
      * @var \FrameworkDSW\Database\TConcurrencyType
      */
     protected $FConcurrencyType = null;
-
     /**
      *
      * Enter description here ...
      * @var \FrameworkDSW\Database\TFetchDirection
      */
     protected $FFetchDirection = null;
-
     /**
      *
      * Enter description here ...
      * @var string
      */
     protected $FCommand = '';
-
     /**
      *
      * Enter description here ...
      * @var boolean
      */
     protected $FIsClosed = false;
-
     /**
      * [0 .. n]:
      * Indicates current row number, scroll insensitive result sets only.
@@ -2966,7 +2964,6 @@ abstract class TAbstractPdoResultSet extends TObject {
      * @var integer
      */
     protected $FCurrentRow = -2;
-
     /**
      *
      * Enter description here ...
@@ -2993,17 +2990,17 @@ abstract class TAbstractPdoResultSet extends TObject {
         parent::__construct();
 
         $this->FStatement = $Statement;
-        $this->FCommand = $Command;
-        $this->FPdo = $Pdo;
+        $this->FCommand   = $Command;
+        $this->FPdo       = $Pdo;
 
         $PdoStatement->execute(); //TODO invoke prepare() with proper PDO::ATTR_CURSOR $Value.
         if ($this->FResultSetType == TResultSetType::eScrollInsensitive()) {
             $this->FRawData = $PdoStatement->fetchAll();
-            $PdoStatement = null;
+            $PdoStatement   = null;
         }
         $this->FPdoStatement = $PdoStatement;
 
-        $this->FResultSetType = $ResultSetType;
+        $this->FResultSetType   = $ResultSetType;
         $this->FConcurrencyType = $ConcurrencyType;
 
         $this->FFetchDirection = TFetchDirection::eUnkown();
@@ -3019,9 +3016,9 @@ abstract class TAbstractPdoResultSet extends TObject {
         if ($this->FResultSetType == TResultSetType::eScrollInsensitive()) {
             $this->FRawData = null;
         }
-        $this->FPdoStatement = null;
-        $this->FIsClosed = true;
-        $this->FCurrentRow = -2;
+        $this->FPdoStatement   = null;
+        $this->FIsClosed       = true;
+        $this->FCurrentRow     = -2;
         $this->FFetchDirection = TFetchDirection::eUnkown();
     }
 
@@ -3050,7 +3047,9 @@ abstract class TAbstractPdoResultSet extends TObject {
                 //TODO generate the IRow instance.
                 break;
             default : //not supported. eg. forward only mode
-                TAbstractPdoConnection::PushWarning(EFetchRowFailed::ClassType(), null, $this->FStatement->getConnection());
+                TClass::PrepareGeneric(['T' => EFetchRowFailed::class]);
+                /**@var \FrameworkDSW\Database\TAbstractPdoConnection $this ->FStatement */
+                TAbstractPdoConnection::PushWarning(new TClass(), null, $this->FStatement->getConnection());
                 break;
         }
     }
@@ -3078,7 +3077,7 @@ abstract class TAbstractPdoResultSet extends TObject {
                         break;
                     case TFetchDirection::eReverse() :
                         if ($this->FCurrentRow == -2) {
-                            $mRawRow = $this->FPdoStatement->fetch(\PDO::FETCH_BOTH, \PDO::FETCH_ORI_LAST);
+                            $mRawRow           = $this->FPdoStatement->fetch(\PDO::FETCH_BOTH, \PDO::FETCH_ORI_LAST);
                             $this->FCurrentRow = 0;
                             --$Offset;
                         }
@@ -3099,7 +3098,8 @@ abstract class TAbstractPdoResultSet extends TObject {
                 }
                 break;
             default : //not supported. eg. forward only mode
-                TAbstractPdoConnection::PushWarning(EFetchRowFailed::ClassType(), null, $this->FStatement->getConnection());
+                TClass::PrepareGeneric(['T' => EFetchRowFailed::class]);
+                TAbstractPdoConnection::PushWarning(new TClass(), null, $this->FStatement->getConnection());
                 break;
         }
     }
@@ -3132,6 +3132,7 @@ abstract class TAbstractPdoResultSet extends TObject {
         if ($this->FResultSetType == TResultSetType::eForwardOnly()) {
             return TFetchDirection::eForward();
         }
+
         return $this->FFetchDirection;
     }
 

@@ -21,22 +21,30 @@ use FrameworkDSW\Utilities\TType;
  *
  * @author 许子健
  */
-class EIndexOutOfBounds extends ERuntimeException {}
+class EIndexOutOfBounds extends ERuntimeException {
+}
+
 /**
  *
  * @author 许子健
  */
-class ENoKeyDefined extends ERuntimeException {}
+class ENoKeyDefined extends ERuntimeException {
+}
+
 /**
  *
  * @author 许子健
  */
-class EIllegalState extends ERuntimeException {}
+class EIllegalState extends ERuntimeException {
+}
+
 /**
  *
  * @author 许子健
  */
-class EConcurrentModification extends ERuntimeException {}
+class EConcurrentModification extends ERuntimeException {
+}
+
 /**
  *
  * @author 许子健
@@ -50,60 +58,72 @@ class EContainerDataOprErr extends ERuntimeException {
 
     /**
      *
-     * @param string $message
-     * @param integer $code
-     * @param \FrameworkDSW\System\EException $previous
+     * @param string $Message
+     * @param \FrameworkDSW\System\EException $Previous
      * @param integer $EffectedCount
      */
-    public function __construct($message, $code, $previous, $EffectedCount) {
-        $this->FEffected = (integer) $EffectedCount;
-        parent::__construct($message, $code, $previous);
+    public function __construct($Message, $Previous = null, $EffectedCount) {
+        $this->FEffected = (integer)$EffectedCount;
+        parent::__construct($Message, $Previous);
     }
 
     /**
      *
      * @return integer
      */
-    public function EffectedCount() {
+    public function getEffectedCount() {
         return $this->FEffected;
     }
 }
-/**
- *
- * @author 许子健
- */
-class EFailedToInsert extends EContainerDataOprErr {}
-/**
- *
- * @author 许子健
- */
-class EFailedToRemove extends EContainerDataOprErr {}
 
 /**
  *
  * @author 许子健
  */
-class EContainerException extends EException {}
+class EFailedToInsert extends EContainerDataOprErr {
+}
+
 /**
  *
  * @author 许子健
  */
-class ECollectionIsReadOnly extends EContainerException {}
+class EFailedToRemove extends EContainerDataOprErr {
+}
+
 /**
  *
  * @author 许子健
  */
-class EInvalidCapacity extends EContainerException {}
+class EContainerException extends EException {
+}
+
 /**
  *
  * @author 许子健
  */
-class ENoSuchElement extends EContainerException {}
+class ECollectionIsReadOnly extends EContainerException {
+}
+
 /**
  *
  * @author 许子健
  */
-class ECollectionNotExisted extends EContainerException {}
+class EInvalidCapacity extends EContainerException {
+}
+
+/**
+ *
+ * @author 许子健
+ */
+class ENoSuchElement extends EContainerException {
+}
+
+/**
+ *
+ * @author 许子健
+ */
+class ENoSuchKey extends EContainerException {
+}
 
 /**
  * \FrameworkDSW\Containers\IIterator
@@ -134,7 +154,8 @@ interface IIteratorAggregate extends IInterface, \IteratorAggregate {
  * FrameworkDSW\Containers\IArrayAccess
  * param <K: ?, V: ?>
  */
-interface IArrayAccess extends IInterface, \ArrayAccess {}
+interface IArrayAccess extends IInterface, \ArrayAccess {
+}
 
 // IListIterator : {[node_0, node_1, node_2, ... ,node_n ,] tail_node}
 
@@ -250,8 +271,8 @@ interface ICollection extends IIteratorAggregate {
 
 /**
  * \FrameworkDSW\Containers\IList
- *  * param	<T: ?>
- * extends	\FrameworkDSW\Containers\ICollection<T: T>
+ *  * param    <T: ?>
+ * extends    \FrameworkDSW\Containers\ICollection<T: T>
  */
 interface IList extends ICollection {
 
@@ -337,7 +358,8 @@ interface IList extends ICollection {
  * param <T: ?>
  * extends \FrameworkDSW\Containers\ICollection<T: T>
  */
-interface ISet extends ICollection {}
+interface ISet extends ICollection {
+}
 
 /**
  * \FrameworkDSW\Containers\IStack
@@ -441,8 +463,10 @@ class TStdMapMapIterator extends TObject implements IIterator {
     public function current() {
         if ($this->FKeyType == TMapKeyType::eObject()) {
             $mCurrentPair = current($this->FMapData);
+
             return $mCurrentPair->Value;
         }
+
         return current($this->FMapData);
     }
 
@@ -472,7 +496,7 @@ class TStdMapMapIterator extends TObject implements IIterator {
      * descHere
      */
     public function Remove() {
-        throw new ENotImplemented();
+        throw new ENotImplemented('Not implemented: \FrameworkDSW\Containers\TStdMapMapIterator::Remove().');
     }
 
     /**
@@ -641,7 +665,7 @@ class TStdListIterator extends TObject implements IIterator {
      * @return integer string
      */
     public function key() {
-        throw new ENoKeyDefined();
+        throw new ENoKeyDefined('No key defined: \FrameworkDSW\Containers\TStdListIterator::key().');
     }
 
     /**
@@ -654,7 +678,7 @@ class TStdListIterator extends TObject implements IIterator {
             return $this->FList->Get($this->FCursor);
         }
         catch (EIndexOutOfBounds $e) {
-            throw new ENoSuchElement();
+            throw new ENoSuchElement(sprintf('No such element: visiting current element of \FrameworkDSW\Containers\TStdListIterator at index %s.', (string)$this->FCursor), $e);
         }
     }
 
@@ -664,7 +688,7 @@ class TStdListIterator extends TObject implements IIterator {
      */
     public function Remove() {
         if ($this->FLastAt < 0) {
-            throw new EIllegalState();
+            throw new EIllegalState(sprintf('Illegal state: the iterating element for removing at index %s might have been removed.', (string)$this->FCursor));
         }
 
         try {
@@ -675,7 +699,7 @@ class TStdListIterator extends TObject implements IIterator {
             $this->FLastAt = -1;
         }
         catch (EIndexOutOfBounds $e) {
-            throw new EConcurrentModification();
+            throw new EConcurrentModification(sprintf('Concurrent modification: iterating and removing at index %s.', (string)$this->FCursor), $e);
         }
     }
 
@@ -741,7 +765,7 @@ class TStdListListIterator extends TStdListIterator implements IListIterator {
             $this->FLastAt = -1;
         }
         catch (EIndexOutOfBounds $e) {
-            throw new EConcurrentModification();
+            throw new EConcurrentModification(sprintf('Concurrent modification: iterating and adding before index %s.', (string)$this->FCursor), $e);
         }
     }
 
@@ -774,14 +798,14 @@ class TStdListListIterator extends TStdListIterator implements IListIterator {
     public function Set($Element) {
         TType::Type($Element, $this->GenericArg('T'));
         if ($this->FLastAt < 0) {
-            throw new EIllegalState();
+            throw new EIllegalState(sprintf('Illegal state: the iterating element for setting at index %s might have been removed.', (string)$this->FCursor));
         }
 
         try {
             $this->FList->Set($this->FCursor, $Element);
         }
         catch (EIndexOutOfBounds $e) {
-            throw new EConcurrentModification();
+            throw new EConcurrentModification(sprintf('Concurrent modification: iterating and setting at index %s.', (string)$this->FCursor), $e);
         }
     }
 }
@@ -810,7 +834,7 @@ abstract class TAbstractCollection extends TObject implements ICollection {
      */
     protected function CheckReadOnly() {
         if ($this->FReadOnly) {
-            throw new ECollectionIsReadOnly();
+            throw new ECollectionIsReadOnly('Read only collection.');
         }
     }
 
@@ -907,6 +931,7 @@ abstract class TAbstractCollection extends TObject implements ICollection {
                 return false;
             }
         }
+
         return true;
     }
 
@@ -932,28 +957,30 @@ abstract class TAbstractCollection extends TObject implements ICollection {
             while ($mItr->valid()) {
                 if ($Element === $mItr->current()) {
                     $mItr->Remove();
+
                     return;
                 }
                 $mItr->next();
             }
         }
         else {
+            /**@var IInterface $Element */
             while ($mItr->Valid()) {
                 if ($Element->Equals($mItr->current())) {
                     $mItr->Remove();
+
                     return;
                 }
                 $mItr->next();
             }
         }
 
-        throw new ENoSuchElement();
+        throw new ENoSuchElement('No such element: removing a non-existent element.');
     }
 
     /**
      *
      * @param \FrameworkDSW\Containers\ICollection $Collection <T: T>
-     * @throws ECollectionNotExisted
      */
     public function RemoveAll($Collection) {
         TType::Object($Collection, [
@@ -961,17 +988,11 @@ abstract class TAbstractCollection extends TObject implements ICollection {
 
         $this->CheckReadOnly();
         $mItr = $this->Iterator();
-        $mFlag = true;
         while ($mItr->valid()) {
             if ($Collection->Contains($mItr->current())) {
                 $mItr->Remove();
-                $mFlag = false;
             }
             $mItr->next();
-        }
-
-        if ($mFlag) {
-            throw new ECollectionNotExisted();
         }
     }
 
@@ -985,7 +1006,7 @@ abstract class TAbstractCollection extends TObject implements ICollection {
             ICollection::class => ['T' => $this->GenericArg('T')]]);
 
         $mModified = false;
-        $mItr = $this->Iterator();
+        $mItr      = $this->Iterator();
         while ($mItr->valid()) {
             if (!$Collection->Contains($mItr->current())) {
                 $mItr->Remove();
@@ -1006,6 +1027,7 @@ abstract class TAbstractCollection extends TObject implements ICollection {
         foreach ($this as $mValue) {
             $mResult[] = $mValue;
         }
+
         return $mResult;
     }
 
@@ -1065,7 +1087,7 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
      */
     private function CheckIndexForAdd($Index) {
         if ($Index < 0 || $Index > $this->FSize) {
-            throw new EIndexOutOfBounds();
+            throw new EIndexOutOfBounds(sprintf('No such index: illegal index %s is not between %s and %s.'), (string)$Index, 0, (string)$this->FSize);
         }
     }
 
@@ -1076,7 +1098,7 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
      */
     private function CheckIndexForGet($Index) {
         if ($Index < 0 || $Index >= $this->FSize) {
-            throw new EIndexOutOfBounds();
+            throw new EIndexOutOfBounds(sprintf('No such index: illegal index %s is not between %s and %s.'), (string)$Index, 0, (string)($this->FSize - 1));
         }
     }
 
@@ -1102,7 +1124,7 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
      * @return integer
      */
     protected function DoInsertAll($Index, $Collection) {
-        $mItr = $Collection->Iterator();
+        $mItr    = $Collection->Iterator();
         $mBackup = $Index;
 
         while ($mItr->valid()) {
@@ -1110,10 +1132,12 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
                 $this->DoInsert($Index++, $mItr->current());
             }
             catch (EException $e) {
-                throw new EFailedToInsert('', 0, $e, $Index - $mBackup - 1);
+                $mEffected = $Index - $mBackup - 1;
+                throw new EFailedToInsert(sprintf('Collection insertion failed: %s elements not inserted from element at index %s.', $mEffected, $Index), $e, $mEffected);
             }
             $mItr->next();
         }
+
         return $Index - $mBackup;
     }
 
@@ -1131,17 +1155,19 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
      * @return integer
      */
     protected function DoRemoveRange($FromIndex, $ToIndex) {
-        $mItr = $this->ListIterator($FromIndex);
+        $mItr     = $this->ListIterator($FromIndex);
         $mRemoved = 0;
         for ($mN = $ToIndex - $FromIndex; $mRemoved < $mN; ++$mRemoved) {
             try {
                 $mItr->Remove();
             }
             catch (EException $e) {
-                throw new EFailedToRemove('', 0, $e, --$mRemoved);
+                --$mRemoved;
+                throw new EFailedToRemove(sprintf('Range move failed: only %s elements removed from element at index %s.', (string)$mRemoved, (string)$FromIndex), $e, $mRemoved);
             }
             $mItr->next();
         }
+
         return $mRemoved;
     }
 
@@ -1229,7 +1255,7 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
             $this->FSize += $this->DoInsertAll($Index, $Collection);
         }
         catch (EFailedToInsert $e) {
-            $this->FSize += $e->EffectedCount();
+            $this->FSize += $e->getEffectedCount();
             throw $e;
         }
     }
@@ -1243,6 +1269,7 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
         TType::Int($Index);
 
         $this->CheckIndexForGet($Index);
+
         return $this->DoGet($Index);
     }
 
@@ -1266,6 +1293,7 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
         }
         else {
             while ($mItr->valid()) {
+                /**@var IInterface $Element */
                 if ($Element->Equals($mItr->current())) {
                     return $mItr->key();
                 }
@@ -1273,7 +1301,7 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
             }
         }
 
-        throw new ENoSuchElement();
+        throw new ENoSuchElement('No such element.');
     }
 
     /**
@@ -1283,6 +1311,7 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
      */
     public function Iterator() {
         TStdListIterator::PrepareGeneric(['T' => $this->GenericArg('T')]);
+
         return new TStdListIterator($this);
     }
 
@@ -1307,13 +1336,14 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
         else {
             while ($mItr->HasPrevious()) {
                 $mItr->Previous();
+                /**@var IInterface $Element */
                 if ($Element->Equals($mItr->current())) {
                     return $mItr->key();
                 }
             }
         }
 
-        throw new ENoSuchElement();
+        throw new ENoSuchElement('No such element.');
     }
 
     /**
@@ -1327,6 +1357,7 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
         $this->CheckIndexForAdd($Index);
         TStdListListIterator::PrepareGeneric([
             'T' => $this->GenericArg('T')]);
+
         return new TStdListListIterator($this, $Index);
     }
 
@@ -1357,16 +1388,16 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
         $this->CheckIndexForGet($FromIndex);
         $this->CheckIndexForGet($ToIndex);
         if ($FromIndex > $ToIndex) {
-            $mTemp = $FromIndex;
+            $mTemp     = $FromIndex;
             $FromIndex = $ToIndex;
-            $ToIndex = $mTemp;
+            $ToIndex   = $mTemp;
         }
 
         try {
             $this->FSize -= $this->DoRemoveRange($FromIndex, $ToIndex);
         }
         catch (EFailedToRemove $e) {
-            $this->FSize -= $e->EffectedCount();
+            $this->FSize -= $e->getEffectedCount();
             throw $e;
         }
     }
@@ -1423,8 +1454,9 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
      */
     public final function First() {
         if ($this->FSize == 0) {
-            throw new EIndexOutOfBounds();
+            throw new EIndexOutOfBounds('No such index: empty list.');
         }
+
         return $this->DoFirst();
     }
 
@@ -1435,8 +1467,9 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
      */
     public final function Last() {
         if ($this->FSize == 0) {
-            throw new EIndexOutOfBounds();
+            throw new EIndexOutOfBounds('No such index: empty list.');
         }
+
         return $this->DoLast();
     }
 
@@ -1454,6 +1487,7 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
         catch (EIndexOutOfBounds $e) {
             return false;
         }
+
         return true;
     }
 
@@ -1568,7 +1602,7 @@ abstract class TAbstractStack extends TAbstractCollection {
      */
     public final function Remove($Element) {
         TType::Type($Element, $this->GenericArg('T'));
-        throw new EFailedToRemove();
+        throw new EFailedToRemove('Illegal operation: use pop instead of remove for stack.', null, -1);
     }
 
     /**
@@ -1577,8 +1611,8 @@ abstract class TAbstractStack extends TAbstractCollection {
      * @throws EFailedToRemove
      */
     public final function RemoveAll($Collection) {
-        TType::Object($Collection, [ICollection::class=>['T' => $this->GenericArg('T')]]);
-        throw new EFailedToRemove();
+        TType::Object($Collection, [ICollection::class => ['T' => $this->GenericArg('T')]]);
+        throw new EFailedToRemove('Illegal operation: only pop allowed for removing elements in stacks.', null, -1);
     }
 
     /**
@@ -1588,7 +1622,7 @@ abstract class TAbstractStack extends TAbstractCollection {
      */
     public final function Peek() {
         if ($this->IsEmpty()) {
-            throw new ENoSuchElement();
+            throw new ENoSuchElement('No such element: empty stack.');
         }
 
         return $this->DoPeek();
@@ -1602,7 +1636,7 @@ abstract class TAbstractStack extends TAbstractCollection {
     public final function Pop() {
         $this->CheckReadOnly();
         if ($this->IsEmpty()) {
-            throw new ENoSuchElement();
+            throw new ENoSuchElement('No such element: empty stack.');
         }
 
         return $this->DoPop();
@@ -1634,7 +1668,7 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
     public function Add($Element) {
         TType::Type($Element, [
             TPair::class => ['K' => $this->GenericArg('K'),
-                'V' => $this->GenericArg('V')]]);
+                             'V' => $this->GenericArg('V')]]);
         $this->CheckReadOnly();
         $this->DoPut($Element->Key, $Element->Value);
     }
@@ -1647,6 +1681,7 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      */
     public function ContainsKey($Key) {
         TType::Type($Key, $this->GenericArg('K'));
+
         return $this->DoContainsKey($Key);
     }
 
@@ -1658,6 +1693,7 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      */
     public function ContainsValue($Value) {
         TType::Type($Value, $this->GenericArg('V'));
+
         return $this->DoContainsValue($Value);
     }
 
@@ -1665,7 +1701,7 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      * descHere
      *
      * @param K $Key
-     * @throws EIndexOutOfBounds
+     * @throws ENoSuchKey
      */
     public function Delete($Key) {
         TType::Type($Key, $this->GenericArg('K'));
@@ -1674,7 +1710,7 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
             $this->DoDelete($Key);
         }
         else {
-            throw new EIndexOutOfBounds(); // TODO: define a new exception class.
+            throw new ENoSuchKey('No such key: deletion failed.');
         }
     }
 
@@ -1693,6 +1729,7 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
                 }
                 $mItr->next();
             }
+
             return false;
         }
         else {
@@ -1701,6 +1738,7 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
                     return true;
                 }
             }
+
             return false;
         }
     }
@@ -1720,6 +1758,7 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
                 }
                 $mItr->next();
             }
+
             return false;
         }
         else {
@@ -1728,6 +1767,7 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
                     return true;
                 }
             }
+
             return false;
         }
     }
@@ -1792,12 +1832,13 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      * @return \FrameworkDSW\Containers\ICollection <T: V>
      */
     protected function DoValues() {
-        $mItr = $this->Iterator();
+        $mItr    = $this->Iterator();
         $mResult = new TList($this->Size());
         while ($mItr->valid()) {
             $mResult->Add($mItr->current()->Value);
             $mItr->next();
         }
+
         return $mResult;
     }
 
@@ -1805,14 +1846,15 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      * descHere
      *
      * @param K $Key
-     * @throws EIndexOutOfBounds
+     * @throws ENoSuchKey
      * @return V
      */
     public function Get($Key) {
         TType::Type($Key, $this->GenericArg('K'));
         if (!$this->DoContainsKey($Key)) {
-            throw new EIndexOutOfBounds();
+            throw new ENoSuchKey('No such key: element not found.');
         }
+
         return $this->DoGet($Key);
     }
 
@@ -1842,6 +1884,7 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      */
     public final function offsetExists($offset) {
         TType::Type($offset, $this->GenericArg('K'));
+
         return $this->DoContainsKey($offset);
     }
 
@@ -1849,14 +1892,15 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      * descHere
      *
      * @param K $offset
-     * @throws EIndexOutOfBounds
+     * @throws ENoSuchKey
      * @return V
      */
     public final function offsetGet($offset) {
         TType::Type($offset, $this->GenericArg('K'));
         if (!$this->DoContainsKey($offset)) {
-            throw new EIndexOutOfBounds();
+            throw new ENoSuchKey('No such key: element not found.');
         }
+
         return $this->DoGet($offset);
     }
 
@@ -1877,13 +1921,13 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      * descHere
      *
      * @param K $offset
-     * @throws EIndexOutOfBounds
+     * @throws ENoSuchKey
      */
     public final function offsetUnset($offset) {
         TType::Type($offset, $this->GenericArg('K'));
         $this->CheckReadOnly();
         if (!$this->DoContainsKey($offset)) {
-            throw new EIndexOutOfBounds();
+            throw new ENoSuchKey('No such key: deletion failed.');
         }
         $this->DoDelete($offset);
     }
@@ -1918,7 +1962,7 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
     public function PutAll($Map) {
         TType::Object($Map, [
             IMap::class => ['K' => $this->GenericArg('K'),
-                'V' => $this->GenericArg('V')]]);
+                            'V' => $this->GenericArg('V')]]);
         $this->CheckReadOnly();
         $this->DoPutAll($Map);
     }
@@ -1942,6 +1986,7 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
         if ($this->Size() == 0) {
             return null;
         }
+
         return $this->DoValues();
     }
 
@@ -1983,13 +2028,14 @@ final class TList extends TAbstractList {
         TType::Bool($KeepOrder);
 
         if (is_null($FromArray)) {
-            $this->FList = new \SplFixedArray($Capacity);
+            $this->FList     = new \SplFixedArray($Capacity);
             $this->FCapacity = $Capacity;
+
             return;
         }
 
-        $this->FList = \SplFixedArray::fromArray($FromArray, $KeepOrder);
-        $this->FSize = count($this->FList);
+        $this->FList     = \SplFixedArray::fromArray($FromArray, $KeepOrder);
+        $this->FSize     = count($this->FList);
         $this->FCapacity = $this->FSize;
     }
 
@@ -2033,7 +2079,7 @@ final class TList extends TAbstractList {
      * @see FrameworkDSW/TAbstractList#DoInsertAll($Index, $Collection)
      */
     protected function DoInsertAll($Index, $Collection) {
-        $mSpace = $Collection->Size();
+        $mSpace  = $Collection->Size();
         $mBackup = $Index;
 
         $mCapacity = $this->FSize + $mSpace + 10;
@@ -2049,8 +2095,10 @@ final class TList extends TAbstractList {
                 }
             }
             catch (EException $e) {
-                throw new EFailedToInsert('', 0, $e, $Index - $mBackup);
+                $mEffected = $Index - $mBackup;
+                throw new EFailedToInsert(sprintf('List insertion failed: %s elements not inserted from element at index %s.', $mEffected, $Index), $e, $mEffected);
             }
+
             return $Index - $mBackup;
         }
 
@@ -2070,7 +2118,7 @@ final class TList extends TAbstractList {
             while ($Index - $mBackup < $mSpace) {
                 $this->FList[$Index++] = null;
             }
-            throw new EFailedToInsert('', 0, $e, $mSpace);
+            throw new EFailedToInsert(sprintf('List insertion failed: %s elements not inserted from element at index %s.', $mSpace, $Index), $e, $mSpace);
         }
 
         return $mSpace;
@@ -2112,6 +2160,7 @@ final class TList extends TAbstractList {
         while ($ToIndex < $this->FSize) {
             $this->FList[($ToIndex++) - $mDelta] = $this->FList[$ToIndex];
         }
+
         return ++$mDelta;
     }
 
@@ -2135,18 +2184,20 @@ final class TList extends TAbstractList {
     protected function DoSubList($FromIndex, $ToIndex) {
         if ($FromIndex >= $ToIndex) {
             $mOffset = $FromIndex - $ToIndex + 1;
-            $mList = new TList($mOffset);
+            $mList   = new TList($mOffset);
             while ($mOffset--) {
                 $mList->Add($this[$FromIndex + $mOffset]);
             }
+
             return $mList;
         }
 
         $mOffset = $ToIndex - $FromIndex + 1;
-        $mList = new TList($mOffset);
+        $mList   = new TList($mOffset);
         while ($mOffset--) {
             $mList->Add($this[$ToIndex + $mOffset]);
         }
+
         return $mList;
     }
 
@@ -2186,23 +2237,23 @@ final class TList extends TAbstractList {
         TType::Object($List, [
             TList::class => ['T' => $this->GenericArg('T')]]);
 
-        $mTempList = $this->FList;
+        $mTempList     = $this->FList;
         $mTempCapacity = $this->FCapacity;
-        $mTempOwned = $this->FElementsOwned;
-        $mReadOnly = $this->FReadOnly;
-        $mSize = $this->FSize;
+        $mTempOwned    = $this->FElementsOwned;
+        $mReadOnly     = $this->FReadOnly;
+        $mSize         = $this->FSize;
 
-        $this->FList = $List->FList;
-        $this->FCapacity = $List->FCapacity;
+        $this->FList          = $List->FList;
+        $this->FCapacity      = $List->FCapacity;
         $this->FElementsOwned = $List->FElementsOwned;
-        $this->FReadOnly = $List->FReadOnly;
-        $this->FSize = $List->FSize;
+        $this->FReadOnly      = $List->FReadOnly;
+        $this->FSize          = $List->FSize;
 
-        $List->FList = $mTempList;
-        $List->FCapacity = $mTempCapacity;
+        $List->FList          = $mTempList;
+        $List->FCapacity      = $mTempCapacity;
         $List->FElementsOwned = $mTempOwned;
-        $List->FReadOnly = $mReadOnly;
-        $List->FSize = $mSize;
+        $List->FReadOnly      = $mReadOnly;
+        $List->FSize          = $mSize;
     }
 
     /**
@@ -2229,6 +2280,7 @@ final class TList extends TAbstractList {
         $this->FList->setSize($this->FSize);
         $mArr = $this->FList->toArray();
         $this->FList->setSize($this->FCapacity);
+
         return $mArr;
     }
 
@@ -2249,7 +2301,7 @@ final class TList extends TAbstractList {
         TType::Int($Value);
 
         if ($Value < $this->FSize) {
-            throw new EInvalidCapacity();
+            throw new EInvalidCapacity(sprintf('Invalid capacity: capacity must be at least %s.', $this->FSize));
         }
         if ($Value != $this->FCapacity) {
             $this->FList->setSize($Value);
@@ -2320,25 +2372,25 @@ final class TLinkedList extends TAbstractList {
      */
     private function GetNodeAddr($Index) {
         // decide from tail or from head.
-        $mCurrAddr = $this->FSize - 1; // from tail
-        $mSteps = $this->FSize - 1 - $Index;
+        $mCurrAddr  = $this->FSize - 1; // from tail
+        $mSteps     = $this->FSize - 1 - $Index;
         $mIsForward = false;
         if ($Index < $mSteps) {
-            $mSteps = $Index;
-            $mCurrAddr = $this->FHead; // from head
+            $mSteps     = $Index;
+            $mCurrAddr  = $this->FHead; // from head
             $mIsForward = true;
         }
 
         // decide if should move from the current index.
         $mIsForward2 = true;
-        $mDelta = $Index - $this->FCurrIndex;
+        $mDelta      = $Index - $this->FCurrIndex;
         if ($mDelta < 0) {
-            $mDelta = -$mDelta;
+            $mDelta      = -$mDelta;
             $mIsForward2 = false;
         }
         if ($mDelta < $mSteps) {
-            $mSteps = $mDelta;
-            $mCurrAddr = $this->FCurrAddr; // from current
+            $mSteps     = $mDelta;
+            $mCurrAddr  = $this->FCurrAddr; // from current
             $mIsForward = $mIsForward2;
         }
 
@@ -2354,8 +2406,9 @@ final class TLinkedList extends TAbstractList {
                 $mCurrAddr = $this->FList[3 * $mCurrAddr + self::CPrev];
             }
         }
-        $this->FCurrAddr = $mCurrAddr;
+        $this->FCurrAddr  = $mCurrAddr;
         $this->FCurrIndex = $Index;
+
         return $mCurrAddr;
     }
 
@@ -2367,16 +2420,17 @@ final class TLinkedList extends TAbstractList {
      * @param boolean $KeepOrder
      */
     public function __construct($ElementsOwned = false, $FromArray = null, $KeepOrder = true) {
-    	parent::__construct($ElementsOwned);
+        parent::__construct($ElementsOwned);
 
-    	TType::Bool($ElementsOwned);
+        TType::Bool($ElementsOwned);
         TType::Arr($FromArray);
         TType::Bool($KeepOrder);
 
         if (is_null($FromArray) || count($FromArray) == 0) {
-            $this->FSize = 0;
-            $this->FList = new \SplFixedArray(30);
+            $this->FSize     = 0;
+            $this->FList     = new \SplFixedArray(30);
             $this->FAddrSize = 0;
+
             return;
         }
         $this->FList = \SplFixedArray::fromArray($FromArray, $KeepOrder);
@@ -2385,11 +2439,11 @@ final class TLinkedList extends TAbstractList {
         for ($mCurr = $this->FSize - 1; $mCurr >= 0; --$mCurr) {
             $this->FList[3 * $mCurr + self::CData] = $this->FList[$mCurr];
         }
-        $this->FHead = 0;
-        $this->FTail = $this->FSize - 1;
-        $this->FCurrAddr = ($this->FSize - 1) >> 1;
+        $this->FHead      = 0;
+        $this->FTail      = $this->FSize - 1;
+        $this->FCurrAddr  = ($this->FSize - 1) >> 1;
         $this->FCurrIndex = $this->FCurrAddr;
-        $this->FAddrSize = $this->FSize;
+        $this->FAddrSize  = $this->FSize;
 
         for ($mIndex = 0; $mIndex < $this->FSize; ++$mIndex) {
             $this->FList[3 * $mIndex + self::CPrev] = $mIndex - 1;
@@ -2412,6 +2466,7 @@ final class TLinkedList extends TAbstractList {
      */
     protected function DoGet($Index) {
         $mNode = $this->GetNodeAddr($Index);
+
         return $this->FList[3 * $mNode + self::CData];
     }
 
@@ -2431,10 +2486,11 @@ final class TLinkedList extends TAbstractList {
         $this->FList[3 * $mNewHigh + self::CNext] = -1;
 
         if ($this->FSize == 0) { // if empty before insertion.
-            $this->FCurrAddr = $mNewHigh;
+            $this->FCurrAddr  = $mNewHigh;
             $this->FCurrIndex = 0;
-            $this->FHead = $mNewHigh;
-            $this->FTail = $mNewHigh;
+            $this->FHead      = $mNewHigh;
+            $this->FTail      = $mNewHigh;
+
             return;
         } // else do the switch...
         if ($Index != $this->FSize) {
@@ -2446,26 +2502,26 @@ final class TLinkedList extends TAbstractList {
         switch ($Index) {
             /** @noinspection PhpMissingBreakStatementInspection */
             case 0 : // unshift
-                $this->FList[3 * $mNode + self::CPrev] = $mNewHigh;
+                $this->FList[3 * $mNode + self::CPrev]    = $mNewHigh;
                 $this->FList[3 * $mNewHigh + self::CNext] = $mNode;
-                $this->FHead = $mNewHigh;
-                $this->FCurrAddr = $mNewHigh;
-                $this->FCurrIndex = 0;
+                $this->FHead                              = $mNewHigh;
+                $this->FCurrAddr                          = $mNewHigh;
+                $this->FCurrIndex                         = 0;
             case $this->FSize : // push
-                $this->FList[3 * $mNode + self::CNext] = $mNewHigh;
+                $this->FList[3 * $mNode + self::CNext]    = $mNewHigh;
                 $this->FList[3 * $mNewHigh + self::CPrev] = $mNode;
-                $this->FTail = $mNewHigh;
-                $this->FCurrAddr = $mNewHigh;
-                $this->FCurrIndex = $Index;
+                $this->FTail                              = $mNewHigh;
+                $this->FCurrAddr                          = $mNewHigh;
+                $this->FCurrIndex                         = $Index;
                 break;
             default : // insert
-                $mPrevNode = $this->FList[3 * $mNode + self::CPrev];
-                $this->FList[3 * $mNode + self::CPrev] = $mNewHigh;
-                $this->FList[3 * $mNewHigh + self::CNext] = $mNode;
+                $mPrevNode                                 = $this->FList[3 * $mNode + self::CPrev];
+                $this->FList[3 * $mNode + self::CPrev]     = $mNewHigh;
+                $this->FList[3 * $mNewHigh + self::CNext]  = $mNode;
                 $this->FList[3 * $mPrevNode + self::CNext] = $mNewHigh;
-                $this->FList[3 * $mNewHigh + self::CPrev] = $mPrevNode;
-                $this->FCurrAddr = $mNewHigh;
-                $this->FCurrIndex = $Index;
+                $this->FList[3 * $mNewHigh + self::CPrev]  = $mPrevNode;
+                $this->FCurrAddr                           = $mNewHigh;
+                $this->FCurrIndex                          = $Index;
                 break;
         }
     }
@@ -2484,7 +2540,7 @@ final class TLinkedList extends TAbstractList {
 
         // TODO: 一个一个插入没有效率，应该先把$Collection拼接成链表，然后整体的一次插入
         --$Index;
-        $mResult = 0;
+        $mResult  = 0;
         $mOldSize = $this->FSize;
         foreach ($Collection as $mElement) {
             $this->DoInsert(++$Index, $mElement);
@@ -2492,6 +2548,7 @@ final class TLinkedList extends TAbstractList {
             ++$this->FSize;
         }
         $this->FSize = $mOldSize;
+
         return $mResult;
     }
 
@@ -2524,23 +2581,25 @@ final class TLinkedList extends TAbstractList {
                 $this->FList[3 * $mNode + self::CNext] = -1;
                 break;
             default : // remove
-                $mPrevNode = $this->FList[3 * $mNode + self::CPrev];
-                $mNextNode = $this->FList[3 * $mNode + self::CNext];
+                $mPrevNode                                 = $this->FList[3 * $mNode + self::CPrev];
+                $mNextNode                                 = $this->FList[3 * $mNode + self::CNext];
                 $this->FList[3 * $mPrevNode + self::CNext] = $mNextNode;
                 $this->FList[3 * $mNextNode + self::CPrev] = $mPrevNode;
-                $this->FList[3 * $mNode + self::CPrev] = -1;
-                $this->FList[3 * $mNode + self::CNext] = -1;
-                $this->FCurrAddr = $mNextNode;
-                $this->FCurrIndex = $Index;
+                $this->FList[3 * $mNode + self::CPrev]     = -1;
+                $this->FList[3 * $mNode + self::CNext]     = -1;
+                $this->FCurrAddr                           = $mNextNode;
+                $this->FCurrIndex                          = $Index;
+
                 return;
         }
 
         if ($this->FSize == 1) {
-            $this->FCurrAddr = -1;
+            $this->FCurrAddr  = -1;
             $this->FCurrIndex = -1;
+
             return;
         }
-        $this->FCurrAddr = $this->FHead;
+        $this->FCurrAddr  = $this->FHead;
         $this->FCurrIndex = 0;
     }
 
@@ -2588,12 +2647,12 @@ final class TLinkedList extends TAbstractList {
             }
         }
 
-        $this->FList = new \SplFixedArray(30);
-        $this->FHead = -1;
-        $this->FTail = -1;
-        $this->FCurrAddr = -1;
+        $this->FList      = new \SplFixedArray(30);
+        $this->FHead      = -1;
+        $this->FTail      = -1;
+        $this->FCurrAddr  = -1;
         $this->FCurrIndex = -1;
-        $this->FAddrSize = 0;
+        $this->FAddrSize  = 0;
     }
 
     /**
@@ -2628,6 +2687,7 @@ final class TLinkedList extends TAbstractList {
         TType::Bool($KeepOrder);
 
         self::PrepareGeneric(['T' => self::StaticGenericArg('T')]);
+
         return new TLinkedList($ElementsOwned, $Array, $KeepOrder);
     }
 
@@ -2641,29 +2701,29 @@ final class TLinkedList extends TAbstractList {
         $this->CheckReadOnly();
         $LinkedList->CheckReadOnly();
 
-        $mTempList = $this->FList;
-        $mTempHead = $this->FHead;
-        $mTempTail = $this->FTail;
+        $mTempList     = $this->FList;
+        $mTempHead     = $this->FHead;
+        $mTempTail     = $this->FTail;
         $mTempReadOnly = $this->FReadOnly;
-        $mTempSize = $this->FSize;
-        $mTempOwned = $this->FElementsOwned;
+        $mTempSize     = $this->FSize;
+        $mTempOwned    = $this->FElementsOwned;
 
-        $this->FList = $LinkedList->FList;
-        $this->FHead = $LinkedList->FHead;
-        $this->FTail = $LinkedList->FTail;
-        $this->FCurrAddr = $LinkedList->FCurrAddr;
-        $this->FCurrIndex = $LinkedList->FCurrIndex;
-        $this->FReadOnly = $LinkedList->FReadOnly;
-        $this->FSize = $LinkedList->FSize;
+        $this->FList          = $LinkedList->FList;
+        $this->FHead          = $LinkedList->FHead;
+        $this->FTail          = $LinkedList->FTail;
+        $this->FCurrAddr      = $LinkedList->FCurrAddr;
+        $this->FCurrIndex     = $LinkedList->FCurrIndex;
+        $this->FReadOnly      = $LinkedList->FReadOnly;
+        $this->FSize          = $LinkedList->FSize;
         $this->FElementsOwned = $LinkedList->FElementsOwned;
 
-        $LinkedList->FList = $mTempList;
-        $LinkedList->FHead = $mTempHead;
-        $LinkedList->FTail = $mTempTail;
-        $LinkedList->FCurrAddr = $mTempTail;
-        $LinkedList->FCurrIndex = $mTempTail;
-        $LinkedList->FReadOnly = $mTempReadOnly;
-        $LinkedList->FSize = $mTempSize;
+        $LinkedList->FList          = $mTempList;
+        $LinkedList->FHead          = $mTempHead;
+        $LinkedList->FTail          = $mTempTail;
+        $LinkedList->FCurrAddr      = $mTempTail;
+        $LinkedList->FCurrIndex     = $mTempTail;
+        $LinkedList->FReadOnly      = $mTempReadOnly;
+        $LinkedList->FSize          = $mTempSize;
         $LinkedList->FElementsOwned = $mTempOwned;
     }
 
@@ -2677,6 +2737,7 @@ final class TLinkedList extends TAbstractList {
         foreach ($this as $mElement) {
             $mResult[] = $mElement;
         }
+
         return $mResult;
     }
 }
@@ -2768,6 +2829,7 @@ final class TStack extends TAbstractStack implements IStack {
         foreach ($this->FStack as $mElement) {
             $mResult[] = $mElement;
         }
+
         return $mResult;
     }
 }
@@ -2847,11 +2909,11 @@ class TMap extends TAbstractMap {
                 return spl_object_hash($Key);
                 break;
             case TMapKeyType::eFloat() :
-                return (string) $Key;
+                return (string)$Key;
                 break;
             case TMapKeyType::eArray() :
             case TMapKeyType::eRecord() :
-                return sha1(serialize((array) $Key), true);
+                return sha1(serialize((array)$Key), true);
                 break;
             case TMapKeyType::eBoolean() :
                 return $Key ? '1' : '0';
@@ -2865,11 +2927,11 @@ class TMap extends TAbstractMap {
      * @param boolean $ElementsOwned
      */
     public function __construct($ElementsOwned = false) {
-    	$this->PrepareMethodGeneric([
-    			'T' => [
-    					TPair::class => ['K' => self::StaticGenericArg('K'),
-    							'V' => self::StaticGenericArg('V')]]]);
-    	parent::__construct($ElementsOwned);
+        $this->PrepareMethodGeneric([
+            'T' => [
+                TPair::class => ['K' => self::StaticGenericArg('K'),
+                                 'V' => self::StaticGenericArg('V')]]]);
+        parent::__construct($ElementsOwned);
         TType::Bool($ElementsOwned);
 
         $mKClassType = $this->GenericArg('K');
@@ -2878,13 +2940,15 @@ class TMap extends TAbstractMap {
             $mKClassType = $mKClassType[0];
         }
         if (class_exists($mKClassType, false) && is_subclass_of($mKClassType, TRecord::class)) {
-            $this->FKeyType = TMapKeyType::eRecord();
+            $this->FKeyType   = TMapKeyType::eRecord();
             $this->FDirectKey = false;
+
             return;
         }
         $this->FDirectKey = ($mKClassType == 'integer' || $mKClassType == 'string');
         if ($this->FDirectKey) {
             $this->FKeyType = TMapKeyType::eDirectKey();
+
             return;
         }
         switch ($mKClassType) {
@@ -2964,8 +3028,10 @@ class TMap extends TAbstractMap {
                     }
                 }
             }
+
             return false;
         }
+
         return in_array($Value, $this->FMap, true);
     }
 
@@ -2999,6 +3065,7 @@ class TMap extends TAbstractMap {
             return $this->FMap[$Key];
         }
         $mPair = $this->FMap[$this->HashKey($Key)];
+
         return $mPair->Value;
     }
 
@@ -3030,9 +3097,9 @@ class TMap extends TAbstractMap {
             $this->FMap[$Key] = $Value;
         }
         elseif (($this->FKeyType == TMapKeyType::eObject()) || ($this->FKeyType == TMapKeyType::eRecord()) || ($this->FKeyType == TMapKeyType::eArray())) {
-            $mPair = new TPair();
-            $mPair->Key = $Key;
-            $mPair->Value = $Value;
+            $mPair                            = new TPair();
+            $mPair->Key                       = $Key;
+            $mPair->Value                     = $Value;
             $this->FMap[$this->HashKey($Key)] = $mPair;
         }
         else {
@@ -3054,8 +3121,8 @@ class TMap extends TAbstractMap {
         elseif (($this->FKeyType == TMapKeyType::eObject()) || ($this->FKeyType == TMapKeyType::eRecord())) {
             $mPair = new TPair();
             foreach ($Map as $mKey => $mValue) {
-                $mPair->Key = $mKey;
-                $mPair->Value = $mValue;
+                $mPair->Key                        = $mKey;
+                $mPair->Value                      = $mValue;
                 $this->FMap[$this->HashKey($mKey)] = $mPair->Duplicate();
             }
         }
@@ -3081,6 +3148,7 @@ class TMap extends TAbstractMap {
             foreach ($this->FMap as $mValue) {
                 $mResult->Add($mValue);
             }
+
             return $mResult;
         } // else ...
         return TList::FromArray($this->FElementsOwned, array_values($this->FMap));
@@ -3114,7 +3182,8 @@ class TMap extends TAbstractMap {
             'K' => $this->GenericArg('K'), 'V' => $this->GenericArg('V'),
             'T' => [
                 TPair::class => ['K' => $this->GenericArg('K'),
-                    'V' => $this->GenericArg('V')]]]);
+                                 'V' => $this->GenericArg('V')]]]);
+
         return new TStdMapMapIterator($this->FMap, $this->FKeyType);
     }
 }
