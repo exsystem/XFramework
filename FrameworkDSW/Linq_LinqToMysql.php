@@ -222,16 +222,16 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
             // TODO how to handle <T: ? > -- i can not put ? and > together
             // since
             // the combination is the ending mark of php. Or just omit it?
-            TMap::PrepareGeneric(['K' => 'string', 'V' => IInterface::class]);
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => IInterface::class]);
             self::$FParameters = new TMap(true);
         }
 
         if (self::$FVarAliasMapping === null) {
-            TMap::PrepareGeneric(['K' => 'string', 'V' => 'string']);
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String]);
             self::$FVarAliasMapping = new TMap();
         }
 
-        TList::PrepareGeneric(['T' => 'string']);
+        TList::PrepareGeneric(['T' => Framework::String]);
         $this->FMembers = new TList();
     }
 
@@ -496,7 +496,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
      * @return \FrameworkDSW\Linq\Expressions\TExpression
      */
     protected function VisitBlock($Expression) {
-        TList::PrepareGeneric(['T' => 'string']);
+        TList::PrepareGeneric(['T' => Framework::String]);
         $mColumns = new TList();
         foreach ($Expression->getExpressions() as $mExpression) {
             // $this->FAlias = 'col' . self::$FParameterNameCounter;

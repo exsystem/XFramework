@@ -48,6 +48,27 @@ class EIllegalClass extends ESerializationException {
  */
 class Framework extends TObject {
     /**
+     * @var string
+     */
+    const Boolean = 'boolean';
+    /**
+     * @var string
+     */
+    const Integer = 'integer';
+    /**
+     * @var string
+     */
+    const Float = 'float';
+    /**
+     * @var string
+     */
+    const String = 'string';
+    /**
+     * @var string
+     */
+    const Variant = 'mixed';
+
+    /**
      * @internal   The array key name for the variable to be serialized.
      * @var        integer
      */

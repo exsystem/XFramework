@@ -7,6 +7,7 @@
  */
 namespace FrameworkDSW\System;
 
+use FrameworkDSW\Framework\Framework;
 use FrameworkDSW\Reflection\TClass;
 use FrameworkDSW\Utilities\EInvalidStringCasting;
 use FrameworkDSW\Utilities\TType;
@@ -1372,12 +1373,12 @@ class TObject implements IInterface {
                 // }
                 // else
                 if (is_string($Value)
-                    && !($Value == 'boolean' || $Value == 'integer'
-                        || $Value == 'float' || $Value == 'string'
+                    && !($Value == Framework::Boolean || $Value == Framework::Integer
+                        || $Value == Framework::Float || $Value == Framework::String
                         || $Value == 'array'
                         || class_exists($Value)
                         || interface_exists($Value)
-                        || $Value == 'mixed')
+                        || $Value == Framework::Variant)
                 ) {
                     throw new ENoSuchType(sprintf('No such type: %s.', $Value), null, $Value);
                 }
@@ -1407,12 +1408,12 @@ class TObject implements IInterface {
                 // }
                 // else
                 if (is_string($Value)
-                    && !($Value == 'boolean' || $Value == 'integer'
-                        || $Value == 'float' || $Value == 'string'
+                    && !($Value == Framework::Boolean || $Value == Framework::Integer
+                        || $Value == Framework::Float || $Value == Framework::String
                         || $Value == 'array'
                         || class_exists($Value)
                         || interface_exists($Value)
-                        || $Value == 'mixed')
+                        || $Value == Framework::Variant)
                 ) {
                     throw new ENoSuchType(sprintf('No such type: %s.', $Value), null, $Value);
                 }

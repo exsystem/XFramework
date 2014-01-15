@@ -8,12 +8,13 @@
 namespace FrameworkDSW\Reflection;
 
 use FrameworkDSW\Containers\TMap;
-use FrameworkDSW\Database\TPrimitiveParam;
 use FrameworkDSW\Framework\Framework;
-use FrameworkDSW\System\EBadGenericArgsStructure;
-use FrameworkDSW\System\EInvalidParameter;
+use FrameworkDSW\System\EError;
+use FrameworkDSW\System\EException;
+use FrameworkDSW\System\IDelegate;
 use FrameworkDSW\System\IInterface;
 use FrameworkDSW\System\TBoolean;
+use FrameworkDSW\System\TEnum;
 use FrameworkDSW\System\TFloat;
 use FrameworkDSW\System\TInteger;
 use FrameworkDSW\System\TObject;
@@ -24,48 +25,425 @@ use FrameworkDSW\Utilities\EInvalidObjectCasting;
 use FrameworkDSW\Utilities\TType;
 
 /**
+ * Class EReflectionException
+ * @package FrameworkDSW\Reflection
+ */
+class EReflectionException extends EException {
+}
+
+/**
+ * Class EIllegalAccess
+ * @package FrameworkDSW\Reflection
+ */
+class EIllegalAccess extends EReflectionException {
+}
+
+/**
+ * Class ENoSuchNamespace
+ * @package FrameworkDSW\Reflection
+ */
+class ENoSuchNamespace extends EReflectionException {
+
+}
+
+/**
+ * Class ENoSuchTypeDefinition
+ * @package FrameworkDSW\Reflection
+ */
+class ENoSuchTypeDefinition extends EReflectionException {
+}
+
+/**
+ *
+ * @author 许子健
+ */
+class ENoSuchFieldMember extends EReflectionException {
+    /**
+     * @var \FrameworkDSW\Reflection\TClass<T: ?>
+     */
+    private $FClass = null;
+    /**
+     * @var string
+     */
+    private $FFieldName = '';
+    /**
+     * @var \FrameworkDSW\System\IInterface
+     */
+    private $FObject = null;
+
+    /**
+     * @param string $Message
+     * @param \FrameworkDSW\System\EException $Previous
+     * @param \FrameworkDSW\System\IInterface $Object
+     * @param string $FieldName
+     * @param \FrameworkDSW\Reflection\TClass $Class <T: ?>
+     */
+    public function __construct($Message, $Previous, $Object, $FieldName, $Class = null) {
+        parent::__construct($Message, $Previous);
+
+        TType::String($Message);
+        TType::Object($Previous, EException::class);
+        TType::Object($Object, IInterface::class);
+        TType::String($FieldName);
+        TType::Object($Class, [TClass::class => ['T' => null]]);
+
+        $this->FObject    = $Object;
+        $this->FFieldName = $FieldName;
+        $this->FClass     = $Class;
+    }
+
+    /**
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
+     */
+    public function getClass() {
+        return $this->FClass;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFieldName() {
+        return $this->FFieldName;
+    }
+
+    /**
+     * @return \FrameworkDSW\System\IInterface
+     */
+    public function getObject() {
+        return $this->FObject;
+    }
+}
+
+/**
+ * Class ENoSuchMethodMember
+ * @package FrameworkDSW\Reflection
+ */
+class ENoSuchMethodMember extends EReflectionException {
+    /**
+     * @var \FrameworkDSW\Reflection\TClass<T: ?>
+     */
+    private $FClass = null;
+    /**
+     * @var string
+     */
+    private $FMethodName = '';
+    /**
+     * @var \FrameworkDSW\System\IInterface
+     */
+    private $FObject = null;
+
+    /**
+     * @param string $Message
+     * @param \FrameworkDSW\System\EException $Previous
+     * @param \FrameworkDSW\System\IInterface $Object
+     * @param string $MethodName
+     * @param \FrameworkDSW\Reflection\TClass $Class <T: ?>
+     */
+    public function __construct($Message, $Previous, $Object, $MethodName, $Class = null) {
+        parent::__construct($Message, $Previous);
+
+        TType::String($Message);
+        TType::Object($Previous, EException::class);
+        TType::Object($Object, IInterface::class);
+        TType::String($MethodName);
+        TType::Object($Class, [TClass::class => ['T' => null]]);
+
+        $this->FObject     = $Object;
+        $this->FMethodName = $MethodName;
+        $this->FClass      = $Class;
+    }
+
+    /**
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
+     */
+    public function getClass() {
+        return $this->FClass;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMethodName() {
+        return $this->FMethodName;
+    }
+
+    /**
+     * @return \FrameworkDSW\System\IInterface
+     */
+    public function getObject() {
+        return $this->FObject;
+    }
+}
+
+/**
+ * Class ENoSuchPropertyMember
+ * @package FrameworkDSW\Reflection
+ */
+class ENoSuchPropertyMember extends EReflectionException {
+    /**
+     * @var \FrameworkDSW\Reflection\TClass<T: ?>
+     */
+    private $FClass = null;
+    /**
+     * @var string
+     */
+    private $FPropertyName = '';
+    /**
+     * @var \FrameworkDSW\System\IInterface
+     */
+    private $FObject = null;
+
+    /**
+     * @param string $Message
+     * @param \FrameworkDSW\System\EException $Previous
+     * @param \FrameworkDSW\System\IInterface $Object
+     * @param string $PropertyName
+     * @param \FrameworkDSW\Reflection\TClass $Class <T: ?>
+     */
+    public function __construct($Message, $Previous, $Object, $PropertyName, $Class = null) {
+        parent::__construct($Message, $Previous);
+
+        TType::String($Message);
+        TType::Object($Previous, EException::class);
+        TType::Object($Object, IInterface::class);
+        TType::String($PropertyName);
+        TType::Object($Class, [TClass::class => ['T' => null]]);
+
+        $this->FObject       = $Object;
+        $this->FPropertyName = $PropertyName;
+        $this->FClass        = $Class;
+    }
+
+    /**
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
+     */
+    public function getClass() {
+        return $this->FClass;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPropertyName() {
+        return $this->FPropertyName;
+    }
+
+    /**
+     * @return \FrameworkDSW\System\IInterface
+     */
+    public function getObject() {
+        return $this->FObject;
+    }
+}
+
+/**
+ * Class ENoSuchSignalMember
+ * @package FrameworkDSW\Reflection
+ */
+class ENoSuchSignalMember extends EReflectionException {
+    /**
+     * @var \FrameworkDSW\Reflection\TClass<T: ?>
+     */
+    private $FClass = null;
+    /**
+     * @var string
+     */
+    private $FSignalName = '';
+    /**
+     * @var \FrameworkDSW\System\IInterface
+     */
+    private $FObject = null;
+
+    /**
+     * @param string $Message
+     * @param \FrameworkDSW\System\EException $Previous
+     * @param \FrameworkDSW\System\IInterface $Object
+     * @param string $SignalName
+     * @param \FrameworkDSW\Reflection\TClass $Class <T: ?>
+     */
+    public function __construct($Message, $Previous, $Object, $SignalName, $Class = null) {
+        parent::__construct($Message, $Previous);
+
+        TType::String($Message);
+        TType::Object($Previous, EException::class);
+        TType::Object($Object, IInterface::class);
+        TType::String($SignalName);
+        TType::Object($Class, [TClass::class => ['T' => null]]);
+
+        $this->FObject     = $Object;
+        $this->FSignalName = $SignalName;
+        $this->FClass      = $Class;
+    }
+
+    /**
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
+     */
+    public function getClass() {
+        return $this->FClass;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSignalName() {
+        return $this->FSignalName;
+    }
+
+    /**
+     * @return \FrameworkDSW\System\IInterface
+     */
+    public function getObject() {
+        return $this->FObject;
+    }
+}
+
+/**
+ * Class ENoSuchSlotMember
+ * @package FrameworkDSW\Reflection
+ */
+class ENoSuchSlotMember extends EReflectionException {
+    /**
+     * @var \FrameworkDSW\Reflection\TClass<T: ?>
+     */
+    private $FClass = null;
+    /**
+     * @var string
+     */
+    private $FSlotName = '';
+    /**
+     * @var \FrameworkDSW\System\IInterface
+     */
+    private $FObject = null;
+
+    /**
+     * @param string $Message
+     * @param \FrameworkDSW\System\EException $Previous
+     * @param \FrameworkDSW\System\IInterface $Object
+     * @param string $SlotName
+     * @param \FrameworkDSW\Reflection\TClass $Class <T: ?>
+     */
+    public function __construct($Message, $Previous, $Object, $SlotName, $Class = null) {
+        parent::__construct($Message, $Previous);
+
+        TType::String($Message);
+        TType::Object($Previous, EException::class);
+        TType::Object($Object, IInterface::class);
+        TType::String($SlotName);
+        TType::Object($Class, [TClass::class => ['T' => null]]);
+
+        $this->FObject   = $Object;
+        $this->FSlotName = $SlotName;
+        $this->FClass    = $Class;
+    }
+
+    /**
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
+     */
+    public function getClass() {
+        return $this->FClass;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSlotName() {
+        return $this->FSlotName;
+    }
+
+    /**
+     * @return \FrameworkDSW\System\IInterface
+     */
+    public function getObject() {
+        return $this->FObject;
+    }
+}
+
+/**
+ * Class EInstantiation
+ * @package FrameworkDSW\Reflection
+ */
+class EInstantiation extends EReflectionException {
+}
+
+class EInvocationTarget extends EReflectionException {
+}
+
+/**
+ * Class EBadTypeDefinition
+ * @package FrameworkDSW\Reflection
+ */
+class EBadTypeDefinition extends EError {
+    /**
+     * @var string
+     */
+    private $FTypeDefinition = '';
+
+    /**
+     * @return string
+     */
+    public function getDoc() {
+        return $this->FTypeDefinition;
+    }
+
+    /**
+     * @param string $Message
+     * @param \FrameworkDSW\System\EException $Previous
+     * @param string $TypeDefinition
+     */
+    public function __construct($Message = '', $Previous = null, $TypeDefinition = '') {
+        parent::__construct($Message, $Previous);
+
+        TType::String($Message);
+        TType::Object($Previous, EException::class);
+        TType::String($TypeDefinition);
+
+        $this->FTypeDefinition = $TypeDefinition;
+    }
+}
+
+/**
  * \FrameworkDSW\Reflection\TModifiers
- * @author    许子健
+ * @author 许子健
  */
 class TModifiers extends TSet {
 
     /**
-     * @var    integer
+     * @var integer
      */
     const eAbstract = 3;
     /**
-     * @var    integer
+     * @var integer
      */
     const eConst = 7;
     /**
-     * @var    integer
+     * @var integer
      */
     const eFinal = 4;
     /**
-     * @var    integer
+     * @var integer
      */
     const eInterface = 6;
     /**
-     * @var    integer
+     * @var integer
      */
     const ePrivate = 0;
     /**
-     * @var    integer
+     * @var integer
      */
     const eProtected = 1;
     /**
-     * @var    integer
+     * @var integer
      */
     const ePublic = 2;
     /**
-     * @var    integer
+     * @var integer
      */
     const eStatic = 5;
 }
 
 /**
  * \FrameworkDSW\Reflection\IType
- * @author    许子健
+ * @author 许子健
  */
 interface IType extends IInterface {
 
@@ -73,25 +451,25 @@ interface IType extends IInterface {
 
 /**
  * \FrameworkDSW\Reflection\IMember
- * @author    许子健
+ * @author 许子健
  */
 interface IMember extends IInterface {
 
     /**
      * descHere
-     * @return    \FrameworkDSW\Reflection\TClass <T: ?>
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
     public function getDeclaringClass();
 
     /**
      * descHere
-     * @return    \FrameworkDSW\Reflection\TModifiers
+     * @return \FrameworkDSW\Reflection\TModifiers
      */
     public function getModifiers();
 
     /**
      * descHere
-     * @return    string
+     * @return string
      */
     public function getName();
 }
@@ -110,7 +488,7 @@ class TArray extends TRecord {
 
 /**
  * \FrameworkDSW\Reflection\TNamespace
- * @author    许子健
+ * @author 许子健
  */
 class TNamespace extends TObject {
     /**
@@ -127,7 +505,7 @@ class TNamespace extends TObject {
 
     /**
      * descHere
-     * @param    string $Namespace
+     * @param string $Namespace
      */
     public function __construct($Namespace) {
         parent::__construct();
@@ -139,7 +517,7 @@ class TNamespace extends TObject {
 
     /**
      * descHere
-     * @return    string
+     * @return string
      */
     public function getName() {
         return $this->FNamespace;
@@ -147,14 +525,14 @@ class TNamespace extends TObject {
 
     /**
      * descHere
-     * @param    string $Namespace
-     * @throws \FrameworkDSW\System\EInvalidParameter
-     * @return    \FrameworkDSW\Reflection\TNamespace
+     * @param string $Namespace
+     * @throws ENoSuchNamespace
+     * @return \FrameworkDSW\Reflection\TNamespace
      */
     public static function getNamespace($Namespace) {
         TType::String($Namespace);
         if (self::$FNamespaces === null) {
-            TMap::PrepareGeneric(['K' => 'string', 'V' => '\FrameworkDSW\Reflection\TNamespace']);
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => TNamespace::class]);
             self::$FNamespaces = new TMap(true);
         }
 
@@ -171,14 +549,14 @@ class TNamespace extends TObject {
                 return $mNamespace;
             }
         }
-        throw new EInvalidParameter();
+        throw new ENoSuchNamespace(sprintf('No such namespace: "%s".', $Namespace));
     }
 }
 
 /**
  * \FrameworkDSW\Reflection\TClass
  * params <T: ?>
- * @author    许子健
+ * @author 许子健
  */
 class TClass extends TObject implements IType {
     /**
@@ -236,7 +614,7 @@ class TClass extends TObject implements IType {
      */
     private function EnsureType() {
         if (!$this->FIsType) {
-            throw new EInvalidObjectCasting(); //TODO
+            throw new EIllegalAccess(sprintf('Illegal access: "%s" is neither a class or a record type.', $this->FClassName));
         }
     }
 
@@ -350,30 +728,30 @@ class TClass extends TObject implements IType {
             $this->FIsArray   = true;
             $this->FClassName = $mTemp;
         }
-        elseif (($mTemp == 'boolean') || ($mTemp == 'integer') || ($mTemp == 'float') || ($mTemp == 'string')) {
+        elseif (($mTemp == Framework::Boolean) || ($mTemp == Framework::Integer) || ($mTemp == Framework::Float) || ($mTemp == Framework::String)) {
             $this->FIsPrimitive = true;
             $this->FClassName   = $mTemp;
         }
-        elseif (isset(class_implements($mTemp)['FrameworkDSW\System\IDelegate'])) {
+        elseif (isset(class_implements($mTemp)[IDelegate::class])) {
             $this->FIsDelegate = true;
             $this->FClassName  = $mTemp;
         }
         else {
             $mRawParentClass = (string)get_parent_class($mTemp);
             switch ($mRawParentClass) {
-                case 'FrameworkDSW\System\TRecord':
+                case TRecord::class:
                     $this->FIsRecord = true;
+                    $this->FIsType   = true;
                     break;
-                case 'FrameworkDSW\System\TEnum':
+                case TEnum::class:
                     $this->FIsEnum = true;
                     break;
-                case 'FrameworkDSW\System\TSet':
+                case TSet::class:
                     $this->FIsSet = true;
                     break;
                 default:
                     if ((class_exists($mTemp, true) === false) && (interface_exists($mTemp, true) === false)) {
-                        throw new EBadGenericArgsStructure();
-                        //TODO throw class not exists.
+                        throw new ENoSuchTypeDefinition(sprintf('No such type: "%s".', $mTemp));
                     }
                     $this->FIsType = true;
                     break;
@@ -404,20 +782,23 @@ class TClass extends TObject implements IType {
 
     /**
      * descHere
+     * @throws EIllegalAccess
      * @return \FrameworkDSW\Reflection\TConstructor <T: T>
      */
     public function getConstructor() {
-        //$this->EnsureType(); //LAZY CHECKING.
-        TConstructor::PrepareGeneric($this->GenericArgs());
+        if ($this->FIsRecord) {
+            throw new EIllegalAccess(sprintf('Illegal access: constructor is only for class types, not for record "%s".', $this->FClassName));
+        }
 
+        TConstructor::PrepareGeneric($this->GenericArgs());
         return new TConstructor();
     }
 
     /**
      * descHere
-     * @param    string $Name
-     * @throws \FrameworkDSW\System\EInvalidParameter
-     * @return    \FrameworkDSW\Reflection\TField
+     * @param string $Name
+     * @throws ENoSuchFieldMember
+     * @return \FrameworkDSW\Reflection\TField
      */
     public function GetDeclaredField($Name) {
         TType::String($Name);
@@ -426,20 +807,19 @@ class TClass extends TObject implements IType {
         try {
             $mRaw = $this->getMetaInfo()->getProperty($Name);
             if ($mRaw->getDeclaringClass()->getName() !== $this->getName()) {
-                throw new EInvalidParameter(); //TODO
+                throw new ENoSuchFieldMember(sprintf('No such field member: "%s".', $Name), null, null, $Name, $this);
             }
 
             return new TField($this, $Name);
         }
         catch (\ReflectionException $Ex) {
-            throw new EInvalidParameter();
-            //TODO throw
+            throw new ENoSuchFieldMember(sprintf('No such field member: "%s".', $Name), null, null, $Name, $this);
         }
     }
 
     /**
      * descHere
-     * @return    \FrameworkDSW\Reflection\TField[]
+     * @return \FrameworkDSW\Reflection\TField[]
      */
     public function getDeclaredFields() {
         $this->EnsureType();
@@ -457,28 +837,28 @@ class TClass extends TObject implements IType {
 
     /**
      * descHere
-     * @param    string $Name
-     * @throws \FrameworkDSW\System\EInvalidParameter
-     * @return    \FrameworkDSW\Reflection\TMethod
+     * @param string $Name
+     * @throws ENoSuchMethodMember
+     * @return \FrameworkDSW\Reflection\TMethod
      */
     public function GetDeclaredMethod($Name) {
         TType::String($Name);
         $this->EnsureType();
         if ((!$this->CheckMethodName($Name)) || ($this->getMetaInfo()->getMethod($Name)->getDeclaringClass()->getName() !== $this->FClassName)) {
-            throw new EInvalidParameter();
+            throw new ENoSuchMethodMember(sprintf('No such method member: "%s".', $Name), null, null, $Name, $this);
         }
 
         try {
             return new TMethod($this, $Name);
         }
         catch (\ReflectionException $Ex) {
-            throw new EInvalidParameter();
+            throw new ENoSuchMethodMember(sprintf('No such method member: "%s".', $Name), null, null, $Name, $this);
         }
     }
 
     /**
      * descHere
-     * @return    \FrameworkDSW\Reflection\TMethod[]
+     * @return \FrameworkDSW\Reflection\TMethod[]
      */
     public function getDeclaredMethods() {
         $this->EnsureType();
@@ -496,12 +876,12 @@ class TClass extends TObject implements IType {
 
     /**
      * descHere
-     * @throws \FrameworkDSW\Utilities\EInvalidObjectCasting
-     * @return    \FrameworkDSW\Reflection\TClass <T: ?>
+     * @throws EIllegalAccess
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
     public function getElementType() {
         if (!$this->FIsArray) {
-            throw new EInvalidObjectCasting(); //TODO
+            throw new EIllegalAccess(sprintf('Illegal access: not an array.'));
         }
         $mRawElementType      = substr($this->FClassName, 0, -2);
         $mOriginalGenericArgT = $this->GenericArg('T');
@@ -518,17 +898,17 @@ class TClass extends TObject implements IType {
 
     /**
      * descHere
-     * @throws \FrameworkDSW\Utilities\EInvalidObjectCasting
-     * @return    \FrameworkDSW\Containers\IMap <K: string, V: \FrameworkDSW\Reflection\IType>
+     * @throws EIllegalAccess
+     * @return \FrameworkDSW\Containers\IMap <K: string, V: \FrameworkDSW\Reflection\IType>
      */
     public function getGenericsValues() {
         if (!($this->FIsType || $this->FIsArray)) {
-            throw new EInvalidObjectCasting(); //TODO
+            throw new EIllegalAccess(sprintf('Illegal access: not a class, interface or record type'));
         }
 
         $mGenericArgs = $this->GenericArg('T');
         if (is_array($mGenericArgs)) {
-            TMap::PrepareGeneric(['K' => 'string', 'V' => 'FrameworkDSW\Reflection\IType']);
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => IType::class]);
             $mResult      = new TMap(true);
             $mGenericArgs = $mGenericArgs[$this->FClassName];
             foreach ($mGenericArgs as $mName => $mType) {
@@ -545,7 +925,7 @@ class TClass extends TObject implements IType {
 
     /**
      * descHere
-     * @return    \FrameworkDSW\Reflection\TClass[] <T: ?>
+     * @return \FrameworkDSW\Reflection\TClass[] <T: ?>
      */
     public function getInterfaces() {
         $this->EnsureType();
@@ -554,7 +934,7 @@ class TClass extends TObject implements IType {
         $mImplements        = $this->getExtendsInfo();
         foreach ($mRawInterfaceNames as $mRawInterfaceName) {
             if (isset($mImplements[$mRawInterfaceName])) {
-                $mInterface = $mImplements[$mRawInterfaceName];
+                $mInterface = [$mRawInterfaceName => $mImplements[$mRawInterfaceName]];
             }
             else {
                 $mInterface = $mRawInterfaceName;
@@ -579,7 +959,7 @@ class TClass extends TObject implements IType {
 
     /**
      * descHere
-     * @return    \FrameworkDSW\Reflection\TField[]
+     * @return \FrameworkDSW\Reflection\TField[]
      */
     public function getFields() {
         $this->EnsureType();
@@ -595,9 +975,9 @@ class TClass extends TObject implements IType {
 
     /**
      * descHere
-     * @param    string $Name
-     * @throws \FrameworkDSW\System\EInvalidParameter
-     * @return    \FrameworkDSW\Reflection\TMethod
+     * @param string $Name
+     * @throws ENoSuchMethodMember
+     * @return \FrameworkDSW\Reflection\TMethod
      */
     public function GetMethod($Name) {
         TType::String($Name);
@@ -606,13 +986,13 @@ class TClass extends TObject implements IType {
             return new TMethod($this, $Name);
         }
         else {
-            throw new EInvalidParameter();
+            throw new ENoSuchMethodMember(sprintf('No such method member: "%s".', $Name), null, null, $Name, $this);
         }
     }
 
     /**
      * descHere
-     * @return    \FrameworkDSW\Reflection\TMethod[]
+     * @return \FrameworkDSW\Reflection\TMethod[]
      */
     public function getMethods() {
         $this->EnsureType();
@@ -630,7 +1010,7 @@ class TClass extends TObject implements IType {
 
     /**
      * descHere
-     * @return    string
+     * @return string
      */
     public function getName() {
         return $this->FClassName;
@@ -638,12 +1018,12 @@ class TClass extends TObject implements IType {
 
     /**
      * descHere
-     * @throws \FrameworkDSW\System\EInvalidParameter
-     * @return    \FrameworkDSW\Reflection\TNamespace
+     * @throws EIllegalAccess
+     * @return \FrameworkDSW\Reflection\TNamespace
      */
     public function getNamespace() {
         if ($this->FIsArray || $this->FIsPrimitive) {
-            throw new EInvalidParameter(); //TODO
+            throw new EIllegalAccess(sprintf('Illegal access: namespace inapplicable.'));
         }
         else {
             return TNamespace::getNamespace($this->getMetaInfo()->getNamespaceName());
@@ -652,7 +1032,7 @@ class TClass extends TObject implements IType {
 
     /**
      * descHere
-     * @return    \FrameworkDSW\Reflection\TClass <T: ?>
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
     public function getParentClass() {
         $this->EnsureType();
@@ -669,7 +1049,7 @@ class TClass extends TObject implements IType {
 
     /**
      * descHere
-     * @return    string
+     * @return string
      */
     public function getSimpleName() {
         $this->EnsureType();
@@ -679,7 +1059,7 @@ class TClass extends TObject implements IType {
 
     /**
      * descHere
-     * @return    boolean
+     * @return boolean
      */
     public function IsArray() {
         return $this->FIsArray;
@@ -687,7 +1067,7 @@ class TClass extends TObject implements IType {
 
     /**
      * descHere
-     * @return    boolean
+     * @return boolean
      */
     public function IsClass() {
         return $this->FIsType && (!$this->getMetaInfo()->isInterface());
@@ -695,7 +1075,7 @@ class TClass extends TObject implements IType {
 
     /**
      * descHere
-     * @return    boolean
+     * @return boolean
      */
     public function IsEnum() {
         return $this->FIsEnum;
@@ -703,8 +1083,8 @@ class TClass extends TObject implements IType {
 
     /**
      * descHere
-     * @param    \FrameworkDSW\System\IInterface $Object
-     * @return    boolean
+     * @param \FrameworkDSW\System\IInterface $Object
+     * @return boolean
      */
     public function IsInstance($Object) {
         try {
@@ -719,7 +1099,7 @@ class TClass extends TObject implements IType {
 
     /**
      * descHere
-     * @return    boolean
+     * @return boolean
      */
     public function IsInterface() {
         return $this->FIsType && $this->getMetaInfo()->isInterface();
@@ -727,7 +1107,7 @@ class TClass extends TObject implements IType {
 
     /**
      * descHere
-     * @return    boolean
+     * @return boolean
      */
     public function IsPrimitive() {
         return $this->FIsPrimitive;
@@ -735,7 +1115,7 @@ class TClass extends TObject implements IType {
 
     /**
      * descHere
-     * @return    boolean
+     * @return boolean
      */
     public function IsSetStruct() {
         return $this->FIsSet;
@@ -743,15 +1123,15 @@ class TClass extends TObject implements IType {
 
     /**
      * descHere
-     * @param    \FrameworkDSW\System\IInterface[] $Parameters
-     * @throws \FrameworkDSW\Utilities\EInvalidObjectCasting
-     * @return    T
+     * @param \FrameworkDSW\System\IInterface[] $Parameters
+     * @throws EIllegalAccess
+     * @return T
      */
     public function NewInstance($Parameters) {
         TType::Arr($Parameters);
         $this->EnsureType();
         if ($this->getMetaInfo()->isInterface()) {
-            throw new EInvalidObjectCasting(); //TODO
+            throw new EIllegalAccess(sprintf('Illegal access: instantiation failed by attempting using interface.'));
         }
         $mConstructor = $this->getConstructor();
         $mResult      = $mConstructor->NewInstance($Parameters);
@@ -763,7 +1143,7 @@ class TClass extends TObject implements IType {
 
 /**
  * \FrameworkDSW\Reflection\TAbstractMember
- * @author    许子健
+ * @author 许子健
  */
 abstract class TAbstractMember extends TObject {
     /**
@@ -775,7 +1155,7 @@ abstract class TAbstractMember extends TObject {
      */
     protected $FClass = null;
     /**
-     * @var    boolean
+     * @var boolean
      */
     protected $FAccessible = false;
     /**
@@ -789,11 +1169,9 @@ abstract class TAbstractMember extends TObject {
 
     /**
      * @param string $DocComment
-     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @throws EBadTypeDefinition
      */
     protected function ParseParameterTypes($DocComment) {
-        //TODO Support for [] - arrays
-
         $mLines           = [];
         $mDocCommentLines = explode("\n", $DocComment);
         foreach ($mDocCommentLines as $mLine) {
@@ -801,20 +1179,20 @@ abstract class TAbstractMember extends TObject {
             if (substr($mLine, 0, 9) === '* @param ') {
                 $mLine = substr($mLine, 9);
                 if ($mLine === false || $mLine === '') {
-                    throw new EInvalidParameter(); //TODO exception type properly, should be.
+                    throw new EBadTypeDefinition(sprintf('Bad type definition: parameter type expected, but end-of-line found.'), null, $DocComment);
                 }
                 $mPos = strpos($mLine, '$');
                 if ($mPos === false) {
-                    throw new EInvalidParameter(); //TODO exception type properly, should be.
+                    throw new EBadTypeDefinition(sprintf('Bad type definition: "$" expected for parameter name.'), null, $DocComment);
                 }
                 $mClassPartString = substr($mLine, 0, $mPos);
                 if ($mClassPartString === false || $mClassPartString === '') {
-                    throw new EInvalidParameter(); //TODO exception type properly, should be.
+                    throw new EBadTypeDefinition(sprintf('Bad type definition: parameter type of class part expected, but end-of-line found.'), null, $DocComment);
                 }
                 $mClassPartString = trim($mClassPartString);
                 $mLine            = substr($mLine, $mPos + 1);
                 if ($mLine === false || $mLine === '') {
-                    throw new EInvalidParameter(); //TODO exception type properly, should be.
+                    throw new EBadTypeDefinition(sprintf('Bad type definition: parameter type of class part expected, but end-of-line found.'), null, $DocComment);
                 }
                 $mPos = strpos($mLine, ' ');
                 if ($mPos === false || $mPos === strlen($mLine)) {
@@ -841,7 +1219,7 @@ abstract class TAbstractMember extends TObject {
             elseif (substr($mLine, 0, 10) === '* @return ') {
                 $mLine = substr($mLine, 10);
                 if ($mLine === false || $mLine === '') {
-                    throw new EInvalidParameter(); //TODO exception type properly, should be.
+                    throw new EBadTypeDefinition(sprintf('Bad type definition: return type expected, but end-of-line found.'), null, $DocComment);
                 }
                 $mPos = strpos($mLine, ' ');
                 if ($mPos === false) {
@@ -868,7 +1246,7 @@ abstract class TAbstractMember extends TObject {
             elseif (substr($mLine, 0, 7) === '* @var ') {
                 $mLine = substr($mLine, 7);
                 if ($mLine === false || $mLine === '') {
-                    throw new EInvalidParameter(); //TODO exception type properly, should be.
+                    throw new EBadTypeDefinition(sprintf('Bad type definition: field type expected, but end-of-line found.'), null, $DocComment);
                 }
                 $mPos = strpos($mLine, ' ');
                 if ($mPos === false) {
@@ -957,7 +1335,7 @@ abstract class TAbstractMember extends TObject {
         $this->FParameterValues = $this->FParameterTypes;
         if (isset($this->FClass->GenericArg('T')[$this->FClass->getName()])) {
             $mGenericsArgs = $this->FClass->GenericArg('T')[$this->FClass->getName()];
-            //TODO additional generics args from methods/ctors.
+            //TODO additional generics args from methods/ctors. -- need declare something implements IType describing GENERICS.
             foreach ($this->FParameterValues as &$mParameter) {
                 if (is_string($mParameter)) {
                     if (isset($mGenericsArgs[$mParameter])) {
@@ -977,8 +1355,9 @@ abstract class TAbstractMember extends TObject {
     }
 
     /**
-     * @param    \FrameworkDSW\Reflection\TClass $Class <T: ?>
-     * @throws \FrameworkDSW\System\EBadGenericArgsStructure
+     * @param \FrameworkDSW\Reflection\TClass $Class <T: ?>
+     * @throws EIllegalAccess
+     * @throws ENoSuchTypeDefinition
      * @return string
      */
     protected function SetClass($Class) {
@@ -988,29 +1367,26 @@ abstract class TAbstractMember extends TObject {
         }
 
         if (strrpos($mTemp, ']', -1) !== false) {
-            throw new EBadGenericArgsStructure(); //TODO non-class.
+            throw new EIllegalAccess(sprintf('Illegal access: class or record type expected, but array typed as "%s" found.'), $mTemp);
         }
 
-        if (($mTemp == 'boolean') || ($mTemp == 'integer') || ($mTemp == 'float') || ($mTemp == 'string')) {
-            throw new EBadGenericArgsStructure(); //TODO non-class.
+        if (($mTemp == Framework::Boolean) || ($mTemp == Framework::Integer) || ($mTemp == Framework::Float) || ($mTemp == Framework::String)) {
+            throw new EIllegalAccess(sprintf('Illegal access: class or record type expected, but %s type found.', $mTemp));
         }
 
-        if (isset(class_implements($mTemp)['FrameworkDSW\System\IDelegate'])) {
-            throw new EBadGenericArgsStructure(); //TODO non-class.
+        if (isset(class_implements($mTemp)[IDelegate::class])) {
+            throw new EIllegalAccess(sprintf('Illegal access: class or record type expected, but delegate type "%s" found.', $mTemp));
         }
 
         $mRawParentClass = (string)get_parent_class($mTemp);
         switch ($mRawParentClass) {
-            case 'FrameworkDSW\System\TRecord':
-                throw new EBadGenericArgsStructure(); //TODO non-class.
-            case 'FrameworkDSW\TEnum':
-                throw new EBadGenericArgsStructure(); //TODO non-class.
-            case 'FrameworkDSW\TSet':
-                throw new EBadGenericArgsStructure(); //TODO non-class.
+            case TEnum::class:
+                throw new EIllegalAccess(sprintf('Illegal access: class or record type expected, but enumeration type "%s" found.', $mTemp));
+            case TSet::class:
+                throw new EIllegalAccess(sprintf('Illegal access: class or record type expected, but set type "%s" found.', $mTemp));
             default:
                 if ((class_exists($mTemp, true) === false) && (interface_exists($mTemp, true) === false)) {
-                    throw new EBadGenericArgsStructure();
-                    //TODO throw class not exists.
+                    throw new ENoSuchTypeDefinition(sprintf('No such class type: %s'), $mTemp);
                 }
                 break;
         }
@@ -1022,7 +1398,7 @@ abstract class TAbstractMember extends TObject {
 
     /**
      * descHere
-     * @return    boolean
+     * @return boolean
      */
     public function getAccessible() {
         return $this->FAccessible;
@@ -1030,7 +1406,7 @@ abstract class TAbstractMember extends TObject {
 
     /**
      * descHere
-     * @param    boolean $Value
+     * @param boolean $Value
      */
     public function setAccessible($Value) {
         TType::Bool($Value);
@@ -1055,7 +1431,7 @@ abstract class TAbstractMember extends TObject {
 
 /**
  * \FrameworkDSW\Reflection\TField
- * @author    许子健
+ * @author 许子健
  */
 final class TField extends TAbstractMember implements IMember {
     /**
@@ -1065,12 +1441,12 @@ final class TField extends TAbstractMember implements IMember {
 
     /**
      * descHere
-     * @param    \FrameworkDSW\Reflection\TClass $Class <T: ?>
-     * @param    string $Name
-     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @param \FrameworkDSW\Reflection\TClass $Class <T: ?>
+     * @param string $Name
+     * @throws ENoSuchFieldMember
      */
     public function __construct($Class, $Name) {
-        TType::Object($Class, [TClass::class => ['T' => null]]); //FIXME !!!!!
+        TType::Object($Class, [TClass::class => ['T' => null]]);
         TType::String($Name);
 
         try {
@@ -1078,7 +1454,7 @@ final class TField extends TAbstractMember implements IMember {
             $this->FMetaInfo = $mClassMetaInfo->getProperty($Name);
         }
         catch (\ReflectionException $Ex) {
-            throw new EInvalidParameter(); //TODO
+            throw new ENoSuchFieldMember(sprintf('No such field member: %s.'), null, null, $Name, $Class);
         }
         $this->SetClass($Class);
         $this->FName = $Name;
@@ -1093,14 +1469,14 @@ final class TField extends TAbstractMember implements IMember {
 
     /**
      * descHere
-     * @throws \FrameworkDSW\System\EInvalidParameter
-     * @return    \FrameworkDSW\Containers\IMap <K: string, V: \FrameworkDSW\Reflection\TClass<T: ?>>
+     * @throws EBadTypeDefinition
+     * @return \FrameworkDSW\Containers\IMap <K: string, V: \FrameworkDSW\Reflection\TClass<T: ?>>
      */
     public function getGenericsValues() {
         if ($this->FParameterValues == []) {
             $DocComment = $this->FMetaInfo->getDocComment();
             if ($DocComment === false) {
-                throw new EInvalidParameter(); //TODO ex.
+                throw new EBadTypeDefinition(sprintf('Bad type definition: undefined type of field "%s.'), $this->FName);
             }
             $this->ParseParameterValues($DocComment);
         }
@@ -1109,7 +1485,7 @@ final class TField extends TAbstractMember implements IMember {
             return null;
         }
         else {
-            TMap::PrepareGeneric(['K' => 'string', 'V' => '\FrameworkDSW\Reflection\IType']);
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => IType::class]);
             $mResult = new TMap(true);
             $mRaw    = $mType[array_keys($mType)[0]];
             foreach ($mRaw as $mName => $mValue) {
@@ -1123,7 +1499,7 @@ final class TField extends TAbstractMember implements IMember {
 
     /**
      * descHere
-     * @return    \FrameworkDSW\Reflection\TModifiers
+     * @return \FrameworkDSW\Reflection\TModifiers
      */
     public function getModifiers() {
         $mResult = new TModifiers();
@@ -1145,14 +1521,14 @@ final class TField extends TAbstractMember implements IMember {
 
     /**
      * descHere
-     * @throws \FrameworkDSW\System\EInvalidParameter
-     * @return    \FrameworkDSW\Reflection\TClass <T: ?>
+     * @throws EBadTypeDefinition
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
     public function getType() {
         if ($this->FParameterValues == []) {
             $mDocComment = $this->FMetaInfo->getDocComment();
             if ($mDocComment === false) {
-                throw new EInvalidParameter(); //TODO ex.
+                throw new EBadTypeDefinition(sprintf('Bad type definition: undefined type of field %s.'), $this->FName);
             }
             $this->ParseParameterValues($mDocComment);
         }
@@ -1164,9 +1540,9 @@ final class TField extends TAbstractMember implements IMember {
 
     /**
      * descHere
-     * @param    \FrameworkDSW\System\IInterface $Object
-     * @throws \FrameworkDSW\System\EInvalidParameter
-     * @return    \FrameworkDSW\System\IInterface
+     * @param \FrameworkDSW\System\IInterface $Object
+     * @throws EIllegalAccess
+     * @return \FrameworkDSW\System\IInterface
      */
     public function GetValue($Object) {
         TType::Object($Object, IInterface::class);
@@ -1199,15 +1575,15 @@ final class TField extends TAbstractMember implements IMember {
             }
         }
         catch (\ReflectionException $Ex) {
-            throw new EInvalidParameter(); //TODO Not accessible.
+            throw new EIllegalAccess(sprintf('Illegal access: member "%s" is not readable.', $this->FName));
         }
     }
 
     /**
      * descHere
-     * @param    \FrameworkDSW\System\IInterface $Object
-     * @param    \FrameworkDSW\System\IInterface $Value
-     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @param \FrameworkDSW\System\IInterface $Object
+     * @param \FrameworkDSW\System\IInterface $Value
+     * @throws EIllegalAccess
      */
     public function SetValue($Object, $Value) {
         TType::Object($Object, IInterface::class);
@@ -1216,28 +1592,28 @@ final class TField extends TAbstractMember implements IMember {
             $mType = $this->getType();
             switch ($mType->getName()) {
                 case 'boolean':
-                    /**@var $Value \FrameworkDSW\System\TBoolean* */
+                    /**@var $Value \FrameworkDSW\System\TBoolean */
                     TType::Object($Value, TBoolean::class);
                     $this->FMetaInfo->setValue($Object, $Value->Unbox());
                     break;
                 case 'integer':
-                    /**@var $Value \FrameworkDSW\System\TInteger* */
+                    /**@var $Value \FrameworkDSW\System\TInteger */
                     TType::Object($Value, TInteger::class);
                     $this->FMetaInfo->setValue($Object, $Value->Unbox());
                     break;
                 case 'float':
-                    /**@var $Value \FrameworkDSW\System\TFloat* */
+                    /**@var $Value \FrameworkDSW\System\TFloat */
                     TType::Object($Value, TFloat::class);
                     $this->FMetaInfo->setValue($Object, $Value->Unbox());
                     break;
                 case 'string':
-                    /**@var $Value \FrameworkDSW\System\TString* */
+                    /**@var $Value \FrameworkDSW\System\TString */
                     TType::Object($Value, TString::class);
                     $this->FMetaInfo->setValue($Object, $Value->Unbox());
                     break;
                 default:
                     if ($this->getType()->IsArray()) {
-                        /**@var $Value \FrameworkDSW\Reflection\TArray* */
+                        /**@var $Value \FrameworkDSW\Reflection\TArray */
                         TType::Object($Value, TArray::class);
                         $this->FMetaInfo->setValue($Object, $Value->Array);
                     }
@@ -1249,7 +1625,7 @@ final class TField extends TAbstractMember implements IMember {
             }
         }
         catch (\ReflectionException $Ex) {
-            throw new EInvalidParameter(); //TODO Not accessible.
+            throw new EIllegalAccess(sprintf('Illegal access: member "%s" is not writable.', $this->FName));
         }
     }
 
@@ -1257,7 +1633,7 @@ final class TField extends TAbstractMember implements IMember {
 
 /**
  * \FrameworkDSW\Reflection\TProperty
- * @author    许子健
+ * @author 许子健
  */
 final class TProperty extends TAbstractMember implements IMember {
     /**
@@ -1271,19 +1647,19 @@ final class TProperty extends TAbstractMember implements IMember {
 
     /**
      * descHere
-     * @param    \FrameworkDSW\Reflection\TClass $Class <T: ?>
-     * @param    string $Name
-     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @param \FrameworkDSW\Reflection\TClass $Class <T: ?>
+     * @param string $Name
+     * @throws ENoSuchPropertyMember
      */
     public function __construct($Class, $Name) {
-        TType::Object($Class, [TClass::class => ['T' => null]]); //FIXME !!!!!
+        TType::Object($Class, [TClass::class => ['T' => null]]);
         TType::String($Name);
 
         try {
             $mClassMetaInfo = new \ReflectionClass($Class->getName());
         }
         catch (\ReflectionException $Ex) {
-            throw new EInvalidParameter(); //TODO
+            throw new ENoSuchPropertyMember(sprintf('No such property member: no such class: %s.', $Class->getName()), null, null, $Name, $Class);
         }
         try {
             $this->FGetterMetaInfo = $mClassMetaInfo->getMethod("get{$Name}");
@@ -1298,7 +1674,7 @@ final class TProperty extends TAbstractMember implements IMember {
 
         }
         if ($this->FGetterMetaInfo === null && $this->FSetterMetaInfo === null) {
-            throw new EInvalidParameter(); //TODO
+            throw new ENoSuchPropertyMember(sprintf('No such property member: $%s->%s.', $Class->getName(), $Name), null, null, $Name, $Class);
         }
         $this->SetClass($Class);
         $this->FName = $Name;
@@ -1313,8 +1689,8 @@ final class TProperty extends TAbstractMember implements IMember {
 
     /**
      * descHere
-     * @throws \FrameworkDSW\System\EInvalidParameter
-     * @return    \FrameworkDSW\Containers\IMap <K: string, V: \FrameworkDSW\Reflection\TClass<T: ?>>
+     * @throws EBadTypeDefinition
+     * @return \FrameworkDSW\Containers\IMap <K: string, V: \FrameworkDSW\Reflection\TClass<T: ?>>
      */
     public function getGenericsValues() {
         if ($this->FParameterValues == []) {
@@ -1325,7 +1701,7 @@ final class TProperty extends TAbstractMember implements IMember {
                 $DocComment = $this->FGetterMetaInfo->getDocComment();
             }
             if ($DocComment === false) {
-                throw new EInvalidParameter(); //TODO ex.
+                throw new EBadTypeDefinition(sprintf('Bad type definition: undefined type of property %s.', $this->FName));
             }
             $this->ParseParameterValues($DocComment);
         }
@@ -1334,7 +1710,7 @@ final class TProperty extends TAbstractMember implements IMember {
             return null;
         }
         else {
-            TMap::PrepareGeneric(['K' => 'string', 'V' => '\FrameworkDSW\Reflection\IType']);
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => IType::class]);
             $mResult = new TMap(true);
             $mRaw    = $mType[array_keys($mType)[0]];
             foreach ($mRaw as $mName => $mValue) {
@@ -1348,7 +1724,7 @@ final class TProperty extends TAbstractMember implements IMember {
 
     /**
      * descHere
-     * @return    \FrameworkDSW\Reflection\TModifiers
+     * @return \FrameworkDSW\Reflection\TModifiers
      */
     public function getModifiers() {
         $mResult = new TModifiers();
@@ -1370,8 +1746,8 @@ final class TProperty extends TAbstractMember implements IMember {
 
     /**
      * descHere
-     * @throws \FrameworkDSW\System\EInvalidParameter
-     * @return    \FrameworkDSW\Reflection\TClass <T: ?>
+     * @throws EBadTypeDefinition
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
     public function getType() {
         if ($this->FParameterValues == []) {
@@ -1382,7 +1758,7 @@ final class TProperty extends TAbstractMember implements IMember {
                 $mDocComment = $this->FGetterMetaInfo->getDocComment();
             }
             if ($mDocComment === false) {
-                throw new EInvalidParameter(); //TODO ex.
+                throw new EBadTypeDefinition(sprintf('Bad type definition: undefined type of property %s.', $this->FName));
             }
             $this->ParseParameterValues($mDocComment);
         }
@@ -1394,9 +1770,9 @@ final class TProperty extends TAbstractMember implements IMember {
 
     /**
      * descHere
-     * @param    \FrameworkDSW\System\IInterface $Object
-     * @throws \FrameworkDSW\System\EInvalidParameter
-     * @return    \FrameworkDSW\System\IInterface
+     * @param \FrameworkDSW\System\IInterface $Object
+     * @throws EIllegalAccess
+     * @return \FrameworkDSW\System\IInterface
      */
     public function GetValue($Object) {
         TType::Object($Object, IInterface::class);
@@ -1429,15 +1805,15 @@ final class TProperty extends TAbstractMember implements IMember {
             }
         }
         catch (\ReflectionException $Ex) {
-            throw new EInvalidParameter(); //TODO Not accessible.
+            throw new EIllegalAccess(sprintf('Illegal access: property "%s" is not readable or wrong object provided.'), $this->FName);
         }
     }
 
     /**
      * descHere
-     * @param    \FrameworkDSW\System\IInterface $Object
-     * @param    \FrameworkDSW\System\IInterface $Value
-     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @param \FrameworkDSW\System\IInterface $Object
+     * @param \FrameworkDSW\System\IInterface $Value
+     * @throws EIllegalAccess
      */
     public function SetValue($Object, $Value) {
         TType::Object($Object, IInterface::class);
@@ -1446,29 +1822,29 @@ final class TProperty extends TAbstractMember implements IMember {
             $mType = $this->getType();
             switch ($mType->getName()) {
                 case 'boolean':
-                    /**@var $Value \FrameworkDSW\System\TBoolean* */
+                    /**@var $Value \FrameworkDSW\System\TBoolean */
                     TType::Object($Value, TBoolean::class);
                     $this->FSetterMetaInfo->invoke($Object, $Value->Unbox());
                     break;
                 case 'integer':
-                    /**@var $Value \FrameworkDSW\System\TInteger* */
+                    /**@var $Value \FrameworkDSW\System\TInteger */
                     TType::Object($Value, TInteger::class);
                     $this->FSetterMetaInfo->invoke($Object, $Value->Unbox());
                     break;
                 case 'float':
-                    /**@var $Value \FrameworkDSW\System\TFloat* */
-                    TType::Object($Value, 'FrameworkDSW\System\TFloat');
-                    $this->FGetterMetaInfo->setValue($Object, $Value->Unbox());
+                    /**@var $Value \FrameworkDSW\System\TFloat */
+                    TType::Object($Value, TFloat::class);
+                    $this->FGetterMetaInfo->invoke($Object, $Value->Unbox());
                     break;
                 case 'string':
-                    /**@var $Value \FrameworkDSW\System\TString* */
+                    /**@var $Value \FrameworkDSW\System\TString */
                     TType::Object($Value, TString::class);
                     $this->FSetterMetaInfo->invoke($Object, $Value->Unbox());
                     break;
                 default:
                     if ($this->getType()->IsArray()) {
-                        /**@var $Value \FrameworkDSW\Reflection\TArray* */
-                        TType::Object($Value, 'FrameworkDSW\Reflection\TArray');
+                        /**@var $Value \FrameworkDSW\Reflection\TArray */
+                        TType::Object($Value, TArray::class);
                         $this->FSetterMetaInfo->invoke($Object, $Value->Array);
                     }
                     else {
@@ -1479,7 +1855,7 @@ final class TProperty extends TAbstractMember implements IMember {
             }
         }
         catch (\ReflectionException $Ex) {
-            throw new EInvalidParameter(); //TODO Not accessible.
+            throw new EIllegalAccess(sprintf('Illegal access: property "%s" is not writable or wrong object provided.'), $this->FName);
         }
     }
 
@@ -1488,12 +1864,12 @@ final class TProperty extends TAbstractMember implements IMember {
 /**
  * \FrameworkDSW\Reflection\TConstructor
  * params <T: ?>
- * @author    许子健
+ * @author 许子健
  */
 class TConstructor extends TAbstractMember implements IMember {
     /**
      * descHere
-     * @var    \ReflectionMethod
+     * @var \ReflectionMethod
      */
     private $FMetaInfo = null;
     /**
@@ -1517,7 +1893,7 @@ class TConstructor extends TAbstractMember implements IMember {
 
     /**
      * descHere
-     * @return    \FrameworkDSW\Reflection\TClass <T: T>
+     * @return \FrameworkDSW\Reflection\TClass <T: T>
      */
     public function getDeclaringClass() {
         TClass::PrepareGeneric($this->GenericArgs());
@@ -1527,7 +1903,7 @@ class TConstructor extends TAbstractMember implements IMember {
 
     /**
      * descHere
-     * @return    \FrameworkDSW\Reflection\TModifiers
+     * @return \FrameworkDSW\Reflection\TModifiers
      */
     public function getModifiers() {
         $mResult = new TModifiers();
@@ -1552,13 +1928,13 @@ class TConstructor extends TAbstractMember implements IMember {
 
     /**
      * descHere
-     * @throws \FrameworkDSW\System\EInvalidParameter
-     * @return \FrameworkDSW\Reflection\TClass[] <T>
+     * @throws EBadTypeDefinition
+     * @return \FrameworkDSW\Reflection\TClass[] <T: ?>
      */
     public function getParameterTypes() {
         $mDocComment = $this->FMetaInfo->getDocComment();
         if ($mDocComment === false) {
-            throw new EInvalidParameter(); //TODO
+            throw new EBadTypeDefinition(sprintf('Bad type definition: undefined type information of constructor for %s.', $this->FClassName));
         }
         $this->ParseParameterTypes($mDocComment);
         $mResult = [];
@@ -1573,7 +1949,7 @@ class TConstructor extends TAbstractMember implements IMember {
     /**
      * descHere
      * @param \FrameworkDSW\System\IInterface[] $Parameters
-     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @throws EInstantiation
      * @return T
      */
     public function NewInstance($Parameters) {
@@ -1587,33 +1963,33 @@ class TConstructor extends TAbstractMember implements IMember {
         $mRawParameters = [];
         $mDocComment    = $this->FMetaInfo->getDocComment();
         if ($mDocComment === false) {
-            throw new EInvalidParameter(); //TODO
+            throw new EInstantiation(sprintf('Instantiation failed: no constructor type information found for class %s.', $this->FClassName));
         }
         $this->ParseParameterValues($mDocComment);
         foreach ($this->FParameterValues as $mIndex => $mType) {
             switch ($mType) {
                 case 'boolean':
-                    /** @var $Parameters \FrameworkDSW\System\TBoolean[] * */
+                    /** @var $Parameters \FrameworkDSW\System\TBoolean[] */
                     TType::Object($Parameters[$mIndex], TBoolean::class);
                     $mRawParameters[$mIndex] = $Parameters[$mIndex]->Unbox();
                     break;
                 case 'integer':
-                    /** @var $Parameters \FrameworkDSW\System\TInteger[] * */
+                    /** @var $Parameters \FrameworkDSW\System\TInteger[] */
                     TType::Object($Parameters[$mIndex], TInteger::class);
                     $mRawParameters[$mIndex] = $Parameters[$mIndex]->Unbox();
                     break;
                 case 'float':
-                    /** @var $Parameters \FrameworkDSW\System\TFloat[] * */
+                    /** @var $Parameters \FrameworkDSW\System\TFloat[] */
                     TType::Object($Parameters[$mIndex], TFloat::class);
                     $mRawParameters[$mIndex] = $Parameters[$mIndex]->Unbox();
                     break;
                 case 'string':
-                    /** @var $Parameters \FrameworkDSW\System\TString[] * */
+                    /** @var $Parameters \FrameworkDSW\System\TString[] */
                     TType::Object($Parameters[$mIndex], TString::class);
                     $mRawParameters[$mIndex] = $Parameters[$mIndex]->Unbox();
                     break;
                 case 'array':
-                    /** @var $Parameters \FrameworkDSW\Reflection\TArray[] * */
+                    /** @var $Parameters \FrameworkDSW\Reflection\TArray[] */
                     TType::Object($Parameters[$mIndex], TArray::class);
                     $mRawParameters[$mIndex] = $Parameters[$mIndex]->Array;
                     break;
@@ -1634,7 +2010,7 @@ class TConstructor extends TAbstractMember implements IMember {
 
 /**
  * \FrameworkDSW\Reflection\TMethod
- * @author    许子健
+ * @author 许子健
  */
 final class TMethod extends TAbstractMember implements IMember {
     /**
@@ -1644,9 +2020,9 @@ final class TMethod extends TAbstractMember implements IMember {
 
     /**
      * descHere
-     * @param    \FrameworkDSW\Reflection\TClass $Class <T: ?>
-     * @param    string $Name
-     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @param \FrameworkDSW\Reflection\TClass $Class <T: ?>
+     * @param string $Name
+     * @throws ENoSuchMethodMember
      */
     public function __construct($Class, $Name) {
         parent::__construct();
@@ -1659,13 +2035,13 @@ final class TMethod extends TAbstractMember implements IMember {
             $this->FMetaInfo = new \ReflectionMethod($mTemp, $Name);
         }
         catch (\ReflectionException $Ex) {
-            throw new EInvalidParameter(); //TODO
+            throw new ENoSuchMethodMember(sprintf('No such method member: %s.', $Name), null, null, $Class);
         }
     }
 
     /**
      * descHere
-     * @return    \FrameworkDSW\Reflection\TModifiers
+     * @return \FrameworkDSW\Reflection\TModifiers
      */
     public function getModifiers() {
         $mResult = new TModifiers();
@@ -1690,13 +2066,13 @@ final class TMethod extends TAbstractMember implements IMember {
 
     /**
      * descHere
-     * @throws \FrameworkDSW\System\EInvalidParameter
-     * @return    \FrameworkDSW\Reflection\TClass[] <T: ?>
+     * @throws EBadTypeDefinition
+     * @return \FrameworkDSW\Reflection\TClass[] <T: ?>
      */
     public function getParameterTypes() {
         $mDocComment = $this->FMetaInfo->getDocComment();
         if ($mDocComment === false) {
-            throw new EInvalidParameter(); //TODO
+            throw new EBadTypeDefinition(sprintf('Bad type definition: undefined type information for method %s.', $this->FName));
         }
         $this->ParseParameterTypes($mDocComment);
         $mResult = [];
@@ -1711,13 +2087,13 @@ final class TMethod extends TAbstractMember implements IMember {
 
     /**
      * descHere
-     * @throws \FrameworkDSW\System\EInvalidParameter
-     * @return    \FrameworkDSW\Reflection\TClass <T: ?>
+     * @throws EBadTypeDefinition
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
     public function getReturnType() {
         $mDocComment = $this->FMetaInfo->getDocComment();
         if ($mDocComment === false) {
-            throw new EInvalidParameter(); //TODO
+            throw new EBadTypeDefinition(sprintf('Bad type definition: undefined type information for method %s.', $this->FName));
         }
         $this->ParseParameterValues($mDocComment);
         $mValue = array_shift($this->FParameterValues);
@@ -1733,10 +2109,10 @@ final class TMethod extends TAbstractMember implements IMember {
 
     /**
      * descHere
-     * @param    \FrameworkDSW\System\IInterface $Object
-     * @param    \FrameworkDSW\System\IInterface[] $Parameters
-     * @throws \FrameworkDSW\System\EInvalidParameter
-     * @return    \FrameworkDSW\System\IInterface
+     * @param \FrameworkDSW\System\IInterface $Object
+     * @param \FrameworkDSW\System\IInterface[] $Parameters
+     * @throws EInvocationTarget
+     * @return \FrameworkDSW\System\IInterface
      */
     public function Invoke($Object, $Parameters) {
         TType::Object($Object, IInterface::class);
@@ -1745,34 +2121,34 @@ final class TMethod extends TAbstractMember implements IMember {
         $mRawParameters = [];
         $mDocComment    = $this->FMetaInfo->getDocComment();
         if ($mDocComment === false) {
-            throw new EInvalidParameter(); //TODO
+            throw new EInvocationTarget(sprintf('Invocation failed: undefined type information for method %s.', $this->FName));
         }
         $this->ParseParameterValues($mDocComment);
         array_shift($this->FParameterValues);
         foreach ($this->FParameterValues as $mIndex => $mType) {
             switch ($mType) {
                 case 'boolean':
-                    /**@var $Parameters \FrameworkDSW\System\TBoolean[]* */
+                    /**@var $Parameters \FrameworkDSW\System\TBoolean[] */
                     TType::Object($Parameters[$mIndex], TBoolean::class);
                     $mRawParameters[$mIndex] = $Parameters[$mIndex]->Unbox();
                     break;
                 case 'integer':
-                    /**@var $Parameters \FrameworkDSW\System\TInteger[]* */
+                    /**@var $Parameters \FrameworkDSW\System\TInteger[] */
                     TType::Object($Parameters[$mIndex], TInteger::class);
                     $mRawParameters[$mIndex] = $Parameters[$mIndex]->Unbox();
                     break;
                 case 'float':
-                    /**@var $Parameters \FrameworkDSW\System\TFloat[]* */
+                    /**@var $Parameters \FrameworkDSW\System\TFloat[] */
                     TType::Object($Parameters[$mIndex], TFloat::class);
                     $mRawParameters[$mIndex] = $Parameters[$mIndex]->Unbox();
                     break;
                 case 'string':
-                    /**@var $Parameters \FrameworkDSW\System\TString[]* */
+                    /**@var $Parameters \FrameworkDSW\System\TString[] */
                     TType::Object($Parameters[$mIndex], TString::class);
                     $mRawParameters[$mIndex] = $Parameters[$mIndex]->Unbox();
                     break;
                 case 'array':
-                    /**@var $Parameters \FrameworkDSW\Reflection\TArray[]* */
+                    /**@var $Parameters \FrameworkDSW\Reflection\TArray[] */
                     TType::Object($Parameters[$mIndex], TArray::class);
                     $mRawParameters[$mIndex] = $Parameters[$mIndex]->Array;
                     break;
@@ -1782,7 +2158,7 @@ final class TMethod extends TAbstractMember implements IMember {
                     break;
             }
         }
-        //TODO methods call with method-generics
+        //TODO methods call with method-generics -- need declare something implements IType describing GENERICS.
 
         try {
             $mRawResult = $this->FMetaInfo->invokeArgs($Object, $mRawParameters);
@@ -1813,7 +2189,7 @@ final class TMethod extends TAbstractMember implements IMember {
             }
         }
         catch (\ReflectionException $Ex) {
-            throw new EInvalidParameter(); //TODO Not accessible.
+            throw new EInvocationTarget(sprintf('Wrong invocation target: wrong target for method %s.', $this->FName));
         }
     }
 
@@ -1821,7 +2197,7 @@ final class TMethod extends TAbstractMember implements IMember {
 
 /**
  * \FrameworkDSW\Reflection\TSignal
- * @author    许子健
+ * @author 许子健
  */
 final class TSignal extends TAbstractMember implements IMember {
     /**
@@ -1831,9 +2207,9 @@ final class TSignal extends TAbstractMember implements IMember {
 
     /**
      * descHere
-     * @param    \FrameworkDSW\Reflection\TClass $Class <T: ?>
-     * @param    string $Name
-     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @param \FrameworkDSW\Reflection\TClass $Class <T: ?>
+     * @param string $Name
+     * @throws ENoSuchSignalMember
      */
     public function __construct($Class, $Name) {
         parent::__construct();
@@ -1846,13 +2222,13 @@ final class TSignal extends TAbstractMember implements IMember {
             $this->FMetaInfo = new \ReflectionMethod($mClassName, "signal{$Name}");
         }
         catch (\ReflectionException $Ex) {
-            throw new EInvalidParameter(); //TODO
+            throw new ENoSuchSignalMember(sprintf('No such signal member: %s.', $Name), null, null, $Class);
         }
     }
 
     /**
      * descHere
-     * @return    \FrameworkDSW\Reflection\TModifiers
+     * @return \FrameworkDSW\Reflection\TModifiers
      */
     public function getModifiers() {
         $mResult = new TModifiers();
@@ -1871,13 +2247,13 @@ final class TSignal extends TAbstractMember implements IMember {
 
     /**
      * descHere
-     * @throws \FrameworkDSW\System\EInvalidParameter
-     * @return    \FrameworkDSW\Reflection\TClass[] <T: ?>
+     * @throws EBadTypeDefinition
+     * @return \FrameworkDSW\Reflection\TClass[] <T: ?>
      */
     public function getParametersTypes() {
         $mDocComment = $this->FMetaInfo->getDocComment();
         if ($mDocComment === false) {
-            throw new EInvalidParameter(); //TODO
+            throw new EBadTypeDefinition(sprintf('Bad type definition: undefined type information for signal %s.', $this->FName));
         }
         $this->ParseParameterTypes($mDocComment);
         $mResult = [];
@@ -1892,9 +2268,9 @@ final class TSignal extends TAbstractMember implements IMember {
 
     /**
      * descHere
-     * @param    \FrameworkDSW\System\IInterface $Object
-     * @param    \FrameworkDSW\System\IInterface[] $Parameters
-     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @param \FrameworkDSW\System\IInterface $Object
+     * @param \FrameworkDSW\System\IInterface[] $Parameters
+     * @throws EInvocationTarget
      */
     public function DispatchSignal($Object, $Parameters) {
         TType::PrepareGeneric($Object, IInterface::class);
@@ -1903,34 +2279,34 @@ final class TSignal extends TAbstractMember implements IMember {
         $mRawParameters = [];
         $mDocComment    = $this->FMetaInfo->getDocComment();
         if ($mDocComment === false) {
-            throw new EInvalidParameter(); //TODO
+            throw new EInvocationTarget(sprintf('Signal dispatched failed: undefined type information of signal %s.', $this->FName));
         }
         $this->ParseParameterValues($mDocComment);
         array_shift($this->FParameterValues);
         foreach ($this->FParameterValues as $mIndex => $mType) {
             switch ($mType) {
                 case 'boolean':
-                    /**@var $Parameters \FrameworkDSW\System\TBoolean[]* */
+                    /**@var $Parameters \FrameworkDSW\System\TBoolean[] */
                     TType::Object($Parameters[$mIndex], TBoolean::class);
                     $mRawParameters[$mIndex] = $Parameters[$mIndex]->Unbox();
                     break;
                 case 'integer':
-                    /**@var $Parameters \FrameworkDSW\System\TInteger[]* */
+                    /**@var $Parameters \FrameworkDSW\System\TInteger[] */
                     TType::Object($Parameters[$mIndex], TInteger::class);
                     $mRawParameters[$mIndex] = $Parameters[$mIndex]->Unbox();
                     break;
                 case 'float':
-                    /**@var $Parameters \FrameworkDSW\System\TFloat[]* */
+                    /**@var $Parameters \FrameworkDSW\System\TFloat[] */
                     TType::Object($Parameters[$mIndex], TFloat::class);
                     $mRawParameters[$mIndex] = $Parameters[$mIndex]->Unbox();
                     break;
                 case 'string':
-                    /**@var $Parameters \FrameworkDSW\System\TString[]* */
+                    /**@var $Parameters \FrameworkDSW\System\TString[] */
                     TType::Object($Parameters[$mIndex], TString::class);
                     $mRawParameters[$mIndex] = $Parameters[$mIndex]->Unbox();
                     break;
                 case 'array':
-                    /**@var $Parameters \FrameworkDSW\Reflection\TArray[]* */
+                    /**@var $Parameters \FrameworkDSW\Reflection\TArray[] */
                     TType::Object($Parameters[$mIndex], TArray::class);
                     $mRawParameters[$mIndex] = $Parameters[$mIndex]->Array;
                     break;
@@ -1940,7 +2316,7 @@ final class TSignal extends TAbstractMember implements IMember {
                     break;
             }
         }
-        //TODO methods call with method-generics
+        //TODO methods call with method-generics -- need declare something implements IType describing GENERICS.
         TObject::Dispatch(array($Object, $this->FName), $mRawParameters);
     }
 
@@ -1948,7 +2324,7 @@ final class TSignal extends TAbstractMember implements IMember {
 
 /**
  * \FrameworkDSW\Reflection\TSlot
- * @author    许子健
+ * @author 许子健
  */
 final class TSlot extends TAbstractMember implements IMember {
     /**
@@ -1958,9 +2334,9 @@ final class TSlot extends TAbstractMember implements IMember {
 
     /**
      * descHere
-     * @param    \FrameworkDSW\Reflection\TClass $Class <T>
-     * @param    string $Name
-     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @param \FrameworkDSW\Reflection\TClass $Class <T>
+     * @param string $Name
+     * @throws ENoSuchSlotMember
      */
     public function __construct($Class, $Name) {
         parent::__construct();
@@ -1973,13 +2349,13 @@ final class TSlot extends TAbstractMember implements IMember {
             $this->FMetaInfo = new \ReflectionMethod($mClassName, "slot{$Name}");
         }
         catch (\ReflectionException $Ex) {
-            throw new EInvalidParameter(); //TODO
+            throw new ENoSuchSlotMember(sprintf('No such slot member: %s.', $Name), null, null, $Class);
         }
     }
 
     /**
      * descHere
-     * @return    \FrameworkDSW\Reflection\TModifiers
+     * @return \FrameworkDSW\Reflection\TModifiers
      */
     public function getModifiers() {
         $mResult = new TModifiers();
@@ -1998,13 +2374,13 @@ final class TSlot extends TAbstractMember implements IMember {
 
     /**
      * descHere
-     * @throws \FrameworkDSW\System\EInvalidParameter
-     * @return    \FrameworkDSW\Reflection\TClass[] <T: ?>
+     * @throws EBadTypeDefinition
+     * @return \FrameworkDSW\Reflection\TClass[] <T: ?>
      */
     public function getParameterTypes() {
         $mDocComment = $this->FMetaInfo->getDocComment();
         if ($mDocComment === false) {
-            throw new EInvalidParameter(); //TODO
+            throw new EBadTypeDefinition(sprintf('Bad type definition: undefined type information of slot %s.', $this->FName));
         }
         $this->ParseParameterTypes($mDocComment);
         $mResult = [];

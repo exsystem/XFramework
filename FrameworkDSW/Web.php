@@ -23,6 +23,60 @@ use FrameworkDSW\System\TRecord;
 use FrameworkDSW\Utilities\TType;
 
 /**
+ * Class ESessionException
+ * @package FrameworkDSW\Web
+ */
+class ESessionException extends EException {
+}
+
+/**
+ * Class ENoSuchRequestParameter
+ * @package FrameworkDSW\Web
+ */
+class ENoSuchRequestParameter extends EException {
+    /**
+     * @var string
+     */
+    private $FName = '';
+    /**
+     * @var \FrameworkDSW\Web\THttpMethod
+     */
+    private $FMethod = null;
+
+    /**
+     * @param string $Message
+     * @param \FrameworkDSW\System\EException $Previous
+     * @param string $Name
+     * @param \FrameworkDSW\Web\THttpMethod $Method
+     */
+    public function __construct($Message = '', $Previous = null, $Name = '', $Method = null) {
+        parent::__construct($Message, $Previous);
+
+        TType::String($Message);
+        TType::Object($Previous, EException::class);
+        TType::String($Name);
+        TType::Object($Method, THttpMethod::class);
+
+        $this->FName   = $Name;
+        $this->FMethod = $Method;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName() {
+        return $this->FName;
+    }
+
+    /**
+     * @return \FrameworkDSW\Web\THttpMethod
+     */
+    public function getMethod() {
+        return $this->FMethod;
+    }
+}
+
+/**
  *
  * @author 许子健
  */
@@ -423,7 +477,7 @@ class THttpCookies extends TMap {
      */
     public function __construct($Request) {
         TType::Object($Request, THttpRequest::class);
-        self::PrepareGeneric(['K' => 'string', 'V' => THttpCookie::class]);
+        self::PrepareGeneric(['K' => Framework::String, 'V' => THttpCookie::class]);
         parent::__construct();
 
         $this->FRequest = $Request;
@@ -456,7 +510,7 @@ class THttpCookies extends TMap {
      */
     protected function DoPut($Key, $Value) {
         if ($Value == null) {
-            throw new EInvalidParameter();
+            throw new EInvalidParameter(sprintf('Invalid parameter: HTTP cookie must be specified, but value null found.'));
         }
         $Value->Name = $Key;
         setcookie($Key, $Value->Value, $Value->Expire, $Value->Path, $Value->Domain, $Value->Secure, $Value->HttpOnly);
@@ -561,7 +615,7 @@ class THttpSession extends TAbstractMap {
     public function __construct($AutoStart = true, $Storage = null) {
         TType::Bool($AutoStart);
         TType::Object($Storage, IHttpSessionStorage::class);
-        $this->PrepareMethodGeneric(array('K' => 'string', 'V' => null, 'T' => [TPair::class => ['K' => 'string', 'V' => null]]));
+        $this->PrepareMethodGeneric(array('K' => Framework::String, 'V' => null, 'T' => [TPair::class => ['K' => Framework::String, 'V' => null]]));
         parent::__construct(false);
         ini_set('session.gc_probability', 1);
         ini_set('session.gc_divisor', 100);
@@ -807,9 +861,8 @@ class THttpSession extends TAbstractMap {
                 }
             });
         }
-        session_start();
-        if (session_id() === '') {
-            throw new EException(); //TODO detail info here.
+        if (session_start() == false) {
+            throw new ESessionException(sprintf('Session exception: session start failed.'));
         }
     }
 
@@ -897,7 +950,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param    float $Value
+     * @param float $Value
      * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function setGcProbability($Value) {
@@ -908,19 +961,24 @@ class THttpSession extends TAbstractMap {
             ini_set('session.gc_divisor', 2147483647);
         }
         else {
-            throw new EInvalidParameter();
+            throw new EInvalidParameter(sprintf('Invalid parameter: GC probability must be between 0 and 100, but %s was given.', $Value));
         }
     }
 
     /**
      * descHere
-     * @param    string $Value
-     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @param string $Value
+     * @throws ESessionException
      */
     public function setSavePath($Value) {
         TType::String($Value);
         if ($this->FStorage === null && !is_dir($Value)) {
-            throw new EInvalidParameter();
+            if ($this->FStorage !== null) {
+                throw new ESessionException(sprintf('No such directory: "%s", setting session save path failed.', $Value));
+            }
+            else {
+                throw new ESessionException(sprintf('Empty session storage: setting session save path as "%s" failed.', $Value));
+            }
         }
         else {
             session_save_path($Value);
@@ -947,13 +1005,13 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param  \FrameworkDSW\Web\IHttpSessionStorage $Storage
-     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @param \FrameworkDSW\Web\IHttpSessionStorage $Storage
+     * @throws ESessionException
      */
     public function setStorage($Storage) {
         TType::Object($Storage, IHttpSessionStorage::class);
         if ($this->getIsStarted()) {
-            throw new EInvalidParameter();
+            throw new ESessionException(sprintf('Session already started: setting session storage is not allowed.'));
         }
         else {
             $this->FStorage = $Storage;
@@ -986,9 +1044,6 @@ class THttpSession extends TAbstractMap {
  * @author 许子健
  */
 class THttpRequest extends TObject {
-    // TODO Some features are not implemented now, like RESTful ability! Do not
-    // call any method with REST.
-
     /**
      *
      * @var string[]
@@ -1024,11 +1079,11 @@ class THttpRequest extends TObject {
      * @var THttpCookies
      */
     private $FCookies = null;
-//    /**
-//     *
-//     * @var string[]
-//     */
-//    private $FRestParameters = [];
+    /**
+     *
+     * @var string[]
+     */
+    private $FRestParameters = [];
     /**
      *
      * @var string
@@ -1165,10 +1220,10 @@ class THttpRequest extends TObject {
         }
 
         if (!is_array($mRaw)) {
-            throw new EBrowscapNotEnabled();
+            throw new EBrowscapNotEnabled(sprintf('Get browser failed: Browscap is not enabled.'));
         }
 
-        TMap::PrepareGeneric(array('K' => 'string', 'V' => 'string'));
+        TMap::PrepareGeneric(array('K' => Framework::String, 'V' => Framework::String));
         $mResult = new TMap();
         foreach ($mRaw as $mKey => &$mValue) {
             if (is_bool($mValue)) {
@@ -1214,20 +1269,29 @@ class THttpRequest extends TObject {
      * descHere
      *
      * @param string $Name
-     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @throws ENoSuchRequestParameter
      * @return string
      */
     public function GetDelete($Name) {
         TType::String($Name);
 
+        if ($this->getIsDeleteRequestViaPostRequest()) {
+            try {
+                return $this->GetPost($Name);
+            }
+            catch (ENoSuchRequestParameter $Ex) {
+                throw new ENoSuchRequestParameter(sprintf('No such DELETE parameter: %s.', $Name), $Ex, $Name, THttpMethod::Delete());
+            }
+        }
+
         if ($this->FDeleteParameters == []) {
-            $this->FDeleteParameters = $this->getIsDeleteRequest() ? $this->FDeleteParameters : [];
+            $this->FDeleteParameters = $this->getIsDeleteRequest() ? $this->getRestParameters() : [];
         }
         if (isset($this->FDeleteParameters[$Name])) {
             return $this->FDeleteParameters[$Name];
         }
         else {
-            throw new EInvalidParameter();
+            throw new ENoSuchRequestParameter(sprintf('No such DELETE parameter: %s.', $Name), null, $Name, THttpMethod::Delete());
         }
     }
 
@@ -1235,20 +1299,29 @@ class THttpRequest extends TObject {
      * descHere
      *
      * @param string $Name
-     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @throws ENoSuchRequestParameter
      * @return string
      */
     public function GetPut($Name) {
         TType::String($Name);
 
+        if ($this->getIsPutRequestViaPostRequest()) {
+            try {
+                return $this->GetPost($Name);
+            }
+            catch (ENoSuchRequestParameter $Ex) {
+                throw new ENoSuchRequestParameter(sprintf('No such PUT parameter: %s.', $Name), $Ex, $Name, THttpMethod::Put());
+            }
+        }
+
         if ($this->FPutParameters == []) {
-            $this->FPutParameters = $this->getIsPutRequest() ? $this->FPutParameters : [];
+            $this->FPutParameters = $this->getIsPutRequest() ? $this->getRestParameters() : [];
         }
         if (isset($this->FPutParameters[$Name])) {
             return $this->FPutParameters[$Name];
         }
         else {
-            throw new EInvalidParameter();
+            throw new ENoSuchRequestParameter(sprintf('No such PUT parameter: %s.', $Name), null, $Name, THttpMethod::Put());
         }
     }
 
@@ -1256,15 +1329,18 @@ class THttpRequest extends TObject {
      * @return string[]
      */
     protected function getRestParameters() {
-        $mResult = [];
-        if (function_exists('mb_parse_str')) {
-            mb_parse_str(file_get_contents('php://input'), $mResult);
-        }
-        else {
-            parse_str(file_get_contents('php://input'), $mResult);
+        if ($this->FRestParameters == []) {
+            $mResult = [];
+            if (function_exists('mb_parse_str')) {
+                mb_parse_str(file_get_contents('php://input'), $mResult);
+            }
+            else {
+                parse_str(file_get_contents('php://input'), $mResult);
+            }
+            $this->FRestParameters = $mResult;
         }
 
-        return $mResult;
+        return $this->FRestParameters;
     }
 
     /**
@@ -1278,7 +1354,7 @@ class THttpRequest extends TObject {
     /**
      *
      * @param string $Name
-     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @throws ENoSuchRequestParameter
      * @return string
      */
     public function GetParameter($Name) {
@@ -1290,7 +1366,7 @@ class THttpRequest extends TObject {
             return (string)$_POST[$Name];
         }
         else {
-            throw new EInvalidParameter();
+            throw new ENoSuchRequestParameter(sprintf('No such request parameter: %s', $Name), null, $Name);
         }
     }
 
@@ -1321,7 +1397,7 @@ class THttpRequest extends TObject {
                 $mPathInfo = substr($_SERVER['PHP_SELF'], strlen($mScriptUrl));
             }
             else {
-                throw new EDeterminePathInfoFailed();
+                throw new EDeterminePathInfoFailed(sprintf('Determine path info failed.'));
             }
             $this->FPathInfo = trim($mPathInfo, '/');
         }
@@ -1379,7 +1455,7 @@ class THttpRequest extends TObject {
         TType::Int($Value);
 
         if ($Value < 0 || $Value > 65535) {
-            throw new EInvalidParameter();
+            throw new EInvalidParameter(sprintf('Invalid port number: port number should between 1 and 65535, but %s found.', $Value));
         }
         $this->FPort = $Value;
     }
@@ -1405,7 +1481,7 @@ class THttpRequest extends TObject {
         TType::Int($Value);
 
         if ($Value < 0 || $Value > 65535) {
-            throw new EInvalidParameter();
+            throw new EInvalidParameter(sprintf('Invalid secure port number: port number should between 1 and 65535, but %s found.', $Value));
         }
         $this->FSecurePort = $Value;
     }
@@ -1444,6 +1520,13 @@ class THttpRequest extends TObject {
     }
 
     /**
+     * @return boolean
+     */
+    public function getIsPutRequestViaPostRequest() {
+        return isset($_POST['_method']) && strtoupper($_POST['_method']) == 'PUT';
+    }
+
+    /**
      *
      * @return boolean
      */
@@ -1475,7 +1558,7 @@ class THttpRequest extends TObject {
                 $this->FScriptUrl = str_replace('\\', '/', str_replace($_SERVER['DOCUMENT_ROOT'], '', $_SERVER['SCRIPT_FILENAME']));
             }
             else {
-                throw new EUnableToResolveScriptUrl();
+                throw new EUnableToResolveScriptUrl(sprintf('Unable to resolve script URL.'));
             }
         }
 
@@ -1516,7 +1599,7 @@ class THttpRequest extends TObject {
         TType::String($XHeader);
         TType::Bool($Terminate);
         TType::Bool($ForceDownload);
-        TType::Object($AddHeaders, [IMap::class => ['K' => 'string', 'V' => 'string']]);
+        TType::Object($AddHeaders, [IMap::class => ['K' => Framework::String, 'V' => Framework::String]]);
 
         if ($ForceDownload) {
             $mDisposition = 'attachment';
@@ -1580,7 +1663,7 @@ class THttpRequest extends TObject {
                 }
             }
             else {
-                throw new EDetermineRequestUriFailed();
+                throw new EDetermineRequestUriFailed(sprintf('Determine request URI failed.'));
             }
         }
 
@@ -1590,7 +1673,7 @@ class THttpRequest extends TObject {
     /**
      *
      * @param string $Name
-     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @throws ENoSuchRequestParameter
      * @return string
      */
     public function GetPost($Name) {
@@ -1600,14 +1683,14 @@ class THttpRequest extends TObject {
             return (string)$_POST[$Name];
         }
         else {
-            throw new EInvalidParameter();
+            throw new ENoSuchRequestParameter(sprintf('No such POST parameter: %s.', $Name), null, $Name, THttpMethod::Post());
         }
     }
 
     /**
      *
      * @param string $Name
-     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @throws ENoSuchRequestParameter
      * @return string
      */
     public function GetQuery($Name) {
@@ -1617,7 +1700,7 @@ class THttpRequest extends TObject {
             return (string)$_GET[$Name];
         }
         else {
-            throw new EInvalidParameter();
+            throw new ENoSuchRequestParameter(sprintf('No such GET parameter: %s.', $Name), null, $Name, THttpMethod::Get());
         }
     }
 
@@ -1940,7 +2023,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
      */
     protected function CreateDefaultUrl($Route, $Parameters = null, $Ampersand = '&') {
         TType::String($Route);
-        TType::Object($Parameters, [IMap::class => ['K' => 'string', 'V' => 'string']]);
+        TType::Object($Parameters, [IMap::class => ['K' => Framework::String, 'V' => Framework::String]]);
         TType::String($Ampersand);
 
         $mQueryString = $this->CreatePathInfo($Parameters, '=', $Ampersand);
@@ -2039,7 +2122,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
      * @return string
      */
     public function CreatePathInfo($Parameters, $Equal = '=', $Ampersand = '&') {
-        TType::Object($Parameters, [IMap::class => ['K' => 'string', 'V' => 'string']]);
+        TType::Object($Parameters, [IMap::class => ['K' => Framework::String, 'V' => Framework::String]]);
         TType::String($Equal);
         TType::String($Ampersand);
 
@@ -2061,10 +2144,10 @@ class TUrlRouter extends TObject implements IUrlRouter {
      */
     public function CreateUrl($Route, $Parameters = null, $Ampersand = '&') {
         TType::String($Route);
-        TType::Object($Parameters, [IMap::class => ['K' => 'string', 'V' => 'string']]);
+        TType::Object($Parameters, [IMap::class => ['K' => Framework::String, 'V' => Framework::String]]);
         TType::String($Ampersand);
 
-        TMap::PrepareGeneric(['K' => 'string', 'V' => 'string']);
+        TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String]);
         $mParameters = new TMap();
         if ($Parameters != null) {
             $mParameters->PutAll($Parameters);
@@ -2347,7 +2430,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
     public function setRules($Value) {
         TType::Object($Value, [IList::class => ['T' => IUrlRouteRule::class]]);
         if ($Value == null) {
-            throw new EInvalidParameter();
+            throw new EInvalidParameter(sprintf('Invalid rules: null are not allowed.'));
         }
         else {
             $this->FRules->AddAll($Value);
@@ -2526,7 +2609,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
         $mTr2['/'] = '\\/';
 
         if (strpos($Route, '<') !== false && preg_match_all('/<(\w+)>/', $Route, $mReferences)) {
-            TMap::PrepareGeneric(array('K' => 'string', 'V' => 'string'));
+            TMap::PrepareGeneric(array('K' => Framework::String, 'V' => Framework::String));
             $this->FReferences = new TMap();
             foreach ($mReferences[1] as $mReference) {
                 $this->FReferences->Put($mReference, "<{$mReference}>");
@@ -2536,7 +2619,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
         $this->FHasHostInfo = !strncasecmp($Pattern, 'http://', 7) || !strncasecmp($Pattern, 'https://', 8);
 
         if (preg_match_all('/<(\w+):?(.*?)?>/', $Pattern, $mParameters)) {
-            TMap::PrepareGeneric(array('K' => 'string', 'V' => 'string'));
+            TMap::PrepareGeneric(array('K' => Framework::String, 'V' => Framework::String));
             $this->FParameters = new TMap();
 
             $mTokens = array_combine($mParameters[1], $mParameters[2]);
@@ -2596,11 +2679,11 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
     public function CreateUrl($Router, $Route, $Parameters = null, $Ampersand = '&') {
         TType::Object($Router, TUrlRouter::class);
         TType::String($Route);
-        TType::Object($Parameters, [IMap::class => ['K' => 'string', 'V' => 'string']]);
+        TType::Object($Parameters, [IMap::class => ['K' => Framework::String, 'V' => Framework::String]]);
         TType::String($Ampersand);
 
         if ($this->FParsingOnly) {
-            throw new EParsingOnlyUrlRule();
+            throw new EParsingOnlyUrlRule(sprintf('Create URL failed: parsing only URL rule provided.'));
         }
 
         if (($this->FUseInheritedCaseSensitive && $Router->getCaseSensitive()) || (!$this->FUseInheritedCaseSensitive && $this->FCaseSensitive)) {
@@ -2617,7 +2700,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
                 }
             }
             else {
-                throw new ECreateUrlFailed();
+                throw new ECreateUrlFailed(sprintf('Create URL failed.'));
             }
         }
 
@@ -2628,14 +2711,14 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
                         $Parameters->Delete($mKey);
                     }
                     else {
-                        throw new ECreateUrlFailed();
+                        throw new ECreateUrlFailed(sprintf('Create URL failed.'));
                     }
                 }
             }
 
             foreach ($this->FDefaultParameters as $mKey => $mValue) {
                 if (!$Parameters->ContainsKey($mKey)) {
-                    throw new ECreateUrlFailed();
+                    throw new ECreateUrlFailed(sprintf('Create URL failed.'));
                 }
             }
         }
@@ -2643,7 +2726,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
         if ((($this->FUseInheritedCheckParameters && $Router->getCheckParameters()) || (!$this->FUseInheritedCheckParameters && $this->FCheckParameters)) && $this->FParameters != null) {
             foreach ($this->FParameters as $mKey => $mValue) {
                 if (!preg_match("/\\A{$mValue}\\z/u{$mCaseSensitive}", $this->FParameters[$mKey])) {
-                    throw new ECreateUrlFailed();
+                    throw new ECreateUrlFailed(sprintf('Create URL failed.'));
                 }
             }
         }
@@ -2874,7 +2957,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
         if ($Router->getUseStrictParsing() && $PathInfo == $RawPathInfo) {
             $mUrlSuffix = $this->FUseInheritedSuffix ? $Router->getUrlSuffix() : $this->FUrlSuffix;
             if ($mUrlSuffix != '' && $mUrlSuffix != '/') {
-                throw new EParseUrlFailed();
+                throw new EParseUrlFailed(sprintf('Parse URL failed.'));
             }
         }
 
@@ -2896,11 +2979,11 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
             $mTr = [];
 
             if ($this->FReferences == null) {
-                TMap::PrepareGeneric(['K' => 'string', 'V' => 'string']);
+                TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String]);
                 $this->FReferences = new TMap();
             }
             if ($this->FParameters == null) {
-                TMap::PrepareGeneric(['K' => 'string', 'V' => 'string']);
+                TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String]);
                 $this->FParameters = new TMap();
             }
 
@@ -2924,7 +3007,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
             }
         }
         else {
-            throw new EParseUrlFailed();
+            throw new EParseUrlFailed(sprintf('Parse URL failed.'));
         }
     }
 
@@ -2964,7 +3047,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
      * @param \FrameworkDSW\Containers\IMap $Value <K: string, V: string>
      */
     public function setDefaultParameters($Value) {
-        TType::Object($Value, [IMap::class => ['K' => 'string', 'V' => 'string']]);
+        TType::Object($Value, [IMap::class => ['K' => Framework::String, 'V' => Framework::String]]);
         Framework::Free($this->FDefaultParameters);
         $this->FDefaultParameters = $Value;
     }
@@ -2985,7 +3068,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
      * @param \FrameworkDSW\Containers\IMap $Value <K: string, V: string>
      */
     public function setParameters($Value) {
-        TType::Object($Value, [IMap::class => ['K' => 'string', 'V' => 'string']]);
+        TType::Object($Value, [IMap::class => ['K' => Framework::String, 'V' => Framework::String]]);
         Framework::Free($this->FParameters);
         $this->FParameters = $Value;
     }
@@ -3016,7 +3099,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
      * @param \FrameworkDSW\Containers\IMap $Value <K: string, V: string>
      */
     public function setReferences($Value) {
-        TType::Object($Value, [IMap::class => ['K' => 'string', 'V' => 'string']]);
+        TType::Object($Value, [IMap::class => ['K' => Framework::String, 'V' => Framework::String]]);
         Framework::Free($this->FReferences);
         $this->FReferences = $Value;
     }

@@ -2945,20 +2945,20 @@ class TMap extends TAbstractMap {
 
             return;
         }
-        $this->FDirectKey = ($mKClassType == 'integer' || $mKClassType == 'string');
+        $this->FDirectKey = ($mKClassType == Framework::Float || $mKClassType == Framework::String);
         if ($this->FDirectKey) {
             $this->FKeyType = TMapKeyType::eDirectKey();
 
             return;
         }
         switch ($mKClassType) {
-            case 'float' :
+            case Framework::Float :
                 $this->FKeyType = TMapKeyType::eFloat();
                 break;
             case 'array' :
                 $this->FKeyType = TMapKeyType::eArray();
                 break;
-            case 'boolean' :
+            case Framework::Boolean :
                 $this->FKeyType = TMapKeyType::eBoolean();
                 break;
             default :

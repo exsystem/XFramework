@@ -8,6 +8,7 @@
 namespace FrameworkDSW\Utilities;
 
 use FrameworkDSW\Containers\TPair;
+use FrameworkDSW\Framework\Framework;
 use FrameworkDSW\System\EException;
 use FrameworkDSW\System\ERuntimeException;
 use FrameworkDSW\System\TDelegate;
@@ -193,17 +194,18 @@ final class TType extends TObject {
             }
             /** @var \FrameworkDSW\System\TObject $Var */
             if ($Var instanceof $mClass) {
-                if ($Type[$mClass] + $Var->GenericArgs() != $Var->GenericArgs()) {
+                $mVarGenericArgs = (array)$Var->GenericArgs();
+                if ($Type[$mClass] + $mVarGenericArgs != $mVarGenericArgs) {
                     $mTypeOfClass = $Type[$mClass];
                     array_walk_recursive($mTypeOfClass, function ($mValue, $mIndex) use (&$mTypeOfClass) {
                         switch ($mValue) {
-                            case 'boolean':
+                            case Framework::Boolean:
                                 break;
-                            case 'integer':
+                            case Framework::Integer:
                                 break;
-                            case 'float':
+                            case Framework::Float:
                                 break;
-                            case 'string':
+                            case Framework::String:
                                 break;
                             case 'array':
                                 break;
@@ -215,7 +217,7 @@ final class TType extends TObject {
                                 break;
                         }
                     });
-                    if ($mTypeOfClass + $Var->GenericArgs() != $Var->GenericArgs()) {
+                    if ($mTypeOfClass + $mVarGenericArgs != $mVarGenericArgs) {
                         throw new EInvalidObjectCasting();
                     }
                 }
@@ -271,16 +273,16 @@ final class TType extends TObject {
      */
     public static function Type(&$Var, $Type) {
         switch ($Type) {
-            case 'boolean':
+            case Framework::Boolean:
                 TType::Bool($Var);
                 break;
-            case 'integer':
+            case Framework::Integer:
                 TType::Int($Var);
                 break;
-            case 'float':
+            case Framework::Float:
                 TType::Float($Var);
                 break;
-            case 'string':
+            case Framework::String:
                 TType::String($Var);
                 break;
             case 'array':
@@ -289,7 +291,7 @@ final class TType extends TObject {
             case TDelegate::class:
                 TType::Delegate($Var);
                 break;
-            case 'mixed':
+            case Framework::Variant:
                 break;
             default: // an array or a compound type string
                 if (is_string($Type) && !(class_exists($Type) || interface_exists($Type))) {

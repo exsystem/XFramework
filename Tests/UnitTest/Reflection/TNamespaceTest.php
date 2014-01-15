@@ -1,11 +1,11 @@
 <?php
 
 namespace UnitTest;
-set_include_path(get_include_path().PATH_SEPARATOR.'../../../');
-require_once 'FrameworkDSW\Framework.php';
+set_include_path(get_include_path() . PATH_SEPARATOR . '../../../');
+require_once 'FrameworkDSW/Framework.php';
 use FrameworkDSW\Framework\Framework;
+use FrameworkDSW\Reflection\ENoSuchNamespace;
 use FrameworkDSW\Reflection\TNamespace;
-use FrameworkDSW\System\EInvalidParameter;
 use FrameworkDSW\System\ERuntimeException;
 
 class TNamespaceTest extends \PHPUnit_Framework_TestCase {
@@ -43,7 +43,7 @@ class TNamespaceTest extends \PHPUnit_Framework_TestCase {
             TNamespace::getNamespace('Foo\bar');
             $this->fail('Namespace Foo\bar should be non-existence.');
         }
-        catch (EInvalidParameter $Ex) {
+        catch (ENoSuchNamespace $Ex) {
             return;
         }
 

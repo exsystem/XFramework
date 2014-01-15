@@ -307,13 +307,13 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
      */
     private function MakeDefault() {
         switch ($this->GenericArg('T')) {
-            case 'integer' :
+            case Framework::Integer :
                 return 0;
-            case 'float' :
+            case Framework::Float :
                 return 0.0;
-            case 'string' :
+            case Framework::String :
                 return '';
-            case 'boolean' :
+            case Framework::Boolean :
                 return false;
             case 'array' :
                 return [];
@@ -948,7 +948,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
                 'T' => [
                     TSelectorDelegate::class => ['S' => $this->GenericArg('T'),
                                                  'D' => $this->GenericArg('R')]]]]);
-        if ($this->GenericArg('R') != 'integer' || $this->GenericArg('R') != 'float') {
+        if ($this->GenericArg('R') != Framework::Integer || $this->GenericArg('R') != Framework::Float) {
             throw new EInvalidTypeCasting(); // TODO exception type needed.
         }
 
@@ -988,7 +988,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
                 'T' => [
                     TSelectorDelegate::class => ['S' => $this->GenericArg('T'),
                                                  'D' => $this->GenericArg('R')]]]]);
-        if ($this->GenericArg('R') != 'integer' || $this->GenericArg('R') != 'float') {
+        if ($this->GenericArg('R') != Framework::Integer || $this->GenericArg('R') != Framework::Float) {
             throw new EInvalidTypeCasting(); // TODO exception type needed.
         }
 
@@ -1107,7 +1107,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
                 'T' => [
                     TSelectorDelegate::class => [
                         'S' => [
-                            TPair::class => ['K' => 'integer',
+                            TPair::class => ['K' => Framework::Integer,
                                              'V' => $this->GenericArg('T')]],
                         'D' => $this->GenericArg('R')]]]]);
 
@@ -1131,7 +1131,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
                 'T' => [
                     TSelectorDelegate::class => [
                         'S' => [
-                            TPair::class => ['K' => 'integer',
+                            TPair::class => ['K' => Framework::Integer,
                                              'V' => $this->GenericArg('T')]],
                         'D' => [
                             IIteratorAggregate::class => [
@@ -1324,7 +1324,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
                 'T' => [
                     TPredicateDelegate::class => [
                         'E' => [
-                            TPair::class => ['K' => 'integer',
+                            TPair::class => ['K' => Framework::Integer,
                                              'V' => $this->GenericArg('T')]]]]]]);
 
         $this->PrepareArguments();
@@ -1404,7 +1404,7 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
                 'T' => [
                     TPredicateDelegate::class => [
                         'E' => [
-                            TPair::class => ['K' => 'integer',
+                            TPair::class => ['K' => Framework::Integer,
                                              'V' => $this->GenericArg('T')]]]]]]);
 
         $this->PrepareArguments();

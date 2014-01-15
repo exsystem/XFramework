@@ -2,55 +2,56 @@
 require_once 'FrameworkDSW/Framework.php';
 
 use FrameworkDSW\Acl\TAcl;
-use FrameworkDSW\Acl\TRuntimeAclStorage;
-use FrameworkDSW\Acl\TAclResource;
-use FrameworkDSW\Acl\TAclRole;
+use FrameworkDSW\Acl\TResource;
+use FrameworkDSW\Acl\TRole;
+use FrameworkDSW\Acl\TRuntimeStorage;
+use FrameworkDSW\Framework\Framework;
 
 
-$acl = new TAcl($storage = new TRuntimeAclStorage());
+$acl = new TAcl($storage = new TRuntimeStorage());
 for ($i = 0; $i < 100; ++$i) {
-	$acl->AddResource(new TAclResource("res{$i}"));
+    $acl->AddResource(new TResource("res{$i}"));
 }
 for ($i = 0; $i < 100; ++$i) {
-	$acl->AddRole(new TAclRole("role{$i}"));
+    $acl->AddRole(new TRole("role{$i}"));
 }
 $test = array();
 for ($i = 0; $i < 100; ++$i) {
-	for ($j = 0; $j < 100; ++$j) {
-		if (rand(0, 10) > 5) {
-			$acl->Allow(new TAclRole("role{$i}"), new TAclResource("res{$j}"), '*');
-			$test["role{$i}res{$j}"] = true;
-		}
-	}
+    for ($j = 0; $j < 100; ++$j) {
+        if (rand(0, 10) > 5) {
+            $acl->Allow(new TRole("role{$i}"), new TResource("res{$j}"), '*');
+            $test["role{$i}res{$j}"] = true;
+        }
+    }
 }
 for ($i = 0; $i < 100; ++$i) {
-	for ($j = 0; $j < 100; ++$j) {
-		if ($acl->IsAllowed(new TAclRole("role{$i}"), new TAclResource("res{$j}"), '*')) {
-			$test["role{$i}res{$j}"] = false;
-		}
-	}
+    for ($j = 0; $j < 100; ++$j) {
+        if ($acl->IsAllowed(new TRole("role{$i}"), new TResource("res{$j}"), '*')) {
+            $test["role{$i}res{$j}"] = false;
+        }
+    }
 }
 $test = array_filter($test);
 var_dump($test);
 
-$acl = new TAcl($storage = new TRuntimeAclStorage());
-$acl->AddResource(new TAclResource('news'));
-$acl->AddResource(new TAclResource('posts'));
-$acl->AddRole(new TAclRole('root'));
-$acl->AddRole(new TAclRole('user'));
-$acl->Allow(new TAclRole('root'), null, '*');
-$acl->Allow(new TAclRole('user'), new TAclResource('posts'), '*');
-if ($acl->IsAllowed(new TAclRole('root'), new TAclResource('news'), '*')) {
-	echo "news is allowed to root\n";
+$acl = new TAcl($storage = new TRuntimeStorage());
+$acl->AddResource(new TResource('news'));
+$acl->AddResource(new TResource('posts'));
+$acl->AddRole(new TRole('root'));
+$acl->AddRole(new TRole('user'));
+$acl->Allow(new TRole('root'), null, '*');
+$acl->Allow(new TRole('user'), new TResource('posts'), '*');
+if ($acl->IsAllowed(new TRole('root'), new TResource('news'), '*')) {
+    echo "news is allowed to root\n";
 }
-if ($acl->IsAllowed(new TAclRole('root'), new TAclResource('posts'), '*')) {
-	echo "posts is allowed to root\n";
+if ($acl->IsAllowed(new TRole('root'), new TResource('posts'), '*')) {
+    echo "posts is allowed to root\n";
 }
-if ($acl->IsAllowed(new TAclRole('user'), new TAclResource('news'), '*')) {
-	echo "news is allowed to user\n";
+if ($acl->IsAllowed(new TRole('user'), new TResource('news'), '*')) {
+    echo "news is allowed to user\n";
 }
-if ($acl->IsAllowed(new TAclRole('user'), new TAclResource('posts'), '*')) {
-	echo "posts is allowed to user\n";
+if ($acl->IsAllowed(new TRole('user'), new TResource('posts'), '*')) {
+    echo "posts is allowed to user\n";
 }
 Framework::Free($storage);
 Framework::Free($acl);

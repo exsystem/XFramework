@@ -448,7 +448,7 @@ final class TMysqlDriver extends TObject implements IDriver {
      */
     public function Connect($Url, $Properties) {
         TType::String($Url);
-        TType::Object($Properties, [IMap::class => ['K' => 'string', 'V' => 'string']]);
+        TType::Object($Properties, [IMap::class => ['K' => Framework::String, 'V' => Framework::String]]);
 
         $this->FProperties = $Properties;
         if ($this->ValidateUrl($Url)) {
@@ -483,7 +483,7 @@ final class TMysqlDriver extends TObject implements IDriver {
      */
     public function GetPropertyInfo($Url, $Properties) {
         TType::String($Url);
-        TType::Object($Properties, [IMap::class => ['K' => 'string', 'V' => 'string']]);
+        TType::Object($Properties, [IMap::class => ['K' => Framework::String, 'V' => Framework::String]]);
 
         if ($this->ValidateUrl($Url)) {
             $this->FProperties = $Properties;
@@ -1327,7 +1327,7 @@ abstract class TAbstractMysqlStatement extends TBaseMysqlObject {
      */
     public function getCommands() {
         if ($this->FCommands === null) {
-            TList::PrepareGeneric(array('T' => 'string'));
+            TList::PrepareGeneric(['T' => Framework::String]);
             $this->FCommands = new TList();
         }
 
@@ -1672,7 +1672,7 @@ EOD;
         TType::Object($Param, IInterface::class);
 
         if ($this->FParams === null) {
-            TMap::PrepareGeneric(['K' => 'string', 'V' => IInterface::class, 'T' => [TPair::class => ['K' => 'string', 'V' => IInterface::class]]]);
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => IInterface::class, 'T' => [TPair::class => ['K' => Framework::String, 'V' => IInterface::class]]]);
             $this->FParams = new TMap(true);
         }
 
@@ -1906,7 +1906,7 @@ class TMysqlCallableStatement extends TAbstractMysqlStatement implements ICallab
         TType::Object($Param, IInterface::class);
 
         if ($this->FParams === null) {
-            TMap::PrepareGeneric(['K' => 'string', 'V' => IInterface::class, 'T' => [TPair::class => ['K' => 'string', 'V' => IInterface::class]]]);
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => IInterface::class, 'T' => [TPair::class => ['K' => Framework::String, 'V' => IInterface::class]]]);
             $this->FParams = new TMap(true);
         }
 
@@ -2190,7 +2190,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
      * @param \FrameworkDSW\Database\TResultSetType $ResultSetType
      */
     public function __construct($Statement, $ConcurrencyType, $ResultSetType) {
-        $this->PrepareGeneric(['K' => 'integer', 'V' => IRow::class, 'T' => IRow::class]);
+        $this->PrepareGeneric(['K' => Framework::Integer, 'V' => IRow::class, 'T' => IRow::class]);
         parent::__construct($Statement->getConnection()->getDriver());
         TType::Object($Statement, TAbstractMysqlStatement::class);
         TType::Object($ConcurrencyType, TConcurrencyType::class);

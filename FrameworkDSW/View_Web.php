@@ -13,6 +13,7 @@ use FrameworkDSW\Containers\TMap;
 use FrameworkDSW\Containers\TPair;
 use FrameworkDSW\CoreClasses\IView;
 use FrameworkDSW\CoreClasses\TComponent;
+use FrameworkDSW\Framework\Framework;
 use FrameworkDSW\System\EInvalidParameter;
 use FrameworkDSW\System\IInterface;
 use FrameworkDSW\System\IPrimitive;
@@ -264,7 +265,7 @@ class TWebPage extends TComponent implements IView {
 
         $mParameters = null;
         if ($Parameters != []) {
-            TMap::PrepareGeneric(['K' => 'string', 'V' => 'string']);
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String]);
             $mParameters = new TMap();
             foreach ($Parameters as $mKey => &$mValue) {
                 $mParameters->Put((string)$mKey, (string)$mValue);
@@ -349,7 +350,7 @@ class TWebPage extends TComponent implements IView {
      * @param \FrameworkDSW\Containers\IMap $ViewData <K: string, V: \FrameworkDSW\System\IInterface>
      */
     public function Update($ViewData) {
-        TType::Object($ViewData, [IMap::class => ['K' => 'string', 'V' => IInterface::class]]);
+        TType::Object($ViewData, [IMap::class => ['K' => Framework::String, 'V' => IInterface::class]]);
         $this->FViewData = $ViewData;
 
         ob_clean();
@@ -404,7 +405,7 @@ class TJsonView extends TComponent implements IView {
      * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function Update($ViewData) {
-        TType::Object($ViewData, [IMap::class => ['K' => 'string', 'V' => IInterface::class]]);
+        TType::Object($ViewData, [IMap::class => ['K' => Framework::String, 'V' => IInterface::class]]);
 
         $mResult        = null;
         $mStatusStack   = [];
@@ -448,7 +449,7 @@ class TJsonView extends TComponent implements IView {
                 }
                 $mCurrentInsertionPoint = $mArray;
             }
-            elseif (($mCurrentData instanceof IMap && in_array($mCurrentData->GenericArg('K'), ['string', TString::class])) || $mCurrentData instanceof TRecord) {
+            elseif (($mCurrentData instanceof IMap && in_array($mCurrentData->GenericArg('K'), [Framework::String, TString::class])) || $mCurrentData instanceof TRecord) {
                 unset($mArray);
                 $mArray = [];
                 foreach ($mCurrentData as $mItemKey => $mItemData) {

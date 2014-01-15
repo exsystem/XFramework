@@ -1,21 +1,21 @@
 <?php
 
 namespace UnitTest;
+
 use FrameworkDSW\Containers\TList;
 use FrameworkDSW\Containers\TMap;
 use FrameworkDSW\Framework\Framework;
+use FrameworkDSW\Reflection\EIllegalAccess;
+use FrameworkDSW\Reflection\ENoSuchFieldMember;
+use FrameworkDSW\Reflection\ENoSuchMethodMember;
 use FrameworkDSW\Reflection\TClass;
-use FrameworkDSW\System\EException;
-use FrameworkDSW\System\EInvalidParameter;
 use FrameworkDSW\System\IDelegate;
 use FrameworkDSW\System\TDelegate;
-use FrameworkDSW\System\TObject;
-use FrameworkDSW\System\TString;
 use FrameworkDSW\Utilities\EInvalidObjectCasting;
 use FrameworkDSW\Utilities\TType;
 
 set_include_path(get_include_path() . PATH_SEPARATOR . '../../../');
-require_once 'FrameworkDSW\Framework.php';
+require_once 'FrameworkDSW/Framework.php';
 
 /**
  * Class TTesterDelegate
@@ -26,7 +26,7 @@ interface TTesterDelegate extends IDelegate {
      * @param \FrameworkDSW\Reflection\TClass $Class <T: ?>
      * @param \ReflectionClass $RawClass
      * @param \PHPUnit_Framework_TestCase $TestCase
-     * @param array $Test;
+     * @param array $Test ;
      */
     public function Invoke($Class, $RawClass, $TestCase, $Test);
 }
@@ -135,7 +135,7 @@ class TClassTest extends \PHPUnit_Framework_TestCase {
                         $mField = $this->FClass->GetDeclaredField($mRawField->getName());
                         $this->fail($mRawField->getName());
                     }
-                    catch (EInvalidParameter $Ex) {
+                    catch (ENoSuchFieldMember $Ex) {
                         echo sprintf("%s非本類定義。\n", $mRawField->getName());
                     }
                 }
@@ -147,7 +147,7 @@ class TClassTest extends \PHPUnit_Framework_TestCase {
         try {
             $this->FClass->GetDeclaredField('FNotDefined');
         }
-        catch (EInvalidParameter $Ex) {
+        catch (ENoSuchFieldMember $Ex) {
             return;
         }
         $this->fail('FNotDefined應該沒有定義。');
@@ -203,7 +203,7 @@ class TClassTest extends \PHPUnit_Framework_TestCase {
                         Framework::Free($Class->GetDeclaredMethod($mRawMethod->getName()));
                         $TestCase->fail(sprintf("方法%s非類型%s定義的成員。\n", $mRawMethod->getName(), $Class->getName()));
                     }
-                    catch (EInvalidParameter $Ex) {
+                    catch (ENoSuchMethodMember $Ex) {
                         echo sprintf("方法%s非本類定義。\n", $mRawMethod->getName());
                     }
                 }
@@ -266,10 +266,10 @@ class TClassTest extends \PHPUnit_Framework_TestCase {
      */
     public function testGetElementType() {
         $mTests = [
-            'integer',
+            'integer[]',
             'string[]',
             ['FrameworkDSW\Containers\IList[]' => ['T' => 'string']],
-            'FrameworkDSW\System\TObject'
+            'FrameworkDSW\System\TObject[][]'
         ];
 
         foreach ($mTests as $mTest) {
@@ -316,7 +316,6 @@ class TClassTest extends \PHPUnit_Framework_TestCase {
         $mTests = [
             'FrameworkDSW\Containers\IMap' => ['FrameworkDSW\Containers\IMap' => ['K' => 'string', 'V' => 'string']],
             TMap::ClassType()              => [TMap::ClassType() => ['K' => 'string', 'V' => 'string']],
-            'string'                       => ['string']
         ];
 
         $this->ClassTester($mTests, new TDelegate(function ($Class, $RawClass, $TestCase, $Test) {
@@ -506,12 +505,12 @@ class TClassTest extends \PHPUnit_Framework_TestCase {
                     $Class->getNamespace();
                     $this->fail(sprintf("類型%s不應該定義在命名空間中！", $Class->getName()));
                 }
-                catch (EInvalidParameter $Ex) {
+                catch (EIllegalAccess $Ex) {
                     echo sprintf("類型名稱為%s。\n", $Class->getName());
                 }
             }
             else {
-                $mNamespace=$Class->getNamespace();
+                $mNamespace = $Class->getNamespace();
                 $this->assertEquals($RawClass->getNamespaceName(), $mNamespace->getName(), sprintf('反射得到的類名稱和定義的不一致！'));
                 Framework::Free($mNamespace);
             }
@@ -539,7 +538,7 @@ class TClassTest extends \PHPUnit_Framework_TestCase {
                     $Class->getParentClass();
                     $this->fail(sprintf("類型%s不應該定義父類！", $Class->getName()));
                 }
-                catch (EInvalidObjectCasting $Ex) {
+                catch (EIllegalAccess $Ex) {
                     echo sprintf("類型名稱為%s，不可以獲取父類。\n", $Class->getName());
                 }
             }
@@ -575,7 +574,7 @@ class TClassTest extends \PHPUnit_Framework_TestCase {
                     $Class->getSimpleName();
                     $this->fail(sprintf("類型%s不應該定義短名稱！", $Class->getName()));
                 }
-                catch (EInvalidObjectCasting $Ex) {
+                catch (EIllegalAccess $Ex) {
                     echo sprintf("類型名稱為%s，不可以獲取短名稱。\n", $Class->getName());
                 }
             }
@@ -602,7 +601,7 @@ class TClassTest extends \PHPUnit_Framework_TestCase {
             /**@var \PHPUnit_Framework_TestCase $TestCase */
             /**@var array $Test */
             TType::Object($Class, ['FrameworkDSW\Reflection\TClass' => ['T' => null]]);
-            echo sprintf("本類%s數組。\n", $Class->IsArray()?'為':'非');
+            echo sprintf("本類%s數組。\n", $Class->IsArray() ? '為' : '非');
         }, 'UnitTest\TTesterDelegate'));
     }
 
@@ -622,7 +621,7 @@ class TClassTest extends \PHPUnit_Framework_TestCase {
             /**@var \PHPUnit_Framework_TestCase $TestCase */
             /**@var array $Test */
             TType::Object($Class, ['FrameworkDSW\Reflection\TClass' => ['T' => null]]);
-            echo sprintf("本類%s類。\n", $Class->IsClass()?'為':'非');
+            echo sprintf("本類%s類。\n", $Class->IsClass() ? '為' : '非');
         }, 'UnitTest\TTesterDelegate'));
     }
 
@@ -642,7 +641,7 @@ class TClassTest extends \PHPUnit_Framework_TestCase {
             /**@var \PHPUnit_Framework_TestCase $TestCase */
             /**@var array $Test */
             TType::Object($Class, ['FrameworkDSW\Reflection\TClass' => ['T' => null]]);
-            echo sprintf("本類%s枚舉。\n", $Class->IsEnum()?'為':'非');
+            echo sprintf("本類%s枚舉。\n", $Class->IsEnum() ? '為' : '非');
         }, 'UnitTest\TTesterDelegate'));
     }
 
@@ -682,7 +681,7 @@ class TClassTest extends \PHPUnit_Framework_TestCase {
             /**@var \PHPUnit_Framework_TestCase $TestCase */
             /**@var array $Test */
             TType::Object($Class, ['FrameworkDSW\Reflection\TClass' => ['T' => null]]);
-            echo sprintf("本類%s接口。\n", $Class->IsInterface()?'為':'非');
+            echo sprintf("本類%s接口。\n", $Class->IsInterface() ? '為' : '非');
         }, 'UnitTest\TTesterDelegate'));
     }
 
@@ -702,7 +701,7 @@ class TClassTest extends \PHPUnit_Framework_TestCase {
             /**@var \PHPUnit_Framework_TestCase $TestCase */
             /**@var array $Test */
             TType::Object($Class, ['FrameworkDSW\Reflection\TClass' => ['T' => null]]);
-            echo sprintf("本類%s基礎數據類型。\n", $Class->IsClass()?'為':'非');
+            echo sprintf("本類%s基礎數據類型。\n", $Class->IsClass() ? '為' : '非');
         }, 'UnitTest\TTesterDelegate'));
     }
 
@@ -722,7 +721,7 @@ class TClassTest extends \PHPUnit_Framework_TestCase {
             /**@var \PHPUnit_Framework_TestCase $TestCase */
             /**@var array $Test */
             TType::Object($Class, ['FrameworkDSW\Reflection\TClass' => ['T' => null]]);
-            echo sprintf("本類%s集合。\n", $Class->IsSetStruct()?'為':'非');
+            echo sprintf("本類%s集合。\n", $Class->IsSetStruct() ? '為' : '非');
         }, 'UnitTest\TTesterDelegate'));
     }
 
@@ -742,7 +741,7 @@ class TClassTest extends \PHPUnit_Framework_TestCase {
             /**@var \PHPUnit_Framework_TestCase $TestCase */
             /**@var array $Test */
             TType::Object($Class, ['FrameworkDSW\Reflection\TClass' => ['T' => null]]);
-           // echo sprintf("本類%s類。\n", $Class->IsClass()?'為':'非');
+            // echo sprintf("本類%s類。\n", $Class->IsClass()?'為':'非');
         }, 'UnitTest\TTesterDelegate'));
     }
 }
