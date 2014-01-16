@@ -172,7 +172,7 @@ interface IUrlRouter extends IInterface {
     /**
      * descHere
      *
-     * @param IUrlRouteRule $Rule
+     * @param \FrameworkDSW\Web\IUrlRouteRule $Rule
      * @param boolean $Append
      */
     public function AddRule($Rule, $Append = true);
@@ -249,7 +249,7 @@ interface IUrlRouter extends IInterface {
     /**
      * descHere
      *
-     * @return TUrlMode
+     * @return \FrameworkDSW\Web\TUrlMode
      */
     public function getUrlMode();
 
@@ -342,7 +342,7 @@ interface IUrlRouter extends IInterface {
     /**
      * descHere
      *
-     * @param TUrlMode $Value
+     * @param \FrameworkDSW\Web\TUrlMode $Value
      */
     public function setUrlMode($Value);
 
@@ -377,10 +377,9 @@ interface IUrlRouteRule extends IInterface {
     /**
      * descHere
      *
-     * @param TUrlRouter $Router
+     * @param \FrameworkDSW\Web\TUrlRouter $Router
      * @param string $Route
-     * @param TMap $Parameters
-     *            <K: string, V: string>
+     * @param \FrameworkDSW\Containers\TMap $Parameters <K: string, V: string>
      * @param string $Ampersand
      * @return string
      */
@@ -396,8 +395,8 @@ interface IUrlRouteRule extends IInterface {
     /**
      * descHere
      *
-     * @param TUrlRouter $Router
-     * @param THttpRequest $Request
+     * @param \FrameworkDSW\Web\TUrlRouter $Router
+     * @param \FrameworkDSW\Web\THttpRequest $Request
      * @param string $PathInfo
      * @param string $RawPathInfo
      * @return string
@@ -458,7 +457,7 @@ class THttpCookie extends TRecord {
 
 /**
  * THttpCookies
- * extends TMap<K: string, V: THttpCookie>
+ * extends \FrameworkDSW\Containers\TMap<K: string, V: \FrameworkDSW\Web\THttpCookie>
  *
  * @author 许子健
  */
@@ -466,7 +465,7 @@ class THttpCookies extends TMap {
 
     /**
      *
-     * @var THttpRequest
+     * @var \FrameworkDSW\Web\THttpRequest
      */
     private $FRequest = null;
 
@@ -509,6 +508,7 @@ class THttpCookies extends TMap {
      * @throws \FrameworkDSW\System\EInvalidParameter
      */
     protected function DoPut($Key, $Value) {
+        /**@var THttpCookie $Value */
         if ($Value == null) {
             throw new EInvalidParameter(sprintf('Invalid parameter: HTTP cookie must be specified, but value null found.'));
         }
@@ -520,7 +520,7 @@ class THttpCookies extends TMap {
     /**
      * descHere
      *
-     * @return THttpRequest
+     * @return \FrameworkDSW\Web\THttpRequest
      */
     public function getRequest() {
         return $this->FRequest;
@@ -540,34 +540,34 @@ interface IHttpSessionStorage extends IInterface {
 
     /**
      * descHere
-     * @param    string $SessionId
+     * @param string $SessionId
      */
     public function Delete($SessionId);
 
     /**
      * descHere
-     * @param    string $SavePath
-     * @param    string $Name
+     * @param string $SavePath
+     * @param string $Name
      */
     public function Open($SavePath, $Name);
 
     /**
      * descHere
-     * @param    string $MaxLifeTime
+     * @param string $MaxLifeTime
      */
     public function Purge($MaxLifeTime);
 
     /**
      * descHere
-     * @param    string $SessionId
+     * @param string $SessionId
      * @return string
      */
     public function Read($SessionId);
 
     /**
      * descHere
-     * @param    string $SessionId
-     * @param    string $SessionData
+     * @param string $SessionId
+     * @param string $SessionData
      */
     public function Write($SessionId, $SessionData);
 
@@ -575,20 +575,20 @@ interface IHttpSessionStorage extends IInterface {
 
 /**
  * TSessionCookieMode
- * @author    许子健
+ * @author 许子健
  */
 class TSessionCookieMode extends TEnum {
 
     /**
-     * @var    integer
+     * @var integer
      */
     const eNone = 0;
     /**
-     * @var    integer
+     * @var integer
      */
     const eAllow = 1;
     /**
-     * @var    integer
+     * @var integer
      */
     const eOnly = 2;
 
@@ -597,13 +597,13 @@ class TSessionCookieMode extends TEnum {
 /**
  * THttpSession
  * extends TAbstractMap<K: string, V: mixed>
- * @author    许子健
+ * @author 许子健
  */
 class THttpSession extends TAbstractMap {
 
     /**
      *
-     * @var IHttpSessionStorage
+     * @var \FrameworkDSW\Web\IHttpSessionStorage
      */
     private $FStorage = null;
 
@@ -652,8 +652,8 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param    K $Key
-     * @return    boolean
+     * @param K $Key
+     * @return boolean
      */
     protected function DoContainsKey($Key) {
         /** @noinspection PhpIllegalArrayKeyTypeInspection */
@@ -662,7 +662,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param    K $Key
+     * @param K $Key
      */
     protected function DoDelete($Key) {
         /** @noinspection PhpIllegalArrayKeyTypeInspection */
@@ -671,8 +671,8 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param    K $Key
-     * @return    V
+     * @param K $Key
+     * @return V
      */
     protected function DoGet($Key) {
         /** @noinspection PhpIllegalArrayKeyTypeInspection */
@@ -681,8 +681,8 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param    K $Key
-     * @param    V $Value
+     * @param K $Key
+     * @param V $Value
      */
     protected function DoPut($Key, $Value) {
         /** @noinspection PhpIllegalArrayKeyTypeInspection */
@@ -691,7 +691,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @return    string
+     * @return string
      */
     public function getCookieDomain() {
         return session_get_cookie_params()['domain'];
@@ -699,7 +699,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @return    boolean
+     * @return boolean
      */
     public function getCookieHttpOnly() {
         return session_get_cookie_params()['httponly'];
@@ -707,7 +707,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @return    integer
+     * @return integer
      */
     public function getCookieLifeTime() {
         return session_get_cookie_params()['lifetime'];
@@ -715,7 +715,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @return    TSessionCookieMode
+     * @return TSessionCookieMode
      */
     public function getCookieMode() {
         if (ini_get('session.use_cookies') === '0') {
@@ -731,7 +731,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @return    string
+     * @return string
      */
     public function getCookiePath() {
         return session_get_cookie_params()['path'];
@@ -739,7 +739,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @return    float
+     * @return float
      */
     public function getGcProbability() {
         return (float)(ini_get('session.gc_probability') / ini_get('session.gc_divisor') * 100);
@@ -747,7 +747,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @return    boolean
+     * @return boolean
      */
     public function getIsStarted() {
         return session_id() !== '';
@@ -755,7 +755,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @return    string
+     * @return string
      */
     public function getSavePath() {
         return session_save_path();
@@ -763,7 +763,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @return    string
+     * @return string
      */
     public function getSessionId() {
         return session_id();
@@ -771,7 +771,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @return    string
+     * @return string
      */
     public function getSessionName() {
         return session_name();
@@ -779,7 +779,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @return    IHttpSessionStorage
+     * @return \FrameworkDSW\Web\IHttpSessionStorage
      */
     public function getStorage() {
         return $this->FStorage;
@@ -787,7 +787,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @return    integer
+     * @return integer
      */
     public function getTimeout() {
         return (integer)ini_get('session.gc_maxlifetime');
@@ -795,7 +795,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @return    boolean
+     * @return boolean
      */
     public function getUseTransparentSessionId() {
         return ini_get('session.use_trans_sid') === '1';
@@ -878,7 +878,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param    boolean $DeleteOldSession
+     * @param boolean $DeleteOldSession
      */
     public function RegenerateId($DeleteOldSession = false) {
         TType::Bool($DeleteOldSession);
@@ -887,7 +887,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param    string $Value
+     * @param string $Value
      */
     public function setCookieDomain($Value) {
         TType::String($Value);
@@ -897,7 +897,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param    boolean $Value
+     * @param boolean $Value
      */
     public function setCookieHttpOnly($Value) {
         TType::Bool($Value);
@@ -907,7 +907,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param    integer $Value
+     * @param integer $Value
      */
     public function setCookieLifeTime($Value) {
         TType::Int($Value);
@@ -987,7 +987,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param    string $Value
+     * @param string $Value
      */
     public function setSessionId($Value) {
         TType::String($Value);
@@ -996,7 +996,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param    string $Value
+     * @param string $Value
      */
     public function setSessionName($Value) {
         TType::String($Value);
@@ -1020,7 +1020,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param    integer $Value
+     * @param integer $Value
      */
     public function setTimeout($Value) {
         TType::Int($Value);
@@ -1029,7 +1029,7 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
-     * @param    boolean $Value
+     * @param boolean $Value
      */
     public function setUseTransparentSessionId($Value) {
         TType::Bool($Value);
@@ -1076,7 +1076,7 @@ class THttpRequest extends TObject {
     private $FCsrfToken = '';
     /**
      *
-     * @var THttpCookies
+     * @var \FrameworkDSW\Web\THttpCookies
      */
     private $FCookies = null;
     /**
@@ -1117,7 +1117,7 @@ class THttpRequest extends TObject {
 
     /**
      *
-     * @return THttpCookie
+     * @return \FrameworkDSW\Web\THttpCookie
      */
     protected function CreateCsrfCookie() {
         $mCsrfTokenCookie        = new THttpCookie();
@@ -1238,7 +1238,7 @@ class THttpRequest extends TObject {
     /**
      * descHere
      *
-     * @return THttpCookies
+     * @return \FrameworkDSW\Web\THttpCookies
      */
     public function getCookies() {
         if ($this->FCookies == null) {
@@ -1856,7 +1856,7 @@ class THttpMethod extends TRecord {
 
     /**
      *
-     * @return THttpMethod
+     * @return \FrameworkDSW\Web\THttpMethod
      */
     public static function Delete() {
         $mResult         = new THttpMethod();
@@ -1867,7 +1867,7 @@ class THttpMethod extends TRecord {
 
     /**
      *
-     * @return THttpMethod
+     * @return \FrameworkDSW\Web\THttpMethod
      */
     public static function Get() {
         $mResult         = new THttpMethod();
@@ -1878,7 +1878,7 @@ class THttpMethod extends TRecord {
 
     /**
      *
-     * @return THttpMethod
+     * @return \FrameworkDSW\Web\THttpMethod
      */
     public static function Head() {
         $mResult         = new THttpMethod();
@@ -1889,7 +1889,7 @@ class THttpMethod extends TRecord {
 
     /**
      *
-     * @return THttpMethod
+     * @return \FrameworkDSW\Web\THttpMethod
      */
     public static function Options() {
         $mResult         = new THttpMethod();
@@ -1900,7 +1900,7 @@ class THttpMethod extends TRecord {
 
     /**
      *
-     * @return THttpMethod
+     * @return \FrameworkDSW\Web\THttpMethod
      */
     public static function Post() {
         $mResult         = new THttpMethod();
@@ -1911,7 +1911,7 @@ class THttpMethod extends TRecord {
 
     /**
      *
-     * @return THttpMethod
+     * @return \FrameworkDSW\Web\THttpMethod
      */
     public static function Put() {
         $mResult         = new THttpMethod();
@@ -1922,7 +1922,7 @@ class THttpMethod extends TRecord {
 
     /**
      *
-     * @return THttpMethod
+     * @return \FrameworkDSW\Web\THttpMethod
      */
     public static function Trace() {
         $mResult         = new THttpMethod();
@@ -2165,6 +2165,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
             $mAnchor = '';
         }
         $Route = trim($Route, '/');
+        /** @var IUrlRouteRule $mRule */
         foreach ($this->FRules as $mRule) {
             $mUrl = $mRule->CreateUrl($this, $Route, $Parameters, $Ampersand);
             if ($mUrl != '') {
@@ -2259,7 +2260,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
     /**
      * descHere
      *
-     * @return TUrlMode
+     * @return \FrameworkDSW\Web\TUrlMode
      */
     public function getUrlMode() {
         return $this->FUrlMode;
@@ -2321,6 +2322,7 @@ class TUrlRouter extends TObject implements IUrlRouter {
             case TUrlMode::ePath():
                 $mRawPathInfo = $mRequest->getPathInfo();
                 $mPathInfo    = $this->RemoveUrlSuffix($mRawPathInfo, $this->getUrlSuffix());
+                /** @var IUrlRouteRule $mRule */
                 foreach ($this->FRules as $mRule) {
                     try {
                         $mRoute = $mRule->ParseUrl($this, $mRequest, $mPathInfo, $mRawPathInfo);
@@ -2582,7 +2584,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
     private $FUseInheritedSuffix = false;
     /**
      *
-     * @var THttpMethod[]
+     * @var \FrameworkDSW\Web\THttpMethod[]
      */
     private $FVerb = [];
 
@@ -2920,7 +2922,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
     /**
      * descHere
      *
-     * @return THttpMethod[]
+     * @return \FrameworkDSW\Web\THttpMethod[]
      */
     public function getVerb() {
         return $this->FVerb;
