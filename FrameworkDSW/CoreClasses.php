@@ -449,7 +449,7 @@ abstract class TComponent extends TObject {
             }
         }
 
-        throw new ENoSuchComponent();
+        throw new ENoSuchComponent(sprintf('No such component: %s.', $Name));
     }
 
     /**

@@ -21,6 +21,7 @@ use FrameworkDSW\System\TObject;
 use FrameworkDSW\System\TRecord;
 use FrameworkDSW\System\TString;
 use FrameworkDSW\Utilities\TType;
+use FrameworkDSW\Web\IUrlRouter;
 
 /**
  * TWebTheme
@@ -28,7 +29,6 @@ use FrameworkDSW\Utilities\TType;
  * @author 许子健
  */
 class TWebTheme extends TObject {
-
     /**
      *
      * @var string
@@ -203,7 +203,7 @@ class TWebPage extends TComponent implements IView {
     private $FTheme = null;
     /**
      *
-     * @var TMap <K: string, V: \IInterface>
+     * @var TMap <K: string, V: \FrameworkDSW\System\IInterface>
      */
     private $FViewData = null;
     /**
@@ -222,7 +222,7 @@ class TWebPage extends TComponent implements IView {
      *
      * @param \FrameworkDSW\Web\IUrlRouter $Router
      * @param string $Template
-     * @param TWebTheme $Theme
+     * @param \FrameworkDSW\View\Web\TWebTheme $Theme
      * @param string $MasterPage
      */
     public function Config($Router, $Template, $Theme = null, $MasterPage = '') {
@@ -353,10 +353,16 @@ class TWebPage extends TComponent implements IView {
         TType::Object($ViewData, [IMap::class => ['K' => Framework::String, 'V' => IInterface::class]]);
         $this->FViewData = $ViewData;
 
-        ob_clean();
-        /** @noinspection PhpIncludeInspection */
-        require_once $this->FTemplate;
-        ob_end_flush();
+        if ($this->getOwner() instanceof TWebPage) {
+            /** @noinspection PhpIncludeInspection */
+            require_once $this->FTemplate;
+        }
+        else {
+            ob_clean();
+            /** @noinspection PhpIncludeInspection */
+            require_once $this->FTemplate;
+            ob_end_flush();
+        }
     }
 }
 
@@ -375,7 +381,6 @@ class TJsonView extends TComponent implements IView {
      * @var integer
      */
     const CInsertionPoint = 1;
-
     /**
      *
      * @var string
