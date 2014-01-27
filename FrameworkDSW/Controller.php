@@ -103,9 +103,10 @@ interface IControllerManager extends IInterface {
      *
      * @param \FrameworkDSW\Controller\TControllerAction $Action
      * @param \FrameworkDSW\System\IInterface $Model
+     * @param \FrameworkDSW\Controller\TOnSetControllerManagerUpdate $OnSetControllerManagerUpdate
      * @param \FrameworkDSW\Controller\TOnSetModelNotify $OnSetModelNotify
      */
-    public function RegisterModel($Action, $Model, $OnSetModelNotify = null);
+    public function RegisterModel($Action, $Model, $OnSetControllerManagerUpdate = null, $OnSetModelNotify = null);
 
     /**
      * descHere
@@ -321,13 +322,14 @@ class TControllerManager extends TObject implements IControllerManager {
      *
      * @param \FrameworkDSW\Controller\TControllerAction $Action
      * @param \FrameworkDSW\System\IInterface $Model
-     * @param \FrameworkDSW\Controller\TOnSetModelNotify $OnSetModelNotify
      * @param \FrameworkDSW\Controller\TOnSetControllerManagerUpdate $OnSetControllerManagerUpdate
+     * @param \FrameworkDSW\Controller\TOnSetModelNotify $OnSetModelNotify
      */
-    public function RegisterModel($Action, $Model, $OnSetModelNotify = null, $OnSetControllerManagerUpdate = null) {
+    public function RegisterModel($Action, $Model, $OnSetControllerManagerUpdate = null, $OnSetModelNotify = null) {
         TType::Delegate($Action, TControllerAction::class);
         TType::Object($Model, IInterface::class);
         TType::Delegate($OnSetModelNotify, TOnSetModelNotify::class);
+        TType::Delegate($OnSetControllerManagerUpdate, TOnSetControllerManagerUpdate::class);
 
         try {
             $this->FModelRegistration[$Action] = $Model;
@@ -340,16 +342,17 @@ class TControllerManager extends TObject implements IControllerManager {
             $this->FNotifierRegistration[$Model][] = $Action;
         }
         catch (ENoSuchKey $Ex) {
+            TLinkedList::PrepareGeneric(['T' => TControllerAction::class]);
             /** @noinspection PhpParamsInspection */
             $this->FNotifierRegistration->Put($Model, new TLinkedList(false, [$Action]));
         }
         /** @var TDelegate $OnSetModelNotify */
         if ($OnSetModelNotify !== null) {
-            $OnSetModelNotify(new TDelegate([$this, 'Notify'], TOnModelNotify::class));
+            $OnSetModelNotify(Framework::Delegate([$this, 'Notify'], TOnModelNotify::class));
         }
         /** @var TDelegate $OnSetControllerManagerUpdate */
         if ($OnSetControllerManagerUpdate !== null) {
-            $OnSetControllerManagerUpdate(new TDelegate([$this, 'Update'], TOnControllerManagerUpdate::class));
+            $OnSetControllerManagerUpdate(Framework::Delegate([$this, 'Update'], TOnControllerManagerUpdate::class));
         }
     }
 

@@ -10,6 +10,7 @@ namespace FrameworkDSW\Framework;
 require_once 'FrameworkDSW/System.php';
 use FrameworkDSW\System\EError;
 use FrameworkDSW\System\ENoSuchType;
+use FrameworkDSW\System\TDelegate;
 use FrameworkDSW\System\TObject;
 
 /**
@@ -114,6 +115,20 @@ class Framework extends TObject {
      * @var array
      */
     private static $FExternalUnits = [];
+    /**
+     *
+     * @var integer
+     */
+    private static $FStartAt = null;
+    /**
+     *
+     * @var array
+     */
+    private static $FDeclaredClasses = null;
+    /**
+     * @var array
+     */
+    private static $FDelegates = [];
 
     /**
      * Serialize a variable or a class into a string.
@@ -193,6 +208,38 @@ class Framework extends TObject {
         self::$FClassInfo   = [];
 
         return $mResult;
+    }
+
+    /**
+     *
+     * @param array $StaticTable
+     * @param array $ClassInfo
+     * @param string $ClassDelimiter
+     * @throws \Exception
+     */
+    static public function WriteStaticTable(&$StaticTable, &$ClassInfo, $ClassDelimiter) {
+        if (!isset(self::$FDeclaredClasses)) {
+            throw new \Exception('FATAL ERROR!');
+        }
+
+        self::$FDeclaredClasses = array_slice(get_declared_classes(), self::$FStartAt);
+        foreach (self::$FDeclaredClasses as $mClass) {
+            if ( /*$mClass[0] == 'T' &&*/
+            is_subclass_of($mClass, TObject::class)
+            ) {
+                $mReflection        = new \ReflectionClass($mClass);
+                $ClassInfo[$mClass] = $mReflection->getFileName();
+
+                foreach ($mClass::ClassSleep() as $mFieldName) {
+                    $mProperty = $mReflection->getProperty($mFieldName);
+                    $mProperty->setAccessible(true);
+                    $StaticTable[$mClass . $ClassDelimiter . $mFieldName] = $mProperty->getValue();
+                }
+
+                //see the PHP BUG #49074 (http://bugs.php.net/bug.php?id=49074).
+                //pay attention at the comment of [1 Aug 9:10pm UTC] felipe@php.net.
+            }
+        }
     }
 
     /**
@@ -333,17 +380,6 @@ class Framework extends TObject {
 
     /**
      *
-     * @var integer
-     */
-    private static $FStartAt = null;
-    /**
-     *
-     * @var array
-     */
-    private static $FDeclaredClasses = null;
-
-    /**
-     *
      */
     static public function PreBoot() {
         if (isset(self::$FDeclaredClasses)) {
@@ -358,34 +394,20 @@ class Framework extends TObject {
 
     /**
      *
-     * @param array $StaticTable
-     * @param array $ClassInfo
-     * @param string $ClassDelimiter
-     * @throws \Exception
+     * @param mixed $Callback string or closure
+     * @param string $Type
+     * @throws ENoSuchType
+     * @return \FrameworkDSW\System\TDelegate
      */
-    static public function WriteStaticTable(&$StaticTable, &$ClassInfo, $ClassDelimiter) {
-        if (!isset(self::$FDeclaredClasses)) {
-            throw new \Exception('FATAL ERROR!');
-        }
-
-        self::$FDeclaredClasses = array_slice(get_declared_classes(), self::$FStartAt);
-        foreach (self::$FDeclaredClasses as $mClass) {
-            if ( /*$mClass[0] == 'T' &&*/
-            is_subclass_of($mClass, TObject::class)
-            ) {
-                $mReflection        = new \ReflectionClass($mClass);
-                $ClassInfo[$mClass] = $mReflection->getFileName();
-
-                foreach ($mClass::ClassSleep() as $mFieldName) {
-                    $mProperty = $mReflection->getProperty($mFieldName);
-                    $mProperty->setAccessible(true);
-                    $StaticTable[$mClass . $ClassDelimiter . $mFieldName] = $mProperty->getValue();
-                }
-
-                //see the PHP BUG #49074 (http://bugs.php.net/bug.php?id=49074).
-                //pay attention at the comment of [1 Aug 9:10pm UTC] felipe@php.net.
+    public static function Delegate($Callback, $Type) {
+        foreach (Framework::$FDelegates as $mDelegate) {
+            if ($mDelegate->getDelegate() == $Callback) {
+                return $mDelegate;
             }
         }
+        $mDelegate               = new TDelegate($Callback, $Type);
+        Framework::$FDelegates[] = $mDelegate;
+        return $mDelegate;
     }
 }
 

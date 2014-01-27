@@ -11,6 +11,7 @@ use FrameworkDSW\Containers\TPair;
 use FrameworkDSW\Framework\Framework;
 use FrameworkDSW\System\EException;
 use FrameworkDSW\System\ERuntimeException;
+use FrameworkDSW\System\IDelegate;
 use FrameworkDSW\System\TDelegate;
 use FrameworkDSW\System\TObject;
 use FrameworkDSW\System\TRecord;
@@ -294,10 +295,15 @@ final class TType extends TObject {
             case Framework::Variant:
                 break;
             default: // an array or a compound type string
-                if (is_string($Type) && !(class_exists($Type) || interface_exists($Type))) {
-                    throw new EInvalidObjectCasting();
+                if (is_string($Type) && in_array(IDelegate::class, class_implements($Type))) { //TODO: problemetic
+                    TType::Delegate($Var);
                 }
-                TType::Object($Var, $Type);
+                else {
+                    if (is_string($Type) && !(class_exists($Type) || interface_exists($Type))) {
+                        throw new EInvalidObjectCasting();
+                    }
+                    TType::Object($Var, $Type);
+                }
                 break;
         }
     }

@@ -33,7 +33,7 @@ class EException extends \Exception {
      */
     public function __construct($Message = '', $Previous = null) {
         TType::String($Message);
-        TType::Object($Previous, '\FrameworkDSW\System\EException');
+        TType::Object($Previous, EException::class);
 
         parent::__construct($Message, -1, $Previous);
     }
@@ -1433,9 +1433,14 @@ class TObject implements IInterface {
      *
      * @param $name
      * @param $arguments
+     * @return mixed
      * @throws ENoSuchMethod
      */
     public final function __call($name, $arguments) {
+        if ($this->$name instanceof TDelegate) {
+            $mDelegate = $this->$name;
+            return call_user_func_array($mDelegate->getDelegate(), $arguments);
+        }
         throw new ENoSuchMethod(sprintf('No such method: %s->%s.', get_class(), $name), null, $this, $name);
     }
 
@@ -1481,6 +1486,11 @@ class TObject implements IInterface {
         }
         else {
             return $name;
+        }
+
+        if (static::$name instanceof TDelegate) {
+            $mDelegate = static::$name;
+            return call_user_func_array($mDelegate->getDelegate(), $arguments);
         }
     }
 
