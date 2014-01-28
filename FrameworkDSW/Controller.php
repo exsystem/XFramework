@@ -1,6 +1,6 @@
 <?php
 /**
- * \FrameworkDSW\Controller\Controller
+ * \FrameworkDSW\Controller
  * @author  许子健
  * @version $Id$
  * @since   separate file since reversion 52
@@ -105,8 +105,9 @@ interface IControllerManager extends IInterface {
      * @param \FrameworkDSW\System\IInterface $Model
      * @param \FrameworkDSW\Controller\TOnSetControllerManagerUpdate $OnSetControllerManagerUpdate
      * @param \FrameworkDSW\Controller\TOnSetModelNotify $OnSetModelNotify
+     * @param boolean $ShouldBeNotified
      */
-    public function RegisterModel($Action, $Model, $OnSetControllerManagerUpdate = null, $OnSetModelNotify = null);
+    public function RegisterModel($Action, $Model, $OnSetControllerManagerUpdate = null, $OnSetModelNotify = null, $ShouldBeNotified = true);
 
     /**
      * descHere
@@ -266,7 +267,6 @@ class ENoSuchActionViewPair extends EException {
 
 /**
  * \FrameworkDSW\Controller\TControllerManager
- * TODO use delegate to bind actions
  * @author 许子健
  */
 class TControllerManager extends TObject implements IControllerManager {
@@ -303,13 +303,6 @@ class TControllerManager extends TObject implements IControllerManager {
      * descHere
      */
     public function Destroy() {
-        foreach ($this->FViewRegistration as $mRegistration) {
-            Framework::Free($mRegistration->Value);
-        }
-        foreach ($this->FNotifierRegistration as $mRegistration) {
-            Framework::Free($mRegistration->Value);
-        }
-
         Framework::Free($this->FModelRegistration);
         Framework::Free($this->FViewRegistration);
         Framework::Free($this->FNotifierRegistration);
@@ -324,12 +317,14 @@ class TControllerManager extends TObject implements IControllerManager {
      * @param \FrameworkDSW\System\IInterface $Model
      * @param \FrameworkDSW\Controller\TOnSetControllerManagerUpdate $OnSetControllerManagerUpdate
      * @param \FrameworkDSW\Controller\TOnSetModelNotify $OnSetModelNotify
+     * @param boolean $ShouldBeNotified
      */
-    public function RegisterModel($Action, $Model, $OnSetControllerManagerUpdate = null, $OnSetModelNotify = null) {
+    public function RegisterModel($Action, $Model, $OnSetControllerManagerUpdate = null, $OnSetModelNotify = null, $ShouldBeNotified = true) {
         TType::Delegate($Action, TControllerAction::class);
         TType::Object($Model, IInterface::class);
         TType::Delegate($OnSetModelNotify, TOnSetModelNotify::class);
         TType::Delegate($OnSetControllerManagerUpdate, TOnSetControllerManagerUpdate::class);
+        TType::Bool($ShouldBeNotified);
 
         try {
             $this->FModelRegistration[$Action] = $Model;
@@ -338,13 +333,15 @@ class TControllerManager extends TObject implements IControllerManager {
             /** @noinspection PhpParamsInspection */
             $this->FModelRegistration->Put($Action, $Model);
         }
-        try {
-            $this->FNotifierRegistration[$Model][] = $Action;
-        }
-        catch (ENoSuchKey $Ex) {
-            TLinkedList::PrepareGeneric(['T' => TControllerAction::class]);
-            /** @noinspection PhpParamsInspection */
-            $this->FNotifierRegistration->Put($Model, new TLinkedList(false, [$Action]));
+        if ($ShouldBeNotified) {
+            try {
+                $this->FNotifierRegistration[$Model][] = $Action;
+            }
+            catch (ENoSuchKey $Ex) {
+                TLinkedList::PrepareGeneric(['T' => TControllerAction::class]);
+                /** @noinspection PhpParamsInspection */
+                $this->FNotifierRegistration->Put($Model, new TLinkedList(false, [$Action]));
+            }
         }
         /** @var TDelegate $OnSetModelNotify */
         if ($OnSetModelNotify !== null) {
@@ -403,9 +400,7 @@ class TControllerManager extends TObject implements IControllerManager {
         TType::Object($Model, IInterface::class);
         try {
             foreach ($this->FNotifierRegistration[$Model] as $mAction) {
-                if ($mAction($Model)) {
-                    $this->Update($mAction);
-                }
+                $this->Update($mAction);
             }
         }
         catch (ENoSuchKey $Ex) {
