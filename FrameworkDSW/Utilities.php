@@ -208,8 +208,6 @@ final class TType extends TObject {
                                 break;
                             case Framework::String:
                                 break;
-                            case 'array':
-                                break;
                             case null:
                                 unset($mTypeOfClass[$mIndex]);
                                 break;
@@ -286,19 +284,24 @@ final class TType extends TObject {
             case Framework::String:
                 TType::String($Var);
                 break;
-            case 'array':
-                TType::Arr($Var);
-                break;
-            case TDelegate::class:
-                TType::Delegate($Var);
-                break;
             case Framework::Variant:
                 break;
             default: // an array or a compound type string
-                if (is_string($Type) && in_array(IDelegate::class, class_implements($Type))) { //TODO: problemetic
-                    TType::Delegate($Var);
+                if (is_array($Type)) {
+                    $mClass = array_keys($Type)[0];
                 }
                 else {
+                    $mClass = (string)$Type;
+                }
+
+                if (strrpos($mClass, ']', -1) !== false) { //array
+                    TType::Arr($Var);
+                    return;
+                }
+                elseif (in_array(IDelegate::class, class_implements($mClass))) { //delegate
+                    TType::Delegate($Var);
+                }
+                else { //object
                     if (is_string($Type) && !(class_exists($Type) || interface_exists($Type))) {
                         throw new EInvalidObjectCasting();
                     }
@@ -314,7 +317,7 @@ final class TType extends TObject {
      * @return boolean
      */
     public static function IsTypePrimitive($Type) {
-        return ($Type === 'boolean' || $Type === 'integer' || $Type === 'float' || $Type === 'string' || $Type === 'array');
+        return ($Type === 'boolean' || $Type === 'integer' || $Type === 'float' || $Type === 'string' || (is_string($Type) && strrpos($Type, ']', -1) !== false));
     }
 }
 

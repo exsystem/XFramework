@@ -716,7 +716,7 @@ class TClass extends TObject implements IType {
     /**
      * descHere
      */
-    public function __construct() {
+    public function  __construct() {
         parent::__construct();
 
         $mTemp = $this->GenericArg('T');

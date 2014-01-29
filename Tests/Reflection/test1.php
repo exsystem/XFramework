@@ -2,14 +2,13 @@
 namespace Test;
 use FrameworkDSW\Containers\TMap;
 use FrameworkDSW\Framework\Framework;
+use FrameworkDSW\Reflection\EIllegalAccess;
 use FrameworkDSW\Reflection\TClass;
 use FrameworkDSW\Reflection\TModifiers;
 use FrameworkDSW\Reflection\TNamespace;
 use FrameworkDSW\System\TBoolean;
 use FrameworkDSW\System\TInteger;
-use FrameworkDSW\System\TObject;
 use FrameworkDSW\System\TString;
-use FrameworkDSW\Utilities\EInvalidObjectCasting;
 use FrameworkDSW\Utilities\TType;
 
 require_once 'FrameworkDSW/Framework.php';
@@ -89,7 +88,8 @@ foreach ($mFields as $mField) {
             echo '>';
             Framework::Free($mFieldTypeGenericsValue);
         }
-    } catch (EInvalidObjectCasting $Ex) {
+    }
+    catch (EIllegalAccess $Ex) {
 
     }
 
