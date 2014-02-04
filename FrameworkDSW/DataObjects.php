@@ -315,10 +315,13 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
                 return '';
             case Framework::Boolean :
                 return false;
-            case 'array' :
-                return [];
             default :
-                return null;
+                if (strrpos($this->GenericArg('T'), ']', -1) !== false) {
+                    return null;
+                }
+                else {
+                    return null;
+                }
         }
     }
 

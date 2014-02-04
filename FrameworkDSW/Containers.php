@@ -2955,14 +2955,16 @@ class TMap extends TAbstractMap {
             case Framework::Float :
                 $this->FKeyType = TMapKeyType::eFloat();
                 break;
-            case 'array' :
-                $this->FKeyType = TMapKeyType::eArray();
-                break;
             case Framework::Boolean :
                 $this->FKeyType = TMapKeyType::eBoolean();
                 break;
             default :
-                $this->FKeyType = TMapKeyType::eObject();
+                if (strrpos($mKClassType, ']', -1) !== false) {
+                    $this->FKeyType = TMapKeyType::eObject();
+                }
+                else {
+                    $this->FKeyType = TMapKeyType::eArray();
+                }
                 break;
         }
     }

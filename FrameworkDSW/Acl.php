@@ -405,9 +405,9 @@ class TRuntimeStorage extends TObject implements IStorage {
     public function __construct() {
         parent::__construct();
 
-        TMap::PrepareGeneric(['K' => Framework::String, 'V' => 'array']);
+        TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String . '[]']);
         $this->FResources = new TMap();
-        TMap::PrepareGeneric(['K' => Framework::String, 'V' => 'array']);
+        TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String . '[]']);
         $this->FRoles = new TMap();
         TMap::PrepareGeneric([
             'K' => [TPair::class => ['K' => Framework::String, 'V' => Framework::String]],

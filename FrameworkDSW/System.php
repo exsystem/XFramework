@@ -1067,9 +1067,8 @@ class TObject implements IInterface {
         }
         else {
             $mType = array_keys($Type)[0];
-
             return $this instanceof $mType;
-        } //TODO !!! Incorrect implementation. FOR GENERICS PARAMETERS.
+        }
     }
 
     /**

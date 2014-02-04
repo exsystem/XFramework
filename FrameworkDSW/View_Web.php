@@ -239,16 +239,6 @@ class TWebPage extends TComponent implements IView {
         if ($Theme != null) {
             $this->FThemeUrl = $this->FTheme->getThemeUrl();
         }
-
-        // TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'IInterface'));
-        // $this->FViewData = new TMap(true);
-
-
-        // $mRaw = array_map(array ('Framework', 'Unserialize'), $_POST);
-        // foreach ($mRaw as $mName => $mObject) {
-        // TType::Object($mObject, 'IInterface');
-        // $this->FViewData->Put($mName, $mObject);
-        // }
     }
 
     /**
@@ -352,16 +342,23 @@ class TWebPage extends TComponent implements IView {
     public function Update($ViewData) {
         TType::Object($ViewData, [IMap::class => ['K' => Framework::String, 'V' => IInterface::class]]);
         $this->FViewData = $ViewData;
-
-        if ($this->getOwner() instanceof TWebPage) {
-            /** @noinspection PhpIncludeInspection */
-            require_once $this->FTemplate;
-        }
-        else {
+        if (!($this->getOwner() instanceof TWebPage)) {
             ob_clean();
             /** @noinspection PhpIncludeInspection */
             require_once $this->FTemplate;
             ob_end_flush();
+        }
+    }
+
+    /**
+     * @param string $Name
+     */
+    public function View($Name) {
+        TType::String($Name);
+        $mView = $this->FindComponent($Name);
+        if ($mView instanceof TWebPage) {
+            /** @noinspection PhpIncludeInspection */
+            require_once $mView->FTemplate;
         }
     }
 }
