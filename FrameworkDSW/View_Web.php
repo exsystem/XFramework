@@ -244,8 +244,8 @@ class TWebPage extends TComponent implements IView {
     /**
      * descHere
      *
-     * @param mixed $Action
-     *            callback array (Controller, Action).
+     * @param string[] $Action
+     *            array (Controller, Action).
      * @param mixed $Parameters
      *            array('key0' => 'value0', ...)
      * @return string
@@ -343,10 +343,14 @@ class TWebPage extends TComponent implements IView {
         TType::Object($ViewData, [IMap::class => ['K' => Framework::String, 'V' => IInterface::class]]);
         $this->FViewData = $ViewData;
         if (!($this->getOwner() instanceof TWebPage)) {
-            ob_clean();
+            if (ob_get_length() != 0) {
+                ob_clean();
+            }
             /** @noinspection PhpIncludeInspection */
             require_once $this->FTemplate;
-            ob_end_flush();
+            if (ob_get_length() != 0) {
+                ob_end_flush();
+            }
         }
     }
 

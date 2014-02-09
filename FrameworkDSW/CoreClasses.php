@@ -1773,6 +1773,27 @@ abstract class TControl extends TComponent implements IControl {
 //TODO private FControlState: TControlState
 //TODO what about touching ability?
 
+/**
+ * Interface IApplication
+ * @package FrameworkDSW\CoreClasses
+ */
+interface IApplication extends IInterface {
+    /**
+     * @return \FrameworkDSW\Controller\IControllerManager
+     */
+    public function getControllerManager();
+
+    /**
+     * Run
+     */
+    public function Run();
+
+    /**
+     * Quit
+     */
+    public function Quit();
+}
+
 
 /**
  * IPopupMenu

@@ -687,7 +687,7 @@ class TStdListIterator extends TObject implements IIterator {
      * @see FrameworkDSW/IIterator#Remove()
      */
     public function Remove() {
-        if ($this->FLastAt < 0) {
+        if ($this->FLastAt < -1) {
             throw new EIllegalState(sprintf('Illegal state: the iterating element for removing at index %s might have been removed.', (string)$this->FCursor));
         }
 

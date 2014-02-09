@@ -1,87 +1,121 @@
 <?php
-echo memory_get_usage(true)."\n\n";
+namespace testHMVC;
+require_once 'FrameworkDSW/Framework.php';
+use FrameworkDSW\Containers\TMap;
+use FrameworkDSW\Controller\TControllerAction;
+use FrameworkDSW\Controller\TControllerManager;
+use FrameworkDSW\Controller\TOnSetControllerManagerUpdate;
+use FrameworkDSW\Controller\TOnSetModelNotify;
+use FrameworkDSW\CoreClasses\IView;
+use FrameworkDSW\CoreClasses\TComponent;
+use FrameworkDSW\Framework\Framework;
+use FrameworkDSW\System\IInterface;
+use FrameworkDSW\System\TObject;
+use FrameworkDSW\System\TString;
+use FrameworkDSW\Utilities\TType;
+use FrameworkDSW\View\Web\TWebPage;
 
-set_include_path(get_include_path().';D:\\ExSystem\\Documents\\ZendStudio9Workspace\\FrameworkDSW');
-
-require_once 'FrameworkDSW/CoreClasses.php';
-require_once 'FrameworkDSW/Controller.php';
-
-class TMyController extends TObject implements IController {
+class TMyModel extends TObject {
     /**
-     *
-     * @var TOnControllerUpdate
+     * @var integer
      */
-    private static $FOnUpdate = null;
+    public $FData = 10;
+    /**
+     * @var \FrameworkDSW\Controller\TOnModelNotify
+     */
+    public $FNotify = null;
 
     /**
-     *
-     * @param TOnControllerUpdate $Value
+     * @param \FrameworkDSW\Controller\TOnModelNotify $Notify
      */
-    public static function setUpdate($Value) {
-        self::$FOnUpdate = $Value;
+    public function setNotify($Notify) {
+        $this->FNotify = $Notify;
+    }
+}
+
+class TMyController extends TObject {
+    /**
+     * @var \FrameworkDSW\Controller\TOnControllerManagerUpdate
+     */
+    public $FUpdate = null;
+
+    /**
+     * @param \FrameworkDSW\Controller\TOnControllerManagerUpdate $Value
+     */
+    public function setUpdate($Value) {
+        $this->FUpdate = $Value;
     }
 
     /**
-     *
-     * @param TMyModel $Model
-     * @return TMap
+     * @param \FrameworkDSW\System\IInterface $Model
+     * @return \FrameworkDSW\Containers\TMap <K: string, V: \FrameworkDSW\System\IInterface>
      */
-    public static function ActionTest($Model) {
-        TType::Object($Model, 'TMyModel');
+    public function TestAction($Model) {
+        TType::Object($Model, IInterface::class);
+        /** @var TMyModel $Model */
+        TMap::PrepareGeneric(['K' => Framework::String, 'V' => IInterface::class]);
+        $mView             = new TMap();
+        $mView['ViewData'] = new TString(sprintf('There are %s little pigs.', (string)$Model->FData));
+        $this->FUpdate(Framework::Delegate([$this, 'TestSubAction'], TControllerAction::class));
 
-        TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'integer'));
-        $ViewData = new TMap();
-        $ViewData->Put('data', strlen($Model->FMyData));
-        return $ViewData;
+        return $mView;
+    }
+
+    public function TestSubAction($Model) {
+        TType::Object($Model, IInterface::class);
+        /** @var TMyModel $Model */
+        ++$Model->FData;
+        TMap::PrepareGeneric(['K' => Framework::String, 'V' => IInterface::class]);
+        $mView             = new TMap();
+        $mView['ViewData'] = new TString(sprintf('There are also %s little sheep.', (string)$Model->FData));
+        return $mView;
     }
 }
 
 class TMyView extends TComponent implements IView {
 
     /**
-     * (non-PHPdoc)
-     * @param IMap $ViewData <K: string, V: IInterface>
-     * @see IView::Update()
+     * descHere
+     * @param \FrameworkDSW\Containers\IMap $ViewData <K: string, V: \FrameworkDSW\System\IInterface>
      */
     public function Update($ViewData) {
-        echo "ViewData is {$ViewData['data']}\n";
+        $fp = fopen('php://stderr', 'r+');
+        fputs($fp, 'Hello! ' . $ViewData['ViewData']->Unbox() . "\n");
     }
 }
 
-class TMyModel extends TObject implements IModel {
-    /**
-     *
-     * @var TOnModelNotify
-     */
-    private $FOnNotify = null;
-
-    /**
-     *
-     * @param TOnModelNotify $Value
-     */
-    public function setNotify($Value) {
-        $this->FOnNotify = $Value;
-    }
-
-    /**
-     *
-     * @var string
-     */
-    public $FMyData = 'this is the data.';
-}
-//prepare
 $mControllerManager = new TControllerManager();
-$mView = new TMyView();
-$mModel = new TMyModel();
-$mControllerManager->Bind(array ('TMyController', 'Test'), $mModel);
-$mControllerManager->Register(array ('TMyController', 'Test'), $mView);
-//invoke
-for ($i=0; $i<1; ++$i)
-$mControllerManager->Update(array ('TMyController', 'Test'));
+$mController        = new TMyController();
+$mAction            = Framework::Delegate([$mController, 'TestAction'], TControllerAction::class);
+$mSubAction         = Framework::Delegate([$mController, 'TestSubAction'], TControllerAction::class);
+$mModel             = new TMyModel();
+$mView              = new TMyView();
+$mMainView          = new TWebPage();
+$mMainView->Config(null, '/Users/ExSystem/PhpstormProjects/FrameworkDSW/Tests/main.php');
+$mMainView->setName('main');
+$mSubView = new TWebPage($mMainView);
+$mSubView->Config(null, '/Users/ExSystem/PhpstormProjects/FrameworkDSW/Tests/sub.php');
+$mSubView->setName('sub');
+
+$mControllerManager->RegisterModel($mAction, $mModel, Framework::Delegate([$mController, 'setUpdate'], TOnSetControllerManagerUpdate::class), Framework::Delegate([$mModel, 'setNotify'], TOnSetModelNotify::class));
+$mControllerManager->RegisterModel($mSubAction, $mModel, null, null, false);
+$mControllerManager->RegisterView($mAction, $mView);
+$mControllerManager->RegisterView($mAction, $mMainView);
+$mControllerManager->RegisterView($mSubAction, $mView);
+$mControllerManager->RegisterView($mSubAction, $mSubView);
+echo 'Ready: ', memory_get_usage(true), "bytes\n";
+$mModel->FData = 10;
+$mModel->FNotify($mModel);
+$mControllerManager->Update($mAction);
+$mModel->FData = 1000;
+$mModel->FNotify($mModel);
 //clean-up
-echo memory_get_usage(true)."\n\n";
+echo 'Updated: ', memory_get_usage(true), " bytes\n";
 Framework::Free($mControllerManager);
+Framework::Free($mController);
 Framework::Free($mModel);
 Framework::Free($mView);
-echo "\nENDED\n";
-echo memory_get_usage(true)."\n\n";
+Framework::Free($mMainView);
+Framework::Free($mSubView);
+echo 'Ended: ', memory_get_usage(true), "bytes\n";
+echo 'Peek: ', memory_get_peak_usage(true), "bytes\n";

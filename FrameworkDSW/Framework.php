@@ -382,7 +382,7 @@ class Framework extends TObject {
      *
      */
     static public function PreBoot() {
-        if (isset(self::$FDeclaredClasses)) {
+        if (isset(Framework::$FDeclaredClasses)) {
             return;
         }
 
@@ -408,6 +408,39 @@ class Framework extends TObject {
         $mDelegate               = new TDelegate($Callback, $Type);
         Framework::$FDelegates[] = $mDelegate;
         return $mDelegate;
+    }
+
+    /**
+     * @var boolean
+     */
+    private static $FDebug = false;
+
+    /**
+     *
+     */
+    public static function Debug() {
+        Framework::$FDebug = true;
+    }
+
+    /**
+     *
+     */
+    public static function Release() {
+        Framework::$FDebug = false;
+    }
+
+    /**
+     * @return boolean
+     */
+    public static function IsDebug() {
+        return Framework::$FDebug;
+    }
+
+    /**
+     * @return boolean
+     */
+    public static function IsRelease() {
+        return !Framework::$FDebug;
     }
 }
 

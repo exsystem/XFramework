@@ -1462,6 +1462,15 @@ class TObject implements IInterface {
             $mIsEnum      = false;
             $mIsEnumOrSet = false;
             if (!$mReflection->isSubclassOf(new \ReflectionClass(TSet::class))) {
+                try {
+                    $mReflection->getProperty($name);
+                    if (static::$$name instanceof TDelegate) {
+                        $mDelegate = static::$$name;
+                        return call_user_func_array($mDelegate->getDelegate(), $arguments);
+                    }
+                }
+                catch (\ReflectionException $Ex) {
+                }
                 TClass::PrepareGeneric(['T' => self::ClassType()]);
                 $mClass = new TClass();
                 throw new ENoSuchMethod(sprintf('No such method: %s::%s().', self::ClassType(), $name), null, null, $name, $mClass);
@@ -1487,10 +1496,6 @@ class TObject implements IInterface {
             return $name;
         }
 
-        if (static::$name instanceof TDelegate) {
-            $mDelegate = static::$name;
-            return call_user_func_array($mDelegate->getDelegate(), $arguments);
-        }
     }
 
     /**
