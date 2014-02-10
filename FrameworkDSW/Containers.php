@@ -11,6 +11,7 @@ use FrameworkDSW\Framework\Framework;
 use FrameworkDSW\System\EException;
 use FrameworkDSW\System\ENotImplemented;
 use FrameworkDSW\System\ERuntimeException;
+use FrameworkDSW\System\IDelegate;
 use FrameworkDSW\System\IInterface;
 use FrameworkDSW\System\TEnum;
 use FrameworkDSW\System\TObject;
@@ -2941,6 +2942,12 @@ class TMap extends TAbstractMap {
         }
         if (class_exists($mKClassType, false) && is_subclass_of($mKClassType, TRecord::class)) {
             $this->FKeyType   = TMapKeyType::eRecord();
+            $this->FDirectKey = false;
+
+            return;
+        }
+        if (interface_exists($mKClassType, false) && is_subclass_of($mKClassType, IDelegate::class)) {
+            $this->FKeyType   = TMapKeyType::eObject();
             $this->FDirectKey = false;
 
             return;

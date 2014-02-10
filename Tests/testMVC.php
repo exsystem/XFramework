@@ -91,10 +91,10 @@ $mSubAction         = Framework::Delegate([$mController, 'TestSubAction'], TCont
 $mModel             = new TMyModel();
 $mView              = new TMyView();
 $mMainView          = new TWebPage();
-$mMainView->Config(null, '/Users/ExSystem/PhpstormProjects/FrameworkDSW/Tests/main.php');
+$mMainView->Config(null, 'Tests/main.php');
 $mMainView->setName('main');
 $mSubView = new TWebPage($mMainView);
-$mSubView->Config(null, '/Users/ExSystem/PhpstormProjects/FrameworkDSW/Tests/sub.php');
+$mSubView->Config(null, 'Tests/sub.php');
 $mSubView->setName('sub');
 
 $mControllerManager->RegisterModel($mAction, $mModel, Framework::Delegate([$mController, 'setUpdate'], TOnSetControllerManagerUpdate::class), Framework::Delegate([$mModel, 'setNotify'], TOnSetModelNotify::class));
