@@ -26,9 +26,10 @@ use FrameworkDSW\Utilities\TType;
 interface TModelBinder extends IDelegate {
     /**
      * @param \FrameworkDSW\Controller\TControllerAction $Action
+     * @param \FrameworkDSW\Controller\TOnModelNotify $OnModelNotify
      * @return \FrameworkDSW\System\IInterface $Model
      */
-    public function Invoke($Action);
+    public function Invoke($Action, $OnModelNotify);
 }
 
 /**
@@ -68,21 +69,6 @@ interface TOnModelNotify extends IDelegate {
      * @param \FrameworkDSW\System\IInterface $Model
      */
     public function Invoke($Model);
-}
-
-/**
- * \FrameworkDSW\Controller\TOnSetModelNotify
- *
- * @author 许子健
- */
-interface TOnSetModelNotify extends IDelegate {
-
-    /**
-     * descHere
-     *
-     * @param \FrameworkDSW\Controller\TOnModelNotify $OnModelNotify
-     */
-    public function Invoke($OnModelNotify);
 }
 
 /**
@@ -128,10 +114,9 @@ interface IControllerManager extends IInterface {
      * @param \FrameworkDSW\Controller\TControllerAction $Action
      * @param \FrameworkDSW\Controller\TModelBinder $ModelBinder
      * @param \FrameworkDSW\Controller\TOnSetControllerManagerUpdate $OnSetControllerManagerUpdate
-     * @param \FrameworkDSW\Controller\TOnSetModelNotify $OnSetModelNotify
      * @param boolean $ShouldBeNotified
      */
-    public function RegisterModel($Action, $ModelBinder, $OnSetControllerManagerUpdate = null, $OnSetModelNotify = null, $ShouldBeNotified = true);
+    public function RegisterModel($Action, $ModelBinder, $OnSetControllerManagerUpdate = null, $ShouldBeNotified = true);
 
     /**
      * descHere
@@ -340,19 +325,17 @@ class TControllerManager extends TObject implements IControllerManager {
      * @param \FrameworkDSW\Controller\TControllerAction $Action
      * @param \FrameworkDSW\Controller\TModelBinder $ModelBinder
      * @param \FrameworkDSW\Controller\TOnSetControllerManagerUpdate $OnSetControllerManagerUpdate
-     * @param \FrameworkDSW\Controller\TOnSetModelNotify $OnSetModelNotify
      * @param boolean $ShouldBeNotified
      */
-    public function RegisterModel($Action, $ModelBinder, $OnSetControllerManagerUpdate = null, $OnSetModelNotify = null, $ShouldBeNotified = true) {
+    public function RegisterModel($Action, $ModelBinder, $OnSetControllerManagerUpdate = null, $ShouldBeNotified = true) {
         TType::Delegate($Action, TControllerAction::class);
         TType::Delegate($ModelBinder, TModelBinder::class);
-        TType::Delegate($OnSetModelNotify, TOnSetModelNotify::class);
         TType::Delegate($OnSetControllerManagerUpdate, TOnSetControllerManagerUpdate::class);
         TType::Bool($ShouldBeNotified);
 
 
         /** @var TDelegate $ModelBinder */
-        $mModel = $ModelBinder($Action);
+        $mModel = $ModelBinder($Action, Framework::Delegate([$this, 'Notify'], TOnModelNotify::class));
         try {
             $this->FModelRegistration[$Action] = $mModel;
         }
@@ -369,10 +352,6 @@ class TControllerManager extends TObject implements IControllerManager {
                 /** @noinspection PhpParamsInspection */
                 $this->FNotifierRegistration->Put($mModel, new TLinkedList(false, [$Action]));
             }
-        }
-        /** @var TDelegate $OnSetModelNotify */
-        if ($OnSetModelNotify !== null) {
-            $OnSetModelNotify(Framework::Delegate([$this, 'Notify'], TOnModelNotify::class));
         }
         /** @var TDelegate $OnSetControllerManagerUpdate */
         if ($OnSetControllerManagerUpdate !== null) {

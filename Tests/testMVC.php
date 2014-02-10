@@ -1,13 +1,12 @@
 <?php
 namespace testHMVC;
-set_include_path(get_include_path() . PATH_SEPARATOR . '/Users/ExSystem/PhpstormProjects/FrameworkDSW/');
+set_include_path(get_include_path() . PATH_SEPARATOR . '../');
 require_once 'FrameworkDSW/Framework.php';
 use FrameworkDSW\Containers\TMap;
 use FrameworkDSW\Controller\TControllerAction;
 use FrameworkDSW\Controller\TControllerManager;
 use FrameworkDSW\Controller\TModelBinder;
 use FrameworkDSW\Controller\TOnSetControllerManagerUpdate;
-use FrameworkDSW\Controller\TOnSetModelNotify;
 use FrameworkDSW\Controller\TViewBinder;
 use FrameworkDSW\CoreClasses\IView;
 use FrameworkDSW\CoreClasses\TComponent;
@@ -122,9 +121,11 @@ class TMyController extends TObject {
 
     /**
      * @param \FrameworkDSW\Controller\TControllerAction $Action
+     * @param \FrameworkDSW\Controller\TOnModelNotify $OnModelNotify
      * @return \FrameworkDSW\System\IInterface $Model
      */
-    public function ModelBinder($Action) {
+    public function ModelBinder($Action, $OnModelNotify) {
+        $this->FModel->FNotify = $OnModelNotify;
         return $this->FModel;
     }
 
@@ -165,7 +166,7 @@ $mControllerManager = new TControllerManager();
 $mController        = new TMyController();
 $mAction            = Framework::Delegate([$mController, 'TestAction'], TControllerAction::class);
 $mSubAction         = Framework::Delegate([$mController, 'TestSubAction'], TControllerAction::class);
-$mControllerManager->RegisterModel($mAction, Framework::Delegate([$mController, 'ModelBinder'], TModelBinder::class), Framework::Delegate([$mController, 'setUpdate'], TOnSetControllerManagerUpdate::class), Framework::Delegate([$mController->FModel, 'setNotify'], TOnSetModelNotify::class));
+$mControllerManager->RegisterModel($mAction, Framework::Delegate([$mController, 'ModelBinder'], TModelBinder::class), Framework::Delegate([$mController, 'setUpdate'], TOnSetControllerManagerUpdate::class));
 $mControllerManager->RegisterModel($mSubAction, Framework::Delegate([$mController, 'ModelBinder'], TModelBinder::class), null, null, false);
 $mControllerManager->RegisterView($mAction, Framework::Delegate([$mController, 'MainViewBinder'], TViewBinder::class));
 $mControllerManager->RegisterView($mSubAction, Framework::Delegate([$mController, 'SubViewBinder'], TViewBinder::class));
