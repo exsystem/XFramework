@@ -1,11 +1,14 @@
 <?php
 namespace testHMVC;
+set_include_path(get_include_path() . PATH_SEPARATOR . '/Users/ExSystem/PhpstormProjects/FrameworkDSW/');
 require_once 'FrameworkDSW/Framework.php';
 use FrameworkDSW\Containers\TMap;
 use FrameworkDSW\Controller\TControllerAction;
 use FrameworkDSW\Controller\TControllerManager;
+use FrameworkDSW\Controller\TModelBinder;
 use FrameworkDSW\Controller\TOnSetControllerManagerUpdate;
 use FrameworkDSW\Controller\TOnSetModelNotify;
+use FrameworkDSW\Controller\TViewBinder;
 use FrameworkDSW\CoreClasses\IView;
 use FrameworkDSW\CoreClasses\TComponent;
 use FrameworkDSW\Framework\Framework;
@@ -38,6 +41,48 @@ class TMyController extends TObject {
      * @var \FrameworkDSW\Controller\TOnControllerManagerUpdate
      */
     public $FUpdate = null;
+    /**
+     * @var TMyModel
+     */
+    public $FModel = null;
+    /**
+     * @var TMyView
+     */
+    private $FView = null;
+    /**
+     * @var \FrameworkDSW\View\Web\TWebPage
+     */
+    private $FMainView = null;
+    /**
+     * @var \FrameworkDSW\View\Web\TWebPage
+     */
+    private $FSubView = null;
+
+    /**
+     *
+     */
+    public function __construct() {
+        parent::__construct();
+        $this->FModel    = new TMyModel();
+        $this->FView     = new TMyView();
+        $this->FMainView = new TWebPage();
+        $this->FMainView->Config(null, 'Tests/main.php');
+        $this->FMainView->setName('main');
+        $this->FSubView = new TWebPage($this->FMainView);
+        $this->FSubView->Config(null, 'Tests/sub.php');
+        $this->FSubView->setName('sub');
+    }
+
+    /**
+     *
+     */
+    public function Destroy() {
+        Framework::Free($this->FModel);
+        Framework::Free($this->FView);
+        Framework::Free($this->FMainView);
+        Framework::Free($this->FSubView);
+        parent::Destroy();
+    }
 
     /**
      * @param \FrameworkDSW\Controller\TOnControllerManagerUpdate $Value
@@ -61,6 +106,10 @@ class TMyController extends TObject {
         return $mView;
     }
 
+    /**
+     * @param \FrameworkDSW\System\IInterface $Model
+     * @return \FrameworkDSW\Containers\TMap <K: string, V: \FrameworkDSW\System\IInterface>
+     */
     public function TestSubAction($Model) {
         TType::Object($Model, IInterface::class);
         /** @var TMyModel $Model */
@@ -70,10 +119,38 @@ class TMyController extends TObject {
         $mView['ViewData'] = new TString(sprintf('There are also %s little sheep.', (string)$Model->FData));
         return $mView;
     }
+
+    /**
+     * @param \FrameworkDSW\Controller\TControllerAction $Action
+     * @return \FrameworkDSW\System\IInterface $Model
+     */
+    public function ModelBinder($Action) {
+        return $this->FModel;
+    }
+
+    /**
+     * @param \FrameworkDSW\Controller\TControllerAction $Action
+     * @return \FrameworkDSW\CoreClasses\IView[]
+     */
+    public function MainViewBinder($Action) {
+        return [$this->FView, $this->FMainView];
+    }
+
+    /**
+     * @param \FrameworkDSW\Controller\TControllerAction $Action
+     * @return \FrameworkDSW\CoreClasses\IView[]
+     */
+    public function SubViewBinder($Action) {
+        return [$this->FView, $this->FSubView];
+    }
+
 }
 
+/**
+ * Class TMyView
+ * @package testHMVC
+ */
 class TMyView extends TComponent implements IView {
-
     /**
      * descHere
      * @param \FrameworkDSW\Containers\IMap $ViewData <K: string, V: \FrameworkDSW\System\IInterface>
@@ -88,34 +165,20 @@ $mControllerManager = new TControllerManager();
 $mController        = new TMyController();
 $mAction            = Framework::Delegate([$mController, 'TestAction'], TControllerAction::class);
 $mSubAction         = Framework::Delegate([$mController, 'TestSubAction'], TControllerAction::class);
-$mModel             = new TMyModel();
-$mView              = new TMyView();
-$mMainView          = new TWebPage();
-$mMainView->Config(null, 'Tests/main.php');
-$mMainView->setName('main');
-$mSubView = new TWebPage($mMainView);
-$mSubView->Config(null, 'Tests/sub.php');
-$mSubView->setName('sub');
-
-$mControllerManager->RegisterModel($mAction, $mModel, Framework::Delegate([$mController, 'setUpdate'], TOnSetControllerManagerUpdate::class), Framework::Delegate([$mModel, 'setNotify'], TOnSetModelNotify::class));
-$mControllerManager->RegisterModel($mSubAction, $mModel, null, null, false);
-$mControllerManager->RegisterView($mAction, $mView);
-$mControllerManager->RegisterView($mAction, $mMainView);
-$mControllerManager->RegisterView($mSubAction, $mView);
-$mControllerManager->RegisterView($mSubAction, $mSubView);
-echo 'Ready: ', memory_get_usage(true), "bytes\n";
-$mModel->FData = 10;
-$mModel->FNotify($mModel);
+$mControllerManager->RegisterModel($mAction, Framework::Delegate([$mController, 'ModelBinder'], TModelBinder::class), Framework::Delegate([$mController, 'setUpdate'], TOnSetControllerManagerUpdate::class), Framework::Delegate([$mController->FModel, 'setNotify'], TOnSetModelNotify::class));
+$mControllerManager->RegisterModel($mSubAction, Framework::Delegate([$mController, 'ModelBinder'], TModelBinder::class), null, null, false);
+$mControllerManager->RegisterView($mAction, Framework::Delegate([$mController, 'MainViewBinder'], TViewBinder::class));
+$mControllerManager->RegisterView($mSubAction, Framework::Delegate([$mController, 'SubViewBinder'], TViewBinder::class));
+$fp = fopen('php://stderr', 'r+');
+fputs($fp, sprintf("Ready: %s bytes\n", memory_get_usage(true)));
+$mController->FModel->FData = 10;
+$mController->FModel->FNotify($mController->FModel);
 $mControllerManager->Update($mAction);
-$mModel->FData = 1000;
-$mModel->FNotify($mModel);
+$mController->FModel->FData = 1000;
+$mController->FModel->FNotify($mController->FModel);
 //clean-up
-echo 'Updated: ', memory_get_usage(true), " bytes\n";
+fputs($fp, sprintf("Updated: %s bytes\n", memory_get_usage(true)));
 Framework::Free($mControllerManager);
 Framework::Free($mController);
-Framework::Free($mModel);
-Framework::Free($mView);
-Framework::Free($mMainView);
-Framework::Free($mSubView);
-echo 'Ended: ', memory_get_usage(true), "bytes\n";
-echo 'Peek: ', memory_get_peak_usage(true), "bytes\n";
+fputs($fp, sprintf("Ended: %s bytes\n", memory_get_usage(true)));
+fputs($fp, sprintf("Peek: %s bytes\n", memory_get_usage(true)));

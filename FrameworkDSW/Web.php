@@ -615,7 +615,7 @@ class THttpSession extends TAbstractMap {
     public function __construct($AutoStart = true, $Storage = null) {
         TType::Bool($AutoStart);
         TType::Object($Storage, IHttpSessionStorage::class);
-        $this->PrepareMethodGeneric(array('K' => Framework::String, 'V' => null, 'T' => [TPair::class => ['K' => Framework::String, 'V' => null]]));
+        $this->PrepareMethodGeneric(['K' => Framework::String, 'V' => null, 'T' => [TPair::class => ['K' => Framework::String, 'V' => null]]]);
         parent::__construct(false);
         ini_set('session.gc_probability', 1);
         ini_set('session.gc_divisor', 100);
@@ -1223,7 +1223,7 @@ class THttpRequest extends TObject {
             throw new EBrowscapNotEnabled(sprintf('Get browser failed: Browscap is not enabled.'));
         }
 
-        TMap::PrepareGeneric(array('K' => Framework::String, 'V' => Framework::String));
+        TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String]);
         $mResult = new TMap();
         foreach ($mRaw as $mKey => &$mValue) {
             if (is_bool($mValue)) {
@@ -2611,7 +2611,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
         $mTr2['/'] = '\\/';
 
         if (strpos($Route, '<') !== false && preg_match_all('/<(\w+)>/', $Route, $mReferences)) {
-            TMap::PrepareGeneric(array('K' => Framework::String, 'V' => Framework::String));
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String]);
             $this->FReferences = new TMap();
             foreach ($mReferences[1] as $mReference) {
                 $this->FReferences->Put($mReference, "<{$mReference}>");
@@ -2621,7 +2621,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
         $this->FHasHostInfo = !strncasecmp($Pattern, 'http://', 7) || !strncasecmp($Pattern, 'https://', 8);
 
         if (preg_match_all('/<(\w+):?(.*?)?>/', $Pattern, $mParameters)) {
-            TMap::PrepareGeneric(array('K' => Framework::String, 'V' => Framework::String));
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String]);
             $this->FParameters = new TMap();
 
             $mTokens = array_combine($mParameters[1], $mParameters[2]);

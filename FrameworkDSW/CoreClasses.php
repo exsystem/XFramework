@@ -1794,7 +1794,6 @@ interface IApplication extends IInterface {
     public function Quit();
 }
 
-
 /**
  * IPopupMenu
  * @author    许子健
