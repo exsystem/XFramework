@@ -167,7 +167,7 @@ $mController        = new TMyController();
 $mAction            = Framework::Delegate([$mController, 'TestAction'], TControllerAction::class);
 $mSubAction         = Framework::Delegate([$mController, 'TestSubAction'], TControllerAction::class);
 $mControllerManager->RegisterModel($mAction, Framework::Delegate([$mController, 'ModelBinder'], TModelBinder::class), Framework::Delegate([$mController, 'setUpdate'], TOnSetControllerManagerUpdate::class));
-$mControllerManager->RegisterModel($mSubAction, Framework::Delegate([$mController, 'ModelBinder'], TModelBinder::class), null, null, false);
+$mControllerManager->RegisterModel($mSubAction, Framework::Delegate([$mController, 'ModelBinder'], TModelBinder::class), null, false);
 $mControllerManager->RegisterView($mAction, Framework::Delegate([$mController, 'MainViewBinder'], TViewBinder::class));
 $mControllerManager->RegisterView($mSubAction, Framework::Delegate([$mController, 'SubViewBinder'], TViewBinder::class));
 $fp = fopen('php://stderr', 'r+');

@@ -13,7 +13,14 @@ use FrameworkDSW\Containers\TAbstractMap;
 use FrameworkDSW\Containers\TLinkedList;
 use FrameworkDSW\Containers\TMap;
 use FrameworkDSW\Containers\TPair;
+use FrameworkDSW\Controller\TControllerAction;
+use FrameworkDSW\Controller\TControllerManager;
+use FrameworkDSW\Controller\TModelBinder;
+use FrameworkDSW\Controller\TViewBinder;
+use FrameworkDSW\CoreClasses\IApplication;
+use FrameworkDSW\CoreClasses\TComponent;
 use FrameworkDSW\Framework\Framework;
+use FrameworkDSW\Reflection\TClass;
 use FrameworkDSW\System\EException;
 use FrameworkDSW\System\EInvalidParameter;
 use FrameworkDSW\System\IInterface;
@@ -21,146 +28,6 @@ use FrameworkDSW\System\TEnum;
 use FrameworkDSW\System\TObject;
 use FrameworkDSW\System\TRecord;
 use FrameworkDSW\Utilities\TType;
-
-/**
- * Class ESessionException
- * @package FrameworkDSW\Web
- */
-class ESessionException extends EException {
-}
-
-/**
- * Class ENoSuchRequestParameter
- * @package FrameworkDSW\Web
- */
-class ENoSuchRequestParameter extends EException {
-    /**
-     * @var string
-     */
-    private $FName = '';
-    /**
-     * @var \FrameworkDSW\Web\THttpMethod
-     */
-    private $FMethod = null;
-
-    /**
-     * @param string $Message
-     * @param \FrameworkDSW\System\EException $Previous
-     * @param string $Name
-     * @param \FrameworkDSW\Web\THttpMethod $Method
-     */
-    public function __construct($Message = '', $Previous = null, $Name = '', $Method = null) {
-        parent::__construct($Message, $Previous);
-
-        TType::String($Message);
-        TType::Object($Previous, EException::class);
-        TType::String($Name);
-        TType::Object($Method, THttpMethod::class);
-
-        $this->FName   = $Name;
-        $this->FMethod = $Method;
-    }
-
-    /**
-     * @return string
-     */
-    public function getName() {
-        return $this->FName;
-    }
-
-    /**
-     * @return \FrameworkDSW\Web\THttpMethod
-     */
-    public function getMethod() {
-        return $this->FMethod;
-    }
-}
-
-/**
- *
- * @author 许子健
- */
-class EUnableToResolveScriptUrl extends EException {
-}
-
-/**
- *
- * @author 许子健
- */
-class EBrowscapNotEnabled extends EException {
-}
-
-/**
- *
- * @author 许子健
- */
-class EDetermineRequestUriFailed extends EException {
-}
-
-/**
- *
- * @author 许子健
- */
-class EDeterminePathInfoFailed extends EException {
-}
-
-/**
- *
- * @author 许子健
- */
-class EParsingOnlyUrlRule extends EException {
-}
-
-/**
- *
- * @author 许子健
- */
-class ECreateUrlFailed extends EException {
-}
-
-/**
- *
- * @author 子健
- */
-class EParseUrlFailed extends EException {
-}
-
-/**
- *
- * @author 许子健
- */
-class EHttpException extends EException {
-    /**
-     *
-     * @var integer
-     */
-    private $FStatusCode = -1;
-
-    /**
-     *
-     * @return integer
-     */
-    public function getStatusCode() {
-        return $this->FStatusCode;
-    }
-
-    /**
-     *
-     * @param integer $StatusCode
-     */
-    public function __construct($StatusCode) {
-        parent::__construct();
-        TType::Int($StatusCode);
-        $this->FStatusCode = $StatusCode;
-    }
-}
-
-/**
- *
- * @author 许子健
- */
-class EResolveRequestFailed extends EHttpException {
-}
 
 /**
  * IUrlRouter
@@ -412,6 +279,192 @@ interface IUrlRouteRule extends IInterface {
 }
 
 /**
+ * IHttpSessionStorage
+ * @author    许子健
+ */
+interface IHttpSessionStorage extends IInterface {
+
+    /**
+     * descHere
+     */
+    public function Close();
+
+    /**
+     * descHere
+     * @param string $SessionId
+     */
+    public function Delete($SessionId);
+
+    /**
+     * descHere
+     * @param string $SavePath
+     * @param string $Name
+     */
+    public function Open($SavePath, $Name);
+
+    /**
+     * descHere
+     * @param string $MaxLifeTime
+     */
+    public function Purge($MaxLifeTime);
+
+    /**
+     * descHere
+     * @param string $SessionId
+     * @return string
+     */
+    public function Read($SessionId);
+
+    /**
+     * descHere
+     * @param string $SessionId
+     * @param string $SessionData
+     */
+    public function Write($SessionId, $SessionData);
+
+}
+
+/**
+ * Class ESessionException
+ * @package FrameworkDSW\Web
+ */
+class ESessionException extends EException {
+}
+
+/**
+ * Class ENoSuchRequestParameter
+ * @package FrameworkDSW\Web
+ */
+class ENoSuchRequestParameter extends EException {
+    /**
+     * @var string
+     */
+    private $FName = '';
+    /**
+     * @var \FrameworkDSW\Web\THttpMethod
+     */
+    private $FMethod = null;
+
+    /**
+     * @param string $Message
+     * @param \FrameworkDSW\System\EException $Previous
+     * @param string $Name
+     * @param \FrameworkDSW\Web\THttpMethod $Method
+     */
+    public function __construct($Message = '', $Previous = null, $Name = '', $Method = null) {
+        parent::__construct($Message, $Previous);
+
+        TType::String($Message);
+        TType::Object($Previous, EException::class);
+        TType::String($Name);
+        TType::Object($Method, THttpMethod::class);
+
+        $this->FName   = $Name;
+        $this->FMethod = $Method;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName() {
+        return $this->FName;
+    }
+
+    /**
+     * @return \FrameworkDSW\Web\THttpMethod
+     */
+    public function getMethod() {
+        return $this->FMethod;
+    }
+}
+
+/**
+ *
+ * @author 许子健
+ */
+class EUnableToResolveScriptUrl extends EException {
+}
+
+/**
+ *
+ * @author 许子健
+ */
+class EBrowscapNotEnabled extends EException {
+}
+
+/**
+ *
+ * @author 许子健
+ */
+class EDetermineRequestUriFailed extends EException {
+}
+
+/**
+ *
+ * @author 许子健
+ */
+class EDeterminePathInfoFailed extends EException {
+}
+
+/**
+ *
+ * @author 许子健
+ */
+class EParsingOnlyUrlRule extends EException {
+}
+
+/**
+ *
+ * @author 许子健
+ */
+class ECreateUrlFailed extends EException {
+}
+
+/**
+ *
+ * @author 子健
+ */
+class EParseUrlFailed extends EException {
+}
+
+/**
+ *
+ * @author 许子健
+ */
+class EHttpException extends EException {
+    /**
+     *
+     * @var integer
+     */
+    private $FStatusCode = -1;
+
+    /**
+     *
+     * @param integer $StatusCode
+     */
+    public function __construct($StatusCode) {
+        parent::__construct();
+        TType::Int($StatusCode);
+        $this->FStatusCode = $StatusCode;
+    }
+
+    /**
+     *
+     * @return integer
+     */
+    public function getStatusCode() {
+        return $this->FStatusCode;
+    }
+}
+
+/**
+ *
+ * @author 许子健
+ */
+class EResolveRequestFailed extends EHttpException {
+}
+
+/**
  * THttpCookie
  *
  * @author 许子健
@@ -491,6 +544,15 @@ class THttpCookies extends TMap {
     /**
      * descHere
      *
+     * @return \FrameworkDSW\Web\THttpRequest
+     */
+    public function getRequest() {
+        return $this->FRequest;
+    }
+
+    /**
+     * descHere
+     *
      * @param K $Key
      */
     protected function DoDelete($Key) {
@@ -516,61 +578,6 @@ class THttpCookies extends TMap {
         setcookie($Key, $Value->Value, $Value->Expire, $Value->Path, $Value->Domain, $Value->Secure, $Value->HttpOnly);
         parent::DoPut($Key, $Value);
     }
-
-    /**
-     * descHere
-     *
-     * @return \FrameworkDSW\Web\THttpRequest
-     */
-    public function getRequest() {
-        return $this->FRequest;
-    }
-}
-
-/**
- * IHttpSessionStorage
- * @author    许子健
- */
-interface IHttpSessionStorage extends IInterface {
-
-    /**
-     * descHere
-     */
-    public function Close();
-
-    /**
-     * descHere
-     * @param string $SessionId
-     */
-    public function Delete($SessionId);
-
-    /**
-     * descHere
-     * @param string $SavePath
-     * @param string $Name
-     */
-    public function Open($SavePath, $Name);
-
-    /**
-     * descHere
-     * @param string $MaxLifeTime
-     */
-    public function Purge($MaxLifeTime);
-
-    /**
-     * descHere
-     * @param string $SessionId
-     * @return string
-     */
-    public function Read($SessionId);
-
-    /**
-     * descHere
-     * @param string $SessionId
-     * @param string $SessionData
-     */
-    public function Write($SessionId, $SessionData);
-
 }
 
 /**
@@ -623,182 +630,6 @@ class THttpSession extends TAbstractMap {
         if ($AutoStart) {
             $this->Open();
         }
-    }
-
-    /**
-     * (non-PHPdoc)
-     * @see TAbstractCollection::Destroy()
-     */
-    public function Destroy() {
-        $this->Close();
-        parent::Destroy();
-    }
-
-    /**
-     * descHere
-     */
-    public function Close() {
-        if (session_id() !== '') {
-            session_write_close();
-        }
-    }
-
-    /**
-     * descHere
-     */
-    public function Clear() {
-        session_unset();
-    }
-
-    /**
-     * descHere
-     * @param K $Key
-     * @return boolean
-     */
-    protected function DoContainsKey($Key) {
-        /** @noinspection PhpIllegalArrayKeyTypeInspection */
-        return isset($_SESSION[$Key]);
-    }
-
-    /**
-     * descHere
-     * @param K $Key
-     */
-    protected function DoDelete($Key) {
-        /** @noinspection PhpIllegalArrayKeyTypeInspection */
-        unset($_SESSION[$Key]);
-    }
-
-    /**
-     * descHere
-     * @param K $Key
-     * @return V
-     */
-    protected function DoGet($Key) {
-        /** @noinspection PhpIllegalArrayKeyTypeInspection */
-        return $_SESSION[$Key];
-    }
-
-    /**
-     * descHere
-     * @param K $Key
-     * @param V $Value
-     */
-    protected function DoPut($Key, $Value) {
-        /** @noinspection PhpIllegalArrayKeyTypeInspection */
-        $_SESSION[$Key] = $Value;
-    }
-
-    /**
-     * descHere
-     * @return string
-     */
-    public function getCookieDomain() {
-        return session_get_cookie_params()['domain'];
-    }
-
-    /**
-     * descHere
-     * @return boolean
-     */
-    public function getCookieHttpOnly() {
-        return session_get_cookie_params()['httponly'];
-    }
-
-    /**
-     * descHere
-     * @return integer
-     */
-    public function getCookieLifeTime() {
-        return session_get_cookie_params()['lifetime'];
-    }
-
-    /**
-     * descHere
-     * @return TSessionCookieMode
-     */
-    public function getCookieMode() {
-        if (ini_get('session.use_cookies') === '0') {
-            return TSessionCookieMode::eNone();
-        }
-        elseif (ini_get('session.use_only_cookies') === '0') {
-            return TSessionCookieMode::eAllow();
-        }
-        else {
-            return TSessionCookieMode::eOnly();
-        }
-    }
-
-    /**
-     * descHere
-     * @return string
-     */
-    public function getCookiePath() {
-        return session_get_cookie_params()['path'];
-    }
-
-    /**
-     * descHere
-     * @return float
-     */
-    public function getGcProbability() {
-        return (float)(ini_get('session.gc_probability') / ini_get('session.gc_divisor') * 100);
-    }
-
-    /**
-     * descHere
-     * @return boolean
-     */
-    public function getIsStarted() {
-        return session_id() !== '';
-    }
-
-    /**
-     * descHere
-     * @return string
-     */
-    public function getSavePath() {
-        return session_save_path();
-    }
-
-    /**
-     * descHere
-     * @return string
-     */
-    public function getSessionId() {
-        return session_id();
-    }
-
-    /**
-     * descHere
-     * @return string
-     */
-    public function getSessionName() {
-        return session_name();
-    }
-
-    /**
-     * descHere
-     * @return \FrameworkDSW\Web\IHttpSessionStorage
-     */
-    public function getStorage() {
-        return $this->FStorage;
-    }
-
-    /**
-     * descHere
-     * @return integer
-     */
-    public function getTimeout() {
-        return (integer)ini_get('session.gc_maxlifetime');
-    }
-
-    /**
-     * descHere
-     * @return boolean
-     */
-    public function getUseTransparentSessionId() {
-        return ini_get('session.use_trans_sid') === '1';
     }
 
     /**
@@ -864,6 +695,135 @@ class THttpSession extends TAbstractMap {
         if (session_start() == false) {
             throw new ESessionException(sprintf('Session exception: session start failed.'));
         }
+    }
+
+    /**
+     * (non-PHPdoc)
+     * @see TAbstractCollection::Destroy()
+     */
+    public function Destroy() {
+        $this->Close();
+        parent::Destroy();
+    }
+
+    /**
+     * descHere
+     */
+    public function Close() {
+        if (session_id() !== '') {
+            session_write_close();
+        }
+    }
+
+    /**
+     * descHere
+     */
+    public function Clear() {
+        session_unset();
+    }
+
+    /**
+     * descHere
+     * @return string
+     */
+    public function getCookieDomain() {
+        return session_get_cookie_params()['domain'];
+    }
+
+    /**
+     * descHere
+     * @return boolean
+     */
+    public function getCookieHttpOnly() {
+        return session_get_cookie_params()['httponly'];
+    }
+
+    /**
+     * descHere
+     * @return integer
+     */
+    public function getCookieLifeTime() {
+        return session_get_cookie_params()['lifetime'];
+    }
+
+    /**
+     * descHere
+     * @return TSessionCookieMode
+     */
+    public function getCookieMode() {
+        if (ini_get('session.use_cookies') === '0') {
+            return TSessionCookieMode::eNone();
+        }
+        elseif (ini_get('session.use_only_cookies') === '0') {
+            return TSessionCookieMode::eAllow();
+        }
+        else {
+            return TSessionCookieMode::eOnly();
+        }
+    }
+
+    /**
+     * descHere
+     * @return string
+     */
+    public function getCookiePath() {
+        return session_get_cookie_params()['path'];
+    }
+
+    /**
+     * descHere
+     * @return float
+     */
+    public function getGcProbability() {
+        return (float)(ini_get('session.gc_probability') / ini_get('session.gc_divisor') * 100);
+    }
+
+    /**
+     * descHere
+     * @return string
+     */
+    public function getSavePath() {
+        return session_save_path();
+    }
+
+    /**
+     * descHere
+     * @return string
+     */
+    public function getSessionId() {
+        return session_id();
+    }
+
+    /**
+     * descHere
+     * @return string
+     */
+    public function getSessionName() {
+        return session_name();
+    }
+
+    /**
+     * descHere
+     * @return \FrameworkDSW\Web\IHttpSessionStorage
+     */
+    public function getStorage() {
+        return $this->FStorage;
+    }
+
+    /**
+     * descHere
+     * @return integer
+     */
+    public function getTimeout() {
+        return (integer)ini_get('session.gc_maxlifetime');
+    }
+
+    /**
+     * descHere
+     * @return boolean
+     */
+    public function getUseTransparentSessionId() {
+        return ini_get('session.use_trans_sid') === '1';
     }
 
     /**
@@ -1020,6 +980,14 @@ class THttpSession extends TAbstractMap {
 
     /**
      * descHere
+     * @return boolean
+     */
+    public function getIsStarted() {
+        return session_id() !== '';
+    }
+
+    /**
+     * descHere
      * @param integer $Value
      */
     public function setTimeout($Value) {
@@ -1034,6 +1002,45 @@ class THttpSession extends TAbstractMap {
     public function setUseTransparentSessionId($Value) {
         TType::Bool($Value);
         ini_set('session.use_trans_sid', $Value);
+    }
+
+    /**
+     * descHere
+     * @param K $Key
+     * @return boolean
+     */
+    protected function DoContainsKey($Key) {
+        /** @noinspection PhpIllegalArrayKeyTypeInspection */
+        return isset($_SESSION[$Key]);
+    }
+
+    /**
+     * descHere
+     * @param K $Key
+     */
+    protected function DoDelete($Key) {
+        /** @noinspection PhpIllegalArrayKeyTypeInspection */
+        unset($_SESSION[$Key]);
+    }
+
+    /**
+     * descHere
+     * @param K $Key
+     * @return V
+     */
+    protected function DoGet($Key) {
+        /** @noinspection PhpIllegalArrayKeyTypeInspection */
+        return $_SESSION[$Key];
+    }
+
+    /**
+     * descHere
+     * @param K $Key
+     * @param V $Value
+     */
+    protected function DoPut($Key, $Value) {
+        /** @noinspection PhpIllegalArrayKeyTypeInspection */
+        $_SESSION[$Key] = $Value;
     }
 
 }
@@ -1116,90 +1123,12 @@ class THttpRequest extends TObject {
     private $FScriptFile = '';
 
     /**
-     *
-     * @return \FrameworkDSW\Web\THttpCookie
-     */
-    protected function CreateCsrfCookie() {
-        $mCsrfTokenCookie        = new THttpCookie();
-        $mCsrfTokenCookie->Value = sha1(uniqid((string)mt_rand(), true));
-        $this->getCookies()->Put($this->FCsrfTokenName, $mCsrfTokenCookie);
-        $this->FCsrfToken = $mCsrfTokenCookie->Value;
-
-        return $mCsrfTokenCookie;
-    }
-
-    /**
-     *
-     * @param string $PathInfo
-     * @return string
-     */
-    protected function DecodePathInfo($PathInfo) {
-        $PathInfo = urldecode($PathInfo);
-
-        // is it UTF-8?
-        // http://w3.org/International/questions/qa-forms-utf-8.html
-        if (preg_match('%^(?:
-       [\x09\x0A\x0D\x20-\x7E]            # ASCII
-     | [\xC2-\xDF][\x80-\xBF]             # non-overlong 2-byte
-     | \xE0[\xA0-\xBF][\x80-\xBF]         # excluding overlongs
-     | [\xE1-\xEC\xEE\xEF][\x80-\xBF]{2}  # straight 3-byte
-     | \xED[\x80-\x9F][\x80-\xBF]         # excluding surrogates
-     | \xF0[\x90-\xBF][\x80-\xBF]{2}      # planes 1-3
-     | [\xF1-\xF3][\x80-\xBF]{3}          # planes 4-15
-     | \xF4[\x80-\x8F][\x80-\xBF]{2}      # plane 16
-    )*$%xs', $PathInfo)
-        ) {
-            return $PathInfo;
-        }
-        else {
-            return utf8_encode($PathInfo);
-        }
-    }
-
-    /**
-     */
-    protected function NormalizeRequest() {
-        if (function_exists('get_magic_quotes_gpc') && get_magic_quotes_gpc() === 1) {
-            if (isset($_GET)) {
-                $_GET = array_map('stripslashes', $_GET);
-            }
-            if (isset($_POST)) {
-                $_POST = array_map('stripslashes', $_POST);
-            }
-            if (isset($_REQUEST)) {
-                $_REQUEST = array_map('stripslashes', $_REQUEST);
-            }
-            if (isset($_COOKIE)) {
-                $_COOKIE = array_map('stripslashes', $_COOKIE);
-            }
-        }
-    }
-
-    /**
      * descHere
      *
      * @return string
      */
     public function getAcceptTypes() {
         return (string)$_SERVER['HTTP_ACCEPT'];
-    }
-
-    /**
-     * descHere
-     *
-     * @param boolean $Absolute
-     * @return string
-     */
-    public function GetBaseUrl($Absolute = false) {
-        if ($this->FBaseUrl == '') {
-            $this->FBaseUrl = rtrim(dirname($this->getScriptUrl()), '/\\');
-        }
-        if ($Absolute) {
-            return $this->getHostInfo() . $this->FBaseUrl;
-        }
-        else {
-            return $this->FBaseUrl;
-        }
     }
 
     /**
@@ -1238,19 +1167,6 @@ class THttpRequest extends TObject {
     /**
      * descHere
      *
-     * @return \FrameworkDSW\Web\THttpCookies
-     */
-    public function getCookies() {
-        if ($this->FCookies == null) {
-            $this->FCookies = new THttpCookies($this);
-        }
-
-        return $this->FCookies;
-    }
-
-    /**
-     * descHere
-     *
      * @return string
      */
     public function getCsrfToken() {
@@ -1263,6 +1179,32 @@ class THttpRequest extends TObject {
         }
 
         return $this->FCsrfToken;
+    }
+
+    /**
+     * descHere
+     *
+     * @return \FrameworkDSW\Web\THttpCookies
+     */
+    public function getCookies() {
+        if ($this->FCookies == null) {
+            $this->FCookies = new THttpCookies($this);
+        }
+
+        return $this->FCookies;
+    }
+
+    /**
+     *
+     * @return \FrameworkDSW\Web\THttpCookie
+     */
+    protected function CreateCsrfCookie() {
+        $mCsrfTokenCookie        = new THttpCookie();
+        $mCsrfTokenCookie->Value = sha1(uniqid((string)mt_rand(), true));
+        $this->getCookies()->Put($this->FCsrfTokenName, $mCsrfTokenCookie);
+        $this->FCsrfToken = $mCsrfTokenCookie->Value;
+
+        return $mCsrfTokenCookie;
     }
 
     /**
@@ -1296,6 +1238,57 @@ class THttpRequest extends TObject {
     }
 
     /**
+     * @return boolean
+     */
+    public function getIsDeleteRequestViaPostRequest() {
+        return isset($_POST['_method']) && strtoupper($_POST['_method']) == 'DELETE';
+    }
+
+    /**
+     *
+     * @param string $Name
+     * @throws ENoSuchRequestParameter
+     * @return string
+     */
+    public function GetPost($Name) {
+        TType::String($Name);
+
+        if (isset($_POST[$Name])) {
+            return (string)$_POST[$Name];
+        }
+        else {
+            throw new ENoSuchRequestParameter(sprintf('No such POST parameter: %s.', $Name), null, $Name, THttpMethod::Post());
+        }
+    }
+
+    /**
+     * descHere
+     *
+     * @return boolean
+     */
+    public function getIsDeleteRequest() {
+        return (isset($_SERVER['REQUEST_METHOD']) && (strtoupper($_SERVER['REQUEST_METHOD']) == 'DELETE')) || $this->getIsDeleteRequestViaPostRequest();
+    }
+
+    /**
+     * @return string[]
+     */
+    protected function getRestParameters() {
+        if ($this->FRestParameters == []) {
+            $mResult = [];
+            if (function_exists('mb_parse_str')) {
+                mb_parse_str(file_get_contents('php://input'), $mResult);
+            }
+            else {
+                parse_str(file_get_contents('php://input'), $mResult);
+            }
+            $this->FRestParameters = $mResult;
+        }
+
+        return $this->FRestParameters;
+    }
+
+    /**
      * descHere
      *
      * @param string $Name
@@ -1326,29 +1319,18 @@ class THttpRequest extends TObject {
     }
 
     /**
-     * @return string[]
+     * @return boolean
      */
-    protected function getRestParameters() {
-        if ($this->FRestParameters == []) {
-            $mResult = [];
-            if (function_exists('mb_parse_str')) {
-                mb_parse_str(file_get_contents('php://input'), $mResult);
-            }
-            else {
-                parse_str(file_get_contents('php://input'), $mResult);
-            }
-            $this->FRestParameters = $mResult;
-        }
-
-        return $this->FRestParameters;
+    public function getIsPutRequestViaPostRequest() {
+        return isset($_POST['_method']) && strtoupper($_POST['_method']) == 'PUT';
     }
 
     /**
      *
      * @return boolean
      */
-    public function getIsSecureConnection() {
-        return isset($_SERVER['HTTPS']) && !strcasecmp($_SERVER['HTTPS'], 'on');
+    public function getIsPutRequest() {
+        return isset($_SERVER['REQUEST_METHOD']) && (strtoupper($_SERVER['REQUEST_METHOD'] == 'PUT'));
     }
 
     /**
@@ -1406,132 +1388,66 @@ class THttpRequest extends TObject {
     }
 
     /**
-     * descHere
      *
+     * @throws EDetermineRequestUriFailed
      * @return string
      */
-    public function getHostInfo() {
-        if ($this->FHostInfo == '') {
-            $mIsSecureConnection = $this->getIsSecureConnection();
-            if ($mIsSecureConnection) {
-                $mSchema = 'https';
+    public function getRequestUri() {
+        if ($this->FRequestUri == '') {
+            if (isset($_SERVER['HTTP_X_REWRITE_URL'])) {
+                $this->FRequestUri = $_SERVER['HTTP_X_REWRITE_URL'];
             }
-            else {
-                $mSchema = 'http';
-            }
-            if (isset($_SERVER['HTTP_HOST'])) {
-                $this->FHostInfo = "{$mSchema}://{$_SERVER['HTTP_HOST']}";
-            }
-            else {
-                $this->FHostInfo = "{$mSchema}://{$_SERVER['SERVER_NAME']}";
-                $mPort           = $mIsSecureConnection ? $this->getSecurePort() : $this->getPort();
-                if (($mPort !== 80 && !$mIsSecureConnection) || ($mPort !== 443 && $mIsSecureConnection)) {
-                    $this->FHostInfo .= ":{$mPort}";
+            elseif (isset($_SERVER['REQUEST_URI'])) {
+                $this->FRequestUri = $_SERVER['REQUEST_URI'];
+                if (!empty($_SERVER['HTTP_HOST'])) {
+                    if (strpos($this->FRequestUri, $_SERVER['HTTP_HOST']) !== false) {
+                        $this->FRequestUri = preg_replace('/^\w+:\/\/[^\/]+/', '', $this->FRequestUri);
+                    }
+                }
+                else {
+                    $this->FRequestUri = preg_replace('/^(http|https):\/\/[^\/]+/i', '', $this->FRequestUri);
                 }
             }
+            elseif (isset($_SERVER['ORIG_PATH_INFO'])) {
+                $this->FRequestUri = $_SERVER['ORIG_PATH_INFO'];
+                if (!empty($_SERVER['QUERY_STRING'])) {
+                    $this->FRequestUri .= "?{$_SERVER['QUERY_STRING']}";
+                }
+            }
+            else {
+                throw new EDetermineRequestUriFailed(sprintf('Determine request URI failed.'));
+            }
         }
 
-        return $this->FHostInfo;
+        return $this->FRequestUri;
     }
 
     /**
      *
-     * @return integer
+     * @param string $PathInfo
+     * @return string
      */
-    public function getPort() {
-        if ($this->FPort == -1) {
-            $this->FPort = !$this->getIsSecureConnection() && isset($_SERVER['SERVER_PORT']) ? $_SERVER['SERVER_PORT'] : 80;
+    protected function DecodePathInfo($PathInfo) {
+        $PathInfo = urldecode($PathInfo);
+
+        // is it UTF-8?
+        // http://w3.org/International/questions/qa-forms-utf-8.html
+        if (preg_match('%^(?:
+       [\x09\x0A\x0D\x20-\x7E]            # ASCII
+     | [\xC2-\xDF][\x80-\xBF]             # non-overlong 2-byte
+     | \xE0[\xA0-\xBF][\x80-\xBF]         # excluding overlongs
+     | [\xE1-\xEC\xEE\xEF][\x80-\xBF]{2}  # straight 3-byte
+     | \xED[\x80-\x9F][\x80-\xBF]         # excluding surrogates
+     | \xF0[\x90-\xBF][\x80-\xBF]{2}      # planes 1-3
+     | [\xF1-\xF3][\x80-\xBF]{3}          # planes 4-15
+     | \xF4[\x80-\x8F][\x80-\xBF]{2}      # plane 16
+    )*$%xs', $PathInfo)
+        ) {
+            return $PathInfo;
         }
-
-        return $this->FPort;
-    }
-
-    /**
-     *
-     * @param integer $Value
-     * @throws EInvalidParameter
-     */
-    public function setPort($Value) {
-        TType::Int($Value);
-
-        if ($Value < 0 || $Value > 65535) {
-            throw new EInvalidParameter(sprintf('Invalid port number: port number should between 1 and 65535, but %s found.', $Value));
+        else {
+            return utf8_encode($PathInfo);
         }
-        $this->FPort = $Value;
-    }
-
-    /**
-     *
-     * @return integer
-     */
-    public function getSecurePort() {
-        if ($this->FSecurePort == -1) {
-            $this->FSecurePort = $this->getIsSecureConnection() && isset($_SERVER['SERVER_PORT']) ? $_SERVER['SERVER_PORT'] : 443;
-        }
-
-        return $this->FSecurePort;
-    }
-
-    /**
-     *
-     * @param integer $Value
-     * @throws EInvalidParameter
-     */
-    public function setSecurePort($Value) {
-        TType::Int($Value);
-
-        if ($Value < 0 || $Value > 65535) {
-            throw new EInvalidParameter(sprintf('Invalid secure port number: port number should between 1 and 65535, but %s found.', $Value));
-        }
-        $this->FSecurePort = $Value;
-    }
-
-    /**
-     * descHere
-     *
-     * @return boolean
-     */
-    public function getIsAjaxRequest() {
-        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest';
-    }
-
-    /**
-     * descHere
-     *
-     * @return boolean
-     */
-    public function getIsDeleteRequest() {
-        return (isset($_SERVER['REQUEST_METHOD']) && (strtoupper($_SERVER['REQUEST_METHOD']) == 'DELETE')) || $this->getIsDeleteRequestViaPostRequest();
-    }
-
-    /**
-     * @return boolean
-     */
-    public function getIsDeleteRequestViaPostRequest() {
-        return isset($_POST['_method']) && strtoupper($_POST['_method']) == 'DELETE';
-    }
-
-    /**
-     *
-     * @return boolean
-     */
-    public function getIsPutRequest() {
-        return isset($_SERVER['REQUEST_METHOD']) && (strtoupper($_SERVER['REQUEST_METHOD'] == 'PUT'));
-    }
-
-    /**
-     * @return boolean
-     */
-    public function getIsPutRequestViaPostRequest() {
-        return isset($_POST['_method']) && strtoupper($_POST['_method']) == 'PUT';
-    }
-
-    /**
-     *
-     * @return boolean
-     */
-    public function getIsPostRequest() {
-        return isset($_SERVER['REQUEST_METHOD']) && (strtoupper($_SERVER['REQUEST_METHOD'] == 'POST'));
     }
 
     /**
@@ -1567,6 +1483,122 @@ class THttpRequest extends TObject {
 
     /**
      * descHere
+     *
+     * @param boolean $Absolute
+     * @return string
+     */
+    public function GetBaseUrl($Absolute = false) {
+        if ($this->FBaseUrl == '') {
+            $this->FBaseUrl = rtrim(dirname($this->getScriptUrl()), '/\\');
+        }
+        if ($Absolute) {
+            return $this->getHostInfo() . $this->FBaseUrl;
+        }
+        else {
+            return $this->FBaseUrl;
+        }
+    }
+
+    /**
+     * descHere
+     *
+     * @return string
+     */
+    public function getHostInfo() {
+        if ($this->FHostInfo == '') {
+            $mIsSecureConnection = $this->getIsSecureConnection();
+            if ($mIsSecureConnection) {
+                $mSchema = 'https';
+            }
+            else {
+                $mSchema = 'http';
+            }
+            if (isset($_SERVER['HTTP_HOST'])) {
+                $this->FHostInfo = "{$mSchema}://{$_SERVER['HTTP_HOST']}";
+            }
+            else {
+                $this->FHostInfo = "{$mSchema}://{$_SERVER['SERVER_NAME']}";
+                $mPort           = $mIsSecureConnection ? $this->getSecurePort() : $this->getPort();
+                if (($mPort !== 80 && !$mIsSecureConnection) || ($mPort !== 443 && $mIsSecureConnection)) {
+                    $this->FHostInfo .= ":{$mPort}";
+                }
+            }
+        }
+
+        return $this->FHostInfo;
+    }
+
+    /**
+     *
+     * @return boolean
+     */
+    public function getIsSecureConnection() {
+        return isset($_SERVER['HTTPS']) && !strcasecmp($_SERVER['HTTPS'], 'on');
+    }
+
+    /**
+     *
+     * @return integer
+     */
+    public function getSecurePort() {
+        if ($this->FSecurePort == -1) {
+            $this->FSecurePort = $this->getIsSecureConnection() && isset($_SERVER['SERVER_PORT']) ? $_SERVER['SERVER_PORT'] : 443;
+        }
+
+        return $this->FSecurePort;
+    }
+
+    /**
+     *
+     * @return integer
+     */
+    public function getPort() {
+        if ($this->FPort == -1) {
+            $this->FPort = !$this->getIsSecureConnection() && isset($_SERVER['SERVER_PORT']) ? $_SERVER['SERVER_PORT'] : 80;
+        }
+
+        return $this->FPort;
+    }
+
+    /**
+     *
+     * @param integer $Value
+     * @throws EInvalidParameter
+     */
+    public function setPort($Value) {
+        TType::Int($Value);
+
+        if ($Value < 0 || $Value > 65535) {
+            throw new EInvalidParameter(sprintf('Invalid port number: port number should between 1 and 65535, but %s found.', $Value));
+        }
+        $this->FPort = $Value;
+    }
+
+    /**
+     *
+     * @param integer $Value
+     * @throws EInvalidParameter
+     */
+    public function setSecurePort($Value) {
+        TType::Int($Value);
+
+        if ($Value < 0 || $Value > 65535) {
+            throw new EInvalidParameter(sprintf('Invalid secure port number: port number should between 1 and 65535, but %s found.', $Value));
+        }
+        $this->FSecurePort = $Value;
+    }
+
+    /**
+     * descHere
+     *
+     * @return boolean
+     */
+    public function getIsAjaxRequest() {
+        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest';
+    }
+
+    /**
+     * descHere
      */
     public function ValidateCsrfToken() {
         $mValid = false;
@@ -1579,6 +1611,14 @@ class THttpRequest extends TObject {
         if (!$mValid) {
             throw new EHttpException(400);
         }
+    }
+
+    /**
+     *
+     * @return boolean
+     */
+    public function getIsPostRequest() {
+        return isset($_SERVER['REQUEST_METHOD']) && (strtoupper($_SERVER['REQUEST_METHOD'] == 'POST'));
     }
 
     /**
@@ -1632,58 +1672,6 @@ class THttpRequest extends TObject {
         if ($Terminate) {
             // TODO how to deal with terminating.
             ob_end_flush();
-        }
-    }
-
-    /**
-     *
-     * @throws EDetermineRequestUriFailed
-     * @return string
-     */
-    public function getRequestUri() {
-        if ($this->FRequestUri == '') {
-            if (isset($_SERVER['HTTP_X_REWRITE_URL'])) {
-                $this->FRequestUri = $_SERVER['HTTP_X_REWRITE_URL'];
-            }
-            elseif (isset($_SERVER['REQUEST_URI'])) {
-                $this->FRequestUri = $_SERVER['REQUEST_URI'];
-                if (!empty($_SERVER['HTTP_HOST'])) {
-                    if (strpos($this->FRequestUri, $_SERVER['HTTP_HOST']) !== false) {
-                        $this->FRequestUri = preg_replace('/^\w+:\/\/[^\/]+/', '', $this->FRequestUri);
-                    }
-                }
-                else {
-                    $this->FRequestUri = preg_replace('/^(http|https):\/\/[^\/]+/i', '', $this->FRequestUri);
-                }
-            }
-            elseif (isset($_SERVER['ORIG_PATH_INFO'])) {
-                $this->FRequestUri = $_SERVER['ORIG_PATH_INFO'];
-                if (!empty($_SERVER['QUERY_STRING'])) {
-                    $this->FRequestUri .= "?{$_SERVER['QUERY_STRING']}";
-                }
-            }
-            else {
-                throw new EDetermineRequestUriFailed(sprintf('Determine request URI failed.'));
-            }
-        }
-
-        return $this->FRequestUri;
-    }
-
-    /**
-     *
-     * @param string $Name
-     * @throws ENoSuchRequestParameter
-     * @return string
-     */
-    public function GetPost($Name) {
-        TType::String($Name);
-
-        if (isset($_POST[$Name])) {
-            return (string)$_POST[$Name];
-        }
-        else {
-            throw new ENoSuchRequestParameter(sprintf('No such POST parameter: %s.', $Name), null, $Name, THttpMethod::Post());
         }
     }
 
@@ -1839,6 +1827,25 @@ class THttpRequest extends TObject {
     public function setScriptUrl($Value) {
         TType::String($Value);
         $this->FScriptUrl = '/' . trim($Value, '/');
+    }
+
+    /**
+     */
+    protected function NormalizeRequest() {
+        if (function_exists('get_magic_quotes_gpc') && get_magic_quotes_gpc() === 1) {
+            if (isset($_GET)) {
+                $_GET = array_map('stripslashes', $_GET);
+            }
+            if (isset($_POST)) {
+                $_POST = array_map('stripslashes', $_POST);
+            }
+            if (isset($_REQUEST)) {
+                $_REQUEST = array_map('stripslashes', $_REQUEST);
+            }
+            if (isset($_COOKIE)) {
+                $_COOKIE = array_map('stripslashes', $_COOKIE);
+            }
+        }
     }
 }
 
@@ -2015,6 +2022,118 @@ class TUrlRouter extends TObject implements IUrlRouter {
     private $FRequest = null;
 
     /**
+     * descHere
+     *
+     * @param \FrameworkDSW\Web\THttpRequest $HttpRequest
+     */
+    public function __construct($HttpRequest) {
+        parent::__construct();
+
+        TType::Object($HttpRequest, THttpRequest::class);
+
+        $this->FUrlMode = TUrlMode::ePath();
+
+        TLinkedList::PrepareGeneric(['T' => IUrlRouteRule::class]);
+        $this->FRules   = new TLinkedList(true);
+        $this->FRequest = $HttpRequest;
+    }
+
+    /**
+     * descHere
+     */
+    public function Destroy() {
+        Framework::Free($this->FRules);
+
+        parent::Destroy();
+    }
+
+    /**
+     * descHere
+     *
+     * @param \FrameworkDSW\Web\IUrlRouteRule $Rule
+     * @param boolean $Append
+     */
+    public function AddRule($Rule, $Append = true) {
+        TType::Object($Rule, IUrlRouteRule::class);
+        TType::Bool($Append);
+
+        if ($Append) {
+            $this->FRules[] = $Rule;
+        }
+        else {
+            $this->FRules->Insert(0, $Rule);
+        }
+    }
+
+    /**
+     * descHere
+     *
+     * @param string $Route
+     * @param \FrameworkDSW\Containers\IMap $Parameters <K: string, V: string>
+     * @param string $Ampersand
+     * @return string
+     */
+    public function CreateUrl($Route, $Parameters = null, $Ampersand = '&') {
+        TType::String($Route);
+        TType::Object($Parameters, [IMap::class => ['K' => Framework::String, 'V' => Framework::String]]);
+        TType::String($Ampersand);
+
+        TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String]);
+        $mParameters = new TMap();
+        if ($Parameters != null) {
+            $mParameters->PutAll($Parameters);
+        }
+
+        if ($mParameters->ContainsKey($this->FRouteVariableName)) {
+            $mParameters->Delete($this->FRouteVariableName);
+        }
+
+        if ($mParameters->ContainsKey('#')) {
+            $mAnchor = "#{$Parameters['#']}";
+            $mParameters->Delete('#');
+        }
+        else {
+            $mAnchor = '';
+        }
+        $Route = trim($Route, '/');
+        /** @var IUrlRouteRule $mRule */
+        foreach ($this->FRules as $mRule) {
+            $mUrl = $mRule->CreateUrl($this, $Route, $Parameters, $Ampersand);
+            if ($mUrl != '') {
+                if ($mRule->getHasHostInfo()) {
+                    return $mUrl == '/' ? "/{$mAnchor}" : "{$mUrl}{$mAnchor}";
+                }
+                else {
+                    return $this->getBaseUrl() . "/{$mUrl}{$mAnchor}";
+                }
+            }
+        }
+
+        $mResult = $this->CreateDefaultUrl($Route, $mParameters, $Ampersand) . $mAnchor;
+        Framework::Free($mParameters);
+
+        return $mResult;
+    }
+
+    /**
+     * descHere
+     *
+     * @return string
+     */
+    public function getBaseUrl() {
+        if ($this->FBaseUrl == '') {
+            if ($this->FShowScriptName) {
+                $this->FBaseUrl = $this->FRequest->getScriptUrl();
+            }
+            else {
+                $this->FBaseUrl = $this->FRequest->GetBaseUrl();
+            }
+        }
+
+        return $this->FBaseUrl;
+    }
+
+    /**
      *
      * @param string $Route
      * @param \FrameworkDSW\Containers\IMap $Parameters <K: string, V: string>
@@ -2072,50 +2191,6 @@ class TUrlRouter extends TObject implements IUrlRouter {
     /**
      * descHere
      *
-     * @param \FrameworkDSW\Web\THttpRequest $HttpRequest
-     */
-    public function __construct($HttpRequest) {
-        parent::__construct();
-
-        TType::Object($HttpRequest, THttpRequest::class);
-
-        $this->FUrlMode = TUrlMode::ePath();
-
-        TLinkedList::PrepareGeneric(['T' => IUrlRouteRule::class]);
-        $this->FRules   = new TLinkedList(true);
-        $this->FRequest = $HttpRequest;
-    }
-
-    /**
-     * descHere
-     */
-    public function Destroy() {
-        Framework::Free($this->FRules);
-
-        parent::Destroy();
-    }
-
-    /**
-     * descHere
-     *
-     * @param \FrameworkDSW\Web\IUrlRouteRule $Rule
-     * @param boolean $Append
-     */
-    public function AddRule($Rule, $Append = true) {
-        TType::Object($Rule, IUrlRouteRule::class);
-        TType::Bool($Append);
-
-        if ($Append) {
-            $this->FRules[] = $Rule;
-        }
-        else {
-            $this->FRules->Insert(0, $Rule);
-        }
-    }
-
-    /**
-     * descHere
-     *
      * @param \FrameworkDSW\Containers\IMap $Parameters <K: string, V: string>
      * @param string $Equal
      * @param string $Ampersand
@@ -2137,51 +2212,28 @@ class TUrlRouter extends TObject implements IUrlRouter {
     /**
      * descHere
      *
-     * @param string $Route
-     * @param \FrameworkDSW\Containers\IMap $Parameters <K: string, V: string>
-     * @param string $Ampersand
+     * @return \FrameworkDSW\Web\TUrlMode
+     */
+    public function getUrlMode() {
+        return $this->FUrlMode;
+    }
+
+    /**
+     * descHere
+     *
      * @return string
      */
-    public function CreateUrl($Route, $Parameters = null, $Ampersand = '&') {
-        TType::String($Route);
-        TType::Object($Parameters, [IMap::class => ['K' => Framework::String, 'V' => Framework::String]]);
-        TType::String($Ampersand);
+    public function getUrlSuffix() {
+        return $this->FSuffix;
+    }
 
-        TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String]);
-        $mParameters = new TMap();
-        if ($Parameters != null) {
-            $mParameters->PutAll($Parameters);
-        }
-
-        if ($mParameters->ContainsKey($this->FRouteVariableName)) {
-            $mParameters->Delete($this->FRouteVariableName);
-        }
-
-        if ($mParameters->ContainsKey('#')) {
-            $mAnchor = "#{$Parameters['#']}";
-            $mParameters->Delete('#');
-        }
-        else {
-            $mAnchor = '';
-        }
-        $Route = trim($Route, '/');
-        /** @var IUrlRouteRule $mRule */
-        foreach ($this->FRules as $mRule) {
-            $mUrl = $mRule->CreateUrl($this, $Route, $Parameters, $Ampersand);
-            if ($mUrl != '') {
-                if ($mRule->getHasHostInfo()) {
-                    return $mUrl == '/' ? "/{$mAnchor}" : "{$mUrl}{$mAnchor}";
-                }
-                else {
-                    return $this->getBaseUrl() . "/{$mUrl}{$mAnchor}";
-                }
-            }
-        }
-
-        $mResult = $this->CreateDefaultUrl($Route, $mParameters, $Ampersand) . $mAnchor;
-        Framework::Free($mParameters);
-
-        return $mResult;
+    /**
+     * descHere
+     *
+     * @return boolean
+     */
+    public function getShowScriptName() {
+        return $this->FShowScriptName;
     }
 
     /**
@@ -2191,24 +2243,6 @@ class TUrlRouter extends TObject implements IUrlRouter {
      */
     public function getAppendParameters() {
         return $this->FAppendParameters;
-    }
-
-    /**
-     * descHere
-     *
-     * @return string
-     */
-    public function getBaseUrl() {
-        if ($this->FBaseUrl == '') {
-            if ($this->FShowScriptName) {
-                $this->FBaseUrl = $this->FRequest->getScriptUrl();
-            }
-            else {
-                $this->FBaseUrl = $this->FRequest->GetBaseUrl();
-            }
-        }
-
-        return $this->FBaseUrl;
     }
 
     /**
@@ -2246,33 +2280,6 @@ class TUrlRouter extends TObject implements IUrlRouter {
      */
     public function getRules() {
         return $this->FRules;
-    }
-
-    /**
-     * descHere
-     *
-     * @return boolean
-     */
-    public function getShowScriptName() {
-        return $this->FShowScriptName;
-    }
-
-    /**
-     * descHere
-     *
-     * @return \FrameworkDSW\Web\TUrlMode
-     */
-    public function getUrlMode() {
-        return $this->FUrlMode;
-    }
-
-    /**
-     * descHere
-     *
-     * @return string
-     */
-    public function getUrlSuffix() {
-        return $this->FSuffix;
     }
 
     /**
@@ -3193,5 +3200,114 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
     public function setVerb($Value) {
         TType::Arr($Value);
         $this->FVerb = $Value;
+    }
+}
+
+/**
+ * Class TWebApplication
+ * @package FrameworkDSW\Web
+ */
+class TWebApplication extends TComponent implements IApplication {
+
+    /**
+     * @var \FrameworkDSW\Controller\TControllerManager
+     */
+    private $FControllerManager = null;
+    /**
+     * @var \FrameworkDSW\Web\TUrlRouter
+     */
+    private $FRouter = null;
+    /**
+     * @var \FrameworkDSW\Web\THttpRequest
+     */
+    private $FRequest = null;
+    /**
+     * @var \FrameworkDSW\System\IInterface[]
+     */
+    private $FControllers = [];
+
+    /**
+     * @param \FrameworkDSW\CoreClasses\TComponent $Owner
+     */
+    public function __construct($Owner = null) {
+        parent::__construct($Owner);
+        TType::Object($Owner, TComponent::class);
+
+        $this->FControllerManager = new TControllerManager();
+        $this->FRequest           = new THttpRequest();
+        $this->FRouter            = new TUrlRouter($this->FRequest);
+    }
+
+    /**
+     * @return \FrameworkDSW\Controller\IControllerManager
+     */
+    public function getControllerManager() {
+        return $this->FControllerManager;
+    }
+
+    /**
+     * @return \FrameworkDSW\Web\THttpRequest
+     */
+    public function getHttpRequest() {
+        return $this->FRequest;
+    }
+
+    /**
+     * @return \FrameworkDSW\Web\TUrlRouter
+     */
+    public function getUrlRouter() {
+        return $this->FRouter;
+    }
+
+    /**
+     * Run
+     */
+    public function Run() {
+
+        //fixme config reading for rules. BEGIN
+        $mRouterRule = new TUrlRouteRule('T<controller>/<action>', '<controller>/<action>');
+        $this->FRouter->AddRule($mRouterRule);
+        //fixme config reading for rules. END
+
+        $this->FRouter->setUseStrictParsing(true);
+        $mPathInfo = $this->FRouter->ParseUrl();
+        list($mControllerName, $mActionName) = explode('/', $mPathInfo);
+        $this->FRouter->ParsePathInfo($mPathInfo);
+
+        //TODO config reading.
+
+        TClass::PrepareGeneric(['T' => $mControllerName]);
+        $mControllerClass     = new TClass();
+        $mController          = $mControllerClass->NewInstance([]);
+        $this->FControllers[] = $mController;
+        $mAction              = Framework::Delegate([$mController, $mActionName . 'Action'], TControllerAction::class);
+        $mModelBinder         = Framework::Delegate([$mController, $mActionName . 'ModelBinder'], TModelBinder::class);
+        $mViewBinder          = Framework::Delegate([$mController, $mActionName . 'ViewBinder'], TViewBinder::class);
+        /** @var TModelBinder $mModelBinder */
+        /** @var TControllerAction $mAction */
+        /** @var TViewBinder $mViewBinder */
+        $this->FControllerManager->RegisterModel($mAction, $mModelBinder);
+        $this->FControllerManager->RegisterView($mAction, $mViewBinder);
+        //...sub actions
+
+        $this->FControllerManager->Update($mAction);
+
+        $this->Quit();
+    }
+
+    /**
+     * Quit
+     */
+    public function Quit() {
+        Framework::Free($this->FControllerManager);
+        Framework::Free($this->FRouter);
+        Framework::Free($this->FRequest);
+
+        foreach ($this->FControllers as $mItem) {
+            Framework::Free($mItem);
+        }
+        //... free model
+        //... free view
+        //... and sub actions, models, views.
     }
 }

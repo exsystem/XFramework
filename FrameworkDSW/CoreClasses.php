@@ -421,7 +421,7 @@ abstract class TComponent extends TObject {
 
     /**
      *
-     * @param    \FrameworkDSW\CoreClasses\TComponent $Component
+     * @param \FrameworkDSW\CoreClasses\TComponent $Component
      */
     public function RemoveComponent($Component) {
         TType::Object($Component, TComponent::class);
