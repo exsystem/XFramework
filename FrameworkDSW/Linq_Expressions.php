@@ -11,6 +11,8 @@ use FrameworkDSW\Containers\IIteratorAggregate;
 use FrameworkDSW\Containers\IList;
 use FrameworkDSW\Containers\TList;
 use FrameworkDSW\Framework\Framework;
+use FrameworkDSW\Reflection\TClass;
+use FrameworkDSW\Reflection\TMethod;
 use FrameworkDSW\System\EInvalidParameter;
 use FrameworkDSW\System\TBoolean;
 use FrameworkDSW\System\TEnum;
@@ -455,16 +457,17 @@ abstract class TExpression extends TObject {
      * descHere
      *
      * @param \FrameworkDSW\Linq\Expressions\TExpression $Instance
-     * @param array $Method
+     * @param \FrameworkDSW\Reflection\TMethod $Method
      * @param \FrameworkDSW\Containers\IIteratorAggregate $Arguments <T: \FrameworkDSW\Linq\Expressions\TExpression>
-     * @param mixed $ReturnType
+     * @param \FrameworkDSW\Reflection\TClass $ReturnType <T: ?>
      * @return \FrameworkDSW\Linq\Expressions\TMethodCallExpression
      */
     public static function Call($Instance, $Method, $Arguments, $ReturnType = null) {
         TType::Object($Instance, TExpression::class);
-        TType::Arr($Method);
+        TType::Object($Method, TMethod::class);
         TType::Object($Arguments, [
             IIteratorAggregate::class => ['T' => TExpression::class]]);
+        TType::Object($ReturnType, [TClass::class => ['T' => null]]);
 
         TList::PrepareGeneric(['T' => TExpression::class]);
         $mArguments = new TList(5, true);
@@ -491,16 +494,17 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param $Test \FrameworkDSW\Linq\Expressions\TExpression
-     * @param $IfTrue \FrameworkDSW\Linq\Expressions\TExpression
-     * @param $IfFalse \FrameworkDSW\Linq\Expressions\TExpression
-     * @param $Type mixed
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $Test
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $IfTrue
+     * @param \FrameworkDSW\Linq\Expressions\TExpression $IfFalse
+     * @param \FrameworkDSW\Reflection\TClass $Type <T: ?>
      * @return \FrameworkDSW\Linq\Expressions\TConditionalExpression
      */
     public static function Condition($Test, $IfTrue, $IfFalse, $Type = null) {
         TType::Object($Test, TExpression::class);
         TType::Object($IfTrue, TExpression::class);
         TType::Object($IfFalse, TExpression::class);
+        TType::Object($Type, [TClass::class => ['T' => null]]);
 
         return new TConditionalExpression($Test, $IfTrue, $IfFalse, $Type);
     }
@@ -509,11 +513,12 @@ abstract class TExpression extends TObject {
      * descHere
      *
      * @param \FrameworkDSW\System\TObject $Value
-     * @param mixed $Type
+     * @param \FrameworkDSW\Reflection\TClass $Type <T: ?>
      * @return \FrameworkDSW\Linq\Expressions\TConstantExpression
      */
     public static function Constant($Value, $Type = null) {
         TType::Object($Value, TObject::class);
+        TType::Object($Type, [TClass::class => ['T' => null]]);
 
         return new TConstantExpression($Value, $Type);
     }
@@ -522,7 +527,7 @@ abstract class TExpression extends TObject {
      * descHere
      *
      * @param \FrameworkDSW\Linq\Expressions\TExpression $Expression
-     * @param mixed $Type
+     * @param \FrameworkDSW\Reflection\TClass $Type <T: ?>
      * @return \FrameworkDSW\Linq\Expressions\TUnaryExpression
      */
     public static function Convert($Expression, $Type) {
@@ -533,7 +538,7 @@ abstract class TExpression extends TObject {
      * descHere
      *
      * @param \FrameworkDSW\Linq\Expressions\TExpression $Expression
-     * @param mixed $Type
+     * @param \FrameworkDSW\Reflection\TClass $Type <T: ?>
      * @return \FrameworkDSW\Linq\Expressions\TUnaryExpression
      */
     public static function ConvertChecked($Expression, $Type) {
@@ -543,7 +548,7 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @param mixed $Type
+     * @param \FrameworkDSW\Reflection\TClass $Type <T: ?>
      * @return \FrameworkDSW\Linq\Expressions\TDefaultExpression
      */
     public static function DefaultValue($Type) {
@@ -639,7 +644,7 @@ abstract class TExpression extends TObject {
     /**
      * descHere
      *
-     * @return mixed
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
     public abstract function getType();
 
@@ -703,7 +708,7 @@ abstract class TExpression extends TObject {
      * @param \FrameworkDSW\Linq\Expressions\TExpression $Body
      * @param \FrameworkDSW\Containers\IList $Parameters <T: \FrameworkDSW\Linq\Expressions\TParameterExpression>
      * @param string $Name
-     * @param mixed $DelegateType
+     * @param \FrameworkDSW\Reflection\TClass $DelegateType <T: ?>
      * @return \FrameworkDSW\Linq\Expressions\TLambdaExpression
      */
     public static function Lambda($Body, $Parameters, $Name = '', /** @noinspection PhpUnusedParameterInspection */
@@ -776,7 +781,7 @@ abstract class TExpression extends TObject {
      *
      * @param $Expression \FrameworkDSW\Linq\Expressions\TExpression
      * @param string $MemberName
-     * @param mixed $Type
+     * @param \FrameworkDSW\Reflection\TClass $Type <T: ?>
      * @return \FrameworkDSW\Linq\Expressions\TMemberExpression
      */
     public static function MakeMember($Expression, $MemberName, $Type) {
@@ -788,7 +793,7 @@ abstract class TExpression extends TObject {
      *
      * @param \FrameworkDSW\Linq\Expressions\TExpressionType $ExpressionType
      * @param \FrameworkDSW\Linq\Expressions\TExpression $Operand
-     * @param mixed $Type
+     * @param \FrameworkDSW\Reflection\TClass $Type <T: ?>
      * @return \FrameworkDSW\Linq\Expressions\TUnaryExpression
      */
     public static function MakeUnary($ExpressionType, $Operand, $Type = null) {
@@ -944,7 +949,7 @@ abstract class TExpression extends TObject {
      * descHere
      *
      * @param string $Name
-     * @param mixed $Type
+     * @param \FrameworkDSW\Reflection\TClass $Type <T: ?>
      * @param boolean $IsByRef
      * @return \FrameworkDSW\Linq\Expressions\TParameterExpression
      */
@@ -1107,7 +1112,7 @@ abstract class TExpression extends TObject {
      * descHere
      *
      * @param \FrameworkDSW\Linq\Expressions\TExpression $Expression
-     * @param mixed $Type
+     * @param \FrameworkDSW\Reflection\TClass $Type <T: ?>
      * @return \FrameworkDSW\Linq\Expressions\TUnaryExpression
      */
     public static function TypeAs($Expression, $Type) {
@@ -1166,7 +1171,7 @@ final class TConstantExpression extends TExpression {
     private $FValue = null;
     /**
      *
-     * @var mixed
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
     private $FType = null;
 
@@ -1174,13 +1179,13 @@ final class TConstantExpression extends TExpression {
      * descHere
      *
      * @param \FrameworkDSW\System\TObject $Value
-     * @param mixed $Type
+     * @param \FrameworkDSW\Reflection\TClass $Type <T: ?>
      * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function __construct($Value, $Type = null) {
         parent::__construct();
 
-        if (($Type === null) && ($Value !== null)) {
+        if (($Type === null) && ($Value !== null)) { // fixme TYPE
             $this->FType = $Value->ObjectType();
         }
         elseif (($Value === null) || $Value->IsInstanceOf($Type)) {
@@ -1204,7 +1209,7 @@ final class TConstantExpression extends TExpression {
     /**
      * descHere
      *
-     * @return mixed
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
     public function getType() {
         return $this->FType;
@@ -1240,7 +1245,7 @@ final class TUnaryExpression extends TExpression {
     private $FOperand = null;
     /**
      *
-     * @var mixed
+     * @var \FrameworkDSW\Reflection\TClass <T: ?>
      */
     private $FType = null;
 
@@ -1249,13 +1254,14 @@ final class TUnaryExpression extends TExpression {
      *
      * @param \FrameworkDSW\Linq\Expressions\TExpressionType $ExpressionType
      * @param \FrameworkDSW\Linq\Expressions\TExpression $Operand
-     * @param mixed $Type
+     * @param \FrameworkDSW\Reflection\TClass $Type <T: ?>
      * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function __construct($ExpressionType, $Operand, $Type = null) {
         parent::__construct();
         TType::Object($ExpressionType, TExpressionType::class);
         TType::Object($Operand, TExpression::class);
+        TType::Object($Type, [TClass::class => ['T' => null]]);
 
         switch ($ExpressionType) {
             case TExpressionType::eArrayLength() :
@@ -1265,57 +1271,57 @@ final class TUnaryExpression extends TExpression {
             case TExpressionType::eQuote() :
             case TExpressionType::eUnaryPlus() :
                 if ($Type !== null) {
-                    throw new EInvalidParameter();
+                    throw new EInvalidParameter(sprintf('Invalid parameter: $Type should not be used for ArrayLength, Negate, NegateChecked, Not, Quote or UnaryPlus  operand, fix it using null.'));
                 }
                 break;
             case TExpressionType::eConvert() :
             case TExpressionType::eConvertChecked() :
             case TExpressionType::eTypeAs() :
                 if ($Type === null) {
-                    throw new EInvalidParameter();
+                    throw new EInvalidParameter(sprintf('Invalid parameter: $Type should not be null for Convert, ConvertChecked or TypeAs operand.'));
                 }
                 break;
             default :
-                throw new EInvalidParameter();
+                throw new EInvalidParameter(sprintf('Invalid parameter: Non-unary expression found.'));
                 break;
         }
         $mOperandType = $Operand->getType();
         switch ($ExpressionType) {
             case TExpressionType::eArrayLength() :
-                if ($mOperandType !== 'array') {
-                    throw new EInvalidParameter();
+                if (!$mOperandType->IsArray()) {
+                    throw new EInvalidParameter(sprintf('Invalid parameter: Operand type is not array for ArrayLength unary expression.'));
                 }
                 break;
             case TExpressionType::eNegate() :
             case TExpressionType::eNegateChecked() :
             case TExpressionType::eUnaryPlus() :
                 $mOperandType = $Operand->getType();
-                if (($mOperandType !== 'integer') || ($mOperandType !== 'float')) {
-                    throw new EInvalidParameter();
-                }
+            if (($mOperandType->getName() != 'integer') || ($mOperandType->getName() != 'float')) {
+                throw new EInvalidParameter(sprintf('Invalid parameter: Operand type is neither integer nor float for Negate, NegateChecked or UnaryPlus unary expression.'));
+            }
                 break;
             case TExpressionType::eNot() :
-                if ($mOperandType !== 'boolean') {
-                    throw new EInvalidParameter();
+                if ($mOperandType->getName() != 'boolean') {
+                    throw new EInvalidParameter(sprintf('Invalid parameter: Operand type is not boolean for Not unary expression.'));
                 }
                 break;
             case TExpressionType::eConvert() :
             case TExpressionType::eConvertChecked() :
-                if (($mOperandType !== 'boolean') || ($mOperandType !== 'integer') || ($mOperandType !== 'float') || ($mOperandType !== 'string')) {
-                    throw new EInvalidParameter();
-                }
-                if (($Type !== 'boolean') || ($Type !== 'integer') || ($Type !== 'float') || ($Type !== 'string')) {
-                    throw new EInvalidParameter();
-                }
+            if (!$mOperandType->IsPrimitive()) {
+                throw new EInvalidParameter(sprintf('Invalid parameter: Operand type is not primitive for Convert or ConvertChecked unary expression.'));
+            }
+            if (!$Type->IsPrimitive()) {
+                throw new EInvalidParameter(sprintf('Invalid parameter: Expression type is not primitive for Convert or ConvertChecked unary expression.'));
+            }
                 break;
             case TExpressionType::eQuote() :
             case TExpressionType::eTypeAs() :
-                if (($mOperandType === 'boolean') || ($mOperandType === 'integer') || ($mOperandType === 'float') || ($mOperandType === 'string')) {
-                    throw new EInvalidParameter();
-                }
-                if (($Type === 'boolean') || ($Type === 'integer') || ($Type === 'float') || ($Type === 'string')) {
-                    throw new EInvalidParameter();
-                }
+            if ($mOperandType->IsPrimitive()) {
+                throw new EInvalidParameter(sprintf('Invalid parameter: Operand type is primitive for Quote or TypeAs unary expression.'));
+            }
+            if ($Type->IsPrimitive()) {
+                throw new EInvalidParameter(sprintf('Invalid parameter: Expression type is primitive for Quote or TypeAs unary expression.'));
+            }
                 break;
         }
 
@@ -1329,6 +1335,7 @@ final class TUnaryExpression extends TExpression {
      */
     public function Destroy() {
         Framework::Free($this->FOperand);
+        Framework::Free($this->FType);
 
         parent::Destroy();
     }
@@ -1380,22 +1387,24 @@ final class TUnaryExpression extends TExpression {
     /**
      * descHere
      *
-     * @return mixed
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
     /** @noinspection PhpInconsistentReturnPointsInspection */
     public function getType() {
-        if ($this->FType == null) {
+        if ($this->FType === null) {
             switch ($this->FNodeType) {
                 case TExpressionType::eArrayLength() :
-                    return 'integer';
+                    TClass::PrepareGeneric(['T' => Framework::Integer]);
+                    return new TClass();
                 case TExpressionType::eNegate() :
                 case TExpressionType::eNegateChecked() :
                 case TExpressionType::eUnaryPlus() :
                     return $this->FOperand->getType();
                 case TExpressionType::eNot() :
-                    return 'boolean';
+                    TClass::PrepareGeneric(['T' => Framework::Boolean]);
+                    return new TClass();
                 case TExpressionType::eQuote() :
-                    return ''; // FIXME: impl.
+                    return null; // FIXME: impl.
             }
         }
         else {
@@ -1743,7 +1752,7 @@ final class TBinaryExpression extends TExpression {
     /**
      * descHere
      *
-     * @return mixed
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
     /** @noinspection PhpInconsistentReturnPointsInspection */
     public function getType() {
@@ -1839,7 +1848,7 @@ final class TConditionalExpression extends TExpression {
     private $FTest = null;
     /**
      *
-     * @var mixed
+     * @var \FrameworkDSW\Reflection\TClass <T: ?>
      */
     private $FType = null;
 
@@ -1849,25 +1858,20 @@ final class TConditionalExpression extends TExpression {
      * @param \FrameworkDSW\Linq\Expressions\TExpression $Test
      * @param \FrameworkDSW\Linq\Expressions\TExpression $IfTrue
      * @param \FrameworkDSW\Linq\Expressions\TExpression $IfFalse
-     * @param mixed $Type
+     * @param \FrameworkDSW\Reflection\TClass $Type <T: ?>
      */
     public function __construct($Test, $IfTrue, $IfFalse, $Type = null) {
         parent::__construct();
         TType::Object($Test, TExpression::class);
         TType::Object($IfTrue, TExpression::class);
         TType::Object($IfFalse, TExpression::class);
-
-        if ($Type === null) {
-            $this->FType = '';
-        }
-        else {
-            $this->FType = $Type;
-        }
+        TType::Object($Type, [TClass::class => ['T' => null]]);
 
         $this->FNodeType = TExpressionType::eConditional();
         $this->FTest     = $Test;
         $this->FIfTrue   = $IfTrue;
         $this->FIfFalse  = $IfFalse;
+        $this->FType = $Type;
     }
 
     /**
@@ -1900,7 +1904,7 @@ final class TConditionalExpression extends TExpression {
     /**
      * descHere
      *
-     * @return mixed
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
     public function getType() {
         return $this->FType;
@@ -1912,7 +1916,7 @@ final class TConditionalExpression extends TExpression {
      * @param \FrameworkDSW\Linq\Expressions\TExpression $Test
      * @param \FrameworkDSW\Linq\Expressions\TExpression $IfTrue
      * @param \FrameworkDSW\Linq\Expressions\TExpression $IfFalse
-     * @return TConditionalExpression
+     * @return \FrameworkDSW\Linq\Expressions\TConditionalExpression
      */
     public function Update($Test, $IfTrue, $IfFalse) {
         TType::Object($Test, TExpression::class);
@@ -1951,14 +1955,14 @@ final class TDefaultExpression extends TExpression {
 
     /**
      *
-     * @var mixed
+     * @var \FrameworkDSW\Reflection\TClass <T: ?>
      */
     private $FType = null;
 
     /**
      * descHere
      *
-     * @param mixed $Type
+     * @param \FrameworkDSW\Reflection\TClass $Type <T: ?>
      */
     public function __construct($Type) {
         parent::__construct();
@@ -1989,7 +1993,7 @@ final class TDefaultExpression extends TExpression {
     /**
      * descHere
      *
-     * @return mixed
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
     public function getType() {
         return $this->FType;
@@ -2011,7 +2015,7 @@ final class TParameterExpression extends TExpression {
     private $FName = '';
     /**
      *
-     * @var mixed
+     * @var \FrameworkDSW\Reflection\TClass <T: ?>
      */
     private $FType = null;
     /**
@@ -2024,16 +2028,17 @@ final class TParameterExpression extends TExpression {
      * descHere
      *
      * @param string $Name
-     * @param mixed $Type
+     * @param \FrameworkDSW\Reflection\TClass $Type <T: ?>
      * @param boolean $IsByRef
      * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function __construct($Name, $Type, $IsByRef = false) {
         TType::String($Name);
+        TType::Object($Type, [TClass::class => ['T' => null]]);
         TType::Bool($IsByRef);
 
         if (preg_match('/[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*/', $Name) !== 1) {
-            throw new EInvalidParameter();
+            throw new EInvalidParameter(sprintf('Invalid parameter: invalid parameter name.'));
         }
 
         $this->FNodeType = TExpressionType::eParameter();
@@ -2042,9 +2047,12 @@ final class TParameterExpression extends TExpression {
         $this->FIsByRef  = $IsByRef;
     }
 
+    /**
+     *
+     */
     public function Destroy() {
+        Framework::Free($this->FType);
         parent::Destroy();
-        // TODO delete me!
     }
 
     /**
@@ -2071,13 +2079,13 @@ final class TParameterExpression extends TExpression {
      * @return \FrameworkDSW\Linq\Expressions\TExpressionType
      */
     public function getNodeType() {
-        return TExpressionType::eParameter(); // ?
+        return TExpressionType::eParameter(); // TODO ?
     }
 
     /**
      * descHere
      *
-     * @return mixed
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
     public function getType() {
         return $this->FType;
@@ -2104,7 +2112,7 @@ final class TMemberExpression extends TExpression {
     private $FMemberName = '';
     /**
      *
-     * @var mixed
+     * @var \FrameworkDSW\Reflection\TClass <T: ?>
      */
     private $FType = null;
 
@@ -2113,12 +2121,13 @@ final class TMemberExpression extends TExpression {
      *
      * @param \FrameworkDSW\Linq\Expressions\TExpression $Expression
      * @param string $MemberName
-     * @param mixed $Type
+     * @param \FrameworkDSW\Reflection\TClass $Type <T: ?>
      * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function __construct($Expression, $MemberName, $Type) {
         TType::Type($Expression, TExpression::class);
         TType::String($MemberName);
+        TType::Object($Type, [TClass::class => ['T' => null]]);
 
         if (preg_match('/[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*/', $MemberName) !== 1) {
             throw new EInvalidParameter();
@@ -2135,6 +2144,7 @@ final class TMemberExpression extends TExpression {
      */
     public function Destroy() {
         Framework::Free($this->FExpression);
+        Framework::Free($this->FType);
         parent::Destroy();
     }
 
@@ -2159,7 +2169,7 @@ final class TMemberExpression extends TExpression {
     /**
      * descHere
      *
-     * @return mixed
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
     public function getType() {
         return $this->FType;
@@ -2170,7 +2180,7 @@ final class TMemberExpression extends TExpression {
      *
      * @param \FrameworkDSW\Linq\Expressions\TExpression $Expression
      * @param string $MemberName
-     * @param mixed $Type
+     * @param \FrameworkDSW\Reflection\TClass $Type <T: ?>
      * @return \FrameworkDSW\Linq\Expressions\TMemberExpression
      */
     public function Update($Expression, $MemberName, $Type) {
@@ -2212,9 +2222,9 @@ final class TMethodCallExpression extends TExpression {
     private $FArguments = null;
     /**
      *
-     * @var array
+     * @var \FrameworkDSW\Reflection\TMethod $Method
      */
-    private $FMethod = [];
+    private $FMethod = null;
     /**
      *
      * @var \FrameworkDSW\Linq\Expressions\TExpression
@@ -2222,7 +2232,7 @@ final class TMethodCallExpression extends TExpression {
     private $FObject = null;
     /**
      *
-     * @var mixed
+     * @var \FrameworkDSW\Reflection\TClass <T: ?>
      */
     private $FType = null;
 
@@ -2230,17 +2240,18 @@ final class TMethodCallExpression extends TExpression {
      * descHere
      *
      * @param \FrameworkDSW\Linq\Expressions\TExpression $Object
-     * @param array $Method
+     * @param \FrameworkDSW\Reflection\TMethod $Method
      * @param \FrameworkDSW\Containers\IList $Arguments <T: \FrameworkDSW\Linq\Expressions\TExpression>
-     * @param mixed $ReturnType
+     * @param \FrameworkDSW\Reflection\TClass $ReturnType <T: ?>
      */
     public function __construct($Object, $Method, $Arguments, $ReturnType = null) {
         parent::__construct();
 
         TType::Object($Object, TExpression::class);
-        TType::Arr($Method);
+        TType::Object($Method, TMethod::class);
         TType::Object($Arguments, [
             IList::class => ['T' => TExpression::class]]);
+        TType::Object($ReturnType, [TClass::class => ['T' => null]]);
 
         $this->FNodeType  = TExpressionType::eCall();
         $this->FObject    = $Object;
@@ -2290,7 +2301,7 @@ final class TMethodCallExpression extends TExpression {
     /**
      * descHere
      *
-     * @return mixed
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
     public function getType() {
         return $this->FType;
@@ -2338,7 +2349,7 @@ class TLambdaExpression extends TExpression {
     private $FParameters = null;
     /**
      *
-     * @var mixed
+     * @var \FrameworkDSW\Reflection\TClass <T: ?>
      */
     private $FReturnType = null;
 
@@ -2348,7 +2359,7 @@ class TLambdaExpression extends TExpression {
      * @param string $Name
      * @param \FrameworkDSW\Linq\Expressions\TExpression $Body
      * @param \FrameworkDSW\Containers\IList $Parameters <T: \FrameworkDSW\Linq\Expressions\TParameterExpression>
-     * @param mixed $ReturnType
+     * @param \FrameworkDSW\Reflection\TClass $ReturnType <T: ?>
      */
     public function __construct($Name, $Body, $Parameters, $ReturnType) {
         parent::__construct();
@@ -2356,6 +2367,7 @@ class TLambdaExpression extends TExpression {
         TType::Object($Body, TExpression::class);
         TType::Object($Parameters, [
             IList::class => ['T' => TParameterExpression::class]]);
+        TType::Object($ReturnType, [TClass::class => ['T' => null]]);
 
         $this->FNodeType   = TExpressionType::eLambda();
         $this->FName       = $Name; // TODO: check if already exists, and if the name is valid.
@@ -2370,6 +2382,7 @@ class TLambdaExpression extends TExpression {
     public function Destroy() {
         Framework::Free($this->FParameters);
         Framework::Free($this->FBody);
+        Framework::Free($this->FReturnType);
         parent::Destroy();
     }
 
@@ -2412,7 +2425,7 @@ class TLambdaExpression extends TExpression {
     /**
      * descHere
      *
-     * @return mixed
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
     public function getReturnType() {
         return $this->FReturnType;
@@ -2421,7 +2434,7 @@ class TLambdaExpression extends TExpression {
     /**
      * descHere
      *
-     * @return mixed
+     * @return \FrameworkDSW\Linq\Expressions\TExpressionType
      */
     public function getType() {
         return $this->FNodeType;
@@ -2459,7 +2472,7 @@ final class TTypedExpression extends TLambdaExpression {
     /**
      * descHere
      *
-     * @return mixed
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
     public function getType() {
         // TODO: Implement getType() method.
@@ -2521,7 +2534,7 @@ final class TBlockExpression extends TExpression {
     /**
      * descHere
      *
-     * @return mixed
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
     public function getType() {
         return $this->FExpressions->Last()->getType();

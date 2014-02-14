@@ -26,6 +26,7 @@ use FrameworkDSW\Linq\TGroupByCallbackDelegate;
 use FrameworkDSW\Linq\TJoinCallbackDelegate;
 use FrameworkDSW\Linq\TPredicateDelegate;
 use FrameworkDSW\Linq\TSelectorDelegate;
+use FrameworkDSW\Reflection\TClass;
 use FrameworkDSW\System\EException;
 use FrameworkDSW\System\IInterface;
 use FrameworkDSW\System\TInteger;
@@ -256,8 +257,8 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
 
     /**
      *
-     * @param array $Method
-     * @param mixed $ReturnType
+     * @param \FrameworkDSW\Reflection\TMethod $Method
+     * @param \FrameworkDSW\Reflection\TClass $ReturnType <T: ?>
      * @param boolean $UseArguments
      * @return \FrameworkDSW\Linq\IQueryable <T: T>
      */
@@ -265,13 +266,17 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
                                         $ReturnType, $UseArguments = false) {
         $this->EnsureExpression();
         if ($UseArguments) {
-            $mExpression = TExpression::Call($this->FExpression->getBody(), $Method, $this->FArguments, [
+            TClass::PrepareGeneric([
                 IQueryable::class => ['T' => $this->GenericArg('T')]]);
+            $mReturnType = new TClass();
+            $mExpression = TExpression::Call($this->FExpression->getBody(), $Method, $this->FArguments, $mReturnType);
         }
         else {
             $this->FArguments->Clear();
-            $mExpression = TExpression::Call($this->FExpression->getBody(), $Method, null, [
+            TClass::PrepareGeneric([
                 IQueryable::class => ['T' => $this->GenericArg('T')]]);
+            $mReturnType = new TClass();
+            $mExpression = TExpression::Call($this->FExpression->getBody(), $Method, null, $mReturnType);
         }
 
         TList::PrepareGeneric(['T' => TParameterExpression::class]);
@@ -700,10 +705,11 @@ class TObjectQuery extends TObject implements IExpressibleOrderedQueryable {
     /**
      * descHere
      *
-     * @return mixed
+     * @return \FrameworkDSW\Reflection\TClass <T: T>
      */
     public function getElementType() {
-        return $this->GenericArg('T');
+        TClass::PrepareGeneric(['T' => $this->GenericArg('T')]);
+        return new TClass();
     }
 
     /**

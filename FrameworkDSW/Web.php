@@ -3208,7 +3208,6 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
  * @package FrameworkDSW\Web
  */
 class TWebApplication extends TComponent implements IApplication {
-
     /**
      * @var \FrameworkDSW\Controller\TControllerManager
      */
@@ -3263,7 +3262,6 @@ class TWebApplication extends TComponent implements IApplication {
      * Run
      */
     public function Run() {
-
         //fixme config reading for rules. BEGIN
         $mRouterRule = new TUrlRouteRule('T<controller>/<action>', '<controller>/<action>');
         $this->FRouter->AddRule($mRouterRule);

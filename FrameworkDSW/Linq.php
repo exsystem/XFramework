@@ -153,7 +153,7 @@ interface IQueryable extends IIteratorAggregate {
     /**
      * descHere
      *
-     * @return mixed
+     * @return \FrameworkDSW\Reflection\TClass <T: T>
      */
     public function getElementType();
 
@@ -368,7 +368,7 @@ interface IExpressibleQueryable extends IQueryable {
     /**
      * descHere
      *
-     * @return IQueryable <T: R>
+     * @return \FrameworkDSW\Linq\IQueryable <T: R>
      */
     public function OfType();
 
@@ -433,8 +433,7 @@ interface IExpressibleQueryable extends IQueryable {
     /**
      * descHere
      *
-     * @param $Predicate \FrameworkDSW\Linq\Expressions\TTypedExpression
-     *            <T: TPredicate<E: T>>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $Predicate <T: TPredicate<E: T>>
      * @return T
      */
     public function Single($Predicate = null);
@@ -450,8 +449,8 @@ interface IExpressibleQueryable extends IQueryable {
     /**
      * descHere
      *
-     * @param $Count integer
-     * @return IQueryable <T: T>
+     * @param integer $Count
+     * @return \FrameworkDSW\Linq\IQueryable <T: T>
      */
     public function Skip($Count);
 
@@ -466,70 +465,65 @@ interface IExpressibleQueryable extends IQueryable {
     /**
      * descHere
      *
-     * @param $Count integer
-     * @return IQueryable <T: T>
+     * @param integer $Count
+     * @return \FrameworkDSW\Linq\IQueryable <T: T>
      */
     public function Take($Count);
 
     /**
      * descHere
      *
-     * @param  \FrameworkDSW\Linq\Expressions\TTypedExpression $Condition \FrameworkDSW\Linq\TPredicateDelegate<E: \FrameworkDSW\Containers\TPair<K: integer, V: T>>>
-     * @return IQueryable <T: T>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $Condition <T: \FrameworkDSW\Linq\TPredicateDelegate<E: \FrameworkDSW\Containers\TPair<K: integer, V: T>>>
+     * @return \FrameworkDSW\Linq\IQueryable <T: T>
      */
     public function TakeWhile($Condition);
 
     /**
      * descHere
      *
-     * @param  \FrameworkDSW\Linq\Expressions\TTypedExpression $KeySelector <T: \FrameworkDSW\Linq\TSelectorDelegate<S: T, D: K>>
-     * @return IExpressibleOrderedQueryable <T: T>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $KeySelector <T: \FrameworkDSW\Linq\TSelectorDelegate<S: T, D: K>>
+     * @return \FrameworkDSW\Linq\IExpressibleOrderedQueryable <T: T>
      */
     public function ThenBy($KeySelector);
 
     /**
      * descHere
      *
-     * @param $KeySelector \FrameworkDSW\Linq\Expressions\TTypedExpression
-     *            <T: \FrameworkDSW\Linq\TSelectorDelegate<S: T, D: K>>
-     * @return IExpressibleOrderedQueryable <T: T>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $KeySelector <T: \FrameworkDSW\Linq\TSelectorDelegate<S: T, D: K>>
+     * @return \FrameworkDSW\Linq\IExpressibleOrderedQueryable <T: T>
      */
     public function ThenByDescending($KeySelector);
 
     /**
      * descHere
      *
-     * @param $With IIteratorAggregate
-     *            <T: T>
-     * @return IQueryable <T: T>
+     * @param \FrameworkDSW\Containers\IIteratorAggregate $With <T: T>
+     * @return \FrameworkDSW\Linq\IQueryable <T: T>
      */
     public function Union($With);
 
     /**
      * descHere
      *
-     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $Condition <T: TPredicateDelegate<E: TPair<K: integer, V: T>>>
-     * @return IQueryable <T: T>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $Condition <T: \FrameworkDSW\Linq\TPredicateDelegate<E: \FrameworkDSW\Containers\TPair<K: integer, V: T>>>
+     * @return \FrameworkDSW\Linq\IQueryable <T: T>
      */
     public function Where($Condition);
 
     /**
      * descHere
      *
-     * @param $With IIteratorAggregate
-     *            <T: Q>
-     * @param $ResultSelector \FrameworkDSW\Linq\Expressions\TTypedExpression
-     *            <T: TSelector<S: TPair<K: T, V: Q>, D: R>>
-     * @return IQueryable <T: R>
+     * @param \FrameworkDSW\Containers\IIteratorAggregate $With <T: Q>
+     * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $ResultSelector <T: \FrameworkDSW\Linq\TSelectorDelegate<S: \FrameworkDSW\Containers\TPair<K: T, V: Q>, D: R>>
+     * @return \FrameworkDSW\Linq\IQueryable <T: R>
      */
     public function Zip($With, $ResultSelector);
-
 }
 
 /**
  * \FrameworkDSW\Linq\IExpressibleOrderedQueryable
  * params <T: ?>
- * extends IQueryable<T: T>
+ * extends \FrameworkDSW\Linq\IQueryable<T: T>
  *
  * @author 许子健
  */
