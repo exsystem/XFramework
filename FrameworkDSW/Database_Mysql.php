@@ -1,7 +1,7 @@
 <?php
 /**
  * \FrameworkDSW\Database\Mysql
- * @author    许子健
+ * @author 许子健
  * @version $Id$
  * @since    separate file since reversion 17
  */
@@ -71,7 +71,7 @@ use FrameworkDSW\Utilities\TVersion;
 /**
  *
  * Enter description here ...
- * @author    许子健
+ * @author 许子健
  */
 abstract class TBaseMysqlObject extends TObject {
     /**
@@ -770,7 +770,7 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
     /**
      *
      * Enter description here ...
-     * @param    \FrameworkDSW\Database\Mysql\TMysqlDriver $Driver
+     * @param \FrameworkDSW\Database\Mysql\TMysqlDriver $Driver
      * @throws \FrameworkDSW\System\EAccessViolation
      */
     public function __construct($Driver) {
@@ -1104,7 +1104,7 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
 
     /**
      * descHere
-     * @param    string $Value
+     * @param string $Value
      * @throws \FrameworkDSW\Database\EUnsupportedDbFeature
      */
     public function setCatalog($Value) {
@@ -1114,7 +1114,7 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
 
     /**
      * descHere
-     * @param    \FrameworkDSW\Database\THoldability $Value
+     * @param \FrameworkDSW\Database\THoldability $Value
      * @throws \FrameworkDSW\Database\EUnsupportedDbFeature
      */
     public function setHoldability($Value) {
@@ -1126,7 +1126,7 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
 
     /**
      * descHere
-     * @param    boolean $Value
+     * @param boolean $Value
      * @throws \FrameworkDSW\Database\EUnsupportedDbFeature
      */
     public function setReadOnly($Value) {
@@ -1136,7 +1136,7 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
 
     /**
      * descHere
-     * @param    \FrameworkDSW\Database\TTransactionIsolationLevel $Value
+     * @param \FrameworkDSW\Database\TTransactionIsolationLevel $Value
      * @throws \FrameworkDSW\Database\EUnsupportedDbFeature
      */
     public function setTransactionIsolation($Value) {
@@ -1282,7 +1282,7 @@ abstract class TAbstractMysqlStatement extends TBaseMysqlObject {
     /**
      * descHere
      * @throws \FrameworkDSW\Database\EEmptyCommand
-     * @return    integer[]
+     * @return integer[]
      */
     public function ExecuteCommands() {
         if ($this->FCommands === null || $this->FCommands->IsEmpty()) {
@@ -1540,7 +1540,7 @@ class TMysqlStatement extends TAbstractMysqlStatement implements IStatement {
 /**
  *
  * Enter description here ...
- * @author    许子健
+ * @author 许子健
  */
 class TMysqlPreparedStatement extends TMysqlStatement implements IPreparedStatement {
     /**
@@ -1692,7 +1692,7 @@ EOD;
 /**
  *
  * Enter description here ...
- * @author    许子健
+ * @author 许子健
  */
 class TMysqlCallableStatement extends TAbstractMysqlStatement implements ICallableStatement {
     /**
@@ -1725,7 +1725,7 @@ class TMysqlCallableStatement extends TAbstractMysqlStatement implements ICallab
      *
      * Enter description here ...
      * @throws \Exception|\FrameworkDSW\Database\EExecuteFailed
-     * @return    \mysqli_result
+     * @return \mysqli_result
      */
     /** @noinspection PhpInconsistentReturnPointsInspection */
     private function FetchRawResult() {
@@ -1792,7 +1792,7 @@ class TMysqlCallableStatement extends TAbstractMysqlStatement implements ICallab
      * (non-PHPdoc)
      * @see \FrameworkDSW\Database\Mysql\TMysqlStatement::DoQuery()
      * @throws \FrameworkDSW\Database\EUnsupportedDbFeature
-     * @return    \FrameworkDSW\Database\IResultSet
+     * @return \FrameworkDSW\Database\IResultSet
      */
     protected function DoQuery() {
         if ($this->FResultSetType == TResultSetType::eScrollSensitive() || $this->FConcurrencyType == TConcurrencyType::eUpdatable()) {
@@ -1923,9 +1923,9 @@ class TMysqlCallableStatement extends TAbstractMysqlStatement implements ICallab
 
     /**
      * descHere
-     * @param    integer $Index
+     * @param integer $Index
      * @throws \FrameworkDSW\Containers\EIndexOutOfBounds
-     * @return    \FrameworkDSW\Database\IResultSet
+     * @return \FrameworkDSW\Database\IResultSet
      */
     public function getResult($Index) {
         TType::Int($Index);
@@ -1946,7 +1946,7 @@ class TMysqlCallableStatement extends TAbstractMysqlStatement implements ICallab
 
     /**
      * descHere
-     * @param    \FrameworkDSW\Database\TCurrentResultOption $Options
+     * @param \FrameworkDSW\Database\TCurrentResultOption $Options
      * @throws \FrameworkDSW\System\EException
      */
     public function NextResult($Options) {
@@ -1989,7 +1989,7 @@ class TMysqlCallableStatement extends TAbstractMysqlStatement implements ICallab
 
 /**
  * \FrameworkDSW\Database\Mysql\TAbstractMysqlResultSet
- * @author    许子健
+ * @author 许子健
  */
 abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
 
@@ -2105,7 +2105,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
     /**
      *
      * Enter description here ...
-     * @param    integer $RowId
+     * @param integer $RowId
      * @throws \FrameworkDSW\Database\EInvalidRowId
      */
     private function EnsureRowId($RowId) {
@@ -2117,7 +2117,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
     /**
      *
      * Enter description here ...
-     * @param    integer $RowId
+     * @param integer $RowId
      * @throws \FrameworkDSW\Database\EInvalidRowId
      */
     private function FetchForward($RowId) {
@@ -2143,7 +2143,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
     /**
      *
      * Enter description here ...
-     * @param    integer $RowId
+     * @param integer $RowId
      * @throws \FrameworkDSW\Database\EInvalidRowId
      */
     private function FetchTo($RowId) {
@@ -2276,7 +2276,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
     /**
      * descHere
      * @throws \FrameworkDSW\Database\EUnsupportedDbFeature
-     * @return    string
+     * @return string
      */
     public function getCursorName() {
         throw new EUnsupportedDbFeature(sprintf('Get cursor name is not supported.'));
@@ -2443,7 +2443,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
 
     /**
      * descHere
-     * @param    integer $Value
+     * @param integer $Value
      * @throws \FrameworkDSW\System\EInvalidParameter
      */
     public function setFetchSize($Value) {
@@ -2595,7 +2595,7 @@ class TMysqlResultSet extends TAbstractMysqlResultSet implements IResultSet {
 
 /**
  * \FrameworkDSW\Database\Mysql\TMysqlStmtResultSet
- * @author    许子健
+ * @author 许子健
  */
 class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet {
     /**
@@ -2756,7 +2756,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
      * (non-PHPdoc)
      * @see \FrameworkDSW\Database\IResultSet::getFetchSize()
      * @throws \FrameworkDSW\Database\EFailedToGetFetchSize
-     * @return    integer
+     * @return integer
      */
     public function getFetchSize() {
         try {
@@ -2965,7 +2965,7 @@ abstract class TAbstractMysqlRow extends TBaseMysqlObject {
 
     /**
      * descHere
-     * @param    string $offset
+     * @param string $offset
      * @throws \FrameworkDSW\Database\EInvalidColumnName
      */
     public final function offsetUnset($offset) {
@@ -3138,7 +3138,7 @@ final class TMysqlRow extends TAbstractMysqlRow implements IRow {
 /**
  *
  * Enter description here ...
- * @author    许子健
+ * @author  许子健
  */
 final class TMysqlInsertRow extends TAbstractMysqlRow implements IRow {
     /**

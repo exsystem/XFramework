@@ -7,8 +7,12 @@
  */
 namespace FrameworkDSW\Database;
 
+use FrameworkDSW\Containers\ENoSuchElement;
 use FrameworkDSW\Containers\IArrayAccess;
 use FrameworkDSW\Containers\IIterator;
+use FrameworkDSW\Containers\IMap;
+use FrameworkDSW\Containers\TLinkedList;
+use FrameworkDSW\Framework\Framework;
 use FrameworkDSW\System\EException;
 use FrameworkDSW\System\IInterface;
 use FrameworkDSW\System\TEnum;
@@ -2030,5 +2034,93 @@ class TSavepoint extends TObject implements ISavepoint {
         else {
             return 'Svpt' . (string)$this->FId;
         }
+    }
+}
+
+/**
+ * Class TDriverManager
+ * @package FrameworkDSW\Database
+ */
+class TDriverManager extends TObject {
+    /**
+     * @var \FrameworkDSW\Containers\TLinkedList <T: \FrameworkDSW\Database\IDriver>
+     */
+    private static $FDrivers = null;
+
+    /**
+     * descHere
+     * @param string $Url
+     * @param \FrameworkDSW\Containers\IMap $Properties <K: string, V: string>
+     * @return \FrameworkDSW\Database\IConnection
+     */
+    public static function Connect($Url, $Properties) {
+        TType::String($Url);
+        TType::Object($Properties, [IMap::class => ['K' => Framework::String, 'V' => Framework::String]]);
+        return TDriverManager::GetDriver($Url)->Connect($Url, $Properties);
+    }
+
+    /**
+     * @param string $Url
+     * @throws \FrameworkDSW\System\EException
+     * @return \FrameworkDSW\Database\IDriver
+     */
+    public static function GetDriver($Url) {
+        TType::String($Url);
+        TDriverManager::EnsureDriversList();
+        foreach (TDriverManager::$FDrivers as $mDriver) {
+            /** @var IDriver $mDriver */
+            if ($mDriver->ValidateUrl($Url)) {
+                return $mDriver;
+            }
+        }
+        throw new EDatabaseException(sprintf('No such driver: for URL "%s".', $Url));
+    }
+
+    /**
+     *
+     */
+    private static function EnsureDriversList() {
+        if (TDriverManager::$FDrivers === null) {
+            TLinkedList::PrepareGeneric(['T' => IDriver::class]);
+            TDriverManager::$FDrivers = new TLinkedList(true);
+        }
+    }
+
+    /**
+     * @param \FrameworkDSW\Database\IDriver $Driver
+     */
+    public static function RegisterDriver($Driver) {
+        TType::Object($Driver, IDriver::class);
+        TDriverManager::EnsureDriversList();
+        if ($Driver !== null && !TDriverManager::$FDrivers->Contains($Driver)) {
+            TDriverManager::$FDrivers->Add($Driver);
+        }
+    }
+
+    /**
+     * @param \FrameworkDSW\Database\IDriver $Driver
+     * @throws EDatabaseException
+     */
+    public static function UnregisterDriver($Driver) {
+        TType::Object($Driver, IDriver::class);
+        TDriverManager::EnsureDriversList();
+        try {
+            TDriverManager::$FDrivers->Remove($Driver);
+        }
+        catch (ENoSuchElement $Ex) {
+            throw new EDatabaseException(sprintf('No such driver.'));
+        }
+        finally {
+            if (TDriverManager::$FDrivers->IsEmpty()) {
+                Framework::Free(TDriverManager::$FDrivers);
+            }
+        }
+    }
+
+    /**
+     * @return \FrameworkDSW\Containers\IList <T: \FrameworkDSW\Database\IDriver>
+     */
+    public static function getDrivers() {
+        return TDriverManager::$FDrivers;
     }
 }
