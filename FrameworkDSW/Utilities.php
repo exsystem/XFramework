@@ -230,19 +230,6 @@ final class TType extends TObject {
     /**
      *
      * @param string $Var
-     * @throws EInvalidClassCasting
-     */
-    public static function MetaClass(&$Var) {
-        $Var = (string)$Var;
-        if (class_exists($Var)) {
-            return;
-        }
-        throw new EInvalidClassCasting();
-    }
-
-    /**
-     *
-     * @param string $Var
      * @throws EInvalidInterfaceCasting
      */
     public static function Intf(&$Var) {
@@ -255,7 +242,7 @@ final class TType extends TObject {
 
     /**
      *
-     * @param TDelegate $Var
+     * @param \FrameworkDSW\System\TDelegate $Var
      * @throws EInvalidDelegateCasting
      */
     public static function Delegate($Var) {

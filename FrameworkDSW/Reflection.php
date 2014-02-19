@@ -607,6 +607,30 @@ class TClass extends TObject implements IType {
      * @var array
      */
     private $FExtendsInfo = [];
+    /**
+     * @var \FrameworkDSW\Reflection\TConstructor <T: T>
+     */
+    private $FConstructor = null;
+    /**
+     * @var \FrameworkDSW\Containers\TMap <K: string, V: \FrameworkDSW\Reflection\TField>
+     */
+    private $FFields = null;
+    /**
+     * @var \FrameworkDSW\Containers\TMap <K: string, V: \FrameworkDSW\Reflection\TMethod>
+     */
+    private $FMethods = null;
+    /**
+     * @var \FrameworkDSW\Containers\TMap <K: string, V: \FrameworkDSW\Reflection\TProperty>
+     */
+    private $FProperties = null;
+    /**
+     * @var \FrameworkDSW\Containers\TMap <K: string, V: \FrameworkDSW\Reflection\TSignal>
+     */
+    private $FSignals = null;
+    /**
+     * @var \FrameworkDSW\Containers\TMap <K: string, V: \FrameworkDSW\Reflection\TSlot>
+     */
+    private $FSlots = null;
 
     /**
      *
@@ -615,6 +639,81 @@ class TClass extends TObject implements IType {
     private function EnsureType() {
         if (!$this->FIsType) {
             throw new EIllegalAccess(sprintf('Illegal access: "%s" is neither a class or a record type.', $this->FClassName));
+        }
+    }
+
+    /**
+     * @param string $Name
+     * @return \FrameworkDSW\Reflection\TField
+     */
+    private function DoGetField($Name) {
+        if ($this->FFields->ContainsKey($Name)) {
+            return $this->FFields[$Name];
+        }
+        else {
+            $mField = new TField($this, $Name);
+            $this->FFields->Put($Name, $mField);
+            return $mField;
+        }
+    }
+
+    /**
+     * @param string $Name
+     * @return \FrameworkDSW\Reflection\TMethod
+     */
+    private function DoGetMethod($Name) {
+        if ($this->FMethods->ContainsKey($Name)) {
+            return $this->FMethods[$Name];
+        }
+        else {
+            $mMethod = new TMethod($this, $Name);
+            $this->FMethods->Put($Name, $mMethod);
+            return $mMethod;
+        }
+    }
+
+    /**
+     * @param string $Name
+     * @return \FrameworkDSW\Reflection\TProperty
+     */
+    private function DoGetProperty($Name) {
+        if ($this->FProperties->ContainsKey($Name)) {
+            return $this->FProperties[$Name];
+        }
+        else {
+            $mProperty = new TProperty($this, $Name);
+            $this->FProperties->Put($Name, $mProperty);
+            return $mProperty;
+        }
+    }
+
+    /**
+     * @param string $Name
+     * @return \FrameworkDSW\Reflection\TSignal
+     */
+    private function DoGetSignal($Name) {
+        if ($this->FSignals->ContainsKey($Name)) {
+            return $this->FSignals[$Name];
+        }
+        else {
+            $mSignal = new TSignal($this, $Name);
+            $this->FSignals->Put($Name, $mSignal);
+            return $mSignal;
+        }
+    }
+
+    /**
+     * @param string $Name
+     * @return \FrameworkDSW\Reflection\TSlot
+     */
+    private function DoGetSlot($Name) {
+        if ($this->FSlots->ContainsKey($Name)) {
+            return $this->FSlots[$Name];
+        }
+        else {
+            $mSlot = new TSlot($this, $Name);
+            $this->FSlots->Put($Name, $mSlot);
+            return $mSlot;
         }
     }
 
@@ -691,10 +790,85 @@ class TClass extends TObject implements IType {
      * @param string $Name
      * @return boolean
      */
-    private function CheckMethodName($Name) {
+    private function CheckMemberName($Name) {
         $mInitialLetterAscii = ord($Name[0]);
 
         return (($mInitialLetterAscii >= ord('A')) && ($mInitialLetterAscii <= ord('Z')));
+    }
+
+    /**
+     * @param string $Name
+     * @return string
+     */
+    private function CheckMethodName($Name) {
+        $mInitialLetterAscii = ord($Name[0]);
+
+        if (($mInitialLetterAscii >= ord('A')) && ($mInitialLetterAscii <= ord('Z'))) {
+            return $Name;
+        }
+        else {
+            return '';
+        }
+    }
+
+    /**
+     * @param string $Name
+     * @return string
+     */
+    private function CheckPropertyName($Name) {
+        $mPrefix = substr($Name, 0, 3);
+        if ($mPrefix === 'get' || $mPrefix === 'set') {
+            $mResult = substr($Name, 3);
+            if ($mResult !== false) {
+                return $mResult;
+            }
+            else {
+                return '';
+            }
+        }
+        else {
+            return '';
+        }
+    }
+
+    /**
+     * @param string $Name
+     * @return string
+     */
+    private function CheckSignalName($Name) {
+        $mPrefix = substr($Name, 0, 6);
+        if ($mPrefix === 'signal') {
+            $mResult = substr($Name, 6);
+            if ($mResult !== false) {
+                return $mResult;
+            }
+            else {
+                return '';
+            }
+        }
+        else {
+            return '';
+        }
+    }
+
+    /**
+     * @param string $Name
+     * @return string
+     */
+    private function CheckSlotName($Name) {
+        $mPrefix = substr($Name, 0, 4);
+        if ($mPrefix === 'slot') {
+            $mResult = substr($Name, 4);
+            if ($mResult !== false) {
+                return $mResult;
+            }
+            else {
+                return '';
+            }
+        }
+        else {
+            return '';
+        }
     }
 
     /**
@@ -761,6 +935,19 @@ class TClass extends TObject implements IType {
         if ($this->FClassName[0] == '\\') {
             $this->FClassName = substr($this->FClassName, 1);
         }
+
+        if ($this->FIsType) {
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => TField::class]);
+            $this->FFields = new TMap(true);
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => TProperty::class]);
+            $this->FProperties = new TMap(true);
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => TMethod::class]);
+            $this->FMethods = new TMap(true);
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => TSignal::class]);
+            $this->FSignals = new TMap(true);
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => TSlot::class]);
+            $this->FSlots = new TMap(true);
+        }
     }
 
     /**
@@ -772,7 +959,7 @@ class TClass extends TObject implements IType {
     public function Cast($Object) {
         TType::Object($Object, IInterface::class);
         $this->EnsureType();
-        if ($Object === null || $Object->IsInstanceOf($this->GenericArg('T'))) {
+        if ($Object === null || $Object->IsInstanceOf($this)) {
             return $Object;
         }
         else {
@@ -790,8 +977,11 @@ class TClass extends TObject implements IType {
             throw new EIllegalAccess(sprintf('Illegal access: constructor is only for class types, not for record "%s".', $this->FClassName));
         }
 
-        TConstructor::PrepareGeneric($this->GenericArgs());
-        return new TConstructor();
+        if ($this->FConstructor === null) {
+            TConstructor::PrepareGeneric($this->GenericArgs());
+            $this->FConstructor = new TConstructor();
+        }
+        return $this->FConstructor;
     }
 
     /**
@@ -809,8 +999,7 @@ class TClass extends TObject implements IType {
             if ($mRaw->getDeclaringClass()->getName() !== $this->getName()) {
                 throw new ENoSuchFieldMember(sprintf('No such field member: "%s".', $Name), null, null, $Name, $this);
             }
-
-            return new TField($this, $Name);
+            return $this->DoGetField($Name);
         }
         catch (\ReflectionException $Ex) {
             throw new ENoSuchFieldMember(sprintf('No such field member: "%s".', $Name), null, null, $Name, $this);
@@ -828,7 +1017,7 @@ class TClass extends TObject implements IType {
         $mResult = [];
         foreach ($mFields as $mField) {
             if ($mField->getDeclaringClass()->getName() === $this->getMetaInfo()->getName()) {
-                $mResult[] = new TField($this, $mField->getName());
+                $mResult[] = $this->DoGetField($mField->getName());
             }
         }
 
@@ -844,12 +1033,12 @@ class TClass extends TObject implements IType {
     public function GetDeclaredMethod($Name) {
         TType::String($Name);
         $this->EnsureType();
-        if ((!$this->CheckMethodName($Name)) || ($this->getMetaInfo()->getMethod($Name)->getDeclaringClass()->getName() !== $this->FClassName)) {
+        if ((!$this->CheckMemberName($Name)) || ($this->getMetaInfo()->getMethod($Name)->getDeclaringClass()->getName() !== $this->FClassName)) {
             throw new ENoSuchMethodMember(sprintf('No such method member: "%s".', $Name), null, null, $Name, $this);
         }
 
         try {
-            return new TMethod($this, $Name);
+            return $this->DoGetMethod($Name);
         }
         catch (\ReflectionException $Ex) {
             throw new ENoSuchMethodMember(sprintf('No such method member: "%s".', $Name), null, null, $Name, $this);
@@ -864,15 +1053,163 @@ class TClass extends TObject implements IType {
         $this->EnsureType();
         $mMethods = $this->getMetaInfo()->getMethods();
         $mResult  = [];
+        $mNames   = [];
         foreach ($mMethods as $mMethod) {
-            $mName = $mMethod->getName();
-            if ($this->CheckMethodName($mName) && ($mMethod->getDeclaringClass()->getName() === $this->FClassName)) {
-                $mResult[] = new TMethod($this, $mName);
+            $mTemp = $this->CheckMethodName($mMethod->getName());
+            if (($mTemp != '') && ($mMethod->getDeclaringClass()->getName() === $this->FClassName)) {
+                $mNames[] = $mTemp;
             }
+        }
+        foreach ($mNames as $mName) {
+            $mResult[] = $this->DoGetMethod($mName);
         }
 
         return $mResult;
     }
+
+    /**
+     * descHere
+     * @param string $Name
+     * @throws ENoSuchPropertyMember
+     * @return \FrameworkDSW\Reflection\TProperty
+     */
+    public function GetDeclaredProperty($Name) {
+        TType::String($Name);
+        $this->EnsureType();
+
+        try {
+            $mGetterFlag = ($this->getMetaInfo()->getMethod("get{$Name}")->getDeclaringClass()->getName() !== $this->FClassName);
+        }
+        catch (\ReflectionException $Ex) {
+            $mGetterFlag = true;
+        }
+        try {
+            $mSetterFlag = ($this->getMetaInfo()->getMethod("set{$Name}")->getDeclaringClass()->getName() !== $this->FClassName);
+        }
+        catch (\ReflectionException $Ex) {
+            $mSetterFlag = true;
+        }
+
+        if ((!$this->CheckMemberName($Name)) || ($mGetterFlag && $mSetterFlag)) {
+            throw new ENoSuchPropertyMember(sprintf('No such declared property member: "%s".', $Name), null, null, $Name, $this);
+        }
+
+        try {
+            return $this->DoGetProperty($Name);
+        }
+        catch (\ReflectionException $Ex) {
+            throw new ENoSuchPropertyMember(sprintf('No such declared property member: "%s".', $Name), null, null, $Name, $this);
+        }
+    }
+
+    /**
+     * descHere
+     * @return \FrameworkDSW\Reflection\TProperty[]
+     */
+    public function getDeclaredProperties() {
+        $this->EnsureType();
+        $mMethods = $this->getMetaInfo()->getMethods();
+        $mResult  = [];
+        $mNames   = [];
+        foreach ($mMethods as $mMethod) {
+            $mTemp = $this->CheckMethodName($mMethod->getName());
+            if (($mTemp != '') && ($mMethod->getDeclaringClass()->getName() === $this->FClassName)) {
+                $mNames[] = $mTemp;
+            }
+        }
+        foreach ($mNames as $mName) {
+            $mResult[] = $this->DoGetProperty($mName);
+        }
+
+        return $mResult;
+    }
+
+    /**
+     * descHere
+     * @param string $Name
+     * @throws ENoSuchSignalMember
+     * @return \FrameworkDSW\Reflection\TSignal
+     */
+    public function GetDeclaredSignal($Name) {
+        TType::String($Name);
+        $this->EnsureType();
+        if ((!$this->CheckMemberName($Name)) || ($this->getMetaInfo()->getMethod($Name)->getDeclaringClass()->getName() !== $this->FClassName)) {
+            throw new ENoSuchSignalMember(sprintf('No such declared signal member: "%s".', $Name), null, null, $Name, $this);
+        }
+
+        try {
+            return $this->DoGetSignal($Name);
+        }
+        catch (\ReflectionException $Ex) {
+            throw new ENoSuchSignalMember(sprintf('No such declared signal member: "%s".', $Name), null, null, $Name, $this);
+        }
+    }
+
+    /**
+     * descHere
+     * @return \FrameworkDSW\Reflection\TSignal[]
+     */
+    public function getDeclaredSignals() {
+        $this->EnsureType();
+        $mMethods = $this->getMetaInfo()->getMethods();
+        $mResult  = [];
+        $mNames   = [];
+        foreach ($mMethods as $mMethod) {
+            $mTemp = $this->CheckSignalName($mMethod->getName());
+            if (($mTemp != '') && ($mMethod->getDeclaringClass()->getName() === $this->FClassName)) {
+                $mNames[] = $mTemp;
+            }
+        }
+        foreach ($mNames as $mName) {
+            $mResult[] = $this->DoGetSignal($mName);
+        }
+
+        return $mResult;
+    }
+
+    /**
+     * descHere
+     * @param string $Name
+     * @throws ENoSuchSlotMember
+     * @return \FrameworkDSW\Reflection\TSlot
+     */
+    public function GetDeclaredSlot($Name) {
+        TType::String($Name);
+        $this->EnsureType();
+        if ((!$this->CheckMemberName($Name)) || ($this->getMetaInfo()->getMethod($Name)->getDeclaringClass()->getName() !== $this->FClassName)) {
+            throw new ENoSuchSlotMember(sprintf('No such declared slot member: "%s".', $Name), null, null, $Name, $this);
+        }
+
+        try {
+            return $this->DoGetSignal($Name);
+        }
+        catch (\ReflectionException $Ex) {
+            throw new ENoSuchSlotMember(sprintf('No such declared slot member: "%s".', $Name), null, null, $Name, $this);
+        }
+    }
+
+    /**
+     * descHere
+     * @return \FrameworkDSW\Reflection\TSlot[]
+     */
+    public function getDeclaredSlots() {
+        $this->EnsureType();
+        $mMethods = $this->getMetaInfo()->getMethods();
+        $mResult  = [];
+        $mNames   = [];
+        foreach ($mMethods as $mMethod) {
+            $mTemp = $this->CheckSlotName($mMethod->getName());
+            if (($mTemp != '') && ($mMethod->getDeclaringClass()->getName() === $this->FClassName)) {
+                $mNames[] = $mTemp;
+            }
+        }
+        foreach ($mNames as $mName) {
+            $mResult[] = $this->DoGetSlot($mName);
+        }
+
+        return $mResult;
+    }
+
 
     /**
      * descHere
@@ -886,14 +1223,12 @@ class TClass extends TObject implements IType {
         $mRawElementType      = substr($this->FClassName, 0, -2);
         $mOriginalGenericArgT = $this->GenericArg('T');
         if (is_array($mOriginalGenericArgT)) {
-            $mGenericArgs = ['T' => [$mRawElementType => $mOriginalGenericArgT[$this->FClassName]]];
+            $mGenericArgs = [$mRawElementType => $mOriginalGenericArgT[$this->FClassName]];
         }
         else {
-            $mGenericArgs = ['T' => $mRawElementType];
+            $mGenericArgs = $mRawElementType;
         }
-        TClass::PrepareGeneric($mGenericArgs);
-
-        return new TClass();
+        return Framework::Type($mGenericArgs);
     }
 
     /**
@@ -912,8 +1247,7 @@ class TClass extends TObject implements IType {
             $mResult      = new TMap(true);
             $mGenericArgs = $mGenericArgs[$this->FClassName];
             foreach ($mGenericArgs as $mName => $mType) {
-                TClass::PrepareGeneric(['T' => $mType]);
-                $mResult[$mName] = new TClass();
+                $mResult[$mName] = Framework::Type($mType);
             }
 
             return $mResult;
@@ -939,8 +1273,7 @@ class TClass extends TObject implements IType {
             else {
                 $mInterface = $mRawInterfaceName;
             }
-            TClass::PrepareGeneric(['T' => $mInterface]);
-            $mResult[] = new TClass();
+            $mResult[] = Framework::Type($mInterface);
         }
 
         return $mResult;
@@ -954,7 +1287,7 @@ class TClass extends TObject implements IType {
         TType::String($Name);
         $this->EnsureType();
 
-        return new TField($this, $Name);
+        return $this->DoGetField($Name);
     }
 
     /**
@@ -966,8 +1299,7 @@ class TClass extends TObject implements IType {
         $mFields = $this->getMetaInfo()->getProperties();
         $mResult = [];
         foreach ($mFields as $mField) {
-            $mName     = $mField->getName();
-            $mResult[] = new TField($this, $mName);
+            $mResult[] = $this->DoGetField($mField->getName());
         }
 
         return $mResult;
@@ -982,8 +1314,8 @@ class TClass extends TObject implements IType {
     public function GetMethod($Name) {
         TType::String($Name);
         $this->EnsureType();
-        if ($this->CheckMethodName($Name)) {
-            return new TMethod($this, $Name);
+        if ($this->CheckMemberName($Name)) {
+            return $this->DoGetMethod($Name);
         }
         else {
             throw new ENoSuchMethodMember(sprintf('No such method member: "%s".', $Name), null, null, $Name, $this);
@@ -998,11 +1330,134 @@ class TClass extends TObject implements IType {
         $this->EnsureType();
         $mMethods = $this->getMetaInfo()->getMethods();
         $mResult  = [];
+        $mNames   = [];
         foreach ($mMethods as $mMethod) {
-            $mName = $mMethod->getName();
-            if ($this->CheckMethodName($mName)) {
-                $mResult[] = new TMethod($this, $mName);
+            $mTemp = $this->CheckMethodName($mMethod->getName());
+            if ($mTemp != '') {
+                $mNames[] = $mTemp;
             }
+        }
+        foreach ($mNames as $mName) {
+            $mResult[] = $this->DoGetMethod($mName);
+        }
+
+        return $mResult;
+    }
+
+    /**
+     * descHere
+     * @param string $Name
+     * @throws ENoSuchPropertyMember
+     * @return \FrameworkDSW\Reflection\TProperty
+     */
+    public function GetProperty($Name) {
+        TType::String($Name);
+        $this->EnsureType();
+        if ($this->CheckMemberName($Name)) {
+            return $this->DoGetProperty($Name);
+        }
+        else {
+            throw new ENoSuchPropertyMember(sprintf('No such property member: "%s".', $Name), null, null, $Name, $this);
+        }
+    }
+
+    /**
+     * descHere
+     * @return \FrameworkDSW\Reflection\TProperty[]
+     */
+    public function getProperties() {
+        $this->EnsureType();
+        $mMethods = $this->getMetaInfo()->getMethods();
+        $mResult  = [];
+        $mNames   = [];
+        foreach ($mMethods as $mMethod) {
+            $mTemp = $this->CheckPropertyName($mMethod->getName());
+            if ($mTemp != '' && !in_array($mTemp, $mNames, true)) {
+                $mNames[] = $mTemp;
+            }
+        }
+        foreach ($mNames as $mName) {
+            $mResult[] = $this->DoGetProperty($mName);
+        }
+
+        return $mResult;
+    }
+
+
+    /**
+     * descHere
+     * @param string $Name
+     * @throws ENoSuchSignalMember
+     * @return \FrameworkDSW\Reflection\TSignal
+     */
+    public function GetSignal($Name) {
+        TType::String($Name);
+        $this->EnsureType();
+        if ($this->CheckMemberName($Name)) {
+            return $this->DoGetSignal($Name);
+        }
+        else {
+            throw new ENoSuchSignalMember(sprintf('No such signal member: "%s".', $Name), null, null, $Name, $this);
+        }
+    }
+
+    /**
+     * descHere
+     * @return \FrameworkDSW\Reflection\TSignal[]
+     */
+    public function getSignals() {
+        $this->EnsureType();
+        $mMethods = $this->getMetaInfo()->getMethods();
+        $mResult  = [];
+        $mNames   = [];
+        foreach ($mMethods as $mMethod) {
+            $mTemp = $this->CheckSignalName($mMethod->getName());
+            if ($mTemp != '' && !in_array($mTemp, $mNames, true)) {
+                $mNames[] = $mTemp;
+            }
+        }
+        foreach ($mNames as $mName) {
+            $mResult[] = $this->DoGetSignal($mName);
+        }
+
+        return $mResult;
+    }
+
+
+    /**
+     * descHere
+     * @param string $Name
+     * @throws ENoSuchSlotMember
+     * @return \FrameworkDSW\Reflection\TSlot
+     */
+    public function GetSlot($Name) {
+        TType::String($Name);
+        $this->EnsureType();
+        if ($this->CheckMemberName($Name)) {
+            return $this->DoGetSlot($Name);
+        }
+        else {
+            throw new ENoSuchSlotMember(sprintf('No such slot member: "%s".', $Name), null, null, $Name, $this);
+        }
+    }
+
+    /**
+     * descHere
+     * @return \FrameworkDSW\Reflection\TSlot[]
+     */
+    public function getSlots() {
+        $this->EnsureType();
+        $mMethods = $this->getMetaInfo()->getMethods();
+        $mResult  = [];
+        $mNames   = [];
+        foreach ($mMethods as $mMethod) {
+            $mTemp = $this->CheckSlotName($mMethod->getName());
+            if ($mTemp != '' && !in_array($mTemp, $mNames, true)) {
+                $mNames[] = $mTemp;
+            }
+        }
+        foreach ($mNames as $mName) {
+            $mResult[] = $this->DoGetSlot($mName);
         }
 
         return $mResult;
@@ -1041,9 +1496,7 @@ class TClass extends TObject implements IType {
             return null;
         }
         else {
-            TClass::PrepareGeneric(['T' => [$mParentClassMetaInfo->getName() => $this->getExtendsInfo()[$mParentClassMetaInfo->getName()]]]);
-
-            return new TClass();
+            return Framework::Type([$mParentClassMetaInfo->getName() => $this->getExtendsInfo()[$mParentClassMetaInfo->getName()]]);
         }
     }
 
@@ -2078,8 +2531,7 @@ final class TMethod extends TAbstractMember implements IMember {
         $mResult = [];
         array_shift($this->FParameterValues);
         foreach ($this->FParameterValues as $mValue) {
-            TClass::PrepareGeneric(['T' => $mValue]);
-            $mResult[] = new TClass();
+            $mResult[] = Framework::Type($mValue);
         }
 
         return $mResult;

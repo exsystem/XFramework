@@ -1,9 +1,14 @@
 <?php
 
 use FrameworkDSW\Containers\TList;
+use FrameworkDSW\Containers\TPair;
 use FrameworkDSW\Framework\Framework;
 use FrameworkDSW\Linq\Expressions\TExpression;
+use FrameworkDSW\Linq\Expressions\TParameterExpression;
 use FrameworkDSW\Linq\LinqToMysql\TMysqlQueryProvider;
+use FrameworkDSW\Linq\TPredicateDelegate;
+use FrameworkDSW\Linq\TSelectorDelegate;
+use FrameworkDSW\System\TBoolean;
 
 require_once 'FrameworkDSW/Framework.php';
 require_once 'Tests/helperForLinqToMysql.php';
@@ -16,38 +21,37 @@ echo "\n";
 
 $MysqlQueryProvider = new TMysqlQueryProvider();
 $c                  = new TTestContext($MysqlQueryProvider);
-$c->PrepareMethodGeneric(array('T' => TStudent::class));
+$c->PrepareMethodGeneric(['T' => TStudent::class]);
 
 $q = $c->CreateQuery();
 
-TList::PrepareGeneric(array('T' => 'TParameterExpression'));
+TList::PrepareGeneric(['T' => TParameterExpression::class]);
 
 $params = new TList();
-$params->Add(TExpression::Parameter('t', 'TStudent'));
-$expr = TExpression::NotEqual(TExpression::MakeMember(TExpression::Parameter('t', 'TStudent'), 'FGender', 'TBoolean'), TExpression::Constant(null, 'TBoolean'));
-TExpression::PrepareGeneric(array(
-    'T' => array(
-        'TPredicateDelegate' => array(
-            'E' => array(
-                'TPair' => array('K' => 'integer', 'V' => 'TStudent'))))));
+$params->Add(TExpression::Parameter('t', Framework::Type(TStudent::class)));
+$expr = TExpression::NotEqual(TExpression::MakeMember(TExpression::Parameter('t', Framework::Type(TStudent::class)), 'FGender', Framework::Type(TBoolean::class)), TExpression::Constant(null, Framework::Type(TBoolean::class)));
+TExpression::PrepareGeneric([
+    'T' => [
+        TPredicateDelegate::class => [
+            'E' => [
+                TPair::class => ['K' => Framework::Integer, 'V' => TStudent::class]]]]]);
 $expr = TExpression::TypedLambda($expr, $params);
 
-$selector = TExpression::Parameter('t', 'TStudent');
-TExpression::PrepareGeneric(array(
-    'T' => array(
-        'TSelectorDelegate' => array(
-            'S' => array(
-                'TPair' => array('K' => 'integer', 'V' => 'TStudent')),
-            'D' => 'TStudent'))));
+$selector = TExpression::Parameter('t', Framework::Type(TStudent::class));
+TExpression::PrepareGeneric([
+    'T' => [
+        TSelectorDelegate::class => [
+            'S' => [
+                TPair::class => ['K' => Framework::Integer, 'V' => TStudent::class]],
+            'D' => TStudent::class]]]);
 $selector = TExpression::TypedLambda($selector, $params);
-
-$orderby = TExpression::MakeMember(TExpression::Parameter('t', 'TStudent'), 'FName', 'string');
-TExpression::PrepareGeneric(array(
-    'T' => array(
-        'TSelectorDelegate' => array('S' => 'TStudent', 'D' => 'string'))));
+$orderby  = TExpression::MakeMember(TExpression::Parameter('t', Framework::Type(TStudent::class)), 'FName', Framework::Type(Framework::String));
+TExpression::PrepareGeneric([
+    'T' => [
+        TSelectorDelegate::class => ['S' => TStudent::class, 'D' => Framework::String]]]);
 $orderby = TExpression::TypedLambda($orderby, $params);
 
-$q->PrepareMethodGeneric(array('R' => 'TStudent', 'K' => 'string'));
+$q->PrepareMethodGeneric(['R' => TStudent::class, 'K' => Framework::String]);
 foreach ($q->Select($selector)->Where($expr)->OrderByDescending($orderby) as $s) {
     echo $s->getName()->getValue();
     echo "\n";

@@ -6,6 +6,7 @@ use FrameworkDSW\Containers\TMap;
 use FrameworkDSW\Database\EExecuteFailed;
 use FrameworkDSW\Database\Mysql\TMysqlConnection;
 use FrameworkDSW\Database\Mysql\TMysqlDriver;
+use FrameworkDSW\Database\Mysql\TMysqlWarningContext;
 use FrameworkDSW\Database\TConcurrencyType;
 use FrameworkDSW\Database\TResultSetType;
 use FrameworkDSW\Framework\Framework;
@@ -101,7 +102,7 @@ EOD;
             }
             catch (EExecuteFailed $e) {
                 $mContext = $e->getWarningContext();
-                if ($mContext->IsInstanceOf('TMysqlWarningContext')) {
+                if ($mContext->IsInstanceOf(Framework::Type(TMysqlWarningContext::class))) {
                     logging($mContext->getErrorMessage());
                 }
             }

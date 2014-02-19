@@ -8,6 +8,7 @@
 namespace FrameworkDSW\Framework;
 
 require_once 'FrameworkDSW/System.php';
+use FrameworkDSW\Reflection\TClass;
 use FrameworkDSW\System\EError;
 use FrameworkDSW\System\ENoSuchType;
 use FrameworkDSW\System\TDelegate;
@@ -129,6 +130,18 @@ class Framework extends TObject {
      * @var array
      */
     private static $FDelegates = [];
+    /**
+     * @var boolean
+     */
+    private static $FDebug = false;
+    /**
+     * @var array
+     */
+    private static $FTypeInfo = [];
+    /**
+     * @var array
+     */
+    private static $FTypeObjs = [];
 
     /**
      * Serialize a variable or a class into a string.
@@ -411,11 +424,6 @@ class Framework extends TObject {
     }
 
     /**
-     * @var boolean
-     */
-    private static $FDebug = false;
-
-    /**
      *
      */
     public static function Debug() {
@@ -441,6 +449,41 @@ class Framework extends TObject {
      */
     public static function IsRelease() {
         return !Framework::$FDebug;
+    }
+
+    /**
+     * @param mixed $Type
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
+     */
+    public static function Type($Type) {
+        if (is_string($Type)) {
+            $mKey   = $Type;
+            $mValue = null;
+        }
+        else {
+            $mKey   = array_keys($Type)[0];
+            $mValue = $Type[$mKey];
+        }
+        if (isset(Framework::$FTypeInfo[$mKey])) {
+            $mIndex = array_search($mValue, Framework::$FTypeInfo[$mKey], true);
+            if ($mIndex === false) {
+                TClass::PrepareGeneric(['T' => $Type]);
+                $mClass                        = new TClass();
+                Framework::$FTypeInfo[$mKey][] = $mValue;
+                Framework::$FTypeObjs[$mKey][] = $mClass;
+                return $mClass;
+            }
+            else {
+                return Framework::$FTypeObjs[$mKey][$mIndex];
+            }
+        }
+        else {
+            TClass::PrepareGeneric(['T' => $Type]);
+            $mClass                      = new TClass();
+            Framework::$FTypeInfo[$mKey] = [$mValue];
+            Framework::$FTypeObjs[$mKey] = [$mClass];
+            return $mClass;
+        }
     }
 }
 

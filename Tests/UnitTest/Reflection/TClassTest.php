@@ -2,6 +2,7 @@
 
 namespace UnitTest;
 
+use FrameworkDSW\Containers\IMap;
 use FrameworkDSW\Containers\TList;
 use FrameworkDSW\Containers\TMap;
 use FrameworkDSW\Framework\Framework;
@@ -11,6 +12,7 @@ use FrameworkDSW\Reflection\ENoSuchMethodMember;
 use FrameworkDSW\Reflection\TClass;
 use FrameworkDSW\System\IDelegate;
 use FrameworkDSW\System\TDelegate;
+use FrameworkDSW\System\TObject;
 use FrameworkDSW\Utilities\EInvalidObjectCasting;
 use FrameworkDSW\Utilities\TType;
 
@@ -99,7 +101,7 @@ class TClassTest extends \PHPUnit_Framework_TestCase {
         $mConstructor = $this->FClass->getConstructor();
         /** @var \FrameworkDSW\System\TObject $mInstance */
         $mInstance = $mConstructor->NewInstance([]);
-        $this->assertEquals('FrameworkDSW\System\TObject', $mInstance->ClassType());
+        $this->assertEquals(TObject::class, $mInstance->ObjectType()->getName());
         Framework::Free($mInstance);
         Framework::Free($mConstructor);
     }
@@ -109,8 +111,8 @@ class TClassTest extends \PHPUnit_Framework_TestCase {
      */
     public function testGetDeclaredField() {
         $mTests = [
-            'FrameworkDSW\Containers\IMap' => ['FrameworkDSW\Containers\IMap' => ['K' => 'string', 'V' => 'string']],
-            TMap::ClassType()              => [TMap::ClassType() => ['K' => 'string', 'V' => 'string']],
+            IMap::class => [IMap::class => ['K' => Framework::String, 'V' => Framework::String]],
+            TMap::class => [TMap::class => ['K' => Framework::String, 'V' => Framework::String]],
         ];
 
         foreach ($mTests as $mClassType => $mT) {
@@ -158,8 +160,8 @@ class TClassTest extends \PHPUnit_Framework_TestCase {
      */
     public function testGetDeclaredFields() {
         $mTests = [
-            'FrameworkDSW\Containers\IMap' => ['FrameworkDSW\Containers\IMap' => ['K' => 'string', 'V' => 'string']],
-            TMap::ClassType()              => [TMap::ClassType() => ['K' => 'string', 'V' => 'string']],
+            IMap::class => [IMap::class => ['K' => Framework::String, 'V' => Framework::String]],
+            TMap::class => [TMap::class => ['K' => Framework::String, 'V' => Framework::String]],
         ];
 
         foreach ($mTests as $mClassType => $mT) {

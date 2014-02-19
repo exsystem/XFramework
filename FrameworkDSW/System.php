@@ -7,6 +7,7 @@
  */
 namespace FrameworkDSW\System;
 
+use FrameworkDSW\Containers\IIteratorAggregate;
 use FrameworkDSW\Framework\Framework;
 use FrameworkDSW\Reflection\TClass;
 use FrameworkDSW\Utilities\EInvalidStringCasting;
@@ -763,8 +764,7 @@ interface IInterface {
     /**
      * Tell if the object supports the given interface.
      *
-     * @param $AInterface string
-     *            The interface name to be tested.
+     * @param \FrameworkDSW\Reflection\TClass $AInterface <T: ?> The interface name to be tested.
      * @return boolean True for supported, false for unsupported.
      */
     public function Supports($AInterface);
@@ -772,34 +772,34 @@ interface IInterface {
     /**
      * Get the object type, with generic information.
      *
-     * @return mixed
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
     public function ObjectType();
 
     /**
      * Get the class type.
      *
-     * @return string The name of the class.
+     * @return \FrameworkDSW\Reflection\TClass <T: ?> The name of the class.
      */
     public static function ClassType();
 
     /**
      *
-     * @return mixed
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
     public function ObjectParentType();
 
     /**
      * Get the parent's class type.
      *
-     * @return string The name of the parent class.
+     * @return \FrameworkDSW\Reflection\TClass <T: ?> The name of the parent class.
      * @see TObject::InheritsFrom()
      */
     public static function ClassParent();
 
     /**
      *
-     * @param mixed $Type
+     * @param \FrameworkDSW\Reflection\TClass $Type <T: ?>
      * @return boolean
      */
     public function IsInstanceOf($Type);
@@ -807,8 +807,7 @@ interface IInterface {
     /**
      * Tell if this class inherits from the given class.
      *
-     * @param string $AClass
-     *            The given class.
+     * @param \FrameworkDSW\Reflection\TClass $AClass <T: ?> The given class.
      * @return boolean If the object is inherited from
      *         <var>$AClass</var>.
      * @see TObject::ClassParent()
@@ -981,7 +980,7 @@ class TObject implements IInterface {
     /**
      * Compare with another object.
      *
-     * @param $Obj IInterface
+     * @param \FrameworkDSW\System\IInterface $Obj
      * @return boolean
      */
     public function Equals($Obj) {
@@ -993,41 +992,42 @@ class TObject implements IInterface {
     /**
      * Tell if the object supports the given interface.
      *
-     * @param $AInterface string
-     *            The interface name to be tested.
+     * @param \FrameworkDSW\Reflection\TClass $AInterface <T: ?> The interface o be tested.
      * @return boolean True for supported, false for unsupported.
      */
     public final function Supports($AInterface) {
-        TType::Intf($AInterface);
+        TType::Object($AInterface, [TClass::class => ['T' => null]]);
 
-        return $this instanceof $AInterface;
+        return $AInterface->IsInterface() && $this->IsInstanceOf($AInterface);
     }
 
     /**
      * Get the object type, with generic information.
      *
-     * @return mixed
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
     public final function ObjectType() {
         if (empty($this->FGenericArgs)) {
-            return get_class($this);
+            $mType = get_class($this);
         }
-
-        return array(get_class($this) => $this->FGenericArgs);
+        else {
+            $mType = [get_class($this) => $this->FGenericArgs];
+        }
+        return Framework::Type($mType);
     }
 
     /**
      * Get the class type.
      *
-     * @return string The name of the class.
+     * @return \FrameworkDSW\Reflection\TClass <T: ?> The name of the class.
      */
     public static final function ClassType() {
-        return get_called_class();
+        return Framework::Type(get_called_class());
     }
 
     /**
      *
-     * @return mixed
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
     public final function ObjectParentType() {
         $mClass = get_parent_class($this);
@@ -1038,7 +1038,7 @@ class TObject implements IInterface {
             return $mClass;
         }
 
-        return array($mClass => $this->FGenericArgs);
+        return Framework::Type([$mClass => $this->FGenericArgs]);
     }
 
     /**
@@ -1048,42 +1048,35 @@ class TObject implements IInterface {
      * @see TObject::InheritsFrom()
      */
     public final static function ClassParent() {
-        $mResult = get_parent_class(self::ClassType());
+        $mResult = get_parent_class(get_called_class());
         if ($mResult == false) {
             return null;
         }
 
-        return $mResult;
+        return Framework::Type($mResult);
     }
 
     /**
      *
-     * @param $Type mixed
+     * @param \FrameworkDSW\Reflection\TClass $Type <T: ?>
      * @return boolean
      */
     public final function IsInstanceOf($Type) {
-        if (is_string($Type)) {
-            return $this instanceof $Type;
-        }
-        else {
-            $mType = array_keys($Type)[0];
-            return $this instanceof $mType;
-        }
+        return $Type->IsInstance($this);
     }
 
     /**
      * Tell if this class inherits from the given class.
      *
-     * @param $AClass string
-     *            The given class.
+     * @param \FrameworkDSW\Reflection\TClass $AClass <T: ?> The given class.
      * @return boolean If the object is inherited from
      *         <var>$AClass</var>.
      * @see TObject::ClassParent()
      */
     public final static function InheritsFrom($AClass) {
-        TType::MetaClass($AClass);
+        TType::Object($AClass, [TClass::class => ['T' => null]]);
 
-        return is_subclass_of(self::ClassType(), $AClass);
+        return is_subclass_of(get_called_class(), $AClass->getName());
     }
 
     /**
@@ -1144,7 +1137,7 @@ class TObject implements IInterface {
      * @return string The path of this class.
      */
     public final static function DeclaredIn() {
-        $mInfo = new \ReflectionClass(self::ClassType());
+        $mInfo = new \ReflectionClass(get_called_class());
 
         return $mInfo->getFileName();
     }
@@ -1221,22 +1214,18 @@ class TObject implements IInterface {
             $mSlotObject = null;
             $mSlotClass  = null;
             if (is_string($Signal[0])) {
-                TClass::PrepareGeneric(['T' => $Signal[0]]);
-                $mSignalClass   = new TClass();
-                $mSignalMessage = sprintf('%s::%s', $mSignalClass->getName(), $Signal[1]);
+                $mSignalMessage = sprintf('%s::%s', Framework::Type($Signal[0])->getName(), $Signal[1]);
             }
             else {
                 $mSignalObject  = $Signal[0];
-                $mSignalMessage = sprintf('%s->%s', $mSignalObject->ClassType(), $Signal[1]);
+                $mSignalMessage = sprintf('%s->%s', $mSignalObject->ObjectType()->getName(), $Signal[1]);
             }
             if (is_string($Slot[0])) {
-                TClass::PrepareGeneric(['T' => $Slot[0]]);
-                $mSlotClass   = new TClass();
-                $mSlotMessage = sprintf('%s::%s', $mSlotClass->getName(), $Slot[1]);
+                $mSlotMessage = sprintf('%s::%s', Framework::Type($Slot[0])->getName(), $Slot[1]);
             }
             else {
                 $mSlotObject  = $Slot[0];
-                $mSlotMessage = sprintf('%s::%s', $mSlotObject->ClassType(), $Slot[1]);
+                $mSlotMessage = sprintf('%s::%s', $mSlotObject->ObjectType()->getName(), $Slot[1]);
             }
             throw new ELinkFailed("Link failed: signal {$mSignalMessage} with slot {$mSlotMessage}.", null, $mSignalObject, $Signal[1], $mSignalClass, $mSlotObject, $Slot[1], $mSlotClass);
         }
@@ -1272,13 +1261,11 @@ class TObject implements IInterface {
             $mSlotObject = null;
             $mSlotClass  = null;
             if (is_string($Signal[0])) {
-                TClass::PrepareGeneric(['T' => $Signal[0]]);
-                $mSignalClass   = new TClass();
-                $mSignalMessage = sprintf('%s::%s', $mSignalClass->getName(), $Signal[1]);
+                $mSignalMessage = sprintf('%s::%s', Framework::Type($Signal[0])->getName(), $Signal[1]);
             }
             else {
                 $mSignalObject  = $Signal[0];
-                $mSignalMessage = sprintf('%s->%s', $mSignalObject->ClassType(), $Signal[1]);
+                $mSignalMessage = sprintf('%s->%s', $mSignalObject->ObjectType()->getName(), $Signal[1]);
             }
             if (is_string($Slot[0])) {
                 TClass::PrepareGeneric(['T' => $Slot[0]]);
@@ -1287,7 +1274,7 @@ class TObject implements IInterface {
             }
             else {
                 $mSlotObject  = $Slot[0];
-                $mSlotMessage = sprintf('%s::%s', $mSlotObject->ClassType(), $Slot[1]);
+                $mSlotMessage = sprintf('%s::%s', $mSlotObject->ObjectType()->getName(), $Slot[1]);
             }
             throw new EUnlinkFailed("Unlink failed: signal {$mSignalMessage} with slot {$mSlotMessage}.", null, $mSignalObject, $Signal[1], $mSignalClass, $mSlotObject, $Slot[1], $mSlotClass);
         }
@@ -1326,13 +1313,11 @@ class TObject implements IInterface {
             $mSignalObject = null;
             $mSignalClass  = null;
             if (is_string($Signal[0])) {
-                TClass::PrepareGeneric(['T' => $Signal[0]]);
-                $mSignalClass   = new TClass();
-                $mSignalMessage = sprintf('%s::%s', $mSignalClass->getName(), $Signal[1]);
+                $mSignalMessage = sprintf('%s::%s', Framework::Type($Signal[0])->getName(), $Signal[1]);
             }
             else {
                 $mSignalObject  = $Signal[0];
-                $mSignalMessage = sprintf('%s->%s', $mSignalObject->ClassType(), $Signal[1]);
+                $mSignalMessage = sprintf('%s->%s', $mSignalObject->ObjectType()->getName(), $Signal[1]);
             }
             throw new EDispatchFailed("Dispatch failed: {$mSignalMessage}.", null, $mSignalObject, $Signal[1], $mSignalClass);
         }
@@ -1374,7 +1359,7 @@ class TObject implements IInterface {
                 if (is_string($Value)
                     && !($Value == Framework::Boolean || $Value == Framework::Integer
                         || $Value == Framework::Float || $Value == Framework::String
-                        || $Value == 'array'
+                        || strrpos($Value, ']', -1) !== false
                         || class_exists($Value)
                         || interface_exists($Value)
                         || $Value == Framework::Variant)
@@ -1409,7 +1394,7 @@ class TObject implements IInterface {
                 if (is_string($Value)
                     && !($Value == Framework::Boolean || $Value == Framework::Integer
                         || $Value == Framework::Float || $Value == Framework::String
-                        || $Value == 'array'
+                        || strrpos($Value, ']', -1) !== false
                         || class_exists($Value)
                         || interface_exists($Value)
                         || $Value == Framework::Variant)
@@ -1471,22 +1456,16 @@ class TObject implements IInterface {
                 }
                 catch (\ReflectionException $Ex) {
                 }
-                TClass::PrepareGeneric(['T' => self::ClassType()]);
-                $mClass = new TClass();
-                throw new ENoSuchMethod(sprintf('No such method: %s::%s().', self::ClassType(), $name), null, null, $name, $mClass);
+                throw new ENoSuchMethod(sprintf('No such method: %s::%s().', get_called_class(), $name), null, null, $name, self::ClassType());
             }
         }
         if ($mIsEnumOrSet) {
             if (!$mReflection->hasConstant($name)) {
                 if ($mIsEnum) {
-                    TClass::PrepareGeneric(['T' => $mReflection->getName()]);
-                    $mClass = new TClass();
-                    throw new ENoSuchEnumElement(sprintf('No such enum element: %s::%s().', $mReflection->getName(), $name), null, $mClass, $name);
+                    throw new ENoSuchEnumElement(sprintf('No such enum element: %s::%s().', $mReflection->getName(), $name), null, self::ClassType(), $name);
                 }
                 else {
-                    TClass::PrepareGeneric(['T' => $mReflection->getName()]);
-                    $mClass = new TClass();
-                    throw new ENoSuchSetElement(sprintf('No such set element: %s::%s().', $mReflection->getName(), $name), null, $mClass, $name);
+                    throw new ENoSuchSetElement(sprintf('No such set element: %s::%s().', $mReflection->getName(), $name), null, self::ClassType(), $name);
                 }
             }
 
@@ -1576,7 +1555,7 @@ class TObject implements IInterface {
      * @throws \FrameworkDSW\System\EAccessViolation
      */
     public function getIterator() {
-        if ($this->Supports('FrameworkDSW\Containers\IIteratorAggregate')) {
+        if ($this->Supports(Framework::Type(IIteratorAggregate::class))) {
             return $this->Iterator();
         }
         else {
@@ -1623,7 +1602,7 @@ abstract class TRecord extends TObject {
      * @see TObject::Equals()
      */
     public final function Equals($Obj) {
-        TType::Object($Obj, $this->ObjectType());
+        TType::Object($Obj, $this->ObjectType()->GenericArg('T'));
         foreach ($Obj as $mField => &$mValue) {
             if ($this->$mField !== $mValue) {
                 return false;
@@ -1793,7 +1772,7 @@ abstract class TSet extends TObject {
      * @param \FrameworkDSW\System\TSet $Set
      */
     public final function Union($Set) {
-        TType::Object($Set, $this->ClassType());
+        TType::Object($Set, get_called_class());
         foreach ($Set->FetchContent() as $mName => $mValue) {
             $this->FSet[$mName] = $mValue || $this->FSet[$mName];
         }
@@ -1804,7 +1783,7 @@ abstract class TSet extends TObject {
      * @param \FrameworkDSW\System\TSet $Set
      */
     public final function Subtract($Set) {
-        TType::Object($Set, $this->ClassType());
+        TType::Object($Set, get_called_class());
         foreach ($Set->FetchContent() as $mName => $mValue) {
             $this->FSet[$mName] = !($mValue && $this->FSet[$mName]);
         }
@@ -1815,7 +1794,7 @@ abstract class TSet extends TObject {
      * @param \FrameworkDSW\System\TSet $Set
      */
     public final function Intersect($Set) {
-        TType::Object($Set, $this->ClassType());
+        TType::Object($Set, get_called_class());
         foreach ($Set->FetchContent() as $mName => $mValue) {
             $this->FSet[$mName] = $mValue && $this->FSet[$mName];
         }
@@ -1827,7 +1806,7 @@ abstract class TSet extends TObject {
      * @return boolean
      */
     public final function IsSubsetOf($Set) {
-        TType::Object($Set, $this->ClassType());
+        TType::Object($Set, get_called_class());
         foreach ($Set->FetchContent() as $mName => $mValue) {
             if (!$mValue && $this->FSet[$mName]) {
                 return false;
@@ -1843,7 +1822,7 @@ abstract class TSet extends TObject {
      * @return boolean
      */
     public final function IsSuperSetOf($Set) {
-        TType::Object($Set, $this->ClassType());
+        TType::Object($Set, get_called_class());
         foreach ($Set->FetchContent() as $mName => $mValue) {
             if ($mName && !$this->FSet[$mName]) {
                 return false;

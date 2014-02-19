@@ -6,6 +6,7 @@ use FrameworkDSW\Database\Mysql\TMysqlDriver;
 use FrameworkDSW\DataObjects\IEntity;
 use FrameworkDSW\DataObjects\TObjectContext;
 use FrameworkDSW\Linq\IQueryProvider;
+use FrameworkDSW\Linq\LinqToMysql\TMysqlQueryProvider;
 use FrameworkDSW\System\EInvalidParameter;
 use FrameworkDSW\System\TBoolean;
 use FrameworkDSW\System\TInteger;
@@ -202,12 +203,13 @@ class TTestContext extends TObjectContext {
     /**
      *
      * @param IQueryProvider $QueryProvider
+     * @throws FrameworkDSW\System\EInvalidParameter
      */
     public function __construct($QueryProvider) {
         parent::__construct($QueryProvider);
 
-        TType::Object($QueryProvider, 'IQueryProvider');
-        if ($QueryProvider->ObjectType() !== 'TMysqlQueryProvider') {
+        TType::Object($QueryProvider, IQueryProvider::class);
+        if (!($QueryProvider instanceof TMysqlQueryProvider)) {
             throw new EInvalidParameter();
         }
 
@@ -217,7 +219,7 @@ class TTestContext extends TObjectContext {
         $mConfig['Username']       = 'root';
         $mConfig['Password']       = '';
         $mConfig['ConnectTimeout'] = '2';
-        $mConfig['Socket']         = '/opt/lampp/var/mysql/mysql.sock'; //LINUX ONLY
+        //$mConfig['Socket']         = '/opt/lampp/var/mysql/mysql.sock'; //LINUX ONLY
         #$mConfig['Socket'] = '/Applications/XAMPP/xamppfiles/var/mysql/mysql.sock'; // MACOSX
         // ONLY
         $this->FConn = $mDriver->Connect('MySQL://localhost/test', $mConfig);
