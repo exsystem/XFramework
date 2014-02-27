@@ -10,6 +10,7 @@ namespace FrameworkDSW\Utilities;
 use FrameworkDSW\Containers\TPair;
 use FrameworkDSW\Framework\Framework;
 use FrameworkDSW\System\EException;
+use FrameworkDSW\System\EInvalidParameter;
 use FrameworkDSW\System\ERuntimeException;
 use FrameworkDSW\System\IDelegate;
 use FrameworkDSW\System\TDelegate;
@@ -386,4 +387,91 @@ final class TVersion extends TRecord {
      * @var integer
      */
     public $Revision = 0;
+}
+
+/**
+ *
+ * @author 许子健
+ */
+class TUuid extends TRecord {
+    /**
+     *
+     * @var string
+     */
+    public $Bytes = "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
+
+    /**
+     *
+     * @param \FrameworkDSW\Utilities\TUuid $Uuid
+     * @return boolean
+     */
+    public static function Validate($Uuid) {
+        TType::Object($Uuid, TUuid::class);
+        return strlen($Uuid->Bytes) == 16;
+    }
+
+    /**
+     * @return \FrameworkDSW\Utilities\TUuid
+     */
+    public static function Generate() {
+        $mResult        = new TUuid();
+        $mResult->Bytes = pack('n*', //16bytes
+            mt_rand(0, 0xFFFF), mt_rand(0, 0xFFFF), //4bytes
+            mt_rand(0, 0xFFFF), //2bytes
+            mt_rand(0, 0x0FFF) | 0x4000, //2bytes
+            mt_rand(0, 0x3FFF) | 0x4000, //2bytes
+            mt_rand(0, 0xFFFF), mt_rand(0, 0xFFFF), mt_rand(0, 0xFFFF)); //6bytes
+        return $mResult;
+    }
+
+    /**
+     * @param \FrameworkDSW\Utilities\TUuid $Uuid
+     * @param string $Delimiter
+     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @return string
+     */
+    public static function ToString($Uuid, $Delimiter = '-') {
+        TType::Object($Uuid, TUuid::class);
+        TType::String($Delimiter);
+
+        if (!self::Validate($Uuid)) {
+            throw new EInvalidParameter();
+        }
+
+        $mResult = bin2hex(substr($Uuid->Bytes, 0, 4));
+        $mResult .= $Delimiter;
+        $mResult .= bin2hex(substr($Uuid->Bytes, 4, 2));
+        $mResult .= $Delimiter;
+        $mResult .= bin2hex(substr($Uuid->Bytes, 6, 2));
+        $mResult .= $Delimiter;
+        $mResult .= bin2hex(substr($Uuid->Bytes, 8, 2));
+        $mResult .= $Delimiter;
+        $mResult .= bin2hex(substr($Uuid->Bytes, 10, 6));
+        return $mResult;
+    }
+
+    /**
+     * @param string $String
+     * @throws EInvalidParameter
+     * @return \FrameworkDSW\Utilities\TUuid
+     */
+    public static function FromString($String) {
+        TType::String($String);
+        $mStartPos     = 0;
+        $mLength       = 0;
+        $mHexString    = '';
+        $mStringLength = strlen($String);
+        while ($mStartPos < $mStringLength) {
+            $mFoundLength = strspn($String, '0123456789abcdefABCDEF', $mStartPos, 32);
+            $mLength += $mFoundLength;
+            $mHexString .= substr($String, $mStartPos++, $mFoundLength);
+            $mStartPos += $mFoundLength;
+        }
+        if ($mLength != 32) {
+            throw new EInvalidParameter();
+        }
+        $mResult        = new TUuid();
+        $mResult->Bytes = pack('H*', $mHexString); //fixme hex2bin($mHexString) for php >=5.4
+        return $mResult;
+    }
 }
