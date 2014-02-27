@@ -143,7 +143,7 @@ class TMysqlDataTypeMapper extends TObject {
             self::$FTypeMappingFromSqlTable = [
                 MYSQLI_TYPE_BIT         => 'integer',
                 MYSQLI_TYPE_BLOB        => 'string',
-                MYSQLI_TYPE_CHAR        => 'string',
+                MYSQLI_TYPE_CHAR => 'integer',
                 MYSQLI_TYPE_DATE        => 'string',
                 MYSQLI_TYPE_DATETIME    => 'string', //TODO: date,datetime->string
                 MYSQLI_TYPE_DECIMAL     => 'string',
@@ -1420,8 +1420,7 @@ class TMysqlStatement extends TAbstractMysqlStatement implements IStatement {
             $this->FMysqliStmt->prepare($this->FCommand);
         }
         catch (\mysqli_sql_exception $Ex) {
-            TClass::PrepareGeneric(['T' => ESetCommandFailed::class]);
-            TMysqlConnection::PushMysqliExceptionWarning(new TClass(), $Ex, $this->FConnection);
+            TMysqlConnection::PushMysqliExceptionWarning(Framework::Type(ESetCommandFailed::class), $Ex, $this->FConnection);
         }
         switch ($this->FResultSetType) {
             case TResultSetType::eForwardOnly():
@@ -1458,16 +1457,21 @@ class TMysqlStatement extends TAbstractMysqlStatement implements IStatement {
         try {
             $this->FMysqliStmt->execute();
             $this->FMysqliStmt->bind_result($Value);
-            $mMeta = $this->FMysqliStmt->result_metadata();
-            $mMeta->fetch_field();
-            $this->FMysqliStmt->fetch();
-            $Type   = $mMeta->type;
-            $Length = $mMeta->lengths;
+            if ($this->FMysqliStmt->fetch() == null) {
+                $this->FMysqliStmt->reset(); //Prevent 'Command out of async' error for next mysqli_stmt_prepare() calling including those of other TMysqlStatement objects.
+                $this->FMysqliStmt->close();
+                $this->FMysqliStmt = null;
+                TMysqlConnection::PushWarning(Framework::Type(EFetchAsScalarFailed::class), '', '', '', $this->FConnection);
+            }
+            $mMeta  = $this->FMysqliStmt->result_metadata();
+            $mField = $mMeta->fetch_field();
+            $Type   = $mField->type;
+            $Length = $mField->length;
             $mMeta->close();
             $this->FMysqliStmt->reset(); //Prevent 'Command out of async' error for next mysqli_stmt_prepare() calling including those of other TMysqlStatement objects.
         }
         catch (\mysqli_sql_exception $Ex) {
-            $this->ResetMysqliStmt(EFetchAsScalarFailed::ClassType(), $Ex);
+            $this->ResetMysqliStmt(Framework::Type(EFetchAsScalarFailed::class), $Ex);
         }
     }
 
@@ -1602,11 +1606,10 @@ EOD;
             }
             array_unshift($mParamsRef, $mTypes);
             try {
-                call_user_func_array(array($this->FMysqliStmt, 'bind_param'), $mParamsRef);
+                call_user_func_array([$this->FMysqliStmt, 'bind_param'], $mParamsRef);
             }
             catch (\mysqli_sql_exception $Ex) {
-                TClass::PrepareGeneric(['T' => EExecuteFailed::class]);
-                TMysqlConnection::PushMysqliExceptionWarning(new TClass(), $Ex, $this->FConnection);
+                TMysqlConnection::PushMysqliExceptionWarning(Framework::Type(EExecuteFailed::class), $Ex, $this->FConnection);
             }
         }
     }
@@ -1735,8 +1738,7 @@ class TMysqlCallableStatement extends TAbstractMysqlStatement implements ICallab
                 $this->FMysqli->query("SET @p{$mParam} = '{$mParamValue}'");
             }
             catch (\mysqli_sql_exception $Ex) {
-                TClass::PrepareGeneric(['T' => EExecuteFailed::class]);
-                TMysqlConnection::PushMysqliExceptionWarning(new TClass(), $Ex, $this->FConnection);
+                TMysqlConnection::PushMysqliExceptionWarning(Framework::Type(EExecuteFailed::class), $Ex, $this->FConnection);
             }
         }
 
@@ -1746,14 +1748,12 @@ class TMysqlCallableStatement extends TAbstractMysqlStatement implements ICallab
                 return $this->FMysqli->store_result();
             }
             catch (\mysqli_sql_exception $Ex) {
-                TClass::PrepareGeneric(['T' => EExecuteFailed::class]);
-                TMysqlConnection::PushMysqliExceptionWarning(new TClass(), $Ex, $this->FConnection);
+                TMysqlConnection::PushMysqliExceptionWarning(Framework::Type(EExecuteFailed::class), $Ex, $this->FConnection);
             }
         }
         catch (\mysqli_sql_exception $Ex) {
             try {
-                TClass::PrepareGeneric(['T' => EExecuteFailed::class]);
-                TMysqlConnection::PushMysqliExceptionWarning(new TClass(), $Ex, $this->FConnection);
+                TMysqlConnection::PushMysqliExceptionWarning(Framework::Type(EExecuteFailed::class), $Ex, $this->FConnection);
             }
             catch (EExecuteFailed $Ex) {
                 while ($this->FMysqli->more_results() && $this->FMysqli->next_result()) {
@@ -1835,8 +1835,7 @@ class TMysqlCallableStatement extends TAbstractMysqlStatement implements ICallab
             ;
         }
         if ($mRawRow === null) {
-            TClass::PrepareGeneric(['T' => EFetchAsScalarFailed::class]);
-            TMysqlConnection::PushWarning(new TClass(), $this->FMysqli->sqlstate, $this->FMysqli->errno, $this->FMysqli->error, $this->FConnection);
+            TMysqlConnection::PushWarning(Framework::Type(EFetchAsScalarFailed::class), $this->FMysqli->sqlstate, $this->FMysqli->errno, $this->FMysqli->error, $this->FConnection);
         }
         $Value = $mRawRow[0];
     }

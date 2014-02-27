@@ -335,10 +335,10 @@ class Framework extends TObject {
     /**
      *
      * @param string $TypeName
-     * @param string $UnitPath
+     * @param mixed $UnitPath
      */
     public static final function RegisterExternalUnit($TypeName, $UnitPath) {
-        self::$FExternalUnits[(string)$TypeName] = (string)$UnitPath;
+        self::$FExternalUnits[(string)$TypeName] = $UnitPath;
     }
 
     /**
@@ -364,7 +364,7 @@ class Framework extends TObject {
             if ($Name === false) {
                 throw new ENoSuchType(sprintf('Illegal type name for autoloading: %s.', $Name), null, $Name);
             }
-            /**@var string $Name * */
+            /** @var string $Name */
             /** @noinspection PhpIncludeInspection */
             require_once "FrameworkDSW/{$Name}.php";
 
@@ -382,11 +382,28 @@ class Framework extends TObject {
             }
         }
         else {
-            $Name = str_replace('\\', DIRECTORY_SEPARATOR, $Name);
-            /**@var string $Name * */
-            /** @noinspection PhpIncludeInspection */
-            if (file_exists("{$Name}.php")) {
-                require_once "{$Name}.php";
+            $mFilename = str_replace('\\', DIRECTORY_SEPARATOR, $Name) . ".php";
+            if (file_exists($mFilename)) {
+                /** @noinspection PhpIncludeInspection */
+                require_once $mFilename;
+            }
+            else {
+                foreach (Framework::$FExternalUnits as $mNamespacePrefix => $mPathPrefix) {
+                    $mNamespacePrefixLength = strlen($mNamespacePrefix);
+                    if ($mNamespacePrefix[$mNamespacePrefixLength - 1] == '\\') {
+                        $mPos = strpos($Name, $mNamespacePrefix);
+                        if ($mPos === 0) {
+                            $mFilename = str_replace('\\', DIRECTORY_SEPARATOR, substr($Name, $mNamespacePrefixLength));
+                            $mFilename = "{$mPathPrefix}{$mFilename}.php";
+                            if (file_exists($mFilename)) {
+                                /** @noinspection PhpIncludeInspection */
+                                require_once $mFilename;
+                                return;
+                            }
+                            break;
+                        }
+                    }
+                }
             }
         }
     }

@@ -119,7 +119,7 @@ interface IAssertion extends IInterface {
      * @param \FrameworkDSW\Acl\TAcl $Acl
      * @param \FrameworkDSW\Acl\IRole $Role
      * @param \FrameworkDSW\Acl\IResource $Resource
-     * @param string
+     * @param string $Privilege
      * @return boolean
      */
     public static function Assert($Acl, $Role, $Resource, $Privilege);
@@ -550,7 +550,7 @@ class TRuntimeStorage extends TObject implements IStorage {
             return $this->FResources;
         }
         else {
-            TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String]);
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String . '[]']);
             $mResult = new TMap();
             foreach ($this->FResources as $mResource => $mPath) {
                 if (in_array($Resource, $mPath, true)) {

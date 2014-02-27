@@ -182,4 +182,4 @@ fputs($fp, sprintf("Updated: %s bytes\n", memory_get_usage(true)));
 Framework::Free($mControllerManager);
 Framework::Free($mController);
 fputs($fp, sprintf("Ended: %s bytes\n", memory_get_usage(true)));
-fputs($fp, sprintf("Peek: %s bytes\n", memory_get_usage(true)));
+fputs($fp, sprintf("Peak: %s bytes\n", memory_get_peak_usage(true)));
