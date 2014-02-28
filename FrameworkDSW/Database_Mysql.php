@@ -143,7 +143,7 @@ class TMysqlDataTypeMapper extends TObject {
             self::$FTypeMappingFromSqlTable = [
                 MYSQLI_TYPE_BIT         => 'integer',
                 MYSQLI_TYPE_BLOB        => 'string',
-                MYSQLI_TYPE_CHAR => 'integer',
+                MYSQLI_TYPE_CHAR        => 'integer',
                 MYSQLI_TYPE_DATE        => 'string',
                 MYSQLI_TYPE_DATETIME    => 'string', //TODO: date,datetime->string
                 MYSQLI_TYPE_DECIMAL     => 'string',
@@ -1573,7 +1573,8 @@ EOD;
      * @see \FrameworkDSW\Database\TMysqlStatement::DoSetCommand()
      */
     protected function DoSetCommand() {
-        $mChunks = preg_split(self::CPattern, $this->FCommand, 0, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+        $mChunks          = preg_split(self::CPattern, $this->FCommand, 0, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+        $this->FRawParams = [];
         foreach ($mChunks as &$mChunk) {
             if ($mChunk[0] == ':') {
                 $this->FRawParams[] = $mChunk;
@@ -1585,11 +1586,9 @@ EOD;
         try {
             parent::DoSetCommand();
         }
-        catch (ESetCommandFailed $Ex) {
+        finally {
             $this->FCommand = $mOriginalCommand;
-            throw $Ex;
         }
-        $this->FCommand = $mOriginalCommand;
     }
 
     /**
@@ -1599,10 +1598,10 @@ EOD;
         if ($this->FParams !== null && $this->FParams->Size() > 0) {
             $mTypes     = '';
             $mParamsRef = [];
-            foreach ($this->FRawParams as $mKey => &$mParam) {
+            foreach ($this->FRawParams as $mParam) {
                 $mTypes .= 's';
                 $mParam       = TMysqlDataTypeMapper::CastToSqlValue('string', $this->FParams[$mParam]);
-                $mParamsRef[] = & $this->FRawParams[$mKey];
+                $mParamsRef[] = & $mParam;
             }
             array_unshift($mParamsRef, $mTypes);
             try {
@@ -1649,8 +1648,7 @@ EOD;
             $this->FMysqliStmt->execute();
         }
         catch (\mysqli_sql_exception $Ex) {
-            TClass::PrepareGeneric(['T' => EExecuteFailed::class]);
-            TMysqlConnection::PushMysqliExceptionWarning(new TClass(), $Ex, $this->FConnection);
+            TMysqlConnection::PushMysqliExceptionWarning(Framework::Type(EExecuteFailed::class), $Ex, $this->FConnection);
         }
 
         return $this->FMysqliStmt->affected_rows;
