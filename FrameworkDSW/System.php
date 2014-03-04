@@ -752,6 +752,10 @@ class EConstructorInvocationNotAllowed extends EError {
  * @author 许子健
  */
 interface IInterface {
+    /**
+     *
+     */
+    public function Destroy();
 
     /**
      * Compare with another object.

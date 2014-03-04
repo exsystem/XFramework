@@ -322,7 +322,7 @@ class Framework extends TObject {
 
     /**
      * Act like FreeAndNil() in VCL.
-     * @param \FrameworkDSW\System\TObject $Object
+     * @param \FrameworkDSW\System\IInterface $Object
      */
     public static final function Free(&$Object) {
         if ($Object !== null) {

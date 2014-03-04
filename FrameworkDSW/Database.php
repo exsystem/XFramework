@@ -38,6 +38,12 @@ interface IDatabaseWarningContext extends IInterface {
      */
     public function getSqlState();
 
+    /**
+     *
+     * Enter description here ...
+     * @return string
+     */
+    public function getErrorMessage();
 }
 
 /**
