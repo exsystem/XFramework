@@ -3308,4 +3308,17 @@ class TWebApplication extends TComponent implements IApplication {
         //... free view
         //... and sub actions, models, views.
     }
+
+    /**
+     * @return \FrameworkDSW\Web\TWebApplication
+     */
+    public static function Application() {
+        $mApp = Framework::Application();
+        if ($mApp instanceof TWebApplication) {
+            return $mApp;
+        }
+        else {
+            return null;
+        }
+    }
 }
