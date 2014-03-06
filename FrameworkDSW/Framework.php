@@ -452,7 +452,7 @@ class Framework extends TObject {
      * @param \FrameworkDSW\Reflection\TClass $ApplicationClass <T: \FrameworkDSW\CoreClasses\IApplication>
      * @param \FrameworkDSW\System\IInterface[] $Parameters
      */
-    public function CreateApplication($ApplicationClass, $Parameters) {
+    public static function CreateApplication($ApplicationClass, $Parameters) {
         TType::Object($ApplicationClass, [TClass::class => ['T' => IApplication::class]]);
         TType::Type($ApplicationClass, IInterface::class . '[]');
         Framework::$FApplication = $ApplicationClass->NewInstance($Parameters);
@@ -461,7 +461,7 @@ class Framework extends TObject {
     /**
      * @return \FrameworkDSW\CoreClasses\IApplication
      */
-    public function Application() {
+    public static function Application() {
         return Framework::$FApplication;
     }
 
