@@ -8,11 +8,14 @@
 namespace FrameworkDSW\Framework;
 
 require_once 'FrameworkDSW/System.php';
+use FrameworkDSW\CoreClasses\IApplication;
 use FrameworkDSW\Reflection\TClass;
 use FrameworkDSW\System\EError;
 use FrameworkDSW\System\ENoSuchType;
+use FrameworkDSW\System\IInterface;
 use FrameworkDSW\System\TDelegate;
 use FrameworkDSW\System\TObject;
+use FrameworkDSW\Utilities\TType;
 
 /**
  * Serialization exception.
@@ -438,6 +441,28 @@ class Framework extends TObject {
         $mDelegate               = new TDelegate($Callback, $Type);
         Framework::$FDelegates[] = $mDelegate;
         return $mDelegate;
+    }
+
+    /**
+     * @var \FrameworkDSW\CoreClasses\IApplication
+     */
+    private static $FApplication = null;
+
+    /**
+     * @param \FrameworkDSW\Reflection\TClass $ApplicationClass <T: \FrameworkDSW\CoreClasses\IApplication>
+     * @param \FrameworkDSW\System\IInterface[] $Parameters
+     */
+    public function CreateApplication($ApplicationClass, $Parameters) {
+        TType::Object($ApplicationClass, [TClass::class => ['T' => IApplication::class]]);
+        TType::Type($ApplicationClass, IInterface::class . '[]');
+        Framework::$FApplication = $ApplicationClass->NewInstance($Parameters);
+    }
+
+    /**
+     * @return \FrameworkDSW\CoreClasses\IApplication
+     */
+    public function Application() {
+        return Framework::$FApplication;
     }
 
     /**

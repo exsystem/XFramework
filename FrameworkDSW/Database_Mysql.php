@@ -2667,8 +2667,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
             }
         }
         catch (\mysqli_sql_exception $Ex) {
-            TClass::PrepareGeneric(['T' => EFetchRowFailed::class]);
-            TMysqlConnection::PushMysqliExceptionWarning(new TClass(), $Ex, $this->FStatement->getConnection());
+            TMysqlConnection::PushMysqliExceptionWarning(Framework::Type(EFetchRowFailed::class), $Ex, $this->FStatement->getConnection());
         }
     }
 
@@ -2683,8 +2682,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
             $this->FMysqliStmt->fetch();
         }
         catch (\mysqli_sql_exception $Ex) {
-            TClass::PrepareGeneric(['T' => EExecuteFailed::class]);
-            TMysqlConnection::PushMysqliExceptionWarning(new TClass(), $Ex, $this->FStatement->getConnection());
+            TMysqlConnection::PushMysqliExceptionWarning(Framework::Type(EExecuteFailed::class), $Ex, $this->FStatement->getConnection());
         }
     }
 
@@ -2721,8 +2719,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
             $this->FMysqliStmt->execute();
         }
         catch (\mysqli_sql_exception $Ex) {
-            TClass::PrepareGeneric(['T' => EExecuteFailed::class]);
-            TMysqlConnection::PushMysqliExceptionWarning(new TClass(), $Ex, $this->FStatement->getConnection());
+            TMysqlConnection::PushMysqliExceptionWarning(Framework::Type(EExecuteFailed::class), $Ex, $this->FStatement->getConnection());
         }
         if ($this->FMysqliStmt->attr_get(MYSQLI_STMT_ATTR_CURSOR_TYPE) === MYSQLI_CURSOR_TYPE_NO_CURSOR) {
             //TODO: php-cgi crashed here only in SnowLeopard.
