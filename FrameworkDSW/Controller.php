@@ -51,9 +51,9 @@ interface TViewBinder extends IDelegate {
 interface TControllerAction extends IDelegate {
     /**
      * @param \FrameworkDSW\System\IInterface $Model
-     * @return \FrameworkDSW\Containers\IMap <K: string, V: \FrameworkDSW\System\IInterface>
+     * @param \FrameworkDSW\Containers\IMap $ViewData <K: string, V: \FrameworkDSW\System\IInterface>
      */
-    public function Invoke($Model);
+    public function Invoke($Model, $ViewData);
 }
 
 /**
@@ -423,8 +423,10 @@ class TControllerManager extends TObject implements IControllerManager {
     public function Update($Action) {
         try {
             $mRegistration = $this->FViewRegistration[$Action];
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => IInterface::class]);
+            $mViewData = new TMap(true);
             /** @var TDelegate $Action */
-            $mViewData = $Action($this->FModelRegistration[$Action]);
+            $Action($this->FModelRegistration[$Action], $mViewData);
             /** @var IView $mView */
             foreach ($mRegistration as $mView) {
                 $mView->Update($mViewData);

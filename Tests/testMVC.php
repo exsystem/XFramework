@@ -2,7 +2,6 @@
 namespace testHMVC;
 set_include_path(get_include_path() . PATH_SEPARATOR . '../');
 require_once 'FrameworkDSW/Framework.php';
-use FrameworkDSW\Containers\TMap;
 use FrameworkDSW\Controller\TControllerAction;
 use FrameworkDSW\Controller\TControllerManager;
 use FrameworkDSW\Controller\TModelBinder;
@@ -92,31 +91,24 @@ class TMyController extends TObject {
 
     /**
      * @param \FrameworkDSW\System\IInterface $Model
-     * @return \FrameworkDSW\Containers\TMap <K: string, V: \FrameworkDSW\System\IInterface>
+     * @param \FrameworkDSW\Containers\IMap $ViewData <K: string, V: \FrameworkDSW\System\IInterface>
      */
-    public function TestAction($Model) {
+    public function TestAction($Model, $ViewData) {
         TType::Object($Model, IInterface::class);
         /** @var TMyModel $Model */
-        TMap::PrepareGeneric(['K' => Framework::String, 'V' => IInterface::class]);
-        $mView             = new TMap();
-        $mView['ViewData'] = new TString(sprintf('There are %s little pigs.', (string)$Model->FData));
+        $ViewData['ViewData'] = new TString(sprintf('There are %s little pigs.', (string)$Model->FData));
         $this->FUpdate(Framework::Delegate([$this, 'TestSubAction'], TControllerAction::class));
-
-        return $mView;
     }
 
     /**
      * @param \FrameworkDSW\System\IInterface $Model
-     * @return \FrameworkDSW\Containers\TMap <K: string, V: \FrameworkDSW\System\IInterface>
+     * @param \FrameworkDSW\Containers\IMap $ViewData <K: string, V: \FrameworkDSW\System\IInterface>
      */
-    public function TestSubAction($Model) {
+    public function TestSubAction($Model, $ViewData) {
         TType::Object($Model, IInterface::class);
         /** @var TMyModel $Model */
         ++$Model->FData;
-        TMap::PrepareGeneric(['K' => Framework::String, 'V' => IInterface::class]);
-        $mView             = new TMap();
-        $mView['ViewData'] = new TString(sprintf('There are also %s little sheep.', (string)$Model->FData));
-        return $mView;
+        $ViewData['ViewData'] = new TString(sprintf('There are also %s little sheep.', (string)$Model->FData));
     }
 
     /**
