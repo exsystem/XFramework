@@ -1597,11 +1597,14 @@ EOD;
     protected function BindRawParameters() {
         if ($this->FParams !== null && $this->FParams->Size() > 0) {
             $mTypes     = '';
+            $mParams = [];
             $mParamsRef = [];
             foreach ($this->FRawParams as $mParam) {
                 $mTypes .= 's';
-                $mParam       = TMysqlDataTypeMapper::CastToSqlValue('string', $this->FParams[$mParam]);
-                $mParamsRef[] = & $mParam;
+                $mParams[] = TMysqlDataTypeMapper::CastToSqlValue('string', $this->FParams[$mParam]);
+            }
+            foreach ($mParams as $mIndex => &$mValue) {
+                $mParamsRef[] = & $mParams[$mIndex];
             }
             array_unshift($mParamsRef, $mTypes);
             try {
