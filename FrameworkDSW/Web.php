@@ -517,49 +517,18 @@ class THttpCookie extends TRecord {
 class THttpCookies extends TMap {
 
     /**
-     *
-     * @var \FrameworkDSW\Web\THttpRequest
-     */
-    private $FRequest = null;
-
-    /**
      * descHere
-     *
-     * @param \FrameworkDSW\Web\THttpRequest $Request
      */
-    public function __construct($Request) {
-        TType::Object($Request, THttpRequest::class);
+    public function __construct() {
         self::PrepareGeneric(['K' => Framework::String, 'V' => THttpCookie::class]);
         parent::__construct();
 
-        $this->FRequest = $Request;
         foreach ($_COOKIE as $mName => $mValue) {
             $mCookie        = new THttpCookie();
             $mCookie->Name  = (string)$mName;
             $mCookie->Value = (string)$mValue;
             $this->Put($mCookie->Name, $mCookie);
         }
-    }
-
-    /**
-     * descHere
-     *
-     * @return \FrameworkDSW\Web\THttpRequest
-     */
-    public function getRequest() {
-        return $this->FRequest;
-    }
-
-    /**
-     * descHere
-     *
-     * @param K $Key
-     */
-    protected function DoDelete($Key) {
-        /** @noinspection PhpIllegalArrayKeyTypeInspection */
-        $mCookie = $this[$Key];
-        setcookie($Key, null, 0, $mCookie->Path, $mCookie->Domain, $mCookie->Secure, $mCookie->HttpOnly);
-        parent::DoDelete($Key);
     }
 
     /**
@@ -575,7 +544,6 @@ class THttpCookies extends TMap {
             throw new EInvalidParameter(sprintf('Invalid parameter: HTTP cookie must be specified, but value null found.'));
         }
         $Value->Name = $Key;
-        setcookie($Key, $Value->Value, $Value->Expire, $Value->Path, $Value->Domain, $Value->Secure, $Value->HttpOnly);
         parent::DoPut($Key, $Value);
     }
 }
@@ -1082,6 +1050,10 @@ class THttpRequest extends TObject {
      */
     private $FCsrfToken = '';
     /**
+     * @var \FrameworkDSW\Containers\TMap <K: string, V: string[]>
+     */
+    private $FHeaders = null;
+    /**
      *
      * @var \FrameworkDSW\Web\THttpCookies
      */
@@ -1188,7 +1160,7 @@ class THttpRequest extends TObject {
      */
     public function getCookies() {
         if ($this->FCookies == null) {
-            $this->FCookies = new THttpCookies($this);
+            $this->FCookies = new THttpCookies();
         }
 
         return $this->FCookies;
@@ -1529,6 +1501,37 @@ class THttpRequest extends TObject {
     }
 
     /**
+     * @return \FrameworkDSW\Containers\IMap <K: string, V: string[]>
+     */
+    public function getHeaders() {
+        if ($this->FHeaders === null) {
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String . '[]']);
+            $this->FHeaders = new TMap();
+            if (function_exists('apache_request_headers')) {
+                $mHeaders = apache_request_headers();
+            }
+            elseif (function_exists('http_get_request_headers')) {
+                $mHeaders = http_get_request_headers();
+            }
+            else {
+                foreach ($_SERVER as $mName => $mValue) {
+                    if (strncmp($mName, 'HTTP_', 5) === 0) {
+                        $mName                  = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($mName, 5)))));
+                        $this->FHeaders[$mName] = [$mValue];
+                    }
+                }
+
+                return $this->FHeaders;
+            }
+            foreach ($mHeaders as $mName => $mValue) {
+                $this->FHeaders[$mName] = [$mValue];
+            }
+        }
+
+        return $this->FHeaders;
+    }
+
+    /**
      *
      * @return boolean
      */
@@ -1598,6 +1601,13 @@ class THttpRequest extends TObject {
     }
 
     /**
+     * @return boolean
+     */
+    public function getIsPjaxRequest() {
+        return $this->getIsAjaxRequest() && !empty($_SERVER['HTTP_X_PJAX']);
+    }
+
+    /**
      * descHere
      */
     public function ValidateCsrfToken() {
@@ -1619,60 +1629,6 @@ class THttpRequest extends TObject {
      */
     public function getIsPostRequest() {
         return isset($_SERVER['REQUEST_METHOD']) && (strtoupper($_SERVER['REQUEST_METHOD'] == 'POST'));
-    }
-
-    /**
-     * descHere
-     *
-     * @param string $FilePath
-     * @param string $SaveName
-     * @param string $MimeType
-     * @param string $XHeader
-     * @param boolean $Terminate
-     * @param boolean $ForceDownload
-     * @param \FrameworkDSW\Containers\IMap $AddHeaders <K: string, V: string>
-     */
-    public function XSendFile($FilePath, $SaveName = '', $MimeType = '', $XHeader = 'X-Sendfile', $Terminate = false, $ForceDownload = true, $AddHeaders = null) {
-        TType::String($FilePath);
-        TType::String($SaveName);
-        TType::String($MimeType);
-        TType::String($XHeader);
-        TType::Bool($Terminate);
-        TType::Bool($ForceDownload);
-        TType::Object($AddHeaders, [IMap::class => ['K' => Framework::String, 'V' => Framework::String]]);
-
-        if ($ForceDownload) {
-            $mDisposition = 'attachment';
-        }
-        else {
-            $mDisposition = 'inline';
-        }
-
-        if ($SaveName == '') {
-            $SaveName = basename($FilePath);
-        }
-
-        if ($MimeType == '') { // TODO FIXME should replace with the correct way
-            // of detecting mime type of the file.
-            $MimeType = 'text/plain';
-        }
-
-        ob_end_clean();
-        ob_start();
-
-        header("Content-type: {$MimeType}");
-        header("Content-Disposition: {$mDisposition}; filename=\"{$SaveName}\"");
-        if ($AddHeaders != null) {
-            foreach ($AddHeaders as $mHeader => $mValue) {
-                header("{$mHeader}: {$mValue}");
-            }
-        }
-        header("{$XHeader}: {$FilePath}");
-
-        if ($Terminate) {
-            // TODO how to deal with terminating.
-            ob_end_flush();
-        }
     }
 
     /**
@@ -1762,47 +1718,6 @@ class THttpRequest extends TObject {
 
     /**
      *
-     * @param string $Url
-     * @param integer $StatusCode
-     */
-    public function Redirect($Url, $StatusCode = 302) {
-        TType::String($Url);
-        TType::Int($StatusCode);
-
-        if (strpos($Url, '/') === 0) {
-            $Url = $this->getHostInfo() . $Url;
-        }
-
-        ob_end_clean();
-        ob_start();
-        header("Location: {$Url}", true, $StatusCode);
-        ob_flush();
-    }
-
-    /**
-     *
-     * @param string $FileName
-     * @param string $Content
-     * @param string $MimeType
-     */
-    public function SendFile($FileName, $Content, $MimeType = '') {
-        if ($MimeType == '') {
-            $MimeType = 'text/plain';
-        }
-        header('Pragma: public');
-        header('Expires: 0');
-        header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-        header("Content-type: {$MimeType}");
-        if (ob_get_length() === false) {
-            header('Content-Length: ' . (function_exists('mb_strlen') ? mb_strlen($Content, '8bit') : strlen($Content)));
-        }
-        header("Content-Disposition: attachment; filename=\"{$FileName}\"");
-        header('Content-Transfer-Encoding: binary');
-        echo $Content;
-    }
-
-    /**
-     *
      * @param string $Value
      */
     public function setBaseUrl($Value) {
@@ -1846,6 +1761,833 @@ class THttpRequest extends TObject {
                 $_COOKIE = array_map('stripslashes', $_COOKIE);
             }
         }
+    }
+}
+
+/**
+ * Class THttpResponse
+ * @package FrameworkDSW\Web
+ */
+class THttpResponse extends TObject {
+    /**
+     * @var integer 8*1024*1024
+     */
+    const CChunkSize = 0x800000;
+
+    /**
+     * @var \FrameworkDSW\Web\THttpRequest
+     */
+    private $FRequest = null;
+    /**
+     * @var string
+     */
+    private $FContent = '';
+    /**
+     * @var mixed
+     */
+    private $FStream = null;
+    /**
+     * @var integer
+     */
+    private $FStreamBegin = -1;
+    /**
+     * @var integer
+     */
+    private $FStreamEnd = -1;
+    /**
+     * @var string
+     */
+    private $FCharset = '';
+    /**
+     * @var string
+     */
+    private $FStatusText = 'OK';
+    /**
+     * @var string
+     */
+    private $FVersion = '';
+    /**
+     * @var boolean
+     */
+    private $FIsSent = false;
+    /**
+     * @var integer
+     */
+    private $FStatusCode = 200;
+    /**
+     * @var \FrameworkDSW\Containers\IMap <K: string, V: string[]>
+     */
+    private $FHeaders = null;
+    /**
+     * @var \FrameworkDSW\Web\THttpCookies
+     */
+    private $FCookies = null;
+
+    /**
+     * @param \FrameworkDSW\Web\THttpRequest $Request
+     * @param string $Version
+     * @param string $Charset
+     */
+    public function __construct($Request, $Version = '', $Charset = '') {
+        parent::__construct();
+        TType::Object($Request, THttpRequest::class);
+        TType::String($Version);
+        TType::String($Charset);
+        $this->FRequest = $Request;
+        if ($Version == '') {
+            if (isset($_SERVER['SERVER_PROTOCOL']) && $_SERVER['SERVER_PROTOCOL'] === '1.0') {
+                $Version = '1.0';
+            }
+            else {
+                $Version = '1.1';
+            }
+        }
+        $this->FVersion = $Version;
+
+        if ($Charset == '') {
+            $this->FCharset = 'UTF-8';
+        }
+    }
+
+    /**
+     *
+     */
+    public function Destroy() {
+        Framework::Free($this->FCookies);
+        Framework::Free($this->FHeaders);
+        parent::Destroy();
+    }
+
+    /**
+     * @return string
+     */
+    public function getCharset() {
+        return $this->FCharset;
+    }
+
+    /**
+     * @param string $Value
+     */
+    public function setCharset($Value) {
+        TType::String($Value);
+        if (!$this->FIsSent) {
+            $this->FCharset = $Value;
+        }
+    }
+
+    /**
+     * @return string
+     */
+    public function getContent() {
+        return $this->FContent;
+    }
+
+    /**
+     * @param string $Value
+     */
+    public function setContent($Value) {
+        TType::String($Value);
+        if (!$this->FIsSent) {
+            $this->FContent = $Value;
+        }
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getIsSent() {
+        return $this->FIsSent;
+    }
+
+    /**
+     * @return \FrameworkDSW\Web\THttpRequest
+     */
+    public function getRequest() {
+        return $this->FRequest;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStatusDescription() {
+        return $this->FStatusText;
+    }
+
+    /**
+     * @return string
+     */
+    public function getVersion() {
+        return $this->FVersion;
+    }
+
+    /**
+     * @param string $Value
+     */
+    public function setVersion($Value) {
+        TType::String($Value);
+        if (!$this->FIsSent) {
+            $this->FVersion = $Value;
+        }
+    }
+
+    /**
+     *
+     */
+    public function Send() {
+        if ($this->FIsSent) {
+            return;
+        }
+        TObject::Dispatch([$this, 'BeforeSend'], []);
+        $this->SendHeaders();
+        $this->SendContent();
+        TObject::Dispatch([$this, 'AfterSend'], []);
+        $this->FIsSent = true;
+
+    }
+
+    /**
+     *
+     */
+    public function signalBeforeSend() {
+    }
+
+    /**
+     *
+     */
+    public function signalAfterSend() {
+    }
+
+    /**
+     *
+     */
+    protected function SendHeaders() {
+        if (headers_sent()) {
+            return;
+        }
+        $mStatusCode = $this->getStatusCode();
+        header("HTTP/{$this->FVersion} {$mStatusCode} {$this->FStatusText}");
+        $mHeaders = $this->getHeaders();
+        if ($mHeaders !== null) {
+            foreach ($mHeaders as $mName => &$mValues) {
+                $mName = str_replace(' ', '-', ucwords('-', ' ', $mName));
+                foreach ($mValues as &$mValue) {
+                    header("{$mName}: {$mValue}", false);
+                }
+
+            }
+        }
+        $this->SendCookies();
+    }
+
+    /**
+     * @return integer
+     */
+    public function getStatusCode() {
+        return $this->FStatusCode;
+    }
+
+    /**
+     * @return \FrameworkDSW\Containers\IMap <K: string, V: string>
+     */
+    public function getHeaders() {
+        if ($this->FHeaders === null) {
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String . '[]']);
+            $this->FHeaders = new TMap();
+        }
+        return $this->FHeaders;
+    }
+
+    /**
+     *
+     */
+    protected function SendCookies() {
+        if ($this->FCookies === null) {
+            return;
+        }
+        /** @var THttpCookie $mCookie */
+        foreach ($this->FCookies as $mCookie) {
+            setcookie($mCookie->Name, $mCookie->Value, $mCookie->Expire, $mCookie->Path, $mCookie->Domain, $mCookie->Secure, $mCookie->HttpOnly);
+        }
+        $this->FCookies->Clear();
+    }
+
+    /**
+     *
+     */
+    protected function SendContent() {
+        if ($this->FStream === null) {
+            echo $this->FContent;
+            return;
+        }
+
+        set_time_limit(0);
+        $mChunkSize = THttpResponse::CChunkSize;
+        if ($this->FStreamBegin >= 0) {
+            fseek($this->FStream, $this->FStreamBegin);
+            while (!feof($this->FStream) && ($mPos = ftell($this->FStream)) <= $this->FStreamEnd) {
+                if ($mPos + $mChunkSize > $this->FStreamEnd) {
+                    $mChunkSize = $this->FStreamEnd - $mPos + 1;
+                }
+                echo fread($this->FStream, $mChunkSize);
+                flush();
+            }
+            fclose($this->FStream);
+        }
+        else {
+            while (!feof($this->FStream)) {
+                echo fread($this->FStream, $mChunkSize);
+                flush();
+            }
+            fclose($this->FStream);
+        }
+    }
+
+    /**
+     *
+     */
+    public function Clear() {
+        Framework::Free($this->FHeaders);
+        Framework::Free($this->FCookies);
+        $this->FStatusCode = 200;
+        $this->FStatusText = 'OK';
+        $this->FStream     = null;
+        $this->FContent    = '';
+        $this->FIsSent     = false;
+    }
+
+    /**
+     * @param string $FilePath
+     * @param string $AttachmentName
+     * @param string $MimeType
+     */
+    public function SendFile($FilePath, $AttachmentName = '', $MimeType = '') {
+        TType::String($FilePath);
+        TType::String($AttachmentName);
+        TType::String($MimeType);
+        if ($MimeType == '') {
+            $MimeType = 'application/octet-stream';
+        }
+        if ($AttachmentName == null) {
+            $AttachmentName = basename($FilePath);
+        }
+        $handle = fopen($FilePath, 'rb');
+        $this->SendStreamAsFile($handle, $AttachmentName, $MimeType);
+    }
+
+    /**
+     *
+     * @param mixed $Stream
+     * @param string $AttachmentName
+     * @param string $MimeType
+     * @throws EHttpException
+     */
+    public function SendStreamAsFile($Stream, $AttachmentName, $MimeType = 'application/octet-stream') {
+        TType::String($AttachmentName);
+        TType::String($MimeType);
+        $mHeaders = $this->getHeaders();
+        fseek($Stream, 0, SEEK_END);
+        $mFileSize = ftell($Stream);
+
+        $mRange = $this->getHttpRange($mFileSize);
+        if ($mRange === []) {
+            $mHeaders['Content-Range'] = ["bytes */{$mFileSize}"];
+            throw new EHttpException(416);
+        }
+
+        list($mBegin, $mEnd) = $mRange;
+        if ($mBegin != 0 || $mEnd != $mFileSize - 1) {
+            $this->SetStatus(206);
+            $mHeaders['Content-Range'] = ["bytes {$mBegin}-{$mEnd}/{$mFileSize}"];
+        }
+        else {
+            $this->SetStatus(200);
+        }
+
+        $mLength = $mEnd - $mBegin + 1;
+
+        if (!$mHeaders->ContainsKey('Pragma')) {
+            $mHeaders['Pragma'] = ['public'];
+        }
+        if (!$mHeaders->ContainsKey('Accept-Ranges')) {
+            $mHeaders['Accept-Ranges'] = ['bytes'];
+        }
+        if (!$mHeaders->ContainsKey('Expires')) {
+            $mHeaders['Expires'] = ['0'];
+        }
+        if (!$mHeaders->ContainsKey('Content-Type')) {
+            $mHeaders['Content-Type'] = [$MimeType];
+        }
+        if (!$mHeaders->ContainsKey('Cache-Control')) {
+            $mHeaders['Cache-Control'] = ['must-revalidate, post-check=0, pre-check=0'];
+        }
+        if (!$mHeaders->ContainsKey('Content-Transfer-Encoding')) {
+            $mHeaders['Content-Transfer-Encoding'] = ['binary'];
+        }
+        if (!$mHeaders->ContainsKey('Content-Length')) {
+            $mHeaders['Content-Length'] = [(string)$mLength];
+        }
+        if (!$mHeaders->ContainsKey('Content-Disposition')) {
+            $mHeaders['Content-Disposition'] = ["attachment; filename=\"{$AttachmentName}\""];
+        }
+
+        $this->FStream      = $Stream;
+        $this->FStreamBegin = $mBegin;
+        $this->FStreamEnd   = $mEnd;
+    }
+
+    /**
+     * @param integer $FileSize
+     * @return integer[]
+     */
+    protected function getHttpRange($FileSize) {
+        TType::Int($FileSize);
+        if (!isset($_SERVER['HTTP_RANGE']) || $_SERVER['HTTP_RANGE'] === '-') {
+            return [0, $FileSize - 1];
+        }
+        if (!preg_match('/^bytes=(\d*)-(\d*)$/', $_SERVER['HTTP_RANGE'], $mMatches)) {
+            return false;
+        }
+        if ($mMatches[1] === '') {
+            $mStart = $FileSize - $mMatches[2];
+            $mEnd   = $FileSize - 1;
+        }
+        elseif ($mMatches[2] !== '') {
+            $mStart = $mMatches[1];
+            $mEnd   = $mMatches[2];
+            if ($mEnd >= $FileSize) {
+                $mEnd = $FileSize - 1;
+            }
+        }
+        else {
+            $mStart = $mMatches[1];
+            $mEnd   = $FileSize - 1;
+        }
+        if ($mStart < 0 || $mStart > $mEnd) {
+            return [];
+        }
+        else {
+            return [$mStart, $mEnd];
+        }
+    }
+
+    /**
+     * @param integer $Code
+     * @param string $Description
+     * @throws \FrameworkDSW\System\EInvalidParameter
+     */
+    public function SetStatus($Code, $Description = '') {
+        TType::Int($Code);
+        TType::String($Description);
+        $this->FStatusCode = $Code;
+        if ($this->getIsInvalid()) {
+            throw new EInvalidParameter(sprintf('Invalid HTTP Status Code: %s.', $Code));
+        }
+        if ($Description == '') {
+            switch ($Code) {
+                case 100:
+                    $this->FStatusText = 'Continue';
+                    break;
+                case 101:
+                    $this->FStatusText = 'Switching Protocols';
+                    break;
+                case 102:
+                    $this->FStatusText = 'Processing';
+                    break;
+                case 118:
+                    $this->FStatusText = 'Connection timed out';
+                    break;
+                case 200:
+                    $this->FStatusText = 'OK';
+                    break;
+                case 201:
+                    $this->FStatusText = 'Created';
+                    break;
+                case 202:
+                    $this->FStatusText = 'Accepted';
+                    break;
+                case 203:
+                    $this->FStatusText = 'Non-Authoritative';
+                    break;
+                case 204:
+                    $this->FStatusText = 'No Content';
+                    break;
+                case 205:
+                    $this->FStatusText = 'Reset Content';
+                    break;
+                case 206:
+                    $this->FStatusText = 'Partial Content';
+                    break;
+                case 207:
+                    $this->FStatusText = 'Multi-Status';
+                    break;
+                case 208:
+                    $this->FStatusText = 'Already Reported';
+                    break;
+                case 210:
+                    $this->FStatusText = 'Content Different';
+                    break;
+                case 226:
+                    $this->FStatusText = 'IM Used';
+                    break;
+                case 300:
+                    $this->FStatusText = 'Multiple Choices';
+                    break;
+                case 301:
+                    $this->FStatusText = 'Moved Permanently';
+                    break;
+                case 302:
+                    $this->FStatusText = 'Found';
+                    break;
+                case 303:
+                    $this->FStatusText = 'See Other';
+                    break;
+                case 304:
+                    $this->FStatusText = 'Not Modified';
+                    break;
+                case 305:
+                    $this->FStatusText = 'Use Proxy';
+                    break;
+                case 306:
+                    $this->FStatusText = 'Reserved';
+                    break;
+                case 307:
+                    $this->FStatusText = 'Temporary Redirect';
+                    break;
+                case 308:
+                    $this->FStatusText = 'Permanent Redirect';
+                    break;
+                case 310:
+                    $this->FStatusText = 'Too many Redirect';
+                    break;
+                case 400:
+                    $this->FStatusText = 'Bad Request';
+                    break;
+                case 401:
+                    $this->FStatusText = 'Unauthorized';
+                    break;
+                case 402:
+                    $this->FStatusText = 'Payment Required';
+                    break;
+                case 403:
+                    $this->FStatusText = 'Forbidden';
+                    break;
+                case 404:
+                    $this->FStatusText = 'Not Found';
+                    break;
+                case 405:
+                    $this->FStatusText = 'Method Not Allowed';
+                    break;
+                case 406:
+                    $this->FStatusText = 'Not Acceptable';
+                    break;
+                case 407:
+                    $this->FStatusText = 'Proxy Authentication Required';
+                    break;
+                case 408:
+                    $this->FStatusText = 'Request Time-out';
+                    break;
+                case 409:
+                    $this->FStatusText = 'Conflict';
+                    break;
+                case 410:
+                    $this->FStatusText = 'Gone';
+                    break;
+                case 411:
+                    $this->FStatusText = 'Length Required';
+                    break;
+                case 412:
+                    $this->FStatusText = 'Precondition Failed';
+                    break;
+                case 413:
+                    $this->FStatusText = 'Request Entity Too Large';
+                    break;
+                case 414:
+                    $this->FStatusText = 'Request-URI Too Long';
+                    break;
+                case 415:
+                    $this->FStatusText = 'Unsupported Media Type';
+                    break;
+                case 416:
+                    $this->FStatusText = 'Requested range unsatisfiable';
+                    break;
+                case 417:
+                    $this->FStatusText = 'Expectation failed';
+                    break;
+                case 418:
+                    $this->FStatusText = 'I\'m a teapot';
+                    break;
+                case 422:
+                    $this->FStatusText = 'Unprocessable entity';
+                    break;
+                case 423:
+                    $this->FStatusText = 'Locked';
+                    break;
+                case 424:
+                    $this->FStatusText = 'Method failure';
+                    break;
+                case 425:
+                    $this->FStatusText = 'Unordered Collection';
+                    break;
+                case 426:
+                    $this->FStatusText = 'Upgrade Required';
+                    break;
+                case 428:
+                    $this->FStatusText = 'Precondition Required';
+                    break;
+                case 429:
+                    $this->FStatusText = 'Too Many Requests';
+                    break;
+                case 431:
+                    $this->FStatusText = 'Request Header Fields Too Large';
+                    break;
+                case 449:
+                    $this->FStatusText = 'Retry With';
+                    break;
+                case 450:
+                    $this->FStatusText = 'Blocked by Windows Parental Controls';
+                    break;
+                case 500:
+                    $this->FStatusText = 'Internal Server Error';
+                    break;
+                case 501:
+                    $this->FStatusText = 'Not Implemented';
+                    break;
+                case 502:
+                    $this->FStatusText = 'Bad Gateway ou Proxy Error';
+                    break;
+                case 503:
+                    $this->FStatusText = 'Service Unavailable';
+                    break;
+                case 504:
+                    $this->FStatusText = 'Gateway Time-out';
+                    break;
+                case 505:
+                    $this->FStatusText = 'HTTP Version not supported';
+                    break;
+                case 507:
+                    $this->FStatusText = 'Insufficient storage';
+                    break;
+                case 508:
+                    $this->FStatusText = 'Loop Detected';
+                    break;
+                case 509:
+                    $this->FStatusText = 'Bandwidth Limit Exceeded';
+                    break;
+                case 510:
+                    $this->FStatusText = 'Not Extended';
+                    break;
+                case 511:
+                    $this->FStatusText = 'Network Authentication Required';
+                    break;
+                default:
+                    $this->FStatusText = '';
+                    break;
+            }
+        }
+        else {
+            $this->FStatusText = $Description;
+        }
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getIsInvalid() {
+        return $this->getStatusCode() < 100 || $this->getStatusCode() >= 600;
+    }
+
+    /**
+     * @param string $Content
+     * @param string $AttachmentName
+     * @param string $MimeType
+     * @throws EHttpException
+     */
+    public function SendContentAsFile($Content, $AttachmentName, $MimeType = 'application/octet-stream') {
+        TType::String($Content);
+        TType::String($AttachmentName);
+        TType::String($MimeType);
+        $mHeaders       = $this->getHeaders();
+        $mContentLength = mb_strlen($Content, '8bit');
+        $mRange         = $this->GetHttpRange($mContentLength);
+        if ($mRange === []) {
+            $mHeaders['Content-Range'] = ["bytes */{$mContentLength}"];
+            throw new EHttpException(416);
+        }
+
+        if (!$mHeaders->ContainsKey('Pragma')) {
+            $mHeaders['Pragma'] = ['public'];
+        }
+        if (!$mHeaders->ContainsKey('Accept-Ranges')) {
+            $mHeaders['Accept-Ranges'] = ['bytes'];
+        }
+        if (!$mHeaders->ContainsKey('Expires')) {
+            $mHeaders['Expires'] = ['0'];
+        }
+        if (!$mHeaders->ContainsKey('Content-Type')) {
+            $mHeaders['Content-Type'] = [$MimeType];
+        }
+        if (!$mHeaders->ContainsKey('Cache-Control')) {
+            $mHeaders['Cache-Control'] = ['must-revalidate, post-check=0, pre-check=0'];
+        }
+        if (!$mHeaders->ContainsKey('Content-Transfer-Encoding')) {
+            $mHeaders['Content-Transfer-Encoding'] = ['binary'];
+        }
+        if (!$mHeaders->ContainsKey('Content-Length')) {
+            $mHeaders['Content-Length'] = [(string)$mContentLength];
+        }
+        if (!$mHeaders->ContainsKey('Content-Disposition')) {
+            $mHeaders['Content-Disposition'] = ["attachment; filename=\"{$AttachmentName}\""];
+        }
+
+        list($mBegin, $mEnd) = $mRange;
+        if ($mBegin != 0 || $mEnd != $mContentLength - 1) {
+            $this->SetStatus(206);
+            $mHeaders['Content-Range'] = ["bytes {$mBegin}-{$mEnd}/{$mContentLength}"];
+            $this->FContent            = mb_substr($Content, $mBegin, $mEnd - $mBegin + 1, '8bit');
+        }
+        else {
+            $this->SetStatus(200);
+            $this->FContent = $Content;
+        }
+    }
+
+    /**
+     * @param string $FilePath
+     * @param string $AttachmentName
+     * @param string $MimeType
+     * @param string $XHeader
+     */
+    public function XSendFile($FilePath, $AttachmentName = '', $MimeType = '', $XHeader = 'X-Sendfile') {
+        TType::String($FilePath);
+        TType::String($AttachmentName);
+        TType::String($MimeType);
+        TType::String($XHeader);
+
+        if ($MimeType == '') {
+            $MimeType = 'application/octet-stream';
+        }
+        if ($AttachmentName == '') {
+            $AttachmentName = basename($FilePath);
+        }
+
+        $mHeaders = $this->getHeaders();
+
+        if (!$mHeaders->ContainsKey($XHeader)) {
+            $mHeaders[$XHeader] = [$FilePath];
+        }
+        if (!$mHeaders->ContainsKey('Content-Type')) {
+            $mHeaders['Content-Type'] = [$MimeType];
+        }
+        if (!$mHeaders->ContainsKey('Content-Disposition')) {
+            $mHeaders['Content-Disposition'] = ["attachment; filename=\"{$AttachmentName}\""];
+        }
+    }
+
+    /**
+     * @param string $Anchor
+     */
+    public function Refresh($Anchor = '') {
+        TType::String($Anchor);
+        $this->Redirect($this->FRequest->getRequestUri() . $Anchor);
+    }
+
+    /**
+     * @param string $Url
+     * @param integer $StatusCode the HTTP status code. Defaults to 302.
+     * See <http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html>
+     * for details about HTTP status code
+     */
+    public function Redirect($Url, $StatusCode = 302) {
+        TType::String($Url);
+        TType::Int($StatusCode);
+        if (strpos($Url, '/') === 0 && strpos($Url, '//') !== 0) {
+            $Url = $this->FRequest->getHostInfo() . $Url;
+        }
+
+        $mHeaders = $this->getHeaders();
+        if ($this->FRequest->getIsPjaxRequest()) {
+            $mHeaders['X-Pjax-Url'] = [$Url];
+        }
+        elseif ($this->FRequest->getIsAjaxRequest()) {
+            $mHeaders['X-Redirect'] = [$Url];
+        }
+        else {
+            $mHeaders['Location'] = [$Url];
+        }
+        $this->SetStatus($StatusCode);
+    }
+
+    /**
+     * @return \FrameworkDSW\Web\THttpCookies
+     */
+    public function getCookies() {
+        if ($this->FCookies === null) {
+            $this->FCookies = new THttpCookies();
+        }
+        return $this->FCookies;
+    }
+
+    /**
+     * @return boolean whether this response is informational
+     */
+    public function getIsInformational() {
+        return $this->getStatusCode() >= 100 && $this->getStatusCode() < 200;
+    }
+
+    /**
+     * @return boolean whether this response is successful
+     */
+    public function getIsSuccessful() {
+        return $this->getStatusCode() >= 200 && $this->getStatusCode() < 300;
+    }
+
+    /**
+     * @return boolean whether this response is a redirection
+     */
+    public function getIsRedirection() {
+        return $this->getStatusCode() >= 300 && $this->getStatusCode() < 400;
+    }
+
+    /**
+     * @return boolean whether this response indicates a client error
+     */
+    public function getIsClientError() {
+        return $this->getStatusCode() >= 400 && $this->getStatusCode() < 500;
+    }
+
+    /**
+     * @return boolean whether this response indicates a server error
+     */
+    public function getIsServerError() {
+        return $this->getStatusCode() >= 500 && $this->getStatusCode() < 600;
+    }
+
+    /**
+     * @return boolean whether this response is OK
+     */
+    public function getIsOk() {
+        return $this->getStatusCode() == 200;
+    }
+
+    /**
+     * @return boolean whether this response indicates the current request is forbidden
+     */
+    public function getIsForbidden() {
+        return $this->getStatusCode() == 403;
+    }
+
+    /**
+     * @return boolean whether this response indicates the currently requested resource is not found
+     */
+    public function getIsNotFound() {
+        return $this->getStatusCode() == 404;
+    }
+
+    /**
+     * @return boolean whether this response is empty
+     */
+    public function getIsEmpty() {
+        return in_array($this->getStatusCode(), [201, 204, 304]);
     }
 }
 
@@ -3213,6 +3955,10 @@ class TWebApplication extends TComponent implements IApplication {
      */
     private $FControllerManager = null;
     /**
+     * @var \FrameworkDSW\System\TExceptionHandler
+     */
+    private $FExceptionHandler = null;
+    /**
      * @var \FrameworkDSW\Web\TUrlRouter
      */
     private $FRouter = null;
@@ -3220,6 +3966,10 @@ class TWebApplication extends TComponent implements IApplication {
      * @var \FrameworkDSW\Web\THttpRequest
      */
     private $FRequest = null;
+    /**
+     * @var \FrameworkDSW\Web\THttpSession
+     */
+    private $FSession = null;
     /**
      * @var \FrameworkDSW\System\IInterface[]
      */
@@ -3232,9 +3982,23 @@ class TWebApplication extends TComponent implements IApplication {
         parent::__construct($Owner);
         TType::Object($Owner, TComponent::class);
 
+        $this->FExceptionHandler->Register();
         $this->FControllerManager = new TControllerManager();
         $this->FRequest           = new THttpRequest();
         $this->FRouter            = new TUrlRouter($this->FRequest);
+    }
+
+    /**
+     * @return \FrameworkDSW\Web\TWebApplication
+     */
+    public static function Application() {
+        $mApp = Framework::Application();
+        if ($mApp instanceof TWebApplication) {
+            return $mApp;
+        }
+        else {
+            return null;
+        }
     }
 
     /**
@@ -3249,6 +4013,16 @@ class TWebApplication extends TComponent implements IApplication {
      */
     public function getHttpRequest() {
         return $this->FRequest;
+    }
+
+    /**
+     * @return \FrameworkDSW\Web\THttpSession
+     */
+    public function getHttpSession() {
+        if ($this->FSession === null) {
+            $this->FSession = new THttpSession();
+        }
+        return $this->FSession;
     }
 
     /**
@@ -3310,15 +4084,9 @@ class TWebApplication extends TComponent implements IApplication {
     }
 
     /**
-     * @return \FrameworkDSW\Web\TWebApplication
+     * @return \FrameworkDSW\System\TExceptionHandler
      */
-    public static function Application() {
-        $mApp = Framework::Application();
-        if ($mApp instanceof TWebApplication) {
-            return $mApp;
-        }
-        else {
-            return null;
-        }
+    public function getExceptionHandler() {
+        return $this->FExceptionHandler;
     }
 }
