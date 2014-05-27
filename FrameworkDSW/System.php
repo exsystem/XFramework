@@ -2446,3 +2446,59 @@ final class TString extends TObject implements IComparable, IPrimitive {
         return $this->FValue;
     }
 }
+
+/**
+ * Class TExceptionHandler
+ * thanks to: Yii 2.0: yii\base\ErrorHandler
+ * @package FrameworkDSW\System
+ */
+abstract class TExceptionHandler extends TObject {
+    /**
+     * @var EException
+     */
+    private $FException = null;
+
+    /**
+     *
+     */
+    public function Register() {
+        set_exception_handler([$this, 'HandleException']);
+    }
+
+    /**
+     * @param \FrameworkDSW\System\EException $Exception
+     */
+    public function HandleException($Exception) {
+        $this->FException = $Exception;
+
+        restore_error_handler();
+        restore_exception_handler();
+        try {
+            $this->RenderException($Exception);
+            if (Framework::IsRelease()) {
+                exit(1);
+            }
+        }
+        catch (EException $Ex) {
+            $mMessage = "{$Ex}\nPrevious exception:\n{$Exception}";
+            if (Framework::IsDebug()) {
+                if (PHP_SAPI === 'cli') {
+                    echo "{$mMessage}\n";
+                }
+                else {
+                    echo '<pre>' . htmlspecialchars($mMessage, ENT_QUOTES) . '</pre>';
+                }
+            }
+            $mMessage .= "\n\$_SERVER = " . var_export($_SERVER, true);
+            error_log($mMessage);
+            exit(1);
+        }
+
+        $this->FException = null;
+    }
+
+    /**
+     * @param \FrameworkDSW\System\EException $Exception
+     */
+    abstract protected function RenderException($Exception);
+}

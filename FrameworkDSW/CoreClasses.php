@@ -297,32 +297,32 @@ interface IView extends IInterface {
 
 /**
  * \FrameworkDSW\CoreClasses\TComponent class
- * @author  许子健
+ * @author 许子健
  */
 abstract class TComponent extends TObject {
     /**
      *
-     * @var    string
+     * @var string
      */
     const CValidIdentPattern = '/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/';
 
     /**
      *
-     * @var    string
+     * @var string
      */
     private $FName = '';
     /**
-     * @var    mixed
+     * @var mixed
      */
     private $FTag = null;
     /**
      *
-     * @var    \FrameworkDSW\CoreClasses\TComponent
+     * @var \FrameworkDSW\CoreClasses\TComponent
      */
     private $FOwner = null;
     /**
      *
-     * @var    \FrameworkDSW\Containers\TList <T: \FrameworkDSW\CoreClasses\TComponent>
+     * @var \FrameworkDSW\Containers\TList <T: \FrameworkDSW\CoreClasses\TComponent>
      */
     private $FComponents = null; //TODO: what about using a linked list?
 
@@ -1782,6 +1782,11 @@ interface IApplication extends IInterface {
      * @return \FrameworkDSW\Controller\IControllerManager
      */
     public function getControllerManager();
+
+    /**
+     * @return \FrameworkDSW\System\TExceptionHandler
+     */
+    public function getExceptionHandler();
 
     /**
      * Run

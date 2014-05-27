@@ -7,6 +7,7 @@
  */
 namespace FrameworkDSW\Web;
 
+use FrameworkDSW\Configuration\TConfiguration;
 use FrameworkDSW\Containers\IList;
 use FrameworkDSW\Containers\IMap;
 use FrameworkDSW\Containers\TAbstractMap;
@@ -18,6 +19,7 @@ use FrameworkDSW\Controller\TControllerManager;
 use FrameworkDSW\Controller\TModelBinder;
 use FrameworkDSW\Controller\TViewBinder;
 use FrameworkDSW\CoreClasses\IApplication;
+use FrameworkDSW\CoreClasses\IView;
 use FrameworkDSW\CoreClasses\TComponent;
 use FrameworkDSW\Framework\Framework;
 use FrameworkDSW\Reflection\TClass;
@@ -553,7 +555,6 @@ class THttpCookies extends TMap {
  * @author 许子健
  */
 class TSessionCookieMode extends TEnum {
-
     /**
      * @var integer
      */
@@ -566,7 +567,6 @@ class TSessionCookieMode extends TEnum {
      * @var integer
      */
     const eOnly = 2;
-
 }
 
 /**
@@ -1501,37 +1501,6 @@ class THttpRequest extends TObject {
     }
 
     /**
-     * @return \FrameworkDSW\Containers\IMap <K: string, V: string[]>
-     */
-    public function getHeaders() {
-        if ($this->FHeaders === null) {
-            TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String . '[]']);
-            $this->FHeaders = new TMap();
-            if (function_exists('apache_request_headers')) {
-                $mHeaders = apache_request_headers();
-            }
-            elseif (function_exists('http_get_request_headers')) {
-                $mHeaders = http_get_request_headers();
-            }
-            else {
-                foreach ($_SERVER as $mName => $mValue) {
-                    if (strncmp($mName, 'HTTP_', 5) === 0) {
-                        $mName                  = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($mName, 5)))));
-                        $this->FHeaders[$mName] = [$mValue];
-                    }
-                }
-
-                return $this->FHeaders;
-            }
-            foreach ($mHeaders as $mName => $mValue) {
-                $this->FHeaders[$mName] = [$mValue];
-            }
-        }
-
-        return $this->FHeaders;
-    }
-
-    /**
      *
      * @return boolean
      */
@@ -1564,6 +1533,37 @@ class THttpRequest extends TObject {
     }
 
     /**
+     * @return \FrameworkDSW\Containers\IMap <K: string, V: string[]>
+     */
+    public function getHeaders() {
+        if ($this->FHeaders === null) {
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String . '[]']);
+            $this->FHeaders = new TMap();
+            if (function_exists('apache_request_headers')) {
+                $mHeaders = apache_request_headers();
+            }
+            elseif (function_exists('http_get_request_headers')) {
+                $mHeaders = http_get_request_headers();
+            }
+            else {
+                foreach ($_SERVER as $mName => $mValue) {
+                    if (strncmp($mName, 'HTTP_', 5) === 0) {
+                        $mName                  = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($mName, 5)))));
+                        $this->FHeaders[$mName] = [$mValue];
+                    }
+                }
+
+                return $this->FHeaders;
+            }
+            foreach ($mHeaders as $mName => $mValue) {
+                $this->FHeaders[$mName] = [$mValue];
+            }
+        }
+
+        return $this->FHeaders;
+    }
+
+    /**
      *
      * @param integer $Value
      * @throws EInvalidParameter
@@ -1592,19 +1592,19 @@ class THttpRequest extends TObject {
     }
 
     /**
+     * @return boolean
+     */
+    public function getIsPjaxRequest() {
+        return $this->getIsAjaxRequest() && !empty($_SERVER['HTTP_X_PJAX']);
+    }
+
+    /**
      * descHere
      *
      * @return boolean
      */
     public function getIsAjaxRequest() {
         return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest';
-    }
-
-    /**
-     * @return boolean
-     */
-    public function getIsPjaxRequest() {
-        return $this->getIsAjaxRequest() && !empty($_SERVER['HTTP_X_PJAX']);
     }
 
     /**
@@ -1942,19 +1942,6 @@ class THttpResponse extends TObject {
         $this->SendContent();
         TObject::Dispatch([$this, 'AfterSend'], []);
         $this->FIsSent = true;
-
-    }
-
-    /**
-     *
-     */
-    public function signalBeforeSend() {
-    }
-
-    /**
-     *
-     */
-    public function signalAfterSend() {
     }
 
     /**
@@ -1968,7 +1955,7 @@ class THttpResponse extends TObject {
         header("HTTP/{$this->FVersion} {$mStatusCode} {$this->FStatusText}");
         $mHeaders = $this->getHeaders();
         if ($mHeaders !== null) {
-            foreach ($mHeaders as $mName => &$mValues) {
+            foreach ($mHeaders as $mName => $mValues) {
                 $mName = str_replace(' ', '-', ucwords('-', ' ', $mName));
                 foreach ($mValues as &$mValue) {
                     header("{$mName}: {$mValue}", false);
@@ -2040,6 +2027,18 @@ class THttpResponse extends TObject {
             }
             fclose($this->FStream);
         }
+    }
+
+    /**
+     *
+     */
+    public function signalBeforeSend() {
+    }
+
+    /**
+     *
+     */
+    public function signalAfterSend() {
     }
 
     /**
@@ -3946,10 +3945,111 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
 }
 
 /**
+ * Class TExceptionHandler
+ * @package FrameworkDSW\Web
+ */
+class TExceptionHandler extends \FrameworkDSW\System\TExceptionHandler {
+    /**
+     * @var \FrameworkDSW\Web\TWebApplication
+     */
+    private $FApplication = null;
+
+    /**
+     * @var \FrameworkDSW\Controller\TControllerAction
+     */
+    private $FExceptionAction = null;
+
+    /**
+     * @var \FrameworkDSW\Controller\TViewBinder
+     */
+    private $FExceptionViewBinder = null;
+
+    /**
+     * @param \FrameworkDSW\Web\TWebApplication $Application
+     */
+    public function __construct($Application = null) {
+        parent::__construct();
+        TType::Object($Application, TWebApplication::class);
+        $this->FApplication = $Application;
+    }
+
+    /**
+     * @return \FrameworkDSW\Controller\TControllerAction
+     */
+    public function getExceptionAction() {
+        return $this->FExceptionAction;
+    }
+
+    /**
+     * @param \FrameworkDSW\Controller\TControllerAction
+     */
+    public function setExceptionAction($Value) {
+        TType::Delegate($Value, TControllerAction::class);
+        $this->FExceptionAction = $Value;
+    }
+
+    /**
+     * @return \FrameworkDSW\Controller\TViewBinder
+     */
+    public function getExceptionViewBinder() {
+        return $this->FExceptionViewBinder;
+    }
+
+    /**
+     * @param \FrameworkDSW\Controller\TViewBinder $Value
+     */
+    public function setExceptionViewBinder($Value) {
+        TType::Delegate($Value, TViewBinder::class);
+        $this->FExceptionViewBinder = $Value;
+    }
+
+    /**
+     * @param \FrameworkDSW\System\EException $Exception
+     */
+    protected function RenderException($Exception) {
+        TType::Object($Exception, EException::class);
+
+        $mResponse = $this->FApplication->getHttpResponse();
+
+        if ($this->FExceptionAction === null || Framework::IsDebug()) {
+            $mContent = htmlspecialchars(var_export($Exception, true), ENT_QUOTES, 'UTF-8');
+            $mResponse->setContent("<pre>{$mContent}</pre>");
+        }
+        else {
+            if (Framework::IsDebug()) {
+                ini_set('display_errors', 1);
+            }
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => IInterface::class]);
+            $mViewData = new TMap();
+            $this->FExceptionAction($Exception, $mViewData);
+            /** @var IView[] $mViews */
+            $mViews = $this->FExceptionViewBinder($this->FExceptionAction);
+            if (count($mViews) > 0) {
+                $mViews[0]->Update($mViewData);
+            }
+            Framework::Free($mViewData);
+        }
+
+        if ($Exception instanceof EHttpException) {
+            $mResponse->SetStatus($Exception->getStatusCode());
+        }
+        else {
+            $mResponse->SetStatus(500);
+        }
+
+        $mResponse->Send();
+    }
+}
+
+/**
  * Class TWebApplication
  * @package FrameworkDSW\Web
  */
 class TWebApplication extends TComponent implements IApplication {
+    /**
+     * @var \FrameworkDSW\Configuration\TConfiguration
+     */
+    private $FConfiguration = null;
     /**
      * @var \FrameworkDSW\Controller\TControllerManager
      */
@@ -3967,25 +4067,66 @@ class TWebApplication extends TComponent implements IApplication {
      */
     private $FRequest = null;
     /**
+     * @var \FrameworkDSW\Web\THttpResponse
+     */
+    private $FResponse = null;
+    /**
      * @var \FrameworkDSW\Web\THttpSession
      */
     private $FSession = null;
     /**
-     * @var \FrameworkDSW\System\IInterface[]
+     * @var \FrameworkDSW\System\IInterface
      */
-    private $FControllers = [];
+    private $FController = null;
+    /**
+     * @var \FrameworkDSW\System\IInterface
+     */
+    private $FExceptionHandlerController = null;
 
     /**
+     * @param \FrameworkDSW\Configuration\TConfiguration $Configuration
      * @param \FrameworkDSW\CoreClasses\TComponent $Owner
      */
-    public function __construct($Owner = null) {
+    public function __construct($Configuration, $Owner = null) {
         parent::__construct($Owner);
+        TType::Object($Configuration, TConfiguration::class);
         TType::Object($Owner, TComponent::class);
 
-        $this->FExceptionHandler->Register();
+        $this->FConfiguration     = $Configuration;
         $this->FControllerManager = new TControllerManager();
         $this->FRequest           = new THttpRequest();
+        $this->FResponse          = new THttpResponse($this->FRequest);
         $this->FRouter            = new TUrlRouter($this->FRequest);
+
+        if ($this->FConfiguration->GetBooleanOrDefault('ExceptionHandler.UseExceptionHandler', true)) {
+            if ($this->FConfiguration->HasKey('ExceptionHandler.ExceptionController')) {
+                $mExceptionHandlerControllerClassName = $this->FConfiguration->GetString('ExceptionHandler.ExceptionController');
+                TClass::PrepareGeneric(['T' => $mExceptionHandlerControllerClassName]);
+                $mExceptionHandlerControllerClass  = new TClass();
+                $this->FExceptionHandlerController = $mExceptionHandlerControllerClass->NewInstance([]);
+
+                $this->FExceptionHandler->setExceptionAction(Framework::Delegate([$this->FExceptionHandlerController, $this->FConfiguration->GetString('ExceptionHandler.ExceptionAction')], TControllerAction::class));
+                /** @noinspection PhpParamsInspection */
+                $this->FExceptionHandler->setExceptionViewBinder(Framework::Delegate([$this->FExceptionHandlerController, $this->FConfiguration->GetString('ExceptionHandler.ExceptionViewBinder')], TViewBinder::class));
+            }
+
+            $this->FExceptionHandler = new TExceptionHandler($this);
+            $this->FExceptionHandler->Register();
+        }
+
+        if ($this->FConfiguration->GetBooleanOrDefault('Session.Enabled')) {
+            $this->FSession = new THttpSession($this->FConfiguration->GetBooleanOrDefault('Session.AutoStart'));
+        }
+
+        $this->FRouter->setUseStrictParsing(true);
+        if ($this->FConfiguration->GetStringOrDefault('UrlRouter.UrlMode', 'Path') == 'Get') {
+            $this->FRouter->setUrlMode(TUrlMode::eGet());
+        }
+        $mRulePatterns        = $this->FConfiguration->GetKeys('UrlRouter.Rules');
+        $mRulePatternStartPos = strlen('UrlRouter.Rules.');
+        foreach ($mRulePatterns as $mPattern) {
+            $this->FRouter->AddRule(new TUrlRouteRule($this->FConfiguration->GetString($mPattern), substr($mPattern, $mRulePatternStartPos, strlen($mPattern))));
+        }
     }
 
     /**
@@ -4016,12 +4157,16 @@ class TWebApplication extends TComponent implements IApplication {
     }
 
     /**
+     * @return \FrameworkDSW\Web\THttpResponse
+     */
+    public function getHttpResponse() {
+        return $this->FResponse;
+    }
+
+    /**
      * @return \FrameworkDSW\Web\THttpSession
      */
     public function getHttpSession() {
-        if ($this->FSession === null) {
-            $this->FSession = new THttpSession();
-        }
         return $this->FSession;
     }
 
@@ -4036,31 +4181,23 @@ class TWebApplication extends TComponent implements IApplication {
      * Run
      */
     public function Run() {
-        //fixme config reading for rules. BEGIN
-        $mRouterRule = new TUrlRouteRule('T<controller>/<action>', '<controller>/<action>');
-        $this->FRouter->AddRule($mRouterRule);
-        //fixme config reading for rules. END
-
-        $this->FRouter->setUseStrictParsing(true);
         $mPathInfo = $this->FRouter->ParseUrl();
         list($mControllerName, $mActionName) = explode('/', $mPathInfo);
         $this->FRouter->ParsePathInfo($mPathInfo);
 
-        //TODO config reading.
+        $mControllerClassName = $this->FConfiguration->GetString("Mvc.Controllers.{$mControllerName}");
+        TClass::PrepareGeneric(['T' => $mControllerClassName]);
+        $mControllerClass  = new TClass();
+        $this->FController = $mControllerClass->NewInstance([]);
 
-        TClass::PrepareGeneric(['T' => $mControllerName]);
-        $mControllerClass     = new TClass();
-        $mController          = $mControllerClass->NewInstance([]);
-        $this->FControllers[] = $mController;
-        $mAction              = Framework::Delegate([$mController, $mActionName . 'Action'], TControllerAction::class);
-        $mModelBinder         = Framework::Delegate([$mController, $mActionName . 'ModelBinder'], TModelBinder::class);
-        $mViewBinder          = Framework::Delegate([$mController, $mActionName . 'ViewBinder'], TViewBinder::class);
+        $mAction      = Framework::Delegate([$this->FController, $mActionName], TControllerAction::class);
+        $mModelBinder = Framework::Delegate([$this->FController, $this->FConfiguration->GetString("Mvc.Models.{$mPathInfo}")], TModelBinder::class);
+        $mViewBinder  = Framework::Delegate([$this->FController, $this->FConfiguration->GetString("Mvc.Views.{$mPathInfo}")], TViewBinder::class);
         /** @var TModelBinder $mModelBinder */
         /** @var TControllerAction $mAction */
         /** @var TViewBinder $mViewBinder */
         $this->FControllerManager->RegisterModel($mAction, $mModelBinder);
         $this->FControllerManager->RegisterView($mAction, $mViewBinder);
-        //...sub actions
 
         $this->FControllerManager->Update($mAction);
 
@@ -4072,15 +4209,13 @@ class TWebApplication extends TComponent implements IApplication {
      */
     public function Quit() {
         Framework::Free($this->FControllerManager);
+        Framework::Free($this->FController);
         Framework::Free($this->FRouter);
         Framework::Free($this->FRequest);
-
-        foreach ($this->FControllers as $mItem) {
-            Framework::Free($mItem);
-        }
-        //... free model
-        //... free view
-        //... and sub actions, models, views.
+        Framework::Free($this->FResponse);
+        Framework::Free($this->FSession);
+        Framework::Free($this->FExceptionHandler);
+        Framework::Free($this->FExceptionHandlerController);
     }
 
     /**

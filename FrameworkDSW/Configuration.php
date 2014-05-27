@@ -540,7 +540,22 @@ class TConfiguration extends TObject implements IConfiguration {
      * @return string[]
      */
     public function GetKeys($Prefix = '') {
-        // TODO: Implement GetKeys() method.
+        TType::String($Prefix);
+        $mResult = [];
+        if ($Prefix === '') {
+            foreach ($this->FConfig as $mKey => $mDummy) {
+                $mResult[] = $mKey;
+            }
+        }
+        else {
+            $Prefix .= '.';
+            foreach ($this->FConfig as $mKey => $mDummy) {
+                if (strpos($mKey, $Prefix) === 0) {
+                    $mResult[] = $mKey;
+                }
+            }
+        }
+        return $mResult;
     }
 
     /**
@@ -548,7 +563,19 @@ class TConfiguration extends TObject implements IConfiguration {
      * @return integer
      */
     public function Count($Prefix = '') {
-        // TODO: Implement Count() method.
+        if ($Prefix === '') {
+            return $this->FConfig->Size();
+        }
+        else {
+            $mResult = 0;
+            $Prefix .= '.';
+            foreach ($this->FConfig as $mKey => $mDummy) {
+                if (strpos($mKey, $Prefix) === 0) {
+                    ++$mResult;
+                }
+            }
+            return $mResult;
+        }
     }
 
     /**

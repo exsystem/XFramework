@@ -333,7 +333,6 @@ class TControllerManager extends TObject implements IControllerManager {
         TType::Delegate($OnSetControllerManagerUpdate, TOnSetControllerManagerUpdate::class);
         TType::Bool($ShouldBeNotified);
 
-
         /** @var TDelegate $ModelBinder */
         $mModel = $ModelBinder($Action, Framework::Delegate([$this, 'Notify'], TOnModelNotify::class));
         try {
@@ -450,8 +449,8 @@ class TControllerManager extends TObject implements IControllerManager {
         TType::Delegate($ViewBinder, TViewBinder::class);
 
         /**@var TDelegate $ViewBinder */
+        $mViews = $ViewBinder($Action);
         try {
-            $mViews = $ViewBinder($Action);
             foreach ($mViews as $mView) {
                 $this->FViewRegistration[$Action]->Add($mView);
             }
@@ -459,7 +458,7 @@ class TControllerManager extends TObject implements IControllerManager {
         catch (ENoSuchKey $Ex) {
             TLinkedList::PrepareGeneric(['T' => IView::class]);
             /** @noinspection PhpParamsInspection */
-            $this->FViewRegistration->Put($Action, new TLinkedList(false, $ViewBinder($Action)));
+            $this->FViewRegistration->Put($Action, new TLinkedList(false, $mViews));
         }
     }
 

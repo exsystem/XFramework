@@ -8,10 +8,10 @@
 namespace FrameworkDSW\Framework;
 
 require_once 'FrameworkDSW/System.php';
-use FrameworkDSW\CoreClasses\IApplication;
 use FrameworkDSW\Reflection\TClass;
 use FrameworkDSW\System\EError;
 use FrameworkDSW\System\ENoSuchType;
+use FrameworkDSW\System\ERuntimeException;
 use FrameworkDSW\System\IInterface;
 use FrameworkDSW\System\TDelegate;
 use FrameworkDSW\System\TObject;
@@ -422,6 +422,12 @@ class Framework extends TObject {
         self::$FDeclaredClasses = get_declared_classes();
         self::$FStartAt         = count(self::$FDeclaredClasses);
 
+        ini_set('display_errors', 0);
+        set_error_handler([Framework::class, 'HandleError']);
+        if (Framework::$FReservedMemorySize > 0) {
+            Framework::$FReservedMemory = str_repeat('x', Framework::$FReservedMemorySize);
+        }
+        register_shutdown_function([Framework::class, 'HandleFatalError']);
         spl_autoload_register('FrameworkDSW\Framework\Framework::AutoLoader', true);
     }
 
@@ -449,12 +455,12 @@ class Framework extends TObject {
     private static $FApplication = null;
 
     /**
-     * @param \FrameworkDSW\Reflection\TClass $ApplicationClass <T: \FrameworkDSW\CoreClasses\IApplication>
+     * @param \FrameworkDSW\Reflection\TClass $ApplicationClass <T: ?> T: extends \FrameworkDSW\CoreClasses\IApplication
      * @param \FrameworkDSW\System\IInterface[] $Parameters
      */
     public static function CreateApplication($ApplicationClass, $Parameters) {
-        TType::Object($ApplicationClass, [TClass::class => ['T' => IApplication::class]]);
-        TType::Type($ApplicationClass, IInterface::class . '[]');
+        TType::Object($ApplicationClass, [TClass::class => ['T' => null]]);
+        TType::Type($Parameters, IInterface::class . '[]');
         Framework::$FApplication = $ApplicationClass->NewInstance($Parameters);
     }
 
@@ -526,6 +532,73 @@ class Framework extends TObject {
             Framework::$FTypeObjs[$mKey] = [$mClass];
             return $mClass;
         }
+    }
+
+    /**
+     * @var integer
+     */
+    private static $FReservedMemorySize = 262144;
+    /**
+     * @var string
+     */
+    private static $FReservedMemory = '';
+
+    /**
+     * @param integer $Size
+     */
+    public static function SetReservedMemorySize($Size) {
+        TType::Int($Size);
+        if ($Size < 0) {
+            $Size = 0;
+        }
+        Framework::$FReservedMemorySize = $Size;
+    }
+
+    /**
+     * @return integer
+     */
+    public static function GetReservedMemorySize() {
+        return Framework::$FReservedMemorySize;
+    }
+
+    /**
+     * @param integer $Code
+     * @param string $Message
+     * @param string $File
+     * @param integer $Line
+     * @param mixed $Context
+     * @throws \FrameworkDSW\System\ERuntimeException
+     */
+    public static function HandleError($Code, $Message, $File, $Line, $Context) {
+        if (error_reporting() & $Code) {
+            if (!class_exists('FrameworkDSW\\System\\ERuntimeException', false)) {
+                require_once __DIR__ . '/System.php';
+            }
+            throw new ERuntimeException($Message, null); //TODO classify errors into different types of runtime exceptions.
+        }
+    }
+
+    /**
+     *
+     */
+    public static function HandleFatalError() {
+        Framework::$FReservedMemory = '';
+        if (!class_exists('FrameworkDSW\\System\\ERuntimeException', false)) {
+            require_once __DIR__ . '/System.php';
+        }
+        $mError = error_get_last();
+        if (isset($mError['type']) && in_array($mError['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_CORE_WARNING, E_COMPILE_ERROR, E_COMPILE_WARNING])) {
+            $mException = new ERuntimeException($mError['message']);
+            PHP_SAPI === 'cli' or error_log($mException);
+            if (Framework::Application() === null) {
+                echo $mError['message'];
+            }
+            else {
+                Framework::Application()->getExceptionHandler()->HandleException($mException);
+            }
+            exit(1);
+        }
+
     }
 }
 
