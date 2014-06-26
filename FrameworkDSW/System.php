@@ -1370,7 +1370,7 @@ class TObject implements IInterface {
                 ) {
                     throw new ENoSuchType(sprintf('No such type: %s.', $Value), null, $Value);
                 }
-                elseif (!is_string($Value)) {
+                elseif (!is_string($Value) && $Value !== null) {
                     throw new EBadGenericArgsStructure('Bad generic args structure.');
                 }
             });
@@ -1405,7 +1405,7 @@ class TObject implements IInterface {
                 ) {
                     throw new ENoSuchType(sprintf('No such type: %s.', $Value), null, $Value);
                 }
-                elseif (!is_string($Value)) {
+                elseif (!is_string($Value) && $Value !== null) {
                     throw new EBadGenericArgsStructure('Bad generic args structure.');
                 }
             });

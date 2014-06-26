@@ -4143,6 +4143,13 @@ class TWebApplication extends TComponent implements IApplication {
     }
 
     /**
+     * @return \FrameworkDSW\Configuration\TConfiguration
+     */
+    public function getConfiguration() {
+        return $this->FConfiguration;
+    }
+
+    /**
      * @return \FrameworkDSW\Controller\IControllerManager
      */
     public function getControllerManager() {
