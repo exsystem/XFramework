@@ -422,6 +422,12 @@ class TControllerManager extends TObject implements IControllerManager {
     public function Update($Action) {
         try {
             $mRegistration = $this->FViewRegistration[$Action];
+        }
+        catch (ENoSuchKey $Ex) {
+            throw new ENoSuchActionViewPair(sprintf('No such action registered: Update failed.'), $Ex, $Action, null);
+        }
+
+        try {
             TMap::PrepareGeneric(['K' => Framework::String, 'V' => IInterface::class]);
             $mViewData = new TMap(true);
             /** @var TDelegate $Action */
@@ -430,11 +436,9 @@ class TControllerManager extends TObject implements IControllerManager {
             foreach ($mRegistration as $mView) {
                 $mView->Update($mViewData);
             }
-            Framework::Free($mViewData);
         }
-        catch (ENoSuchKey $Ex) {
-            /** @var TControllerAction $Action */
-            throw new ENoSuchActionViewPair(sprintf('No such action registered: Update failed.'), $Ex, $Action, null);
+        finally {
+            Framework::Free($mViewData);
         }
     }
 

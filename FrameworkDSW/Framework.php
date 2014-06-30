@@ -378,12 +378,6 @@ class Framework extends TObject {
             /** @noinspection PhpIncludeInspection */
             require_once (string)self::$FExternalUnits[$Name];
         }
-        elseif (isset(self::$FExternalUnits['*'])) {
-            foreach (self::$FExternalUnits['*'] as $mUnit) {
-                /** @noinspection PhpIncludeInspection */
-                require_once (string)$mUnit;
-            }
-        }
         else {
             $mFilename = str_replace('\\', DIRECTORY_SEPARATOR, $Name) . ".php";
             if (file_exists($mFilename)) {
@@ -407,6 +401,13 @@ class Framework extends TObject {
                         }
                     }
                 }
+            }
+        }
+
+        if (isset(self::$FExternalUnits['*'])) {
+            foreach (self::$FExternalUnits['*'] as $mUnit) {
+                /** @noinspection PhpIncludeInspection */
+                require_once (string)$mUnit;
             }
         }
     }
