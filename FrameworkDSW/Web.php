@@ -2839,14 +2839,19 @@ class TUrlRouter extends TObject implements IUrlRouter {
         $Route = trim($Route, '/');
         /** @var IUrlRouteRule $mRule */
         foreach ($this->FRules as $mRule) {
-            $mUrl = $mRule->CreateUrl($this, $Route, $Parameters, $Ampersand);
-            if ($mUrl != '') {
-                if ($mRule->getHasHostInfo()) {
-                    return $mUrl == '/' ? "/{$mAnchor}" : "{$mUrl}{$mAnchor}";
+            try {
+                $mUrl = $mRule->CreateUrl($this, $Route, $Parameters, $Ampersand);
+                if ($mUrl != '') {
+                    if ($mRule->getHasHostInfo()) {
+                        return $mUrl == '/' ? "/{$mAnchor}" : "{$mUrl}{$mAnchor}";
+                    }
+                    else {
+                        return $this->getBaseUrl() . "/{$mUrl}{$mAnchor}";
+                    }
                 }
-                else {
-                    return $this->getBaseUrl() . "/{$mUrl}{$mAnchor}";
-                }
+            }
+            catch (ECreateUrlFailed $Ex) {
+                continue;
             }
         }
 
