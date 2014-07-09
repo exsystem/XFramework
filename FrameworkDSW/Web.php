@@ -1956,7 +1956,7 @@ class THttpResponse extends TObject {
         $mHeaders = $this->getHeaders();
         if ($mHeaders !== null) {
             foreach ($mHeaders as $mName => $mValues) {
-                $mName = str_replace(' ', '-', ucwords('-', ' ', $mName));
+                $mName = str_replace(' ', '-', ucwords($mName));
                 foreach ($mValues as &$mValue) {
                     header("{$mName}: {$mValue}", false);
                 }
@@ -3363,9 +3363,9 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
         $mTr['/']  = '\\/';
         $mTr2['/'] = '\\/';
 
+        TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String]);
+        $this->FReferences = new TMap();
         if (strpos($Route, '<') !== false && preg_match_all('/<(\w+)>/', $Route, $mReferences)) {
-            TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String]);
-            $this->FReferences = new TMap();
             foreach ($mReferences[1] as $mReference) {
                 $this->FReferences->Put($mReference, "<{$mReference}>");
             }
