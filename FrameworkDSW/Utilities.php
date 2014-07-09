@@ -274,6 +274,8 @@ final class TType extends TObject {
                 break;
             case Framework::Variant:
                 break;
+            case null:
+                break;
             default: // an array or a compound type string
                 if (is_array($Type)) {
                     $mClass = array_keys($Type)[0];
