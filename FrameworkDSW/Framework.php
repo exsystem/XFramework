@@ -572,6 +572,10 @@ class Framework extends TObject {
      */
     public static function HandleError($Code, $Message, $File, $Line, $Context) {
         if (error_reporting() & $Code) {
+            if (Framework::IsDebug() && function_exists('xdebug_is_enabled') && strstr($Message, 'Property access is not allowed yet') !== false) {
+                return;
+            }
+
             if (!class_exists('FrameworkDSW\\System\\ERuntimeException', false)) {
                 require_once __DIR__ . '/System.php';
             }

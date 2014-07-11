@@ -4104,6 +4104,9 @@ class TWebApplication extends TComponent implements IApplication {
         $this->FRouter            = new TUrlRouter($this->FRequest);
 
         if ($this->FConfiguration->GetBooleanOrDefault('ExceptionHandler.UseExceptionHandler', true)) {
+            $this->FExceptionHandler = new TExceptionHandler($this);
+            $this->FExceptionHandler->Register();
+
             if ($this->FConfiguration->HasKey('ExceptionHandler.ExceptionController')) {
                 $mExceptionHandlerControllerClassName = $this->FConfiguration->GetString('ExceptionHandler.ExceptionController');
                 TClass::PrepareGeneric(['T' => $mExceptionHandlerControllerClassName]);
@@ -4114,9 +4117,6 @@ class TWebApplication extends TComponent implements IApplication {
                 /** @noinspection PhpParamsInspection */
                 $this->FExceptionHandler->setExceptionViewBinder(Framework::Delegate([$this->FExceptionHandlerController, $this->FConfiguration->GetString('ExceptionHandler.ExceptionViewBinder')], TViewBinder::class));
             }
-
-            $this->FExceptionHandler = new TExceptionHandler($this);
-            $this->FExceptionHandler->Register();
         }
 
         if ($this->FConfiguration->GetBooleanOrDefault('Session.Enabled')) {
