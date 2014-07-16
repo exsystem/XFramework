@@ -1417,7 +1417,12 @@ class TMysqlStatement extends TAbstractMysqlStatement implements IStatement {
      */
     protected function DoSetCommand() {
         try {
-            $this->FMysqliStmt->prepare($this->FCommand);
+            if ($this->FMysqliStmt === null) {
+                $this->FMysqliStmt = $this->FMysqli->prepare($this->FCommand);
+            }
+            else {
+                $this->FMysqliStmt->prepare($this->FCommand);
+            }
         }
         catch (\mysqli_sql_exception $Ex) {
             TMysqlConnection::PushMysqliExceptionWarning(Framework::Type(ESetCommandFailed::class), $Ex, $this->FConnection);
@@ -1597,7 +1602,7 @@ EOD;
     protected function BindRawParameters() {
         if ($this->FParams !== null && $this->FParams->Size() > 0) {
             $mTypes     = '';
-            $mParams = [];
+            $mParams    = [];
             $mParamsRef = [];
             foreach ($this->FRawParams as $mParam) {
                 $mTypes .= 's';
@@ -2826,10 +2831,10 @@ abstract class TAbstractMysqlRow extends TBaseMysqlObject {
      */
     protected function EnsureUpdatable() {
         if ($this->FTableName == '') {
-            throw new EUnableToUpdateNonSingleTableResultSet(sprintf('Update result set failed: the row can not be updated since it comes from a result set which is not a part of a single table. Check if the result set is a joined result set.'));
+            throw new EUnableToUpdateNonSingleTableResultSet(sprintf('UPDATE result SET failed: the ROW can NOT be updated since it comes FROM a result SET which IS NOT a part of a single TABLE. CHECK IF the result SET IS a joined result SET.'));
         }
         if ($this->FResultSet->getType() != TResultSetType::eScrollSensitive() || $this->FConcurrencyType == TConcurrencyType::eReadOnly()) {
-            throw new EResultSetIsNotUpdatable(sprintf('Update result set failed: scroll insensitive and read-only result sets are not updatable.'));
+            throw new EResultSetIsNotUpdatable(sprintf('UPDATE result SET failed: scroll INSENSITIVE AND READ-only result sets are NOT updatable.'));
         }
     }
 
