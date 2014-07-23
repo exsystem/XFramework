@@ -3050,7 +3050,7 @@ class TMap extends TAbstractMap {
      * @param K $Key
      */
     protected function DoDelete($Key) {
-        if (!TType::IsTypePrimitive($this->GenericArg('V'))) {
+        if ($this->FElementsOwned && !TType::IsTypePrimitive($this->GenericArg('V'))) {
             Framework::Free($this->DoGet($Key));
         }
         if ($this->FDirectKey) {
