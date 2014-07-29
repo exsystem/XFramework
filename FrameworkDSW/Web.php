@@ -3488,8 +3488,8 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
 
         if ($this->FParameters != null) {
             foreach ($this->FParameters as $mKey => $mValue) {
-                $mTr["<{$mKey}>"] = urlencode($mValue);
-                $this->FParameters->Delete($mKey);
+                $mTr["<{$mKey}>"] = urlencode($Parameters[$mKey]);
+                $Parameters->Delete($mKey);
             }
         }
         $mSuffix = $this->FUseInheritedSuffix ? $Router->getUrlSuffix() : $this->FUrlSuffix;
@@ -4017,7 +4017,7 @@ class TExceptionHandler extends \FrameworkDSW\System\TExceptionHandler {
         $mResponse = $this->FApplication->getHttpResponse();
 
         if ($this->FExceptionAction === null || Framework::IsDebug()) {
-            $mContent = htmlspecialchars(var_export($Exception, true), ENT_QUOTES, 'UTF-8');
+            $mContent = htmlspecialchars(var_export($Exception, true), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             $mResponse->setContent("<pre>{$mContent}</pre>");
         }
         else {
