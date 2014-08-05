@@ -4026,9 +4026,13 @@ class TExceptionHandler extends \FrameworkDSW\System\TExceptionHandler {
             }
             TMap::PrepareGeneric(['K' => Framework::String, 'V' => IInterface::class]);
             $mViewData = new TMap();
-            $this->FExceptionAction($Exception, $mViewData);
+            /** @var string $mAction */
+            $mAction = $this->FExceptionAction;
+            $mAction($Exception, $mViewData);
+            /** @var string $mViewBinder */
+            $mViewBinder = $this->FExceptionViewBinder;
             /** @var IView[] $mViews */
-            $mViews = $this->FExceptionViewBinder($this->FExceptionAction);
+            $mViews = $mViewBinder($this->FExceptionAction);
             if (count($mViews) > 0) {
                 $mViews[0]->Update($mViewData);
             }
