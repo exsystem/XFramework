@@ -1128,8 +1128,8 @@ abstract class TExpression extends TObject {
      * @return \FrameworkDSW\Linq\Expressions\TTypedExpression <T: T>
      */
     public static function TypedLambda($Body, $Parameters, $Name = '') {
-        TTypedExpression::PrepareGeneric(array(
-            'T' => self::StaticGenericArg('T')));
+        TTypedExpression::PrepareGeneric([
+            'T' => self::StaticGenericArg('T')]);
 
         return new TTypedExpression($Name, $Body, $Parameters, $Body->getType());
     }
@@ -1764,11 +1764,12 @@ final class TBinaryExpression extends TExpression {
             case TExpressionType::eMultiply() :
             case TExpressionType::eMultiplyChecked() :
             case TExpressionType::eDivide() :
-                if (($this->FLeft->getType() == TFloat::class) || ($this->FRight->getType() == TFloat::class)) {
-                    return TFloat::class;
+                $mTFloatClass = Framework::Type(TFloat::class);
+                if (($this->FLeft->getType() === $mTFloatClass) || ($this->FRight->getType() === $mTFloatClass)) {
+                    return $mTFloatClass;
                 }
                 else {
-                    return TInteger::class;
+                    return Framework::Type(TInteger::class);
                 }
             case TExpressionType::eModulo() :
             case TExpressionType::eAnd() :
@@ -1776,7 +1777,7 @@ final class TBinaryExpression extends TExpression {
             case TExpressionType::eExclusiveOr() :
             case TExpressionType::eLeftShift() :
             case TExpressionType::eRightShift() :
-                return TInteger::class;
+                return Framework::Type(TInteger::class);
             case TExpressionType::eAssign() :
             case TExpressionType::ePower() :
             case TExpressionType::eArrayIndex() :
@@ -1789,7 +1790,7 @@ final class TBinaryExpression extends TExpression {
             case TExpressionType::eLessThanOrEqual() :
             case TExpressionType::eEqual() :
             case TExpressionType::eNotEqual() :
-                return TBoolean::class;
+                return Framework::Type(TBoolean::class);
         }
     }
 
@@ -2051,7 +2052,6 @@ final class TParameterExpression extends TExpression {
      *
      */
     public function Destroy() {
-        Framework::Free($this->FType);
         parent::Destroy();
     }
 
@@ -2283,7 +2283,7 @@ final class TMethodCallExpression extends TExpression {
     /**
      * descHere
      *
-     * @return array
+     * @return \FrameworkDSW\Reflection\TMethod
      */
     public function getMethod() {
         return $this->FMethod;
@@ -2589,7 +2589,7 @@ abstract class TExpressionVisitor extends TObject {
         }
         $mObjectType = $Expression->ObjectType();
 
-        switch ($mObjectType) {
+        switch ($mObjectType->getName()) {
             case TBinaryExpression::class :
                 return $this->VisitBinary($Expression);
                 break;

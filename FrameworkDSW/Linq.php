@@ -128,7 +128,7 @@ interface IQueryProvider extends IInterface {
      * descHere
      *
      * @param \FrameworkDSW\Linq\Expressions\TTypedExpression $Expression <T: T>
-     * @return IQueryable <T: T>
+     * @return \FrameworkDSW\Linq\IQueryable <T: T>
      */
     public function CreateQuery($Expression = null);
 
