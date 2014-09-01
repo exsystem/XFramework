@@ -154,7 +154,24 @@ class TMyView extends TComponent implements IView {
     }
 }
 
+/**
+ * Class TResponder
+ * @package testHMVC
+ */
+class TResponder extends TObject {
+    /**
+     * @param $Action
+     * @param $Model
+     * @param $ViewData
+     */
+    public function slotAfterAction($Action, $Model, $ViewData) {
+        $fp = fopen('php://stderr', 'r+');
+        fputs($fp, 'after update.');
+    }
+}
+
 $mControllerManager = new TControllerManager();
+TObject::Link([$mControllerManager, 'AfterAction'], [TResponder::class, 'AfterAction']);
 $mController        = new TMyController();
 $mAction            = Framework::Delegate([$mController, 'TestAction'], TControllerAction::class);
 $mSubAction         = Framework::Delegate([$mController, 'TestSubAction'], TControllerAction::class);
