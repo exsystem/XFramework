@@ -430,8 +430,11 @@ class TControllerManager extends TObject implements IControllerManager {
         try {
             TMap::PrepareGeneric(['K' => Framework::String, 'V' => IInterface::class]);
             $mViewData = new TMap(true);
+            $mModel = $this->FModelRegistration[$Action];
             /** @var TDelegate $Action */
-            $Action($this->FModelRegistration[$Action], $mViewData);
+            TObject::Dispatch([$this, 'BeforeAction'], [$Action, $mModel, $mViewData]);
+            $Action($mModel, $mViewData);
+            TObject::Dispatch([$this, 'AfterAction'], [$Action, $mModel, $mViewData]);
             /** @var IView $mView */
             foreach ($mRegistration as $mView) {
                 $mView->Update($mViewData);
@@ -499,7 +502,23 @@ class TControllerManager extends TObject implements IControllerManager {
             $this->FViewRegistration[$Action]->Remove($View);
         }
         catch (ENoSuchKey $Ex) {
-            throw new ENoSuchActionViewPair(sprintf('No such action view pair: action  is unregistered with the view.'), $Ex, $Action, $View);
+            throw new ENoSuchActionViewPair(sprintf('No such action view pair: action is unregistered with the view.'), $Ex, $Action, $View);
         }
+    }
+
+    /**
+     * @param \FrameworkDSW\Controller\TControllerAction $Action
+     * @param \FrameworkDSW\System\IInterface $Model
+     * @param \FrameworkDSW\Containers\IMap $ViewData <K: string, V: \FrameworkDSW\System\IInterface>
+     */
+    public function signalBeforeAction($Action, $Model, $ViewData) {
+    }
+
+    /**
+     * @param \FrameworkDSW\Controller\TControllerAction $Action
+     * @param \FrameworkDSW\System\IInterface $Model
+     * @param \FrameworkDSW\Containers\IMap $ViewData <K: string, V: \FrameworkDSW\System\IInterface>
+     */
+    public function signalAfterAction($Action, $Model, $ViewData) {
     }
 }

@@ -42,12 +42,12 @@ class TJsonStorage extends TObject implements IConfigurationStorage {
     public function Load() {
         $mContent = file_get_contents($this->FFileName);
         if ($mContent === false) {
-            throw new EException(sprintf('Unable read file: "%s".', $this->FFileName));
+            throw new ERuntimeException(sprintf('Unable read file: "%s".', $this->FFileName));
         }
         else {
             $mArray = json_decode($mContent, true);
             if (is_array($mArray) && array_diff_key($mArray, array_keys(array_keys($mArray))) === false) {
-                throw new EException(sprintf('Wrong structure: "%s".', $this->FFileName));
+                throw new ERuntimeException(sprintf('Wrong structure: "%s".', $this->FFileName));
             }
 
             $mStack = [];
@@ -109,7 +109,7 @@ class TJsonStorage extends TObject implements IConfigurationStorage {
             file_put_contents($this->FFileName, $mResult);
         }
         catch (ERuntimeException $Ex) {
-            throw new EException('Failed to set file contents.');
+            throw new ERuntimeException('Failed to set file contents.');
         }
     }
 }
