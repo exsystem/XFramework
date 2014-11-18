@@ -22,6 +22,7 @@ use FrameworkDSW\CoreClasses\IApplication;
 use FrameworkDSW\CoreClasses\IView;
 use FrameworkDSW\CoreClasses\TComponent;
 use FrameworkDSW\Framework\Framework;
+use FrameworkDSW\Internationalization\TInternationalizationManager;
 use FrameworkDSW\Reflection\TClass;
 use FrameworkDSW\System\EException;
 use FrameworkDSW\System\EInvalidParameter;
@@ -4091,6 +4092,10 @@ class TWebApplication extends TComponent implements IApplication {
      * @var \FrameworkDSW\System\IInterface
      */
     private $FExceptionHandlerController = null;
+    /**
+     * @var \FrameworkDSW\Internationalization\TInternationalizationManager
+     */
+    private $FInternationalizationManager = null;
 
     /**
      * @param \FrameworkDSW\Configuration\TConfiguration $Configuration
@@ -4194,6 +4199,22 @@ class TWebApplication extends TComponent implements IApplication {
     }
 
     /**
+     * @return \FrameworkDSW\Internationalization\TInternationalizationManager
+     */
+    public function getInternationalizationManager() {
+        return $this->FInternationalizationManager;
+    }
+
+    /**
+     * @param \FrameworkDSW\Internationalization\TInternationalizationManager $Value
+     * @throws \FrameworkDSW\Utilities\EInvalidObjectCasting
+     */
+    public function setInternationalizationManager($Value) {
+        TType::Object($Value, TInternationalizationManager::class);
+        $this->FInternationalizationManager = $Value;
+    }
+
+    /**
      * Run
      */
     public function Run() {
@@ -4232,6 +4253,7 @@ class TWebApplication extends TComponent implements IApplication {
         Framework::Free($this->FSession);
         Framework::Free($this->FExceptionHandler);
         Framework::Free($this->FExceptionHandlerController);
+        Framework::Free($this->FInternationalizationManager);
     }
 
     /**

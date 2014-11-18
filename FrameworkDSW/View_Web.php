@@ -22,6 +22,7 @@ use FrameworkDSW\System\TRecord;
 use FrameworkDSW\System\TString;
 use FrameworkDSW\Utilities\TType;
 use FrameworkDSW\Web\IUrlRouter;
+use FrameworkDSW\Web\TWebApplication;
 
 /**
  * TWebTheme
@@ -364,6 +365,18 @@ class TWebPage extends TComponent implements IView {
             /** @noinspection PhpIncludeInspection */
             require_once $mView->FTemplate;
         }
+    }
+
+    /**
+     * @param string $Code
+     * @param mixed[] $Arguments
+     * @return string
+     */
+    public function Translate($Code, $Arguments = []) {
+        TType::String($Code);
+        TType::Type($Arguments, Framework::Variant . '[]');
+
+        return TWebApplication::Application()->getInternationalizationManager()->TranslateMessage($Code, $Arguments);
     }
 }
 

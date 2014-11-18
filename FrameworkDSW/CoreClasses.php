@@ -1779,6 +1779,11 @@ abstract class TControl extends TComponent implements IControl {
  */
 interface IApplication extends IInterface {
     /**
+     * @return \FrameworkDSW\Configuration\IConfiguration
+     */
+    public function getConfiguration();
+
+    /**
      * @return \FrameworkDSW\Controller\IControllerManager
      */
     public function getControllerManager();
@@ -1787,6 +1792,11 @@ interface IApplication extends IInterface {
      * @return \FrameworkDSW\System\TExceptionHandler
      */
     public function getExceptionHandler();
+
+    /**
+     * @return \FrameworkDSW\Internationalization\TInternationalizationManager
+     */
+    public function getInternationalizationManager();
 
     /**
      * Run
