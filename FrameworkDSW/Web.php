@@ -7,7 +7,6 @@
  */
 namespace FrameworkDSW\Web;
 
-use FrameworkDSW\Configuration\TConfiguration;
 use FrameworkDSW\Containers\IList;
 use FrameworkDSW\Containers\IMap;
 use FrameworkDSW\Containers\TAbstractMap;
@@ -15,14 +14,12 @@ use FrameworkDSW\Containers\TLinkedList;
 use FrameworkDSW\Containers\TMap;
 use FrameworkDSW\Containers\TPair;
 use FrameworkDSW\Controller\TControllerAction;
-use FrameworkDSW\Controller\TControllerManager;
 use FrameworkDSW\Controller\TModelBinder;
 use FrameworkDSW\Controller\TViewBinder;
 use FrameworkDSW\CoreClasses\IApplication;
 use FrameworkDSW\CoreClasses\IView;
-use FrameworkDSW\CoreClasses\TComponent;
+use FrameworkDSW\CoreClasses\TApplication;
 use FrameworkDSW\Framework\Framework;
-use FrameworkDSW\Internationalization\TInternationalizationManager;
 use FrameworkDSW\Reflection\TClass;
 use FrameworkDSW\System\EException;
 use FrameworkDSW\System\EInvalidParameter;
@@ -4055,19 +4052,7 @@ class TExceptionHandler extends \FrameworkDSW\System\TExceptionHandler {
  * Class TWebApplication
  * @package FrameworkDSW\Web
  */
-class TWebApplication extends TComponent implements IApplication {
-    /**
-     * @var \FrameworkDSW\Configuration\TConfiguration
-     */
-    private $FConfiguration = null;
-    /**
-     * @var \FrameworkDSW\Controller\TControllerManager
-     */
-    private $FControllerManager = null;
-    /**
-     * @var \FrameworkDSW\System\TExceptionHandler
-     */
-    private $FExceptionHandler = null;
+class TWebApplication extends TApplication implements IApplication {
     /**
      * @var \FrameworkDSW\Web\TUrlRouter
      */
@@ -4092,40 +4077,33 @@ class TWebApplication extends TComponent implements IApplication {
      * @var \FrameworkDSW\System\IInterface
      */
     private $FExceptionHandlerController = null;
-    /**
-     * @var \FrameworkDSW\Internationalization\TInternationalizationManager
-     */
-    private $FInternationalizationManager = null;
 
     /**
-     * @param \FrameworkDSW\Configuration\TConfiguration $Configuration
-     * @param \FrameworkDSW\CoreClasses\TComponent $Owner
+     * @param boolean $UseExceptionHandler
+     * @throws \FrameworkDSW\Reflection\EIllegalAccess
      */
-    public function __construct($Configuration, $Owner = null) {
-        parent::__construct($Owner);
-        TType::Object($Configuration, TConfiguration::class);
-        TType::Object($Owner, TComponent::class);
+    protected function DoInitialize($UseExceptionHandler) {
+        TType::Bool($UseExceptionHandler);
 
-        $this->FConfiguration     = $Configuration;
-        $this->FControllerManager = new TControllerManager();
-        $this->FRequest           = new THttpRequest();
-        $this->FResponse          = new THttpResponse($this->FRequest);
-        $this->FRouter            = new TUrlRouter($this->FRequest);
+        $this->FRequest  = new THttpRequest();
+        $this->FResponse = new THttpResponse($this->FRequest);
+        $this->FRouter   = new TUrlRouter($this->FRequest);
 
-        if ($this->FConfiguration->GetBooleanOrDefault('ExceptionHandler.UseExceptionHandler', true)) {
+
+        if ($UseExceptionHandler) {
             $this->FExceptionHandler = new TExceptionHandler($this);
             $this->FExceptionHandler->Register();
+        }
 
-            if ($this->FConfiguration->HasKey('ExceptionHandler.ExceptionController')) {
-                $mExceptionHandlerControllerClassName = $this->FConfiguration->GetString('ExceptionHandler.ExceptionController');
-                TClass::PrepareGeneric(['T' => $mExceptionHandlerControllerClassName]);
-                $mExceptionHandlerControllerClass  = new TClass();
-                $this->FExceptionHandlerController = $mExceptionHandlerControllerClass->NewInstance([]);
+        if ($this->FConfiguration->HasKey('ExceptionHandler.ExceptionController')) {
+            $mExceptionHandlerControllerClassName = $this->FConfiguration->GetString('ExceptionHandler.ExceptionController');
+            TClass::PrepareGeneric(['T' => $mExceptionHandlerControllerClassName]);
+            $mExceptionHandlerControllerClass  = new TClass();
+            $this->FExceptionHandlerController = $mExceptionHandlerControllerClass->NewInstance([]);
 
-                $this->FExceptionHandler->setExceptionAction(Framework::Delegate([$this->FExceptionHandlerController, $this->FConfiguration->GetString('ExceptionHandler.ExceptionAction')], TControllerAction::class));
-                /** @noinspection PhpParamsInspection */
-                $this->FExceptionHandler->setExceptionViewBinder(Framework::Delegate([$this->FExceptionHandlerController, $this->FConfiguration->GetString('ExceptionHandler.ExceptionViewBinder')], TViewBinder::class));
-            }
+            $this->FExceptionHandler->setExceptionAction(Framework::Delegate([$this->FExceptionHandlerController, $this->FConfiguration->GetString('ExceptionHandler.ExceptionAction')], TControllerAction::class));
+            /** @noinspection PhpParamsInspection */
+            $this->FExceptionHandler->setExceptionViewBinder(Framework::Delegate([$this->FExceptionHandlerController, $this->FConfiguration->GetString('ExceptionHandler.ExceptionViewBinder')], TViewBinder::class));
         }
 
         if ($this->FConfiguration->GetBooleanOrDefault('Session.Enabled')) {
@@ -4144,6 +4122,31 @@ class TWebApplication extends TComponent implements IApplication {
     }
 
     /**
+     *
+     */
+    protected function DoRun() {
+        $mPathInfo = $this->FRouter->ParseUrl();
+        list($mControllerName, $mActionName) = explode('/', $mPathInfo);
+        $this->FRouter->ParsePathInfo($mPathInfo);
+
+        $mControllerClassName = $this->FConfiguration->GetString("Mvc.Controllers.{$mControllerName}");
+        TClass::PrepareGeneric(['T' => $mControllerClassName]);
+        $mControllerClass  = new TClass();
+        $this->FController = $mControllerClass->NewInstance([]);
+
+        $mAction      = Framework::Delegate([$this->FController, $mActionName], TControllerAction::class);
+        $mModelBinder = Framework::Delegate([$this->FController, $this->FConfiguration->GetString("Mvc.Models.{$mPathInfo}")], TModelBinder::class);
+        $mViewBinder  = Framework::Delegate([$this->FController, $this->FConfiguration->GetString("Mvc.Views.{$mPathInfo}")], TViewBinder::class);
+        /** @var TModelBinder $mModelBinder */
+        /** @var TControllerAction $mAction */
+        /** @var TViewBinder $mViewBinder */
+        $this->FControllerManager->RegisterModel($mAction, $mModelBinder);
+        $this->FControllerManager->RegisterView($mAction, $mViewBinder);
+
+        $this->FControllerManager->Update($mAction);
+    }
+
+    /**
      * @return \FrameworkDSW\Web\TWebApplication
      */
     public static function Application() {
@@ -4154,20 +4157,6 @@ class TWebApplication extends TComponent implements IApplication {
         else {
             return null;
         }
-    }
-
-    /**
-     * @return \FrameworkDSW\Configuration\TConfiguration
-     */
-    public function getConfiguration() {
-        return $this->FConfiguration;
-    }
-
-    /**
-     * @return \FrameworkDSW\Controller\IControllerManager
-     */
-    public function getControllerManager() {
-        return $this->FControllerManager;
     }
 
     /**
@@ -4196,70 +4185,5 @@ class TWebApplication extends TComponent implements IApplication {
      */
     public function getUrlRouter() {
         return $this->FRouter;
-    }
-
-    /**
-     * @return \FrameworkDSW\Internationalization\TInternationalizationManager
-     */
-    public function getInternationalizationManager() {
-        return $this->FInternationalizationManager;
-    }
-
-    /**
-     * @param \FrameworkDSW\Internationalization\TInternationalizationManager $Value
-     * @throws \FrameworkDSW\Utilities\EInvalidObjectCasting
-     */
-    public function setInternationalizationManager($Value) {
-        TType::Object($Value, TInternationalizationManager::class);
-        $this->FInternationalizationManager = $Value;
-    }
-
-    /**
-     * Run
-     */
-    public function Run() {
-        $mPathInfo = $this->FRouter->ParseUrl();
-        list($mControllerName, $mActionName) = explode('/', $mPathInfo);
-        $this->FRouter->ParsePathInfo($mPathInfo);
-
-        $mControllerClassName = $this->FConfiguration->GetString("Mvc.Controllers.{$mControllerName}");
-        TClass::PrepareGeneric(['T' => $mControllerClassName]);
-        $mControllerClass  = new TClass();
-        $this->FController = $mControllerClass->NewInstance([]);
-
-        $mAction      = Framework::Delegate([$this->FController, $mActionName], TControllerAction::class);
-        $mModelBinder = Framework::Delegate([$this->FController, $this->FConfiguration->GetString("Mvc.Models.{$mPathInfo}")], TModelBinder::class);
-        $mViewBinder  = Framework::Delegate([$this->FController, $this->FConfiguration->GetString("Mvc.Views.{$mPathInfo}")], TViewBinder::class);
-        /** @var TModelBinder $mModelBinder */
-        /** @var TControllerAction $mAction */
-        /** @var TViewBinder $mViewBinder */
-        $this->FControllerManager->RegisterModel($mAction, $mModelBinder);
-        $this->FControllerManager->RegisterView($mAction, $mViewBinder);
-
-        $this->FControllerManager->Update($mAction);
-
-        $this->Quit();
-    }
-
-    /**
-     * Quit
-     */
-    public function Quit() {
-        Framework::Free($this->FControllerManager);
-        Framework::Free($this->FController);
-        Framework::Free($this->FRouter);
-        Framework::Free($this->FRequest);
-        Framework::Free($this->FResponse);
-        Framework::Free($this->FSession);
-        Framework::Free($this->FExceptionHandler);
-        Framework::Free($this->FExceptionHandlerController);
-        Framework::Free($this->FInternationalizationManager);
-    }
-
-    /**
-     * @return \FrameworkDSW\System\TExceptionHandler
-     */
-    public function getExceptionHandler() {
-        return $this->FExceptionHandler;
     }
 }

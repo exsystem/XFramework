@@ -8,11 +8,14 @@
 namespace FrameworkDSW\Framework;
 
 require_once 'FrameworkDSW/System.php';
+use FrameworkDSW\Configuration\IConfiguration;
+use FrameworkDSW\Controller\IControllerManager;
+use FrameworkDSW\CoreClasses\TComponent;
+use FrameworkDSW\Internationalization\TInternationalizationManager;
 use FrameworkDSW\Reflection\TClass;
 use FrameworkDSW\System\EError;
 use FrameworkDSW\System\ENoSuchType;
 use FrameworkDSW\System\ERuntimeException;
-use FrameworkDSW\System\IInterface;
 use FrameworkDSW\System\TDelegate;
 use FrameworkDSW\System\TObject;
 use FrameworkDSW\Utilities\TType;
@@ -457,12 +460,24 @@ class Framework extends TObject {
 
     /**
      * @param \FrameworkDSW\Reflection\TClass $ApplicationClass <T: ?> T: extends \FrameworkDSW\CoreClasses\IApplication
-     * @param \FrameworkDSW\System\IInterface[] $Parameters
+     * @param \FrameworkDSW\CoreClasses\TComponent $Owner
+     * @param \FrameworkDSW\Configuration\IConfiguration $Configuration
+     * @param \FrameworkDSW\Controller\IControllerManager $ControllerManager
+     * @param boolean $UseExceptionHandler
+     * @param \FrameworkDSW\Internationalization\TInternationalizationManager $InternationalizationManager
+     * @throws \FrameworkDSW\Reflection\EIllegalAccess
+     * @throws \FrameworkDSW\Utilities\EInvalidObjectCasting
      */
-    public static function CreateApplication($ApplicationClass, $Parameters) {
+    public static function CreateApplication($ApplicationClass, $Owner = null, $Configuration = null, $ControllerManager = null, $UseExceptionHandler = true, $InternationalizationManager = null) {
         TType::Object($ApplicationClass, [TClass::class => ['T' => null]]);
-        TType::Type($Parameters, IInterface::class . '[]');
-        Framework::$FApplication = $ApplicationClass->NewInstance($Parameters);
+        TType::Object($Owner, TComponent::class);
+        TType::Object($Configuration, IConfiguration::class);
+        TType::Object($ControllerManager, IControllerManager::class);
+        TType::Bool($UseExceptionHandler);
+        TType::Object($InternationalizationManager, TInternationalizationManager::class);
+
+        Framework::$FApplication = $ApplicationClass->NewInstance([$Owner]);
+        Framework::$FApplication->Initialize($Configuration, $ControllerManager, $UseExceptionHandler, $InternationalizationManager);
     }
 
     /**

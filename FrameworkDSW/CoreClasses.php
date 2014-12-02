@@ -7,9 +7,13 @@
  */
 namespace FrameworkDSW\CoreClasses;
 
+use FrameworkDSW\Configuration\TConfiguration;
 use FrameworkDSW\Containers\EIndexOutOfBounds;
 use FrameworkDSW\Containers\TList;
+use FrameworkDSW\Controller\IControllerManager;
+use FrameworkDSW\Controller\TControllerManager;
 use FrameworkDSW\Framework\Framework;
+use FrameworkDSW\Internationalization\TInternationalizationManager;
 use FrameworkDSW\System\EException;
 use FrameworkDSW\System\IDelegate;
 use FrameworkDSW\System\IInterface;
@@ -66,29 +70,29 @@ final class TOperation extends TEnum {
  * @author    许子健
  */
 final class TCursor extends TEnum {
-    const eDefault   = 0;
-    const eNone      = -1;
-    const eArrow     = -2;
-    const eCross     = -3;
-    const eIBeam     = -4;
-    const eSize      = -22;
-    const eSizeNESW  = -6;
-    const eSizeNS    = -7;
-    const eSizeNWSE  = -8;
-    const eSizeWE    = -9;
-    const eUpArrow   = -10;
+    const eDefault = 0;
+    const eNone = -1;
+    const eArrow = -2;
+    const eCross = -3;
+    const eIBeam = -4;
+    const eSize = -22;
+    const eSizeNESW = -6;
+    const eSizeNS = -7;
+    const eSizeNWSE = -8;
+    const eSizeWE = -9;
+    const eUpArrow = -10;
     const eHourGlass = -11;
-    const eDrag      = -12;
-    const eNoDrag    = -13;
-    const eHSplit    = -14;
-    const eVSplit    = -15;
+    const eDrag = -12;
+    const eNoDrag = -13;
+    const eHSplit = -14;
+    const eVSplit = -15;
     const eMultiDrag = -16;
-    const eSQLWait   = -17;
-    const eNo        = -18;
-    const eAppStart  = -19;
-    const eHelp      = -20;
+    const eSQLWait = -17;
+    const eNo = -18;
+    const eAppStart = -19;
+    const eHelp = -20;
     const eHandPoint = -21;
-    const eSizeAll   = -22;
+    const eSizeAll = -22;
 }
 
 /**
@@ -111,8 +115,8 @@ class TDragDropObject extends TObject { //TODO: impl TDragDropObject.
  * @author    许子健
  */
 final class TShiftState extends TSet {
-    const eShift  = 0, eAlt = 1, eCtrl = 2;
-    const eLeft   = 3, eRight = 4, eMiddle = 5;
+    const eShift = 0, eAlt = 1, eCtrl = 2;
+    const eLeft = 3, eRight = 4, eMiddle = 5;
     const eDouble = 6, eTouch = 7, ePen = 8;
 }
 
@@ -129,9 +133,9 @@ final class TMouseButton extends TSet {
  * @author    许子健
  */
 final class TAlign extends TEnum {
-    const eNone       = 0;
-    const eTopLeft    = 1, eTop = 2, eTopRight = 3;
-    const eLeft       = 4, eClient = 5, eRight = 6;
+    const eNone = 0;
+    const eTopLeft = 1, eTop = 2, eTopRight = 3;
+    const eLeft = 4, eClient = 5, eRight = 6;
     const eBottomLeft = 7, eBottom = 8, eBottomRight = 9;
 }
 
@@ -454,7 +458,7 @@ abstract class TComponent extends TObject {
 
     /**
      *
-     * @return    string
+     * @return string
      */
     public function getName() {
         return $this->FName;
@@ -1799,6 +1803,14 @@ interface IApplication extends IInterface {
     public function getInternationalizationManager();
 
     /**
+     * @param \FrameworkDSW\Configuration\IConfiguration $Configuration
+     * @param \FrameworkDSW\Controller\IControllerManager $ControllerManager
+     * @param boolean $UseExceptionHandler
+     * @param \FrameworkDSW\Internationalization\TInternationalizationManager $InternationalizationManager
+     */
+    public function Initialize($Configuration = null, $ControllerManager = null, $UseExceptionHandler = true, $InternationalizationManager = null);
+
+    /**
      * Run
      */
     public function Run();
@@ -1807,6 +1819,198 @@ interface IApplication extends IInterface {
      * Quit
      */
     public function Quit();
+
+    /**
+     * @param \FrameworkDSW\CoreClasses\IApplication $Application
+     */
+    public function signalOnCreate($Application);
+
+    /**
+     * @param \FrameworkDSW\CoreClasses\IApplication $Application
+     * @param \FrameworkDSW\Configuration\TConfiguration $Configuration
+     * @param \FrameworkDSW\Controller\IControllerManager $ControllerManager
+     * @param \FrameworkDSW\Internationalization\TInternationalizationManager $InternationalizationManager
+     */
+    public function signalBeforeInitialization($Application, $Configuration, $ControllerManager, $InternationalizationManager);
+
+    /**
+     * @param \FrameworkDSW\CoreClasses\IApplication $Application
+     */
+    public function signalAfterInitialization($Application);
+
+    /**
+     * @param \FrameworkDSW\CoreClasses\IApplication $Application
+     */
+    public function signalBeforeRun($Application);
+
+    /**
+     * @param \FrameworkDSW\CoreClasses\IApplication $Application
+     */
+    public function signalAfterRun($Application);
+
+    /**
+     * @param \FrameworkDSW\CoreClasses\IApplication $Application
+     */
+    public function signalOnQuit($Application);
+}
+
+/**
+ * Class TApplication
+ * @package FrameworkDSW\CoreClasses
+ */
+abstract class TApplication extends TComponent implements IApplication {
+    /**
+     * @var \FrameworkDSW\Configuration\TConfiguration
+     */
+    protected $FConfiguration = null;
+    /**
+     * @var \FrameworkDSW\Controller\TControllerManager
+     */
+    protected $FControllerManager = null;
+    /**
+     * @var \FrameworkDSW\System\TExceptionHandler
+     */
+    protected $FExceptionHandler = null;
+    /**
+     * @var \FrameworkDSW\Internationalization\TInternationalizationManager
+     */
+    protected $FInternationalizationManager = null;
+
+    /**
+     * @param \FrameworkDSW\CoreClasses\TComponent $Owner
+     */
+    public function __construct($Owner = null) {
+        parent::__construct($Owner);
+        TType::Object($Owner, TComponent::class);
+
+        TObject::Dispatch([$this, 'OnCreate'], [$this]);
+    }
+
+
+    /**
+     * @return \FrameworkDSW\Configuration\IConfiguration
+     */
+    public function getConfiguration() {
+        return $this->FConfiguration;
+    }
+
+    /**
+     * @return \FrameworkDSW\Controller\IControllerManager
+     */
+    public function getControllerManager() {
+        return $this->FControllerManager;
+    }
+
+    /**
+     * @return \FrameworkDSW\System\TExceptionHandler
+     */
+    public function getExceptionHandler() {
+        return $this->FExceptionHandler;
+    }
+
+    /**
+     * @return \FrameworkDSW\Internationalization\TInternationalizationManager
+     */
+    public function getInternationalizationManager() {
+        return $this->FInternationalizationManager;
+    }
+
+
+    /**
+     * @param \FrameworkDSW\Configuration\IConfiguration $Configuration
+     * @param \FrameworkDSW\Controller\IControllerManager $ControllerManager
+     * @param boolean $UseExceptionHandler
+     * @param \FrameworkDSW\Internationalization\TInternationalizationManager $InternationalizationManager
+     */
+    public function Initialize($Configuration = null, $ControllerManager = null, $UseExceptionHandler = true, $InternationalizationManager = null) {
+        TType::Object($Configuration, TConfiguration::class);
+        TType::Object($ControllerManager, IControllerManager::class);
+        TType::Bool($UseExceptionHandler);
+        TType::Object($InternationalizationManager, TInternationalizationManager::class);
+
+        TObject::Dispatch([$this, 'BeforeInitialization'], [$Configuration, $ControllerManager, $InternationalizationManager]);
+        $this->FConfiguration = $Configuration;
+        if ($ControllerManager === null) {
+            $this->FControllerManager = new TControllerManager();
+        }
+        else {
+            $this->FControllerManager = $ControllerManager;
+        }
+        $this->FInternationalizationManager = $InternationalizationManager;
+        $this->DoInitialize($UseExceptionHandler);
+        TObject::Dispatch([$this, 'AfterInitialization'], [$Configuration, $this->FControllerManager, $UseExceptionHandler, $InternationalizationManager]);
+    }
+
+    /**
+     * @param boolean $UseExceptionHandler
+     */
+    protected abstract function DoInitialize($UseExceptionHandler);
+
+    /**
+     *
+     */
+    protected abstract function DoRun();
+
+    /**
+     * Run
+     */
+    public function Run() {
+        TObject::Dispatch([$this, 'BeforeRun'], [$this]);
+        $this->DoRun();
+        TObject::Dispatch([$this, 'AfterRun'], [$this]);
+        $this->Quit();
+    }
+
+    /**
+     * Quit
+     */
+    public function Quit() {
+        TObject::Dispatch([$this, 'OnQuit'], [$this]);
+
+        Framework::Free($this->FConfiguration);
+        Framework::Free($this->FControllerManager);
+        Framework::Free($this->FExceptionHandler);
+        Framework::Free($this->FInternationalizationManager);
+    }
+
+    /**
+     * @param \FrameworkDSW\CoreClasses\IApplication $Application
+     */
+    public function signalOnCreate($Application) {
+    }
+
+    /**
+     * @param \FrameworkDSW\CoreClasses\IApplication $Application
+     * @param \FrameworkDSW\Configuration\TConfiguration $Configuration
+     * @param \FrameworkDSW\Controller\IControllerManager $ControllerManager
+     * @param \FrameworkDSW\Internationalization\TInternationalizationManager $InternationalizationManager
+     */
+    public function signalBeforeInitialization($Application, $Configuration, $ControllerManager, $InternationalizationManager) {
+    }
+
+    /**
+     * @param \FrameworkDSW\CoreClasses\IApplication $Application
+     */
+    public function signalAfterInitialization($Application) {
+    }
+
+    /**
+     * @param \FrameworkDSW\CoreClasses\IApplication $Application
+     */
+    public function signalBeforeRun($Application) {
+    }
+
+    /**
+     * @param \FrameworkDSW\CoreClasses\IApplication $Application
+     */
+    public function signalAfterRun($Application) {
+    }
+
+    /**
+     * @param \FrameworkDSW\CoreClasses\IApplication $Application
+     */
+    public function signalOnQuit($Application) {
+    }
 }
 
 /**
