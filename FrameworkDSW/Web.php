@@ -27,7 +27,9 @@ use FrameworkDSW\System\IInterface;
 use FrameworkDSW\System\TEnum;
 use FrameworkDSW\System\TObject;
 use FrameworkDSW\System\TRecord;
+use FrameworkDSW\System\TString;
 use FrameworkDSW\Utilities\TType;
+use FrameworkDSW\View\Web\TWebPage;
 
 /**
  * IUrlRouter
@@ -1958,7 +1960,6 @@ class THttpResponse extends TObject {
                 foreach ($mValues as &$mValue) {
                     header("{$mName}: {$mValue}", false);
                 }
-
             }
         }
         $this->SendCookies();
@@ -3948,6 +3949,64 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
 }
 
 /**
+ * Class TExceptionCallStackViewDataNode
+ * @package FrameworkDSW\Web
+ */
+class TExceptionCallStackViewDataNode extends TRecord {
+    /**
+     * @var string
+     */
+    public $File = '';
+    /**
+     * @var string
+     */
+    public $Line = '';
+    /**
+     * @var string
+     */
+    public $Method = '';
+    /**
+     * @var \FrameworkDSW\Containers\TPair[] <K: string, V: mixed>
+     */
+    public $Parameters = [];
+}
+
+/**
+ * Class TExceptionViewDataNode
+ * @package FrameworkDSW\Web
+ */
+class TExceptionViewDataNode extends TRecord {
+    /**
+     * @var \FrameworkDSW\System\EException
+     */
+    public $Exception = null;
+    /**
+     * @var string
+     */
+    public $ClassName = '';
+    /**
+     * @var string
+     */
+    public $Namespace = '';
+    /**
+     * @var string
+     */
+    public $File = '';
+    /**
+     * @var string
+     */
+    public $Line = '';
+    /**
+     * @var string
+     */
+    public $Message = '';
+    /**
+     * @var \FrameworkDSW\Web\TExceptionCallStackViewDataNode[]
+     */
+    public $CallStack = [];
+}
+
+/**
  * Class TExceptionHandler
  * @package FrameworkDSW\Web
  */
@@ -4012,18 +4071,133 @@ class TExceptionHandler extends \FrameworkDSW\System\TExceptionHandler {
     protected function RenderException($Exception) {
         TType::Object($Exception, EException::class);
 
-        $mResponse = $this->FApplication->getHttpResponse();
+        $mResponse       = $this->FApplication->getHttpResponse();
+        $mExceptionClass = $Exception->ObjectType();
+        TMap::PrepareGeneric(['K' => Framework::String, 'V' => IInterface::class]);
+        $mViewData              = new TMap();
+        $mViewData['Exception'] = $Exception;
+        $mViewData['ClassName'] = new TString($mExceptionClass->getSimpleName());
+        $mViewData['Namespace'] = new TString($mExceptionClass->getNamespace()->getName());
+        Framework::Free($mExceptionClass);
+        $mViewData['File']    = new TString($Exception->getFile());
+        $mViewData['Line']    = new TString((string)$Exception->getLine());
+        $mViewData['Message'] = new TString($Exception->getMessage());
+        TLinkedList::PrepareGeneric(['T' => TExceptionCallStackViewDataNode::class]);
+        $mCallStack = new TLinkedList();
+        $mRawTrace  = $Exception->getTrace();
+        foreach ($mRawTrace as $mRawItem) {
+            $mItem       = new TExceptionCallStackViewDataNode();
+            $mItem->File = $mRawItem['file'];
+            $mItem->Line = $mRawItem['line'];
+            if (isset($mRawItem['class'])) {
+                $mItem->Method = "{$mRawItem['class']}{$mRawItem['type']}{$mRawItem['function']}";
+            }
+            else {
+                $mItem->Method = $mRawItem['function'];
+            }
+
+            foreach ($mRawItem['args'] as $mRawArg) {
+                $mPair = new TPair();
+                if (is_bool($mRawArg)) {
+                    if ($mRawArg === true) {
+                        $mPair->Key = 'true';
+                    }
+                    else {
+                        $mPair->Key = 'false';
+                    }
+                }
+                elseif (is_numeric($mRawArg)) {
+                    $mPair->Key = (string)$mRawArg;
+                }
+                elseif (is_string($mRawArg)) {
+                    $mPair->Key = "'{$mRawArg}'";
+                }
+                elseif (is_array($mRawArg)) {
+                    $mPair->Key = 'array';
+                }
+                else {
+                    $mPair->Key = get_class($mRawArg);
+                }
+
+                $mPair->Value        = $mRawArg;
+                $mItem->Parameters[] = $mPair;
+            }
+            $mCallStack->Add($mItem);
+        }
+        $mViewData['CallStack'] = $mCallStack;
+        TLinkedList::PrepareGeneric(['T' => TExceptionViewDataNode::class]);
+        $mViewData['ExceptionStack'] = new TLinkedList();
+
+        $mException = $Exception->getPrevious();
+        while ($mException !== null) {
+            if ($mException instanceof EException) {
+                $mExceptionClass  = $mException->ObjectType();
+                $mItem            = new TExceptionViewDataNode();
+                $mItem->Exception = $mException;
+                $mItem->ClassName = $mExceptionClass->getSimpleName();
+                $mItem->Namespace = $mExceptionClass->getNamespace()->getName();
+                Framework::Free($mExceptionClass);
+                $mItem->File      = $mException->getFile();
+                $mItem->Line      = (string)$mException->getLine();
+                $mItem->Message   = $mException->getMessage();
+                $mItem->CallStack = [];
+                $mRawTrace        = $mException->getTrace();
+                foreach ($mRawTrace as $mRawItem) {
+                    $mCallStackItem       = new TExceptionCallStackViewDataNode();
+                    $mCallStackItem->File = $mRawItem['file'];
+                    $mCallStackItem->Line = $mRawItem['line'];
+                    if (isset($mRawItem['class'])) {
+                        $mCallStackItem->Method = "{$mRawItem['class']}{$mRawItem['type']}{$mRawItem['function']}";
+                    }
+                    else {
+                        $mCallStackItem->Method = $mRawItem['function'];
+                    }
+
+                    foreach ($mRawItem['args'] as $mRawArg) {
+                        $mPair = new TPair();
+                        if (is_bool($mRawArg)) {
+                            if ($mRawArg === true) {
+                                $mPair->Key = 'true';
+                            }
+                            else {
+                                $mPair->Key = 'false';
+                            }
+                        }
+                        elseif (is_numeric($mRawArg)) {
+                            $mPair->Key = (string)$mRawArg;
+                        }
+                        elseif (is_string($mRawArg)) {
+                            $mPair->Key = "'{$mRawArg}'";
+                        }
+                        elseif (is_array($mRawArg)) {
+                            $mPair->Key = 'array';
+                        }
+                        else {
+                            $mPair->Key = get_class($mRawArg);
+                        }
+
+                        $mPair->Value                 = $mRawArg;
+                        $mCallStackItem->Parameters[] = $mPair;
+                    }
+                    $mItem->CallStack[] = $mCallStackItem;
+                }
+                $mViewData['ExceptionStack']->Add($mItem);
+            }
+        }
+
+        $mResponse->setContent('');
+        ob_end_clean();
 
         if ($this->FExceptionAction === null || Framework::IsDebug()) {
-            $mContent = htmlspecialchars(var_export($Exception, true), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-            $mResponse->setContent("<pre>{$mContent}</pre>");
+            $mView = new TWebPage();
+            $mView->Config(null, 'Resource/ExceptionViewTemplate/exception.php');
+            $mView->Update($mViewData);
+            Framework::Free($mView);
         }
         else {
             if (Framework::IsDebug()) {
                 ini_set('display_errors', 1);
             }
-            TMap::PrepareGeneric(['K' => Framework::String, 'V' => IInterface::class]);
-            $mViewData = new TMap();
             /** @var string $mAction */
             $mAction = $this->FExceptionAction;
             $mAction($Exception, $mViewData);
@@ -4034,8 +4208,9 @@ class TExceptionHandler extends \FrameworkDSW\System\TExceptionHandler {
             if (count($mViews) > 0) {
                 $mViews[0]->Update($mViewData);
             }
-            Framework::Free($mViewData);
         }
+
+        Framework::Free($mViewData);
 
         if ($Exception instanceof EHttpException) {
             $mResponse->SetStatus($Exception->getStatusCode());
@@ -4079,6 +4254,47 @@ class TWebApplication extends TApplication implements IApplication {
     private $FExceptionHandlerController = null;
 
     /**
+     * @return \FrameworkDSW\Web\TWebApplication
+     */
+    public static function Application() {
+        $mApp = Framework::Application();
+        if ($mApp instanceof TWebApplication) {
+            return $mApp;
+        }
+        else {
+            return null;
+        }
+    }
+
+    /**
+     * @return \FrameworkDSW\Web\THttpRequest
+     */
+    public function getHttpRequest() {
+        return $this->FRequest;
+    }
+
+    /**
+     * @return \FrameworkDSW\Web\THttpResponse
+     */
+    public function getHttpResponse() {
+        return $this->FResponse;
+    }
+
+    /**
+     * @return \FrameworkDSW\Web\THttpSession
+     */
+    public function getHttpSession() {
+        return $this->FSession;
+    }
+
+    /**
+     * @return \FrameworkDSW\Web\TUrlRouter
+     */
+    public function getUrlRouter() {
+        return $this->FRouter;
+    }
+
+    /**
      * @param boolean $UseExceptionHandler
      * @throws \FrameworkDSW\Reflection\EIllegalAccess
      */
@@ -4088,7 +4304,6 @@ class TWebApplication extends TApplication implements IApplication {
         $this->FRequest  = new THttpRequest();
         $this->FResponse = new THttpResponse($this->FRequest);
         $this->FRouter   = new TUrlRouter($this->FRequest);
-
 
         if ($UseExceptionHandler) {
             $this->FExceptionHandler = new TExceptionHandler($this);
@@ -4144,46 +4359,6 @@ class TWebApplication extends TApplication implements IApplication {
         $this->FControllerManager->RegisterView($mAction, $mViewBinder);
 
         $this->FControllerManager->Update($mAction);
-    }
-
-    /**
-     * @return \FrameworkDSW\Web\TWebApplication
-     */
-    public static function Application() {
-        $mApp = Framework::Application();
-        if ($mApp instanceof TWebApplication) {
-            return $mApp;
-        }
-        else {
-            return null;
-        }
-    }
-
-    /**
-     * @return \FrameworkDSW\Web\THttpRequest
-     */
-    public function getHttpRequest() {
-        return $this->FRequest;
-    }
-
-    /**
-     * @return \FrameworkDSW\Web\THttpResponse
-     */
-    public function getHttpResponse() {
-        return $this->FResponse;
-    }
-
-    /**
-     * @return \FrameworkDSW\Web\THttpSession
-     */
-    public function getHttpSession() {
-        return $this->FSession;
-    }
-
-    /**
-     * @return \FrameworkDSW\Web\TUrlRouter
-     */
-    public function getUrlRouter() {
-        return $this->FRouter;
+        $this->FResponse->Send();
     }
 }
