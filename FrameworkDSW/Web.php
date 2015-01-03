@@ -7,6 +7,8 @@
  */
 namespace FrameworkDSW\Web;
 
+use FrameworkDSW\Configuration\Json\TJsonStorage;
+use FrameworkDSW\Configuration\TConfiguration;
 use FrameworkDSW\Containers\IList;
 use FrameworkDSW\Containers\IMap;
 use FrameworkDSW\Containers\TAbstractMap;
@@ -20,6 +22,9 @@ use FrameworkDSW\CoreClasses\IApplication;
 use FrameworkDSW\CoreClasses\IView;
 use FrameworkDSW\CoreClasses\TApplication;
 use FrameworkDSW\Framework\Framework;
+use FrameworkDSW\Internationalization\TInternationalizationManager;
+use FrameworkDSW\Internationalization\TJsonResourceSource;
+use FrameworkDSW\Internationalization\TLocale;
 use FrameworkDSW\Reflection\TClass;
 use FrameworkDSW\System\EException;
 use FrameworkDSW\System\EInvalidParameter;
@@ -1879,7 +1884,19 @@ class THttpResponse extends TObject {
      * @return string
      */
     public function getContent() {
-        return $this->FContent;
+        if (ob_get_level() == 0) {
+            return $this->FContent;
+        }
+        else {
+            $mContent = '';
+            while (ob_get_level() > 0) {
+                $mContent = ob_get_contents() . $mContent;
+                ob_end_clean();
+            }
+            ob_start();
+            echo $mContent;
+            return $mContent;
+        }
     }
 
     /**
@@ -1888,7 +1905,16 @@ class THttpResponse extends TObject {
     public function setContent($Value) {
         TType::String($Value);
         if (!$this->FIsSent) {
-            $this->FContent = $Value;
+            if (ob_get_level() == 0) {
+                $this->FContent = $Value;
+            }
+            else {
+                while (ob_get_level() > 1) {
+                    ob_end_clean();
+                }
+                ob_clean();
+                echo $Value;
+            }
         }
     }
 
@@ -2002,7 +2028,15 @@ class THttpResponse extends TObject {
      */
     protected function SendContent() {
         if ($this->FStream === null) {
-            echo $this->FContent;
+            if (ob_get_level() == 0) {
+                echo $this->FContent;
+            }
+            else {
+                while (ob_get_level() > 1) {
+                    ob_end_flush();
+                }
+                ob_flush();
+            }
             return;
         }
 
@@ -4185,12 +4219,9 @@ class TExceptionHandler extends \FrameworkDSW\System\TExceptionHandler {
             }
         }
 
-        $mResponse->setContent('');
-        ob_end_clean();
-
         if ($this->FExceptionAction === null || Framework::IsDebug()) {
             $mView = new TWebPage();
-            $mView->Config(null, 'Resource/ExceptionViewTemplate/exception.php');
+            $mView->Config(dirname(__DIR__) . '/Resource/ExceptionViewTemplate/exception.php');
             $mView->Update($mViewData);
             Framework::Free($mView);
         }
@@ -4254,16 +4285,56 @@ class TWebApplication extends TApplication implements IApplication {
     private $FExceptionHandlerController = null;
 
     /**
-     * @return \FrameworkDSW\Web\TWebApplication
+     * @var \FrameworkDSW\Web\TWebApplication
      */
-    public static function Application() {
-        $mApp = Framework::Application();
-        if ($mApp instanceof TWebApplication) {
-            return $mApp;
+    public static $FApplication = null;
+
+    /**
+     * @param string $Configuration
+     * @param mixed $ExternalUnits
+     * @param boolean $UseExceptionHandler
+     * @throws \FrameworkDSW\Utilities\EInvalidObjectCasting
+     * @throws \FrameworkDSW\Utilities\EInvalidStringCasting
+     */
+    public static function CreateApplication($Configuration = '', $ExternalUnits = [], $UseExceptionHandler = true) {
+        TType::String($Configuration);
+        TType::Type($ExternalUnits, Framework::Variant);
+        TType::Bool($UseExceptionHandler);
+
+        foreach ($ExternalUnits as $mKey => $mValue) {
+            Framework::RegisterExternalUnit($mKey, $mValue);
+        }
+
+        if ($Configuration == '') {
+            $mConfiguration = null;
         }
         else {
-            return null;
+            switch (pathinfo($Configuration, PATHINFO_EXTENSION)) {
+                case 'json':
+                default:
+                    $mStorage = new TJsonStorage($Configuration);
+                    break;
+            }
+            $mConfiguration = new TConfiguration($mStorage);
         }
+
+        try {
+            $mLocale           = new TLocale($mConfiguration->GetString('Application.Internationalization.DefaultLocale'));
+            $mResourceBasePath = $mConfiguration->GetString('Application.Internationalization.ResourceBasePath');
+
+            $mInternationalizationManager = new TInternationalizationManager(new TJsonResourceSource($mLocale, $mResourceBasePath));
+        }
+        catch (EException $Ex) {
+            $mInternationalizationManager = null;
+        }
+
+        $mApplication = new TWebApplication();
+        $mApplication->Initialize($mConfiguration, null, $UseExceptionHandler, $mInternationalizationManager);
+        TApplication::$FApplication    = $mApplication;
+        TWebApplication::$FApplication = $mApplication;
+        $mApplication->Run();
+        Framework::Free($mApplication);
+        Framework::Free($mLocale);
     }
 
     /**
@@ -4360,5 +4431,6 @@ class TWebApplication extends TApplication implements IApplication {
 
         $this->FControllerManager->Update($mAction);
         $this->FResponse->Send();
+        Framework::Free($this->FController);
     }
 }

@@ -980,6 +980,34 @@ class EConstructorInvocationNotAllowed extends EError {
 }
 
 /**
+ * Serialization exception.
+ * @author  许子健
+ */
+class ESerializationException extends EError {
+}
+
+/**
+ *
+ * @author  许子健
+ */
+class ESerializeResource extends ESerializationException {
+}
+
+/**
+ *
+ * @author  许子健
+ */
+class EBadSerializedData extends ESerializationException {
+}
+
+/**
+ *
+ * @author  许子健
+ */
+class EIllegalClass extends ESerializationException {
+}
+
+/**
  * IInterface
  * The ultimate base interface for all interfaces inside FrameworkDSW.
  *

@@ -1877,6 +1877,11 @@ abstract class TApplication extends TComponent implements IApplication {
     protected $FInternationalizationManager = null;
 
     /**
+     * @var \FrameworkDSW\CoreClasses\IApplication
+     */
+    public static $FApplication = null;
+
+    /**
      * @param \FrameworkDSW\CoreClasses\TComponent $Owner
      */
     public function __construct($Owner = null) {
