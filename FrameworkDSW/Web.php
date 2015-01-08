@@ -24,10 +24,10 @@ use FrameworkDSW\CoreClasses\TApplication;
 use FrameworkDSW\Framework\Framework;
 use FrameworkDSW\Internationalization\TInternationalizationManager;
 use FrameworkDSW\Internationalization\TJsonResourceSource;
-use FrameworkDSW\Internationalization\TLocale;
 use FrameworkDSW\Reflection\TClass;
 use FrameworkDSW\System\EException;
 use FrameworkDSW\System\EInvalidParameter;
+use FrameworkDSW\System\IDelegate;
 use FrameworkDSW\System\IInterface;
 use FrameworkDSW\System\TEnum;
 use FrameworkDSW\System\TObject;
@@ -4121,8 +4121,10 @@ class TExceptionHandler extends \FrameworkDSW\System\TExceptionHandler {
         $mRawTrace  = $Exception->getTrace();
         foreach ($mRawTrace as $mRawItem) {
             $mItem       = new TExceptionCallStackViewDataNode();
-            $mItem->File = $mRawItem['file'];
-            $mItem->Line = $mRawItem['line'];
+            if (isset($mRawItem['file'])) {
+                $mItem->File = $mRawItem['file'];
+                $mItem->Line = $mRawItem['line'];
+            }
             if (isset($mRawItem['class'])) {
                 $mItem->Method = "{$mRawItem['class']}{$mRawItem['type']}{$mRawItem['function']}";
             }
@@ -4255,6 +4257,17 @@ class TExceptionHandler extends \FrameworkDSW\System\TExceptionHandler {
 }
 
 /**
+ * Interface TOnWebApplicationCreate
+ * @package FrameworkDSW\Web
+ */
+interface TOnWebApplicationCreate extends IDelegate {
+    /**
+     *
+     */
+    public function Invoke();
+}
+
+/**
  * Class TWebApplication
  * @package FrameworkDSW\Web
  */
@@ -4292,13 +4305,15 @@ class TWebApplication extends TApplication implements IApplication {
     /**
      * @param string $Configuration
      * @param mixed $ExternalUnits
+     * @param \FrameworkDSW\Web\TOnWebApplicationCreate $OnCreate
      * @param boolean $UseExceptionHandler
      * @throws \FrameworkDSW\Utilities\EInvalidObjectCasting
      * @throws \FrameworkDSW\Utilities\EInvalidStringCasting
      */
-    public static function CreateApplication($Configuration = '', $ExternalUnits = [], $UseExceptionHandler = true) {
+    public static function CreateApplication($Configuration = '', $ExternalUnits = [], $OnCreate = null, $UseExceptionHandler = true) {
         TType::String($Configuration);
         TType::Type($ExternalUnits, Framework::Variant);
+        TType::Delegate($OnCreate);
         TType::Bool($UseExceptionHandler);
 
         foreach ($ExternalUnits as $mKey => $mValue) {
@@ -4319,10 +4334,7 @@ class TWebApplication extends TApplication implements IApplication {
         }
 
         try {
-            $mLocale           = new TLocale($mConfiguration->GetString('Application.Internationalization.DefaultLocale'));
-            $mResourceBasePath = $mConfiguration->GetString('Application.Internationalization.ResourceBasePath');
-
-            $mInternationalizationManager = new TInternationalizationManager(new TJsonResourceSource($mLocale, $mResourceBasePath));
+            $mInternationalizationManager = new TInternationalizationManager(new TJsonResourceSource($mConfiguration->GetString('Application.Internationalization.ResourceBasePath')));
         }
         catch (EException $Ex) {
             $mInternationalizationManager = null;
@@ -4330,11 +4342,10 @@ class TWebApplication extends TApplication implements IApplication {
 
         $mApplication = new TWebApplication();
         $mApplication->Initialize($mConfiguration, null, $UseExceptionHandler, $mInternationalizationManager);
-        TApplication::$FApplication    = $mApplication;
-        TWebApplication::$FApplication = $mApplication;
+        /** @var callable $OnCreate */
+        $OnCreate();
         $mApplication->Run();
         Framework::Free($mApplication);
-        Framework::Free($mLocale);
     }
 
     /**
@@ -4371,6 +4382,8 @@ class TWebApplication extends TApplication implements IApplication {
      */
     protected function DoInitialize($UseExceptionHandler) {
         TType::Bool($UseExceptionHandler);
+
+        TWebApplication::$FApplication = $this;
 
         $this->FRequest  = new THttpRequest();
         $this->FResponse = new THttpResponse($this->FRequest);

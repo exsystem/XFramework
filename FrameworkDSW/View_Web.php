@@ -191,11 +191,6 @@ class TWebPage extends TComponent implements IView {
      *
      * @var string
      */
-    private $FMasterPage = '';
-    /**
-     *
-     * @var string
-     */
     private $FTemplate = '';
     /**
      *
@@ -204,7 +199,7 @@ class TWebPage extends TComponent implements IView {
     private $FTheme = null;
     /**
      *
-     * @var TMap <K: string, V: \FrameworkDSW\System\IInterface>
+     * @var \FrameworkDSW\Containers\TMap <K: string, V: \FrameworkDSW\System\IInterface>
      */
     private $FViewData = null;
     /**
@@ -244,22 +239,19 @@ class TWebPage extends TComponent implements IView {
      *
      * @param string $Template
      * @param \FrameworkDSW\View\Web\TWebTheme $Theme
-     * @param string $MasterPage
      * @param \FrameworkDSW\Web\IUrlRouter $Router
      * @param \FrameworkDSW\Web\THttpResponse $Response
      * @throws \FrameworkDSW\Utilities\EInvalidObjectCasting
      * @throws \FrameworkDSW\Utilities\EInvalidStringCasting
      */
-    public function Config($Template, $Theme = null, $MasterPage = '', $Router = null, $Response = null) {
+    public function Config($Template, $Theme = null, $Router = null, $Response = null) {
         TType::String($Template);
         TType::Object($Theme, TWebTheme::class);
-        TType::String($MasterPage);
         TType::Object($Router, IUrlRouter::class);
         TType::Object($Response, THttpResponse::class);
 
-        $this->FTemplate   = $Template;
-        $this->FTheme      = $Theme;
-        $this->FMasterPage = $MasterPage;
+        $this->FTemplate = $Template;
+        $this->FTheme    = $Theme;
 
         if ($Router === null) {
             $this->FRouter = TWebApplication::$FApplication->getUrlRouter();
@@ -332,15 +324,6 @@ class TWebPage extends TComponent implements IView {
         else {
             return $mRaw;
         }
-    }
-
-    /**
-     * descHere
-     *
-     * @return string
-     */
-    public function getMasterPage() {
-        return $this->FMasterPage;
     }
 
     /**
@@ -494,8 +477,8 @@ class TJsonView extends TComponent implements IView {
             unset($mCurrentStatus);
             $mCurrentStatus = array_pop($mStatusStack);
 
-            $mCurrentData              = &$mCurrentStatus[self::CData];
-            $mCurrentInsertionPoint    = &$mCurrentStatus[self::CInsertionPoint];
+            $mCurrentData           = &$mCurrentStatus[self::CData];
+            $mCurrentInsertionPoint = &$mCurrentStatus[self::CInsertionPoint];
 
             if (is_scalar($mCurrentData) || $mCurrentData === null) {
                 $mCurrentInsertionPoint = $mCurrentData;
@@ -523,7 +506,7 @@ class TJsonView extends TComponent implements IView {
                 foreach ($mCurrentData as $Item) {
                     unset($mInsertionPoint);
                     $mInsertionPoint = null;
-                    $mArray[]          = &$mInsertionPoint;
+                    $mArray[]        = &$mInsertionPoint;
                     $mStatusStack[]  = [self::CData => $Item, self::CInsertionPoint => &$mInsertionPoint];
                 }
                 $mCurrentInsertionPoint = $mArray;
@@ -549,12 +532,15 @@ class TJsonView extends TComponent implements IView {
             }
         }
 
-        $this->FResponse->setContent('');
+        if ($this->FResponse === null) {
+            $this->FResponse = TWebApplication::$FApplication->getHttpResponse();
+        }
+
         if ($this->FJsonpCallback == '') {
-            echo json_encode($mResult);
+            $this->FResponse->setContent(json_encode($mResult));
         }
         else {
-            echo $this->FJsonpCallback, '(', json_encode($mResult), ')';
+            $this->FResponse->setContent($this->FJsonpCallback . '(' . json_encode($mResult) . ')');
         }
     }
 }

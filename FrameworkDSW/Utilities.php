@@ -243,11 +243,14 @@ final class TType extends TObject {
 
     /**
      *
-     * @param \FrameworkDSW\System\TDelegate $Var
+     * @param \FrameworkDSW\System\IDelegate $Var
      * @throws EInvalidDelegateCasting
      */
-    public static function Delegate($Var) {
-        if (!($Var instanceof TDelegate || is_null($Var))) {
+    public static function Delegate(&$Var) {
+        if (is_null($Var)) {
+            $Var = new TDelegate();
+        }
+        elseif (!($Var instanceof TDelegate)) {
             throw new EInvalidDelegateCasting();
         }
     }

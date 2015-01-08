@@ -1933,6 +1933,8 @@ abstract class TApplication extends TComponent implements IApplication {
         TType::Bool($UseExceptionHandler);
         TType::Object($InternationalizationManager, TInternationalizationManager::class);
 
+        TApplication::$FApplication = $this;
+
         TObject::Dispatch([$this, 'BeforeInitialization'], [$Configuration, $ControllerManager, $InternationalizationManager]);
         $this->FConfiguration = $Configuration;
         if ($ControllerManager === null) {

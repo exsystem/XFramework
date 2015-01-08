@@ -2146,15 +2146,17 @@ final class TDelegate {
      * @param string $Type
      * @throws ENoSuchType
      */
-    public final function __construct($Callback, $Type) {
-        try {
-            $mPrototype        = new \ReflectionMethod($Type, 'Invoke');
-            $this->FAtLeast    = $mPrototype->getNumberOfRequiredParameters();
-            $this->FNoMoreThan = $mPrototype->getNumberOfParameters();
-            $this->setDelegate($Callback);
-        }
-        catch (\ReflectionException $e) {
-            throw new ENoSuchType(sprintf('No such type: %s.', $Type), null, $Type);
+    public final function __construct($Callback = null, $Type = '') {
+        if ($Callback !== null) {
+            try {
+                $mPrototype        = new \ReflectionMethod($Type, 'Invoke');
+                $this->FAtLeast    = $mPrototype->getNumberOfRequiredParameters();
+                $this->FNoMoreThan = $mPrototype->getNumberOfParameters();
+                $this->setDelegate($Callback);
+            }
+            catch (\ReflectionException $e) {
+                throw new ENoSuchType(sprintf('No such type: %s.', $Type), null, $Type);
+            }
         }
     }
 
@@ -2163,7 +2165,9 @@ final class TDelegate {
      * @return mixed
      */
     public final function __invoke() {
-        return call_user_func_array($this->FDelegate, func_get_args());
+        if ($this->FDelegate !== null) {
+            return call_user_func_array($this->FDelegate, func_get_args());
+        }
     }
 
     /**

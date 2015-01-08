@@ -584,21 +584,23 @@ class TJsonResourceSource extends TObject implements IResourceSource {
     private $FResource = null;
 
     /**
-     * @param \FrameworkDSW\Internationalization\TLocale $Locale
      * @param string $ResourceFileBasePath
+     * @param \FrameworkDSW\Internationalization\TLocale $Locale
      * @throws EInvalidParameter
      * @throws \FrameworkDSW\Utilities\EInvalidObjectCasting
      * @throws \FrameworkDSW\Utilities\EInvalidStringCasting
      */
-    public function __construct($Locale, $ResourceFileBasePath = '') {
+    public function __construct($ResourceFileBasePath = '', $Locale = null) {
         parent::__construct();
-        TType::Object($Locale, TLocale::class);
         TType::String($ResourceFileBasePath);
+        TType::Object($Locale, TLocale::class);
 
         $this->FResourceFileBasePath = $ResourceFileBasePath;
         TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::Variant]);
         $this->FResource = new TMap(true);
-        $this->setLocale($Locale);
+        if ($Locale !== null) {
+            $this->setLocale($Locale);
+        }
     }
 
     /**

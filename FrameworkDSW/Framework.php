@@ -11,6 +11,7 @@ use FrameworkDSW\CoreClasses\TApplication;
 use FrameworkDSW\Reflection\TClass;
 use FrameworkDSW\System\ENoSuchType;
 use FrameworkDSW\System\ERuntimeException;
+use FrameworkDSW\System\ESerializeResource;
 use FrameworkDSW\System\TDelegate;
 use FrameworkDSW\System\TObject;
 use FrameworkDSW\Utilities\TType;
