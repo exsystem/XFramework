@@ -1912,7 +1912,9 @@ class THttpResponse extends TObject {
                 while (ob_get_level() > 1) {
                     ob_end_clean();
                 }
-                ob_clean();
+                ob_end_clean();
+                ob_start();
+                //ob_clean(); FIXME: https://bugs.php.net/bug.php?id=68859
                 echo $Value;
             }
         }
@@ -4106,6 +4108,7 @@ class TExceptionHandler extends \FrameworkDSW\System\TExceptionHandler {
         TType::Object($Exception, EException::class);
 
         $mResponse       = $this->FApplication->getHttpResponse();
+
         $mExceptionClass = $Exception->ObjectType();
         TMap::PrepareGeneric(['K' => Framework::String, 'V' => IInterface::class]);
         $mViewData              = new TMap();
@@ -4132,31 +4135,33 @@ class TExceptionHandler extends \FrameworkDSW\System\TExceptionHandler {
                 $mItem->Method = $mRawItem['function'];
             }
 
-            foreach ($mRawItem['args'] as $mRawArg) {
-                $mPair = new TPair();
-                if (is_bool($mRawArg)) {
-                    if ($mRawArg === true) {
-                        $mPair->Key = 'true';
+            if (isset($mRawItem['args'])) {
+                foreach ($mRawItem['args'] as $mRawArg) {
+                    $mPair = new TPair();
+                    if (is_bool($mRawArg)) {
+                        if ($mRawArg === true) {
+                            $mPair->Key = 'true';
+                        }
+                        else {
+                            $mPair->Key = 'false';
+                        }
+                    }
+                    elseif (is_numeric($mRawArg)) {
+                        $mPair->Key = (string)$mRawArg;
+                    }
+                    elseif (is_string($mRawArg)) {
+                        $mPair->Key = "'{$mRawArg}'";
+                    }
+                    elseif (is_array($mRawArg)) {
+                        $mPair->Key = 'array';
                     }
                     else {
-                        $mPair->Key = 'false';
+                        $mPair->Key = get_class($mRawArg);
                     }
-                }
-                elseif (is_numeric($mRawArg)) {
-                    $mPair->Key = (string)$mRawArg;
-                }
-                elseif (is_string($mRawArg)) {
-                    $mPair->Key = "'{$mRawArg}'";
-                }
-                elseif (is_array($mRawArg)) {
-                    $mPair->Key = 'array';
-                }
-                else {
-                    $mPair->Key = get_class($mRawArg);
-                }
 
-                $mPair->Value        = $mRawArg;
-                $mItem->Parameters[] = $mPair;
+                    $mPair->Value        = $mRawArg;
+                    $mItem->Parameters[] = $mPair;
+                }
             }
             $mCallStack->Add($mItem);
         }
@@ -4221,6 +4226,13 @@ class TExceptionHandler extends \FrameworkDSW\System\TExceptionHandler {
             }
         }
 
+        if ($Exception instanceof EHttpException) {
+            $mResponse->SetStatus($Exception->getStatusCode());
+        }
+        else {
+            $mResponse->SetStatus(500);
+        }
+
         if ($this->FExceptionAction === null || Framework::IsDebug()) {
             $mView = new TWebPage();
             $mView->Config(dirname(__DIR__) . '/Resource/ExceptionViewTemplate/exception.php');
@@ -4244,14 +4256,6 @@ class TExceptionHandler extends \FrameworkDSW\System\TExceptionHandler {
         }
 
         Framework::Free($mViewData);
-
-        if ($Exception instanceof EHttpException) {
-            $mResponse->SetStatus($Exception->getStatusCode());
-        }
-        else {
-            $mResponse->SetStatus(500);
-        }
-
         $mResponse->Send();
     }
 }

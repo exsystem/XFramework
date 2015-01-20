@@ -537,11 +537,11 @@ class Framework {
      */
     public static function HandleFatalError() {
         Framework::$FReservedMemory = '';
-        if (!class_exists('FrameworkDSW\\System\\ERuntimeException', false)) {
-            require_once __DIR__ . '/System.php';
-        }
         $mError = error_get_last();
         if (isset($mError['type']) && in_array($mError['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_CORE_WARNING, E_COMPILE_ERROR, E_COMPILE_WARNING])) {
+            if (!class_exists('FrameworkDSW\\System\\ERuntimeException', false)) {
+                require_once __DIR__ . '/System.php';
+            }
             $mException = new ERuntimeException($mError['message']);
             PHP_SAPI === 'cli' or error_log($mException);
             if (TApplication::$FApplication === null) {

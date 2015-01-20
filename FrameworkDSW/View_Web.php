@@ -312,7 +312,7 @@ class TWebPage extends TComponent implements IView {
      * descHere
      *
      * @param string $Name
-     * @return \FrameworkDSW\System\IInterface
+     * @return mixed
      */
     public function Data($Name) {
         TType::String($Name);
