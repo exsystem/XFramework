@@ -270,6 +270,8 @@ class TWebPage extends TComponent implements IView {
         if ($Theme != null) {
             $this->FThemeUrl = $this->FTheme->getThemeUrl();
         }
+
+        $this->FResponse->getHeaders()->Clear();
     }
 
     /**

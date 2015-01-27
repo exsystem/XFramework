@@ -1912,9 +1912,7 @@ class THttpResponse extends TObject {
                 while (ob_get_level() > 1) {
                     ob_end_clean();
                 }
-                ob_end_clean();
-                ob_start();
-                //ob_clean(); FIXME: https://bugs.php.net/bug.php?id=68859
+                ob_clean();
                 echo $Value;
             }
         }
