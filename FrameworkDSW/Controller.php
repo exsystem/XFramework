@@ -457,12 +457,12 @@ class TControllerManager extends TObject implements IControllerManager {
 
         /**@var TDelegate $ViewBinder */
         $mViews = $ViewBinder($Action);
-        try {
+        if ($this->FViewRegistration->ContainsKey($Action)) {
             foreach ($mViews as $mView) {
                 $this->FViewRegistration[$Action]->Add($mView);
             }
         }
-        catch (ENoSuchKey $Ex) {
+        else {
             TLinkedList::PrepareGeneric(['T' => IView::class]);
             /** @noinspection PhpParamsInspection */
             $this->FViewRegistration->Put($Action, new TLinkedList(false, $mViews));

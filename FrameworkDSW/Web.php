@@ -597,8 +597,6 @@ class THttpSession extends TAbstractMap {
         TType::Object($Storage, IHttpSessionStorage::class);
         $this->PrepareMethodGeneric(['K' => Framework::String, 'V' => null, 'T' => [TPair::class => ['K' => Framework::String, 'V' => null]]]);
         parent::__construct(false);
-        ini_set('session.gc_probability', 1);
-        ini_set('session.gc_divisor', 100);
         $this->FStorage = $Storage;
         if ($AutoStart) {
             $this->Open();
@@ -4222,6 +4220,7 @@ class TExceptionHandler extends \FrameworkDSW\System\TExceptionHandler {
                 }
                 $mViewData['ExceptionStack']->Add($mItem);
             }
+            $mException = $mException->getPrevious();
         }
 
         if ($Exception instanceof EHttpException) {
