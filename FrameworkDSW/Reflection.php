@@ -906,6 +906,10 @@ class TClass extends TObject implements IType {
             $this->FIsPrimitive = true;
             $this->FClassName   = $mTemp;
         }
+        elseif ($mTemp == Framework::Variant) {
+            $this->FIsPrimitive = false;
+            $this->FClassName   = $mTemp;
+        }
         elseif (isset(class_implements($mTemp)[IDelegate::class])) {
             $this->FIsDelegate = true;
             $this->FClassName  = $mTemp;
@@ -1541,7 +1545,7 @@ class TClass extends TObject implements IType {
      */
     public function IsInstance($Object) {
         try {
-            TType::Object($Object, $this->GenericArg(['T']));
+            TType::Object($Object, $this->GenericArg('T'));
         }
         catch (EInvalidObjectCasting $Ex) {
             return false;

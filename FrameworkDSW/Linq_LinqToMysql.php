@@ -277,7 +277,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
         $this->FEntityType = $mDummy[0]->getType();
         /** @var TClass $mEntityType */
         $mEntityType       = $this->FEntityType;
-        $mEntityName       = $mEntityType->GetMethod('getTableName')->Invoke(null, [])->Unbox();
+        $mEntityName = $mEntityType->GetProperty('TableName')->GetValue(null)->Unbox();
 
         $this->FResultType = $Expression->getReturnType();
 
@@ -315,17 +315,18 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
         self::$FParameters->Clear();
         self::$FParameterNameCounter = 0;
 
-        if (is_array($this->FResultType)) {
-            TList::PrepareGeneric($this->FResultType[IQueryable::class]);
-            $mClass = TList::class;
+        if ($this->FResultType->getGenericsValues() == []) {
+            $mResultCollection = $this->FResultType->NewInstance([]);
         }
         else {
-            $mClass = $this->FResultType;
+            TList::PrepareGeneric($this->FResultType->GenericArg('T')[IQueryable::class]);
+            $mResultCollection = new TList();
         }
-        $mElementClass     = $this->FResultType[IQueryable::class]['T'];
-        $mResultCollection = new $mClass();
 
-        if (in_array($mElementClass, ['boolean', 'integer', 'float',
+        /** @var TClass $mElementClass */
+        $mElementClass = $this->FResultType->getGenericsValues()['T'];
+
+        if (in_array($mElementClass->getName(), ['boolean', 'integer', 'float',
             'string'])
         ) {
             foreach ($mResultSet as $mRow) {
@@ -339,11 +340,11 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
                 $mResultCollection->Add($mDefaults[$mElementClass]);
             }
         }
-        elseif (in_array(IEntity::class, class_implements($mElementClass))) {
+        elseif (in_array(Framework::Type(IEntity::class), $mElementClass->getInterfaces())) {
             // TODO interface comparing is not supported -- InheritsFrom()
             /** @noinspection PhpUnusedLocalVariableInspection */
             foreach ($mResultSet as $mRow) {
-                $mElement            = new $mElementClass($this->FContext);
+                $mElement = $mElementClass->NewInstance([$this->FContext]);
                 $mResultElementName  = $this->FResultElementName;
                 $$mResultElementName = $mElement;
                 /** @noinspection PhpUnusedLocalVariableInspection */
@@ -359,7 +360,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
         else {
             /** @noinspection PhpUnusedLocalVariableInspection */
             foreach ($mResultSet as $mRow) {
-                $mElement            = new $mElementClass();
+                $mElement = $mElementClass->NewInstance([]);
                 $mResultElementName  = $this->FResultElementName;
                 $$mResultElementName = $mElement;
                 /** @noinspection PhpUnusedLocalVariableInspection */
@@ -592,7 +593,7 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
 
         if ($this->FAlias == '') { // sql
             $mTable  = $Expression->getExpression()->getType();
-            $mColumn = $mTable->GetMethod('getColumns')->Invoke(null, []);
+            $mColumn = $mTable->GetProperty('Columns')->GetValue(null);
             $mColumn = $mColumn[$Expression->getMember()];
             $this->FSql .= ".`{$mColumn}`";
             $this->FMembers->Add("`{$mColumn}`");
@@ -843,11 +844,10 @@ final class TMysqlQueryProvider extends TExpressionVisitor implements IQueryProv
             else {
                 $this->FSql = '';
             }
-            if (get_class($mArgs[0]) == TTypedExpression::class && $mArgs[0]->getBody()->ObjectType() === TParameterExpression::class) {
+            if ($mArgs[0] instanceof TTypedExpression && $mArgs[0]->getBody() instanceof TParameterExpression) {
                 $mParameter = $mArgs[0]->getBody();
                 if ($mParameter instanceof TParameterExpression) {
-                    $mEntityClass = $mParameter->getType();
-                    $mMembers     = $mEntityClass::getColumnsType();
+                    $mMembers = $mParameter->getType()->GetProperty('ColumnsType')->GetValue(null);
 
                     TList::PrepareGeneric(['T' => TExpression::class]);
                     $mExpressions = new TList();

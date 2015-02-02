@@ -1,5 +1,7 @@
 <?php
 
+use Foo\TStudent;
+use Foo\TTestContext;
 use FrameworkDSW\Containers\TList;
 use FrameworkDSW\Containers\TPair;
 use FrameworkDSW\Framework\Framework;
@@ -12,7 +14,7 @@ use FrameworkDSW\System\TBoolean;
 
 require_once 'FrameworkDSW/Framework.php';
 require_once 'Tests/helperForLinqToMysql.php';
-
+Framework::Debug();
 echo PHP_VERSION;
 echo "\n";
 
@@ -38,6 +40,7 @@ TExpression::PrepareGeneric([
 $expr = TExpression::TypedLambda($expr, $params);
 
 $selector = TExpression::Parameter('t', Framework::Type(TStudent::class));
+//$selector = TExpression::MakeMember(TExpression::Parameter('t', Framework::Type(TStudent::class)), 'FName', Framework::Type(Framework::String));
 TExpression::PrepareGeneric([
     'T' => [
         TSelectorDelegate::class => [
@@ -53,11 +56,11 @@ $orderby = TExpression::TypedLambda($orderby, $params);
 
 $q->PrepareMethodGeneric(['R' => TStudent::class, 'K' => Framework::String]);
 foreach ($q->Select($selector)->Where($expr)->OrderByDescending($orderby) as $s) {
-    echo $s->getName()->getValue();
+    echo $s->getName()->Unbox();
     echo "\n";
-    $c->DeleteObject($s);
+    //$c->DeleteObject($s);
 }
-$c->SaveChanges();
+//$c->SaveChanges();
 Framework::Free($selector);
 Framework::Free($expr);
 Framework::Free($orderby);

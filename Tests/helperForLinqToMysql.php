@@ -1,10 +1,12 @@
 <?php
+namespace Foo;
 
 use FrameworkDSW\Containers\TMap;
 use FrameworkDSW\Database\Mysql\TMysqlConnection;
 use FrameworkDSW\Database\Mysql\TMysqlDriver;
 use FrameworkDSW\DataObjects\IEntity;
 use FrameworkDSW\DataObjects\TObjectContext;
+use FrameworkDSW\Framework\Framework;
 use FrameworkDSW\Linq\IQueryProvider;
 use FrameworkDSW\Linq\LinqToMysql\TMysqlQueryProvider;
 use FrameworkDSW\System\EInvalidParameter;
@@ -60,11 +62,11 @@ class TStudent extends TObject implements IEntity {
 
     /**
      *
-     * @param TObjectContext $Context
+     * @param \FrameworkDSW\DataObjects\TObjectContext $Context
      */
     public function __construct($Context) {
         global $RESULT;
-        TType::Object($Context, 'TObjectContext');
+        TType::Object($Context, TObjectContext::class);
         $this->FContext = $Context;
         $RESULT[]       = $this;
     }
@@ -74,25 +76,25 @@ class TStudent extends TObject implements IEntity {
      * @return string[] TODO {string}
      */
     public static function getPrimaryKeys() {
-        return array('FStudentNo');
+        return ['FStudentNo'];
     }
 
     /**
      *
-     * @return array TODO {<string, string>}
+     * @return mixed TODO {<string, string>}
      */
     public static function getColumns() {
-        return array('FStudentNo' => 'StudentNo', 'FName' => 'Name',
-                     'FGender'    => 'Gender');
+        return ['FStudentNo' => 'StudentNo', 'FName' => 'Name',
+                'FGender'    => 'Gender'];
     }
 
     /**
      *
-     * @return array TODO {<string, string>}
+     * @return mixed TODO {<string, string>}
      */
     public static function getColumnsType() {
-        return array('FStudentNo' => 'TInteger', 'FName' => 'TString',
-                     'FGender'    => 'TBoolean');
+        return ['FStudentNo' => Framework::Type(TInteger::class), 'FName' => Framework::Type(TString::class),
+                'FGender'    => Framework::Type(TBoolean::class)];
     }
 
     /**
@@ -116,12 +118,12 @@ class TStudent extends TObject implements IEntity {
      * @param TInteger $Value
      */
     public function setStudentNo($Value) {
-        TType::Object($Value, 'TInteger');
-        TObject::Dispatch(array($this->FContext, 'PreChange'), array($this,
-            array('FStudentNo')));
+        TType::Object($Value, TInteger::class);
+        TObject::Dispatch([$this->FContext, 'PreChange'], [$this,
+            ['FStudentNo']]);
         $this->FStudentNo = $Value;
-        TObject::Dispatch(array($this->FContext, 'PostChange'), array($this,
-            array('FStudentNo')));
+        TObject::Dispatch([$this->FContext, 'PostChange'], [$this,
+            ['FStudentNo']]);
     }
 
     /**
@@ -250,8 +252,8 @@ class TTestContext extends TObjectContext {
         global $CHANGED;
 
         function display($obj) {
-            var_dump(array($obj->getStudentNo()->getValue(),
-                $obj->getName()->getValue(), $obj->getGender()->getValue()));
+            var_dump([$obj->getStudentNo()->Unbox(),
+                $obj->getName()->Unbox(), $obj->getGender()->Unbox()]);
         }
 
         foreach ($ADD as $addItem) {

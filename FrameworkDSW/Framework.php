@@ -387,14 +387,14 @@ class Framework {
      *
      */
     static public function PreBoot() {
+        if (isset(Framework::$FDeclaredClasses)) {
+            return;
+        }
+
         $mObStatus = ob_get_status(true);
         if (count($mObStatus) > 0 && $mObStatus[0]['chunk_size'] > 0) {
             ob_end_clean();
             ob_start();
-        }
-
-        if (isset(Framework::$FDeclaredClasses)) {
-            return;
         }
 
         self::$FDeclaredClasses = get_declared_classes();
