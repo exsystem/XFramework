@@ -2,7 +2,7 @@
 /**
  * \FrameworkDSW\Containers
  * @author  许子健
- * @version $Id$
+ * @version $Id: Containers.php 100 2014-07-23 04:13:20Z exsystemchina@gmail.com $
  * @since   separate file since reversion 1
  */
 namespace FrameworkDSW\Containers;
@@ -2641,10 +2641,7 @@ final class TLinkedList extends TAbstractList {
     protected function DoClear() {
         if ($this->FElementsOwned) {
             for ($mIndex = 0; $mIndex < $this->FSize; ++$mIndex) {
-                $this->FList[3 * $mIndex + self::CData]->Destroy();
-                $this->FList[3 * $mIndex + self::CData] = null;
-                // Framework::Free($this->FList[3 * $mIndex + self::CData]);
-                // //TODO: FIX ME!
+                Framework::Free($this->FList[3 * $mIndex + self::CData]);
             }
         }
 
