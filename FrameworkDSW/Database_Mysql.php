@@ -45,11 +45,13 @@ use FrameworkDSW\Database\IPreparedStatement;
 use FrameworkDSW\Database\IResultSet;
 use FrameworkDSW\Database\IRow;
 use FrameworkDSW\Database\IStatement;
+use FrameworkDSW\Database\TBestRowIdentifierScope;
 use FrameworkDSW\Database\TConcurrencyType;
 use FrameworkDSW\Database\TCurrentResultOption;
 use FrameworkDSW\Database\TDriverPropertyInfo;
 use FrameworkDSW\Database\TFetchDirection;
 use FrameworkDSW\Database\THoldability;
+use FrameworkDSW\Database\TInMemoryResultSet;
 use FrameworkDSW\Database\TResultSetType;
 use FrameworkDSW\Database\TSavepoint;
 use FrameworkDSW\Database\TTransactionIsolationLevel;
@@ -57,7 +59,6 @@ use FrameworkDSW\Framework\Framework;
 use FrameworkDSW\Reflection\TClass;
 use FrameworkDSW\System\EAccessViolation;
 use FrameworkDSW\System\EInvalidParameter;
-use FrameworkDSW\System\ENotImplemented;
 use FrameworkDSW\System\IInterface;
 use FrameworkDSW\System\IPrimitive;
 use FrameworkDSW\System\TBoolean;
@@ -116,58 +117,130 @@ abstract class TBaseMysqlObject extends TObject {
  */
 class TMysqlDataTypeMapper extends TObject {
     /**
-     * @var array
+     * @var mixed
      *
      */
     private static $FTypeMappingFromSqlTable = [];
     /**
-     * @var array
+     * @var mixed
      */
     private static $FCastMappingFromSqlTable = [];
     /**
-     * @var array
+     * @var mixed
      */
     private static $FCastMappingToSqlTable = [];
 
     /**
+     * @param string $MysqlType
+     * @return integer
+     * @throws EInvalidParameter
+     * @throws \FrameworkDSW\Utilities\EInvalidStringCasting
+     */
+    public static function MysqlTypeToMysqliType($MysqlType) {
+        TType::String($MysqlType);
+
+        switch (strtoupper($MysqlType)) {
+            case 'BIT':
+                return MYSQLI_TYPE_BIT;
+            case 'BLOB':
+                return MYSQLI_TYPE_BLOB;
+            case 'CHAR':
+                return MYSQLI_TYPE_CHAR;
+            case 'DATE':
+                return MYSQLI_TYPE_DATE;
+            case 'DATETIME':
+                return MYSQLI_TYPE_DATETIME;
+            case 'DECIMAL':
+                return MYSQLI_TYPE_DECIMAL;
+            case 'DOUBLE':
+                return MYSQLI_TYPE_DOUBLE;
+            case 'ENUM':
+                return MYSQLI_TYPE_ENUM;
+            case 'FLOAT':
+                return MYSQLI_TYPE_FLOAT;
+            case 'GEOMETRY':
+                return MYSQLI_TYPE_GEOMETRY;
+            case 'MEDIUMINT':
+                return MYSQLI_TYPE_INT24;
+            case 'INTERVAL':
+                return MYSQLI_TYPE_INTERVAL;
+            case 'INT':
+                return MYSQLI_TYPE_LONG;
+            case 'LONGBLOB':
+                return MYSQLI_TYPE_LONG_BLOB;
+            case 'BIGINT':
+                return MYSQLI_TYPE_LONGLONG;
+            case 'MEDIUMBLOB':
+                return MYSQLI_TYPE_MEDIUM_BLOB;
+            case 'DATE':
+                return MYSQLI_TYPE_NEWDATE;
+            case 'DECIMAL':
+                return MYSQLI_TYPE_NEWDECIMAL;
+            case 'SET':
+                return MYSQLI_TYPE_SET;
+            case 'SMALLINT':
+                return MYSQLI_TYPE_SHORT;
+            case 'STRING':
+                return MYSQLI_TYPE_STRING;
+            case 'TIME':
+                return MYSQLI_TYPE_TIME;
+            case 'TIMESTAMP':
+                return MYSQLI_TYPE_TIMESTAMP;
+            case 'TINYINT':
+                return MYSQLI_TYPE_TINY;
+            case 'TINYBLOB':
+                return MYSQLI_TYPE_TINY_BLOB;
+            case 'VARCHAR':
+                return MYSQLI_TYPE_VAR_STRING;
+            case 'YEAR':
+                return MYSQLI_TYPE_YEAR;
+            default:
+                throw new EInvalidParameter(sprintf('No such MySQL Type: %s.', $MysqlType));
+        }
+    }
+
+    /**
      * @param integer $MysqliType
      * @param integer $FieldLength
-     * @return string
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
     public static function MapFromSqlType($MysqliType, $FieldLength) {
+        TType::Int($MysqliType);
+        TType::Int($FieldLength);
+
         if ($FieldLength == 1 && ($MysqliType == MYSQLI_TYPE_BIT || $MysqliType == MYSQLI_TYPE_TINY)) {
-            return 'boolean';
+            return Framework::Type(TBoolean::class);
         }
 
         if (count(self::$FTypeMappingFromSqlTable) == 0) {
             self::$FTypeMappingFromSqlTable = [
-                MYSQLI_TYPE_BIT         => 'integer',
-                MYSQLI_TYPE_BLOB        => 'string',
-                MYSQLI_TYPE_CHAR        => 'integer',
-                MYSQLI_TYPE_DATE        => 'string',
-                MYSQLI_TYPE_DATETIME    => 'string', //TODO: date,datetime->string
-                MYSQLI_TYPE_DECIMAL     => 'string',
-                MYSQLI_TYPE_DOUBLE      => 'string',
-                MYSQLI_TYPE_ENUM        => 'integer',
-                MYSQLI_TYPE_FLOAT       => 'float',
+                MYSQLI_TYPE_BIT         => Framework::Type(TInteger::class),
+                MYSQLI_TYPE_BLOB        => Framework::Type(TString::class),
+                MYSQLI_TYPE_CHAR        => Framework::Type(TInteger::class),
+                MYSQLI_TYPE_DATE        => Framework::Type(TString::class),
+                MYSQLI_TYPE_DATETIME    => Framework::Type(TString::class), //TODO: date,datetime->string
+                MYSQLI_TYPE_DECIMAL     => Framework::Type(TString::class),
+                MYSQLI_TYPE_DOUBLE      => Framework::Type(TString::class),
+                MYSQLI_TYPE_ENUM        => Framework::Type(TInteger::class),
+                MYSQLI_TYPE_FLOAT       => Framework::Type(TFloat::class),
                 MYSQLI_TYPE_GEOMETRY    => 'todo',
-                MYSQLI_TYPE_INT24       => 'integer',
-                MYSQLI_TYPE_INTERVAL    => 'integer',
-                MYSQLI_TYPE_LONG        => 'integer',
-                MYSQLI_TYPE_LONG_BLOB   => 'string',
-                MYSQLI_TYPE_LONGLONG    => 'integer',
-                MYSQLI_TYPE_MEDIUM_BLOB => 'string',
-                MYSQLI_TYPE_NEWDATE     => 'string', //TODO: blob->string? newdate->string?
-                MYSQLI_TYPE_NEWDECIMAL  => 'float',
-                MYSQLI_TYPE_SET         => 'integer',
-                MYSQLI_TYPE_SHORT       => 'integer',
-                MYSQLI_TYPE_STRING      => 'string',
-                MYSQLI_TYPE_TIME        => 'integer',
-                MYSQLI_TYPE_TIMESTAMP   => 'integer', //TODO: time, timestamp->integer?
-                MYSQLI_TYPE_TINY        => 'integer',
-                MYSQLI_TYPE_TINY_BLOB   => 'string', //TODO: blob->string?
-                MYSQLI_TYPE_VAR_STRING  => 'string',
-                MYSQLI_TYPE_YEAR        => 'integer'
+                MYSQLI_TYPE_INT24       => Framework::Type(TInteger::class),
+                MYSQLI_TYPE_INTERVAL    => Framework::Type(TInteger::class),
+                MYSQLI_TYPE_LONG        => Framework::Type(TInteger::class),
+                MYSQLI_TYPE_LONG_BLOB   => Framework::Type(TInteger::class),
+                MYSQLI_TYPE_LONGLONG    => Framework::Type(TInteger::class),
+                MYSQLI_TYPE_MEDIUM_BLOB => Framework::Type(TString::class),
+                MYSQLI_TYPE_NEWDATE     => Framework::Type(TString::class), //TODO: blob->string? newdate->string?
+                MYSQLI_TYPE_NEWDECIMAL  => Framework::Type(TFloat::class),
+                MYSQLI_TYPE_SET         => Framework::Type(TInteger::class),
+                MYSQLI_TYPE_SHORT       => Framework::Type(TInteger::class),
+                MYSQLI_TYPE_STRING      => Framework::Type(TInteger::class),
+                MYSQLI_TYPE_TIME        => Framework::Type(TInteger::class),
+                MYSQLI_TYPE_TIMESTAMP   => Framework::Type(TInteger::class), //TODO: time, timestamp->integer?
+                MYSQLI_TYPE_TINY        => Framework::Type(TInteger::class),
+                MYSQLI_TYPE_TINY_BLOB   => Framework::Type(TString::class), //TODO: blob->string?
+                MYSQLI_TYPE_VAR_STRING  => Framework::Type(TString::class),
+                MYSQLI_TYPE_YEAR        => Framework::Type(TInteger::class)
             ]; //TODO: year->integer?
         }
 
@@ -176,24 +249,26 @@ class TMysqlDataTypeMapper extends TObject {
     }
 
     /**
-     * @param string $Type
+     * @param \FrameworkDSW\Reflection\TClass $Type <T: ?>
      * @param mixed $Value
      * @return \FrameworkDSW\System\IInterface
      */
     public static function CastFromSqlValue($Type, $Value) {
+        TType::Object($Type, [TClass::class => ['T' => null]]);
+
         if ($Value === null) {
             return null;
         }
 
         if (count(self::$FCastMappingFromSqlTable) == 0) {
             self::$FCastMappingFromSqlTable = [
-                'boolean' => 'GetBoolean',
-                'integer' => 'GetInteger',
-                'float'   => 'GetFloat',
-                'string'  => 'GetString'
+                TBoolean::ClassType()->getSimpleName() => 'GetBoolean',
+                TInteger::ClassType()->getSimpleName() => 'GetInteger',
+                TFloat::ClassType()->getSimpleName()   => 'GetFloat',
+                TString::ClassType()->getSimpleName()  => 'GetString'
             ];
         }
-        $mMethod = self::$FCastMappingFromSqlTable[$Type];
+        $mMethod = self::$FCastMappingFromSqlTable[$Type->getSimpleName()];
 
         return self::$mMethod($Value);
     }
@@ -1161,6 +1236,16 @@ final class TMysqlConnection extends TBaseMysqlObject implements IConnection {
         TClass::PrepareGeneric(['T' => EExecuteFailed::class]);
         self::EnsureQuery($this, $mSql, new TClass());
     }
+
+    /**
+     * @param string $Identifier
+     * @return string
+     */
+    public function QuoteIdentifier($Identifier) {
+        // TODO: Implement QuoteIdentifier() method.
+        TType::String($Identifier);
+        return $Identifier;
+    }
 }
 
 /**
@@ -1609,7 +1694,7 @@ EOD;
                 $mParams[] = TMysqlDataTypeMapper::CastToSqlValue('string', $this->FParams[$mParam]);
             }
             foreach ($mParams as $mIndex => &$mValue) {
-                $mParamsRef[] = & $mParams[$mIndex];
+                $mParamsRef[] = &$mParams[$mIndex];
             }
             array_unshift($mParamsRef, $mTypes);
             try {
@@ -2013,7 +2098,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
     /**
      *
      * Enter description here ...
-     * @var array
+     * @var mixed
      */
     protected $FMeta = [];
     /**
@@ -2021,7 +2106,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
      * Enter description here ...
      * data structure:
      * colName => value, ...
-     * @var array
+     * @var mixed
      */
     protected $FCurrentRow = [];
     /**
@@ -2196,11 +2281,11 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
      */
     public function __construct($Statement, $ConcurrencyType, $ResultSetType) {
         $this->PrepareGeneric(['K' => Framework::Integer, 'V' => IRow::class, 'T' => IRow::class]);
-        parent::__construct($Statement->getConnection()->getDriver());
         TType::Object($Statement, TAbstractMysqlStatement::class);
         TType::Object($ConcurrencyType, TConcurrencyType::class);
         TType::Object($ResultSetType, TResultSetType::class);
 
+        parent::__construct($Statement->getConnection()->getDriver());
         $this->FStatement      = $Statement;
         $this->FResultSetType  = $ResultSetType;
         $this->FFetchDirection = TFetchDirection::eForward();
@@ -2395,6 +2480,7 @@ abstract class TAbstractMysqlResultSet extends TBaseMysqlObject {
      */
     public final function offsetSet($offset, $value) { //TODO problematic!!
         TType::Int($offset);
+        TType::Object($value, IRow::class);
         $this->FetchAbsolute($offset);
         foreach ($value as $mColumn => $mData) {
             $this->FRow[$mColumn] = $mData;
@@ -2666,7 +2752,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
             TMysqlConnection::PushMysqliExceptionWarning(new TClass(), $Ex, $this->FStatement->getConnection());
         }
         foreach ($this->FMeta as $mItem) {
-            $mParams[] = & $this->FCurrentRow[$mItem->name];
+            $mParams[] = &$this->FCurrentRow[$mItem->name];
         }
         try {
             $this->FMysqliStmt->execute();
@@ -2720,7 +2806,7 @@ class TMysqlStmtResultSet extends TAbstractMysqlResultSet implements IResultSet 
         parent::__construct($Statement, $ConcurrencyType, $ResultSetType);
 
         foreach ($this->FMeta as $mItem) {
-            $mParams[] = & $this->FCurrentRow[$mItem->name];
+            $mParams[] = &$this->FCurrentRow[$mItem->name];
         }
 
         try {
@@ -2791,19 +2877,19 @@ abstract class TAbstractMysqlRow extends TBaseMysqlObject {
     /**
      *
      * Enter description here ...
-     * @var array
+     * @var mixed
      */
     protected $FRowMeta = [];
     /**
      *
      * Enter description here ...
-     * @var array
+     * @var string[]
      */
     protected $FColumnNames = [];
     /**
      *
      * Enter description here ...
-     * @var array
+     * @var mixed
      */
     protected $FPendingUpdateRow = [];
     /**
@@ -2833,7 +2919,9 @@ abstract class TAbstractMysqlRow extends TBaseMysqlObject {
         if ($this->FTableName == '') {
             throw new EUnableToUpdateNonSingleTableResultSet(sprintf('UPDATE result SET failed: the ROW can NOT be updated since it comes FROM a result SET which IS NOT a part of a single TABLE. CHECK IF the result SET IS a joined result SET.'));
         }
-        if ($this->FResultSet->getType() != TResultSetType::eScrollSensitive() || $this->FConcurrencyType == TConcurrencyType::eReadOnly()) {
+        if (/*$this->FResultSet->getType() != TResultSetType::eScrollSensitive() || */
+            $this->FConcurrencyType == TConcurrencyType::eReadOnly()
+        ) {
             throw new EResultSetIsNotUpdatable(sprintf('UPDATE result SET failed: scroll INSENSITIVE AND READ-only result sets are NOT updatable.'));
         }
     }
@@ -2849,7 +2937,7 @@ abstract class TAbstractMysqlRow extends TBaseMysqlObject {
      * Enter description here ...
      * @param \FrameworkDSW\Database\Mysql\TAbstractMysqlResultSet $ResultSet
      * @param \FrameworkDSW\Database\TConcurrencyType $ConcurrencyType
-     * @param array $Meta
+     * @param mixed $Meta
      * @param boolean $WasUpdated
      */
     public function __construct($ResultSet, $ConcurrencyType, &$Meta, &$WasUpdated) {
@@ -2859,7 +2947,7 @@ abstract class TAbstractMysqlRow extends TBaseMysqlObject {
 
         $this->FResultSet       = $ResultSet;
         $this->FConcurrencyType = $ConcurrencyType;
-        $this->FWasUpdated      = & $WasUpdated;
+        $this->FWasUpdated      = &$WasUpdated;
         $this->FTableName       = "`{$Meta[0]->orgtable}`";
         foreach ($Meta as $mMetaObject) {
             //NOT_NULL_FLAG = 1
@@ -3021,7 +3109,7 @@ final class TMysqlRow extends TAbstractMysqlRow implements IRow {
     /**
      *
      * Enter description here ...
-     * @var array
+     * @var mixed
      */
     private $FCurrentRow = [];
 
@@ -3072,8 +3160,8 @@ final class TMysqlRow extends TAbstractMysqlRow implements IRow {
      * Enter description here ...
      * @param \FrameworkDSW\Database\Mysql\TAbstractMysqlResultSet $ResultSet
      * @param \FrameworkDSW\Database\TConcurrencyType $ConcurrencyType
-     * @param array $CurrentRow
-     * @param array $Meta
+     * @param mixed $CurrentRow
+     * @param mixed $Meta
      * @param boolean $WasDeleted
      * @param boolean $WasUpdated
      */
@@ -3081,8 +3169,8 @@ final class TMysqlRow extends TAbstractMysqlRow implements IRow {
         TType::Object($ResultSet, TAbstractMysqlResultSet::class);
         TType::Object($ConcurrencyType, TConcurrencyType::class);
 
-        $this->FCurrentRow = & $CurrentRow;
-        $this->FWasDeleted = & $WasDeleted;
+        $this->FCurrentRow = &$CurrentRow;
+        $this->FWasDeleted = &$WasDeleted;
 
         parent::__construct($ResultSet, $ConcurrencyType, $Meta, $WasUpdated);
     }
@@ -3133,7 +3221,7 @@ final class TMysqlRow extends TAbstractMysqlRow implements IRow {
     public function getWasDeleted() {
         $this->EnsureUpdatable();
 
-        return count($this->FCurrentRow) == 0;
+        return $this->FWasDeleted; //count($this->FCurrentRow) == 0;
     }
 }
 
@@ -3223,7 +3311,11 @@ final class TMysqlInsertRow extends TAbstractMysqlRow implements IRow {
  *
  * @author 许子健
  */
-final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData { //TODO: pending...
+final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData { //TODO: pending
+    /**
+     * @var integer
+     */
+    private static $FMaxBufferSize = 65535; //TODO what is it?
     /**
      *
      * @var \FrameworkDSW\Database\Mysql\TMysqlConnection
@@ -3301,7 +3393,35 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
      * @return \FrameworkDSW\Database\IResultSet
      */
     public function GetAttributes($Catalog, $SchemaPattern, $TypeNamePattern, $AttributeNamePattern) {
-        throw new ENotImplemented(); //TODO: todo
+        TType::Object($Catalog, TString::class);
+        TType::Object($SchemaPattern, TString::class);
+        TType::String($TypeNamePattern);
+        TType::String($AttributeNamePattern);
+
+        TMap::PrepareGeneric(['K' => Framework::String, 'V' => [TClass::class => ['T' => null]]]);
+        $mMeta = new TMap(true);
+        $mMeta->Put('TYPE_CAT', Framework::Type(TString::class));
+        $mMeta->Put('TYPE_SCHEM', Framework::Type(TString::class));
+        $mMeta->Put('TYPE_NAME', Framework::Type(TString::class));
+        $mMeta->Put('ATTR_NAME', Framework::Type(TString::class));
+        $mMeta->Put('DATA_TYPE', Framework::Type(TString::class));
+        $mMeta->Put('ATTR_TYPE_NAME', Framework::Type(TString::class));
+        $mMeta->Put('ATTR_SIZE', Framework::Type(TInteger::class));
+        $mMeta->Put('DECIMAL_DIGITS', Framework::Type(TInteger::class));
+        $mMeta->Put('NUM_PREC_RADIX', Framework::Type(TInteger::class));
+        $mMeta->Put('NULLABLE', Framework::Type(TBoolean::class));
+        $mMeta->Put('REMARKS', Framework::Type(TString::class));
+        $mMeta->Put('ATTR_DEF', Framework::Type(TString::class));
+        $mMeta->Put('SQL_DATA_TYPE', Framework::Type(TInteger::class));
+        $mMeta->Put('SQL_DATETIME_SUB', Framework::Type(TInteger::class));
+        $mMeta->Put('CHAR_OCTET_LENGTH', Framework::Type(TInteger::class));
+        $mMeta->Put('ORDINAL_POSITION', Framework::Type(TInteger::class));
+        $mMeta->Put('IS_NULLABLE', Framework::Type(TBoolean::class));
+        $mMeta->Put('SCOPE_CATALOG', Framework::Type(TString::class));
+        $mMeta->Put('SCOPE_SCHEMA', Framework::Type(TString::class));
+        $mMeta->Put('SCOPE_TABLE', Framework::Type(TString::class));
+        $mMeta->Put('SOURCE_DATA_TYPE', Framework::Type(TInteger::class));
+        return new TInMemoryResultSet(null, [], $mMeta);
     }
 
     /**
@@ -3311,11 +3431,100 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
      * @param string $Table
      * @param \FrameworkDSW\Database\TBestRowIdentifierScope $Scope
      * @param boolean $Nullable
-     * @throws \FrameworkDSW\System\ENotImplemented
      * @return \FrameworkDSW\Database\IResultSet
      */
     public function GetBestRowIdentifier($Catalog, $Schema, $Table, $Scope, $Nullable) {
-        throw new ENotImplemented(); //TODO: todo
+        TType::String($Catalog);
+        TType::String($Schema);
+        TType::String($Table);
+        TType::Object($Scope, TBestRowIdentifierScope::class);
+        TType::Bool($Nullable);
+
+        if ($Catalog == '') {
+            $Database = '';
+        }
+        else {
+            $Database = $this->FConnection->QuoteIdentifier($Catalog) . '.';
+        }
+        $Database = $this->FConnection->QuoteIdentifier($Schema);
+        $Table    = $this->FConnection->QuoteIdentifier($Table);
+
+        /** @var \FrameworkDSW\Containers\TMap[] $mData <K: string, V: \FrameworkDSW\System\IInterface> */
+        $mData = [];
+
+        TMap::PrepareGeneric(['K' => Framework::String, 'V' => [TClass::class => ['T' => null]]]);
+        $mMeta = new TMap(true);
+        $mMeta->Put('SCOPE', Framework::Type(TInteger::class));
+        $mMeta->Put('COLUMN_NAME', Framework::Type(TString::class));
+        $mMeta->Put('DATA_TYPE', Framework::Type([TClass::class => ['T' => null]]));
+        $mMeta->Put('TYPE_NAME', Framework::Type(TString::class));
+        $mMeta->Put('COLUMN_SIZE', Framework::Type(TInteger::class));
+        $mMeta->Put('BUFFER_LENGTH', Framework::Type(TInteger::class));
+        $mMeta->Put('DECIMAL_DIGITS', Framework::Type(TInteger::class));
+        $mMeta->Put('PSEUDO_COLUMN', Framework::Type(TInteger::class));
+
+        try {
+            $mStatement = $this->FConnection->CreateStatement(TResultSetType::eScrollInsensitive(), TConcurrencyType::eReadOnly());
+            $mResultSet = $mStatement->Query("SHOW COLUMNS FROM {$Table} FROM {$Database}");
+
+            /** @var \FrameworkDSW\Database\IRow $mRow */
+            foreach ($mResultSet as $mRow) {
+                $mKeyTypeRaw = $mRow['Key'];
+                if ($mKeyTypeRaw instanceof TString && $mKeyTypeRaw !== null) {
+                    $mKeyType = $mKeyTypeRaw->Unbox();
+                    if (stripos($mKeyType, 'PRI') === 0) {
+                        TMap::PrepareGeneric(['K' => Framework::String, 'V' => IInterface::class]);
+                        $mDataRow = new TMap(true);
+                        $mDataRow->Put('SCOPE', TBestRowIdentifierScope::eSession());
+                        $mDataRow->Put('COLUMN_NAME', $mRow['Field']);
+                        /** @var TString[] $mRow */
+                        $mType = $mRow['Type']->Unbox();
+
+                        $mSize     = self::$FMaxBufferSize;
+                        $mDecimals = 0;
+
+                        if (strpos($mType, 'enum') !== false) {
+                            $mToken     = strtok(strstr(strstr($mType, '('), ')', true), ',');
+                            $mMaxLength = 0;
+
+                            while ($mToken !== false) {
+                                $mMaxLength = max($mMaxLength, strlen($mToken) - 2);
+                                $mToken     = strtok(',');
+                            }
+                            $mSize     = $mMaxLength;
+                            $mDecimals = 0;
+                            $mType     = 'enum';
+                        }
+                        elseif (strpos($mType, '(') !== false) {
+                            $mTemp = substr(strstr($mType, '('), 1);
+                            if (strpos($mTemp, ',') !== false) {
+                                list($mSize, $mDecimals) = explode(',', $mTemp, 2);
+                                $mSize     = (integer)$mSize;
+                                $mDecimals = (integer)$mDecimals;
+                            }
+                            else {
+                                $mSize = (integer)strstr($mTemp, ')', true);
+                            }
+                            $mType = strstr($mType, '(', true);
+                        }
+
+                        $mDataRow->Put('DATA_TYPE', TMysqlDataTypeMapper::MapFromSqlType(TMysqlDataTypeMapper::MysqlTypeToMysqliType($mType), 1));
+                        $mDataRow->Put('TYPE_NAME', new TString($mType));
+                        $mDataRow->Put('COLUMN_SIZE', new TInteger($mSize + $mDecimals));
+                        $mDataRow->Put('BUFFER_LENGTH', new TInteger($mSize + $mDecimals));
+                        $mDataRow->Put('DECIMAL_DIGITS', new TInteger($mDecimals));
+                        $mDataRow->Put('PSEUDO_COLUMN', new TBoolean(false));
+
+                        $mData[] = $mDataRow;
+                    }
+                }
+            }
+
+            return new TInMemoryResultSet(null, $mData, $mMeta);
+        }
+        finally {
+            Framework::Free($mStatement);
+        }
     }
 
     /**
@@ -3324,16 +3533,45 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
      * @return \FrameworkDSW\Database\IResultSet
      */
     public function getCatalogs() {
-        throw new ENotImplemented(); //TODO: todo
+        try {
+            $mStatement = $this->FConnection->CreateStatement(TResultSetType::eScrollInsensitive(), TConcurrencyType::eReadOnly());
+            $mResultSet = $mStatement->Query('SHOW DATABASES');
+
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => [TClass::class => ['T' => null]]]);
+            $mMeta = new TMap(true);
+            $mMeta->Put('TABLE_CAT', Framework::Type(TString::class));
+
+            /** @var \FrameworkDSW\Containers\TMap[] $mData <K: string, V: \FrameworkDSW\System\IInterface> */
+            $mData = [];
+
+            /** @var \FrameworkDSW\Database\IRow $mRow */
+            foreach ($mResultSet as $mRow) {
+                TMap::PrepareGeneric(['K' => Framework::String, 'V' => IInterface::class]);
+                $mItem = new TMap(true);
+                $mItem->Put('TABLE_CAT', $mRow['Database']);
+                $mData[] = $mItem;
+            }
+            return new TInMemoryResultSet(null, $mData, $mMeta);
+        }
+        finally {
+            Framework::Free($mStatement);
+        }
     }
 
     /**
      * descHere
-     * @throws \FrameworkDSW\Database\EUnsupportedDbFeature
+     * @return string
+     */
+    public function getCatalogSeparator() {
+        return '.';
+    }
+
+    /**
+     * descHere
      * @return string
      */
     public function getCatalogTerm() {
-        throw new EUnsupportedDbFeature(sprintf('Unsupported database feature: catalog is not supported by this driver.'));
+        return 'database';
     }
 
     /**
@@ -3363,6 +3601,7 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
      * @return \FrameworkDSW\Database\IConnection
      */
     public function getConnection() {
+        return $this->FConnection;
     }
 
     /**
@@ -3380,16 +3619,10 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
 
     /**
      * descHere
-     * @return \FrameworkDSW\Utilities\TVersion
-     */
-    public function getDatabaseVersion() {
-    }
-
-    /**
-     * descHere
      * @return string[]
      */
     public function getDateTimeFunctions() {
+        return ['DAYOFWEEK', 'WEEKDAY', 'DAYOFMONTH', 'DAYOFYEAR', 'MONTH', 'DAYNAME', 'MONTHNAME', 'QUARTER', 'WEEK', 'YEAR', 'HOUR', 'MINUTE', 'SECOND', 'PERIOD_ADD', 'PERIOD_DIFF', 'TO_DAYS', 'FROM_DAYS', 'DATE_FORMAT', 'TIME_FORMAT', 'CURDATE', 'CURRENT_DATE', 'CURTIME', 'CURRENT_TIME', 'NOW', 'SYSDATE', 'CURRENT_TIMESTAMP', 'UNIX_TIMESTAMP', 'FROM_UNIXTIME', 'SEC_TO_TIME', 'TIME_TO_SEC'];
     }
 
     /**
@@ -3397,6 +3630,7 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
      * @return string
      */
     public function getDbmsName() {
+        return 'MySQL';
     }
 
     /**
@@ -3404,6 +3638,22 @@ final class TMysqlDatabaseMetaData extends TObject implements IDatabaseMetaData 
      * @return \FrameworkDSW\Utilities\TVersion
      */
     public function getDbmsVersion() {
+        try {
+            $mStatement = $this->FConnection->CreateStatement(TResultSetType::eScrollInsensitive(), TConcurrencyType::eReadOnly());
+            $mStatement->setCommand('SELECT VERSION()');
+            $mRaw = $mStatement->FetchAsScalar();
+            if ($mRaw instanceof TString) { // FIXME buggy for handling '5.2.0-standard', etc.
+                $mRawVersion            = explode('.', $mRaw->Unbox(), 3);
+                $mVersion               = new TVersion();
+                $mVersion->MajorVersion = (integer)$mRawVersion[0];
+                $mVersion->MinorVersion = (integer)$mRawVersion[1];
+                $mVersion->Build        = (integer)$mRawVersion[2];
+            }
+            return $mVersion;
+        }
+        finally {
+            Framework::Free($mStatement);
+        }
     }
 
     /**

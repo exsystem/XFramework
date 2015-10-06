@@ -1663,7 +1663,7 @@ abstract class TAbstractMember extends TObject {
                 }
                 $mGenericsPartString = strstr($mLine, '> ', true);
                 if ($mGenericsPartString === false) {
-                    if ($mLine[strlen($mLine)] === '>') {
+                    if ($mLine[strlen($mLine) - 1] === '>') {
                         $mGenericsPartString = $mLine;
                         $mLines[]            = [$mClassPartString, $mGenericsPartString];
                         continue;
@@ -1690,7 +1690,7 @@ abstract class TAbstractMember extends TObject {
                 }
                 $mGenericsPartString = strstr($mLine, '> ', true);
                 if ($mGenericsPartString === false) {
-                    if ($mLine[strlen($mLine)] === '>') {
+                    if ($mLine[strlen($mLine) - 1] === '>') {
                         $mGenericsPartString = $mLine;
                         array_push($mLines, [$mClassPartString, $mGenericsPartString]);
                         continue;
@@ -1717,7 +1717,7 @@ abstract class TAbstractMember extends TObject {
                 }
                 $mGenericsPartString = strstr($mLine, '> ', true);
                 if ($mGenericsPartString === false) {
-                    if ($mLine[strlen($mLine)] === '>') {
+                    if ($mLine[strlen($mLine) - 1] === '>') {
                         $mGenericsPartString = $mLine;
                         $mLines[0]           = [$mClassPartString, $mGenericsPartString];
                         continue;
@@ -2531,7 +2531,7 @@ final class TMethod extends TAbstractMember implements IMember {
         if ($mDocComment === false) {
             throw new EBadTypeDefinition(sprintf('Bad type definition: undefined type information for method %s.', $this->FName));
         }
-        $this->ParseParameterTypes($mDocComment);
+        $this->ParseParameterValues($mDocComment);
         $mResult = [];
         array_shift($this->FParameterValues);
         foreach ($this->FParameterValues as $mValue) {
@@ -2558,7 +2558,6 @@ final class TMethod extends TAbstractMember implements IMember {
         }
         else {
             TClass::PrepareGeneric(['T' => $mValue]);
-
             return new TClass();
         }
     }
