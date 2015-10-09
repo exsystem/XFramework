@@ -2867,28 +2867,32 @@ class TUrlRouter extends TObject implements IUrlRouter {
         TType::Object($Parameters, [IMap::class => ['K' => Framework::String, 'V' => Framework::String]]);
         TType::String($Ampersand);
 
-        TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String]);
-        $mParameters = new TMap();
-        if ($Parameters != null) {
-            $mParameters->PutAll($Parameters);
-        }
+        $mAnchor = '';
+        if ($Parameters !== null) {
+            if ($Parameters->ContainsKey($this->FRouteVariableName)) {
+                $Parameters->Delete($this->FRouteVariableName);
+            }
 
-        if ($mParameters->ContainsKey($this->FRouteVariableName)) {
-            $mParameters->Delete($this->FRouteVariableName);
-        }
+            if ($Parameters->ContainsKey('#')) {
+                $mAnchor = "#{$Parameters['#']}";
+                $Parameters->Delete('#');
+            }
 
-        if ($mParameters->ContainsKey('#')) {
-            $mAnchor = "#{$Parameters['#']}";
-            $mParameters->Delete('#');
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String]);
+            $mParameters = new TMap();
         }
         else {
-            $mAnchor = '';
+            $mParameters = null;
         }
+
         $Route = trim($Route, '/');
         /** @var IUrlRouteRule $mRule */
         foreach ($this->FRules as $mRule) {
             try {
-                $mUrl = $mRule->CreateUrl($this, $Route, $Parameters, $Ampersand);
+                if ($mParameters !== null) {
+                    $mParameters->PutAll($Parameters);
+                }
+                $mUrl = $mRule->CreateUrl($this, $Route, $mParameters, $Ampersand);
                 if ($mUrl != '') {
                     if ($mRule->getHasHostInfo()) {
                         return $mUrl == '/' ? "/{$mAnchor}" : "{$mUrl}{$mAnchor}";
@@ -2901,10 +2905,16 @@ class TUrlRouter extends TObject implements IUrlRouter {
             catch (ECreateUrlFailed $Ex) {
                 continue;
             }
+            finally {
+                if ($mParameters !== null) {
+                    $mParameters->Clear();
+                }
+            }
         }
 
-        $mResult = $this->CreateDefaultUrl($Route, $mParameters, $Ampersand) . $mAnchor;
+        $mResult = $this->CreateDefaultUrl($Route, $Parameters, $Ampersand) . $mAnchor;
         Framework::Free($mParameters);
+        Framework::Free($Parameters);
 
         return $mResult;
     }
@@ -3507,10 +3517,10 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
             }
         }
 
-        if ($this->FDefaultParameters != null) {
+        if ($this->FDefaultParameters !== null) {
             foreach ($this->FDefaultParameters as $mKey => $mValue) {
-                if ($Parameters->ContainsKey($mKey)) {
-                    if ($Parameters[$mKey] == $mValue) {
+                if ($Parameters !== null && $Parameters->ContainsKey($mKey)) {
+                    if ($Parameters[$mKey] != $mValue) {
                         $Parameters->Delete($mKey);
                     }
                     else {
@@ -3534,10 +3544,18 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
             }
         }
 
-        if ($this->FParameters != null) {
-            foreach ($this->FParameters as $mKey => $mValue) {
-                $mTr["<{$mKey}>"] = urlencode($Parameters[$mKey]);
-                $Parameters->Delete($mKey);
+        if ($this->FParameters !== null && !$this->FParameters->IsEmpty()) {
+            if ($Parameters === null) {
+                throw new ECreateUrlFailed(sprintf('Create URL failed.'));
+            }
+            try {
+                foreach ($this->FParameters as $mKey => $mValue) {
+                    $mTr["<{$mKey}>"] = urlencode($Parameters[$mKey]);
+                    $Parameters->Delete($mKey);
+                }
+            }
+            catch (ENoSuchKey $Ex) {
+                throw new ECreateUrlFailed(sprintf('Create URL failed.'));
             }
         }
         $mSuffix = $this->FUseInheritedSuffix ? $Router->getUrlSuffix() : $this->FUrlSuffix;
@@ -3551,7 +3569,7 @@ class TUrlRouteRule extends TObject implements IUrlRouteRule {
             }
         }
 
-        if ($Parameters == null || $Parameters->IsEmpty()) {
+        if ($Parameters === null || $Parameters->IsEmpty()) {
             return $mUrl != '' ? "{$mUrl}{$mSuffix}" : $mUrl;
         }
 
