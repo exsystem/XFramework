@@ -9,6 +9,7 @@ namespace FrameworkDSW\Web;
 
 use FrameworkDSW\Configuration\Json\TJsonStorage;
 use FrameworkDSW\Configuration\TConfiguration;
+use FrameworkDSW\Containers\ENoSuchKey;
 use FrameworkDSW\Containers\IList;
 use FrameworkDSW\Containers\IMap;
 use FrameworkDSW\Containers\TAbstractMap;
@@ -529,14 +530,8 @@ class THttpCookies extends TMap {
     public function __construct() {
         self::PrepareGeneric(['K' => Framework::String, 'V' => THttpCookie::class]);
         parent::__construct();
-
-        foreach ($_COOKIE as $mName => $mValue) {
-            $mCookie        = new THttpCookie();
-            $mCookie->Name  = (string)$mName;
-            $mCookie->Value = (string)$mValue;
-            $this->Put($mCookie->Name, $mCookie);
-        }
     }
+
 
     /**
      * descHere
@@ -552,6 +547,22 @@ class THttpCookies extends TMap {
         }
         $Value->Name = $Key;
         parent::DoPut($Key, $Value);
+    }
+
+    /**
+     * @param string $Key
+     */
+    public function RemoveFromBrowser($Key) {
+        TType::String($Key);
+
+        try {
+            $mCookie = $this->Get($Key);
+        }
+        catch (ENoSuchKey $Ex) {
+            $mCookie = new THttpCookie();
+            $this->Put($Key, $mCookie);
+        }
+        $mCookie->Expire = time() - 3600;
     }
 }
 
@@ -1164,6 +1175,12 @@ class THttpRequest extends TObject {
     public function getCookies() {
         if ($this->FCookies == null) {
             $this->FCookies = new THttpCookies();
+            foreach ($_COOKIE as $mName => $mValue) {
+                $mCookie        = new THttpCookie();
+                $mCookie->Name  = (string)$mName;
+                $mCookie->Value = (string)$mValue;
+                $this->FCookies->Put($mCookie->Name, $mCookie);
+            }
         }
 
         return $this->FCookies;
@@ -4103,7 +4120,7 @@ class TExceptionHandler extends \FrameworkDSW\System\TExceptionHandler {
     protected function RenderException($Exception) {
         TType::Object($Exception, EException::class);
 
-        $mResponse       = $this->FApplication->getHttpResponse();
+        $mResponse = $this->FApplication->getHttpResponse();
 
         $mExceptionClass = $Exception->ObjectType();
         TMap::PrepareGeneric(['K' => Framework::String, 'V' => IInterface::class]);
@@ -4119,7 +4136,7 @@ class TExceptionHandler extends \FrameworkDSW\System\TExceptionHandler {
         $mCallStack = new TLinkedList();
         $mRawTrace  = $Exception->getTrace();
         foreach ($mRawTrace as $mRawItem) {
-            $mItem       = new TExceptionCallStackViewDataNode();
+            $mItem = new TExceptionCallStackViewDataNode();
             if (isset($mRawItem['file'])) {
                 $mItem->File = $mRawItem['file'];
                 $mItem->Line = $mRawItem['line'];
