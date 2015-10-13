@@ -172,17 +172,19 @@ interface IStorage extends IInterface {
      * descHere
      *
      * @param string $Resource
+     * @param mixed $Options
      * @return \FrameworkDSW\Containers\IMap <K: string, V: string[]>
      */
-    public function getResources($Resource = '');
+    public function getResources($Resource = '', $Options = null);
 
     /**
      * descHere
      *
      * @param string $Role
+     * @param mixed $Options
      * @return \FrameworkDSW\Containers\IMap <K: string, V: string[]>
      */
-    public function getRoles($Role = '');
+    public function getRoles($Role = '', $Options = null);
 
     /**
      * descHere
@@ -541,9 +543,10 @@ class TRuntimeStorage extends TObject implements IStorage {
      * descHere
      *
      * @param string $Resource
+     * @param mixed $Options
      * @return \FrameworkDSW\Containers\IMap <K: string, V: string[]>
      */
-    public function getResources($Resource = '') {
+    public function getResources($Resource = '', $Options = null) {
         TType::String($Resource);
 
         if ($Resource == '') {
@@ -566,9 +569,10 @@ class TRuntimeStorage extends TObject implements IStorage {
      * descHere
      *
      * @param string $Role
+     * @param mixed $Options
      * @return \FrameworkDSW\Containers\IMap <K: string, V: string[]>
      */
-    public function getRoles($Role = '') {
+    public function getRoles($Role = '', $Options = null) {
         TType::String($Role);
 
         if ($Role == '') {
@@ -972,10 +976,11 @@ class TAcl extends TObject {
      * descHere
      *
      * @param \FrameworkDSW\Acl\IResource $Resource
+     * @param mixed $Options
      * @throws ENoSuchResource
      * @return \FrameworkDSW\Containers\IMap <K: \FrameworkDSW\Acl\IResource, V: \FrameworkDSW\Containers\IList<T: \FrameworkDSW\Acl\IResource>>
      */
-    public function getResources($Resource = null) {
+    public function getResources($Resource = null, $Options = null) {
         TType::Object($Resource, IResource::class);
 
         $mResourceId = '';
@@ -985,7 +990,7 @@ class TAcl extends TObject {
                 throw new ENoSuchResource(sprintf('No such resource: %s.', $mResourceId));
             }
         }
-        $mRaw = $this->FStorage->getResources($mResourceId);
+        $mRaw = $this->FStorage->getResources($mResourceId, $Options);
         TMap::PrepareGeneric(['K' => IResource::class, 'V' => [IList::class => ['T' => IResource::class]]]);
         $mResult = new TMap(true);
         foreach ($mRaw as $mRawResource => $mRawPath) {
@@ -1005,16 +1010,19 @@ class TAcl extends TObject {
      * descHere
      *
      * @param string $ResourceId
+     * @param mixed $Options
      * @return \FrameworkDSW\Containers\IMap <K: \FrameworkDSW\Acl\IResource, V: \FrameworkDSW\Containers\IList<T: \FrameworkDSW\Acl\IResource>>
+     * @throws ENoSuchResource
+     * @throws \FrameworkDSW\Utilities\EInvalidStringCasting
      */
-    public function getResourcesById($ResourceId = '') {
+    public function getResourcesById($ResourceId = '', $Options = null) {
         TType::String($ResourceId);
 
         if ($ResourceId == '') {
-            return $this->getResources();
+            return $this->getResources(null, $Options);
         }
         else {
-            return $this->getResources($this->getResourceById($ResourceId));
+            return $this->getResources($this->getResourceById($ResourceId), $Options);
         }
     }
 
@@ -1040,10 +1048,11 @@ class TAcl extends TObject {
      * descHere
      *
      * @param \FrameworkDSW\Acl\IRole $Role
+     * @param mixed $Options
      * @throws ENoSuchRole
      * @return \FrameworkDSW\Containers\IMap <K: \FrameworkDSW\Acl\IRole, V: IList<T: \FrameworkDSW\Acl\IRole>>
      */
-    public function getRoles($Role = null) {
+    public function getRoles($Role = null, $Options = null) {
         TType::Object($Role, IResource::class);
 
         $mRoleId = '';
@@ -1053,7 +1062,7 @@ class TAcl extends TObject {
                 throw new ENoSuchRole(sprintf('No such role: %s.', $mRoleId));
             }
         }
-        $mRaw = $this->FStorage->getRoles($mRoleId);
+        $mRaw = $this->FStorage->getRoles($mRoleId, $Options);
         TMap::PrepareGeneric(['K' => IRole::class, 'V' => [IList::class => ['T' => IRole::class]]]);
         $mResult = new TMap(true);
         foreach ($mRaw as $mRawRole => $mRawPath) {
@@ -1073,16 +1082,17 @@ class TAcl extends TObject {
      * descHere
      *
      * @param string $RoleId
+     * @param mixed $Options
      * @return \FrameworkDSW\Containers\IMap <K: \FrameworkDSW\Acl\IRole, V: \FrameworkDSW\Containers\IList<T: \FrameworkDSW\Acl\IRole>>
      */
-    public function getRolesById($RoleId = '') {
+    public function getRolesById($RoleId = '', $Options = null) {
         TType::String($RoleId);
 
         if ($RoleId == '') {
-            return $this->getRoles();
+            return $this->getRoles(null, $Options);
         }
         else {
-            return $this->getRoles($this->getRoleById($RoleId));
+            return $this->getRoles($this->getRoleById($RoleId), $Options);
         }
     }
 

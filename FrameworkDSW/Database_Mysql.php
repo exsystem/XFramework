@@ -234,7 +234,7 @@ class TMysqlDataTypeMapper extends TObject {
                 MYSQLI_TYPE_NEWDECIMAL  => Framework::Type(TFloat::class),
                 MYSQLI_TYPE_SET         => Framework::Type(TInteger::class),
                 MYSQLI_TYPE_SHORT       => Framework::Type(TInteger::class),
-                MYSQLI_TYPE_STRING      => Framework::Type(TInteger::class),
+                MYSQLI_TYPE_STRING      => Framework::Type(TString::class),
                 MYSQLI_TYPE_TIME        => Framework::Type(TInteger::class),
                 MYSQLI_TYPE_TIMESTAMP   => Framework::Type(TInteger::class), //TODO: time, timestamp->integer?
                 MYSQLI_TYPE_TINY        => Framework::Type(TInteger::class),
