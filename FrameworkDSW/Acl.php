@@ -874,6 +874,14 @@ class TAcl extends TObject {
      * @var \FrameworkDSW\Acl\IStorage
      */
     private $FStorage = null;
+    /**
+     * @var \FrameworkDSW\Containers\TMap <K: string, V: \FrameworkDSW\Acl\IResource>
+     */
+    private $FResources = null;
+    /**
+     * @var \FrameworkDSW\Containers\TMap <K: string, V: \FrameworkDSW\Acl\IRole>
+     */
+    private $FRoles = null;
 
     /**
      * descHere
@@ -885,6 +893,19 @@ class TAcl extends TObject {
         TType::Object($Storage, IStorage::class);
 
         $this->FStorage = $Storage;
+        TMap::PrepareGeneric(['K' => Framework::String, 'V' => IResource::class]);
+        $this->FResources = new TMap(true);
+        TMap::PrepareGeneric(['K' => Framework::String, 'V' => IRole::class]);
+        $this->FRoles = new TMap(true);
+    }
+
+    /**
+     *
+     */
+    public function Destroy() {
+        Framework::Free($this->FResources);
+        Framework::Free($this->FRoles);
+        parent::Destroy();
     }
 
     /**
@@ -892,17 +913,24 @@ class TAcl extends TObject {
      *
      * @param \FrameworkDSW\Acl\IResource $Resource
      * @param \FrameworkDSW\Acl\IResource $Parent
-     * @throws EResourceExisted
-     * @throws ENoSuchParentResource
-     * @return TAcl
+     * @return \FrameworkDSW\Acl\TAcl
+     * @throws \FrameworkDSW\Acl\ENoSuchParentResource
+     * @throws \FrameworkDSW\Acl\EResourceExisted
+     * @throws \FrameworkDSW\System\EInvalidParameter
+     * @throws \FrameworkDSW\Utilities\EInvalidObjectCasting
      */
     public function AddResource($Resource, $Parent = null) {
         TType::Object($Resource, IResource::class);
         TType::Object($Parent, IResource::class);
 
         $mResourceId = $Resource->getResourceId();
-        $mParentId   = '';
-        if ($Parent != null) {
+
+        if ($mResourceId == '') {
+            throw new EInvalidParameter(sprintf('Invalid resource ID: Empty ID is not allowed.'));
+        }
+
+        $mParentId = '';
+        if ($Parent !== null) {
             if ($this->FStorage->HasResource($mParentId)) {
                 throw new ENoSuchParentResource(sprintf('No such parent resource: %s.', $Parent->getResourceId()));
             }
@@ -913,7 +941,7 @@ class TAcl extends TObject {
         }
 
         $this->FStorage->AddResource($Resource, $mParentId);
-
+        $this->FResources->Put($Resource->getResourceId(), $Resource);
         return $this;
     }
 
@@ -924,7 +952,7 @@ class TAcl extends TObject {
      * @param \FrameworkDSW\Acl\IRole $Parent
      * @throws ERoleExisted
      * @throws ENoSuchParentRole
-     * @return TAcl
+     * @return \FrameworkDSW\Acl\TAcl
      */
     public function AddRole($Role, $Parent = null) {
         TType::Object($Role, IRole::class);
@@ -932,7 +960,7 @@ class TAcl extends TObject {
 
         $mRoleId   = $Role->getRoleId();
         $mParentId = '';
-        if ($Parent != null) {
+        if ($Parent !== null) {
             if ($this->FStorage->HasRole($mParentId)) {
                 throw new ENoSuchParentRole(sprintf('No such parent role: %s.', $Parent->getRoleId()));
             }
@@ -943,7 +971,7 @@ class TAcl extends TObject {
         }
 
         $this->FStorage->AddRole($Role, $mParentId);
-
+        $this->FRoles->Put($Role->getRoleId(), $Role);
         return $this;
     }
 
@@ -973,7 +1001,7 @@ class TAcl extends TObject {
         }
 
         $mResourceId = '';
-        if ($Resource != null) {
+        if ($Resource !== null) {
             $mResourceId = $Resource->getResourceId();
         }
         if ($Role === null) {
@@ -1052,7 +1080,7 @@ class TAcl extends TObject {
         TType::String($ResourceId);
 
         if ($this->FStorage->HasResource($ResourceId)) {
-            return $this->FStorage->GetResource($ResourceId);
+            return $this->DoGetResource($ResourceId);
         }
         else {
             throw new ENoSuchResource(sprintf('No such resource: %s.', $ResourceId));
@@ -1071,7 +1099,7 @@ class TAcl extends TObject {
         TType::Object($Resource, IResource::class);
 
         $mResourceId = '';
-        if ($Resource != null) {
+        if ($Resource !== null) {
             $mResourceId = $Resource->getResourceId();
             if (!$this->FStorage->HasResource($mResourceId)) {
                 throw new ENoSuchResource(sprintf('No such resource: %s.', $mResourceId));
@@ -1084,9 +1112,9 @@ class TAcl extends TObject {
             TList::PrepareGeneric(['T' => TResource::class]);
             $mPath = new TList(count($mRawPath), true);
             foreach ($mRawPath as $mRawPathElement) {
-                $mPath->Add(new TResource($mRawPathElement));
+                $mPath->Add($this->DoGetResource($mRawPathElement));
             }
-            $mResult->Put(new TResource($mRawResource), $mPath);
+            $mResult->Put($this->DoGetResource($mRawResource), $mPath);
         }
         Framework::Free($mRaw);
 
@@ -1124,7 +1152,7 @@ class TAcl extends TObject {
         TType::String($RoleId);
 
         if ($this->FStorage->HasRole($RoleId)) {
-            return $this->FStorage->GetRole($RoleId);
+            return $this->DoGetRole($RoleId);
         }
         else {
             throw new ENoSuchRole(sprintf('No such role: %s.', $RoleId));
@@ -1143,7 +1171,7 @@ class TAcl extends TObject {
         TType::Object($Role, IResource::class);
 
         $mRoleId = '';
-        if ($Role != null) {
+        if ($Role !== null) {
             $mRoleId = $Role->getRoleId();
             if (!$this->FStorage->HasRole($mRoleId)) {
                 throw new ENoSuchRole(sprintf('No such role: %s.', $mRoleId));
@@ -1156,9 +1184,9 @@ class TAcl extends TObject {
             TList::PrepareGeneric(['T' => TResource::class]);
             $mPath = new TList(count($mRawPath), true);
             foreach ($mRawPath as $mRawPathElement) {
-                $mPath->Add(new TRole($mRawPathElement));
+                $mPath->Add($this->DoGetRole($mRawPathElement));
             }
-            $mResult->Put(new TRole($mRawRole), $mPath);
+            $mResult->Put($this->DoGetRole($mRawRole), $mPath);
         }
         Framework::Free($mRaw);
 
@@ -1232,7 +1260,7 @@ class TAcl extends TObject {
         }
 
         $mResourceId = '';
-        if ($Resource != null) {
+        if ($Resource !== null) {
             $mResourceId = $Resource->getResourceId();
             if (!$this->FStorage->HasResource($mResourceId)) {
                 throw new ENoSuchResource(sprintf('No such resource: %s.', $mResourceId));
@@ -1273,11 +1301,15 @@ class TAcl extends TObject {
 
         if ($Resource === null) {
             $this->FStorage->RemoveResource();
+            $this->FResources->Clear();
         }
         else {
             $mResourceId = $Resource->getResourceId();
             if ($this->FStorage->HasResource($mResourceId)) {
                 $this->FStorage->RemoveResource($mResourceId);
+                if ($this->FResources->ContainsKey($mResourceId)) {
+                    $this->FResources->Delete($mResourceId);
+                }
             }
             else {
                 throw new ENoSuchResource(sprintf('No such resource: %s.', $mResourceId));
@@ -1304,6 +1336,9 @@ class TAcl extends TObject {
             $mRoleId = $Role->getRoleId();
             if ($this->FStorage->HasRole($mRoleId)) {
                 $this->FStorage->RemoveRole($mRoleId);
+                if ($this->FRoles->ContainsKey($mRoleId)) {
+                    $this->FRoles->Delete($mRoleId);
+                }
             }
             else {
                 throw new ENoSuchRole(sprintf('No such role: %s.', $mRoleId));
@@ -1329,7 +1364,7 @@ class TAcl extends TObject {
 
         $mResourceId = $Resource->getResourceId();
         $mFromId     = '';
-        if ($From != null) {
+        if ($From !== null) {
             $mFromId = $From->getResourceId();
             if (!$this->FStorage->HasResource($mFromId)) {
                 throw new ENoSuchParentResource(sprintf('No such parent resource: %s.', $mFromId));
@@ -1355,7 +1390,7 @@ class TAcl extends TObject {
 
         $mRoleId = $Role->getRoleId();
         $mFromId = '';
-        if ($From != null) {
+        if ($From !== null) {
             $mFromId = $From->getRoleId();
             if (!$this->FStorage->HasRole($mFromId)) {
                 throw new ENoSuchParentRole(sprintf('No such parent role: %s.', $mFromId));
@@ -1365,4 +1400,41 @@ class TAcl extends TObject {
         return $this->FStorage->ResourceInheritsFrom($mRoleId, $mFromId, $Directly);
     }
 
+    /**
+     * @param string $ResourceId
+     * @return \FrameworkDSW\Acl\IResource
+     */
+    private function DoGetResource($ResourceId) {
+        if ($this->FResources->ContainsKey($ResourceId)) {
+            $mResult = $this->FResources[$ResourceId];
+            if ($mResult === null) {
+                $mResult                       = $this->FStorage->GetResource($ResourceId);
+                $this->FResources[$ResourceId] = $mResult;
+            }
+        }
+        else {
+            $mResult = $this->FStorage->GetResource($ResourceId);
+            $this->FResources->Put($ResourceId, $mResult);
+        }
+        return $mResult;
+    }
+
+    /**
+     * @param string $RoleId
+     * @return \FrameworkDSW\Acl\IRole
+     */
+    private function DoGetRole($RoleId) {
+        if ($this->FRoles->ContainsKey($RoleId)) {
+            $mResult = $this->FRoles[$RoleId];
+            if ($mResult === null) {
+                $mResult               = $this->FStorage->GetRole($RoleId);
+                $this->FRoles[$RoleId] = $mResult;
+            }
+        }
+        else {
+            $mResult = $this->FStorage->GetRole($RoleId);
+            $this->FRoles->Put($RoleId, $mResult);
+        }
+        return $mResult;
+    }
 }
