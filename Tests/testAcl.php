@@ -7,8 +7,8 @@ use FrameworkDSW\Acl\TRole;
 use FrameworkDSW\Acl\TRuntimeStorage;
 use FrameworkDSW\Framework\Framework;
 
-
-$acl = new TAcl($storage = new TRuntimeStorage());
+$storage = new TRuntimeStorage();
+$acl = new TAcl($storage);
 for ($i = 0; $i < 100; ++$i) {
     $acl->AddResource(new TResource("res{$i}"));
 }

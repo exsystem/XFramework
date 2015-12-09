@@ -199,7 +199,7 @@ final class TType extends TObject {
                 $mVarGenericArgs = (array)$Var->GenericArgs();
                 if ($Type[$mClass] + $mVarGenericArgs != $mVarGenericArgs) {
                     $mTypeOfClass = $Type[$mClass];
-                    array_walk_recursive($mTypeOfClass, function ($mValue, $mIndex) use (&$mTypeOfClass) {
+                    foreach (new \RecursiveArrayIterator($mTypeOfClass) as $mIndex => $mValue) {
                         switch ($mValue) {
                             case Framework::Boolean:
                                 break;
@@ -216,7 +216,7 @@ final class TType extends TObject {
                                 $mTypeOfClass[$mIndex] = "\\{$mValue}";
                                 break;
                         }
-                    });
+                    }
                     if ($mTypeOfClass + $mVarGenericArgs != $mVarGenericArgs) {
                         throw new EInvalidObjectCasting();
                     }

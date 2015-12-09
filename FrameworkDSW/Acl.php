@@ -7,6 +7,7 @@
  */
 namespace FrameworkDSW\Acl;
 
+use FrameworkDSW\Containers\ENoSuchKey;
 use FrameworkDSW\Containers\IList;
 use FrameworkDSW\Containers\TLinkedList;
 use FrameworkDSW\Containers\TList;
@@ -127,6 +128,7 @@ interface IAssertion extends IInterface {
 
 /**
  * \FrameworkDSW\Acl\IStorage
+ * params <K: ?, R: ?>
  *
  * @author 许子健
  */
@@ -151,23 +153,35 @@ interface IStorage extends IInterface {
     /**
      * descHere
      *
-     * @param string $Role
-     * @param string $Resource
+     * @param K $Role
+     * @param R $Resource
      * @param string $Privilege
      * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion>
      * @param mixed $Option
      */
-    public function Allow($Role = '', $Resource = '', $Privilege = '', $Assertion = null, $Option = null);
+    public function Allow($Role, $Resource, $Privilege = '', $Assertion = null, &$Option = null);
 
     /**
      * descHere
      *
-     * @param string $Role
-     * @param string $Resource
+     * @param K $Role
+     * @param R $Resource
      * @param string $Privilege
      * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion>
      */
-    public function Deny($Role = '', $Resource = '', $Privilege = '', $Assertion = null);
+    public function Deny($Role, $Resource, $Privilege = '', $Assertion = null);
+
+    /**
+     * @param string $ResourceId
+     * @return R
+     */
+    public function GetResourceKey($ResourceId);
+
+    /**
+     * @param string $RoleId
+     * @return K
+     */
+    public function GetRoleKey($RoleId);
 
     /**
      * @param string $ResourceId
@@ -184,20 +198,20 @@ interface IStorage extends IInterface {
     /**
      * descHere
      *
-     * @param string $Resource
+     * @param R $Resource
      * @param mixed $Options
-     * @return \FrameworkDSW\Containers\IMap <K: string, V: string[]>
+     * @return \FrameworkDSW\Containers\IMap <K: R, V: R[]>
      */
-    public function GetResources($Resource = '', $Options = null);
+    public function GetResources($Resource, &$Options = null);
 
     /**
      * descHere
      *
-     * @param string $Role
+     * @param K $Role
      * @param mixed $Options
-     * @return \FrameworkDSW\Containers\IMap <K: string, V: string[]>
+     * @return \FrameworkDSW\Containers\IMap <K: K, V: K[]>
      */
-    public function GetRoles($Role = '', $Options = null);
+    public function GetRoles($Role, &$Options = null);
 
     /**
      * descHere
@@ -218,47 +232,69 @@ interface IStorage extends IInterface {
     /**
      * descHere
      *
-     * @param string $Role
-     * @param string $Resource
+     * @param K $Role
+     * @param R $Resource
      * @param string $Privilege
      * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion>
      * @return boolean
      */
-    public function IsAllowed($Role, $Resource = '', $Privilege = '', $Assertion = null);
+    public function IsAllowed($Role, $Resource, $Privilege = '', $Assertion = null);
 
     /**
      * descHere
      *
-     * @param string $Resource
+     * @param R $Resource
      */
-    public function RemoveResource($Resource = '');
+    public function RemoveResource($Resource);
 
     /**
      * descHere
      *
-     * @param string $Role
+     * @param K $Role
      */
-    public function RemoveRole($Role = '');
+    public function RemoveRole($Role);
+
+    /**
+     * @param R $ResourceKey
+     * @param \FrameworkDSW\Acl\IResource $Resource
+     */
+    public function UpdateResource($ResourceKey, $Resource);
+
+    /**
+     * @param K $RoleKey
+     * @param \FrameworkDSW\Acl\IRole $Role
+     */
+    public function UpdateRole($RoleKey, $Role);
 
     /**
      * descHere
      *
-     * @param string $Resource
-     * @param string $From
+     * @param R $Resource
+     * @param R $From
      * @param boolean $Directly
      * @return boolean
      */
-    public function ResourceInheritsFrom($Resource, $From = '', $Directly = false);
+    public function ResourceInheritsFrom($Resource, $From, $Directly = false);
 
     /**
      * descHere
      *
-     * @param string $Role
-     * @param string $From
+     * @param K $Role
+     * @param K $From
      * @param boolean $Directly
      * @return boolean
      */
-    public function RoleInheritsFrom($Role, $From = '', $Directly = false);
+    public function RoleInheritsFrom($Role, $From, $Directly = false);
+
+    /**
+     * @return R
+     */
+    public function getEmptyResourceKey();
+
+    /**
+     * @return K
+     */
+    public function getEmptyRoleKey();
 }
 
 /**
@@ -334,6 +370,7 @@ class TResource extends TObject implements IResource {
 
 /**
  * \FrameworkDSW\Acl\TRuntimeStorage
+ * extends \FrameworkDSW\Acl\IStorage<K: string, R: string>
  *
  * @author 许子健
  */
@@ -422,6 +459,7 @@ class TRuntimeStorage extends TObject implements IStorage {
      * descHere
      */
     public function __construct() {
+        $this->PrepareMethodGeneric(['K' => Framework::String, 'R' => Framework::String]);
         parent::__construct();
 
         TMap::PrepareGeneric(['K' => Framework::String, 'V' => [TPair::class => ['K' => IResource::class, 'V' => Framework::String . '[]']]]);
@@ -466,12 +504,12 @@ class TRuntimeStorage extends TObject implements IStorage {
 
         $mParentPath = [];
         if ($Parent != '') {
-            $mParentPath   = $this->FResources[$Parent];
+            $mParentPath   = $this->FResources[$Parent]->Value;
             $mParentPath[] = $Parent;
         }
         TPair::PrepareGeneric(['K' => IResource::class, 'V' => Framework::String . '[]']);
         $mPair        = new TPair();
-        $mPair->Key   = null;
+        $mPair->Key   = $Resource;
         $mPair->Value = $mParentPath;
         $this->FResources->Put($Resource->getResourceId(), $mPair);
     }
@@ -488,12 +526,12 @@ class TRuntimeStorage extends TObject implements IStorage {
 
         $mParentPath = [];
         if ($Parent != '') {
-            $mParentPath   = $this->FResources[$Parent];
+            $mParentPath   = $this->FResources[$Parent]->Value;
             $mParentPath[] = $Parent;
         }
         TPair::PrepareGeneric(['K' => IRole::class, 'V' => Framework::String . '[]']);
         $mPair        = new TPair();
-        $mPair->Key   = null;
+        $mPair->Key   = $Role;
         $mPair->Value = $mParentPath;
         $this->FRoles->Put($Role->getRoleId(), $mPair);
     }
@@ -501,15 +539,15 @@ class TRuntimeStorage extends TObject implements IStorage {
     /**
      * descHere
      *
-     * @param string $Role
-     * @param string $Resource
+     * @param K $Role
+     * @param R $Resource
      * @param string $Privilege
      * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion>
      * @param mixed $Option
      */
-    public function Allow($Role = '', $Resource = '', $Privilege = '', $Assertion = null, $Option = null) {
-        TType::String($Role);
-        TType::String($Resource);
+    public function Allow($Role, $Resource, $Privilege = '', $Assertion = null, &$Option = null) {
+        TType::Type($Role, $this->GenericArg('K'));
+        TType::Type($Resource, $this->GenericArg('R'));
         TType::String($Privilege);
 
         if ($Role != '' && $Resource != '') {
@@ -538,14 +576,14 @@ class TRuntimeStorage extends TObject implements IStorage {
     /**
      * descHere
      *
-     * @param string $Role
-     * @param string $Resource
+     * @param K $Role
+     * @param R $Resource
      * @param string $Privilege
      * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion>
      */
-    public function Deny($Role = '', $Resource = '', $Privilege = '', $Assertion = null) {
-        TType::String($Role);
-        TType::String($Resource);
+    public function Deny($Role, $Resource, $Privilege = '', $Assertion = null) {
+        TType::Type($Role, $this->GenericArg('K'));
+        TType::Type($Resource, $this->GenericArg('R'));
         TType::String($Privilege);
 
         if ($Role != '' && $Resource != '') {
@@ -576,12 +614,12 @@ class TRuntimeStorage extends TObject implements IStorage {
     /**
      * descHere
      *
-     * @param string $Resource
+     * @param R $Resource
      * @param mixed $Options
      * @return \FrameworkDSW\Containers\IMap <K: string, V: string[]>
      */
-    public function GetResources($Resource = '', $Options = null) {
-        TType::String($Resource);
+    public function GetResources($Resource, &$Options = null) {
+        TType::Type($Resource, $this->GenericArg('R'));
 
         if ($Resource == '') {
             return $this->FResources;
@@ -603,12 +641,12 @@ class TRuntimeStorage extends TObject implements IStorage {
     /**
      * descHere
      *
-     * @param string $Role
+     * @param K $Role
      * @param mixed $Options
      * @return \FrameworkDSW\Containers\IMap <K: string, V: string[]>
      */
-    public function GetRoles($Role = '', $Options = null) {
-        TType::String($Role);
+    public function GetRoles($Role, &$Options = null) {
+        TType::Type($Role, $this->GenericArg('K'));
 
         if ($Role == '') {
             return $this->FRoles;
@@ -654,16 +692,17 @@ class TRuntimeStorage extends TObject implements IStorage {
     /**
      * descHere
      *
-     * @param string $Role
-     * @param string $Resource
+     * @param K $Role
+     * @param R $Resource
      * @param string $Privilege
      * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion>
      * @return boolean
      */
-    public function IsAllowed($Role, $Resource = '', $Privilege = '', $Assertion = null) {
-        TType::String($Role);
-        TType::String($Resource);
+    public function IsAllowed($Role, $Resource, $Privilege = '', $Assertion = null) {
+        TType::Type($Role, $this->GenericArg('K'));
+        TType::Type($Resource, $this->GenericArg('R'));
         TType::String($Privilege);
+        TType::Object($Assertion, [TClass::class => ['T' => IAssertion::class]]);
 
         TPair::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String]);
         $mResourceRolePair        = new TPair();
@@ -699,10 +738,11 @@ class TRuntimeStorage extends TObject implements IStorage {
     /**
      * descHere
      *
-     * @param string $Resource
+     * @param R $Resource
      */
-    public function RemoveResource($Resource = '') {
-        TType::String($Resource);
+    public function RemoveResource($Resource) {
+        TType::Type($Resource, $this->GenericArg('R'));
+
         if ($Resource == '') {
             /** @var TPair $mValue */
             foreach ($this->FResources as $mKey => $mValue) {
@@ -738,10 +778,11 @@ class TRuntimeStorage extends TObject implements IStorage {
     /**
      * descHere
      *
-     * @param string $Role
+     * @param K $Role
      */
-    public function RemoveRole($Role = '') {
-        TType::String($Role);
+    public function RemoveRole($Role) {
+        TType::Type($Role, $this->GenericArg('K'));
+
         if ($Role == '') {
             /** @var TPair $mValue */
             foreach ($this->FRoles as $mKey => $mValue) {
@@ -779,14 +820,14 @@ class TRuntimeStorage extends TObject implements IStorage {
     /**
      * descHere
      *
-     * @param string $Resource
-     * @param string $From
+     * @param R $Resource
+     * @param R $From
      * @param boolean $Directly
      * @return boolean
      */
-    public function ResourceInheritsFrom($Resource, $From = '', $Directly = false) {
-        TType::String($Resource);
-        TType::String($From);
+    public function ResourceInheritsFrom($Resource, $From, $Directly = false) {
+        TType::Type($Resource, $this->GenericArg('R'));
+        TType::Type($From, $this->GenericArg('R'));
         TType::Bool($Directly);
 
         $mPath = $this->FResources[$Resource]->Value;
@@ -806,14 +847,14 @@ class TRuntimeStorage extends TObject implements IStorage {
     /**
      * descHere
      *
-     * @param string $Role
-     * @param string $From
+     * @param K $Role
+     * @param K $From
      * @param boolean $Directly
      * @return boolean
      */
-    public function RoleInheritsFrom($Role, $From = '', $Directly = false) {
-        TType::String($Role);
-        TType::String($From);
+    public function RoleInheritsFrom($Role, $From, $Directly = false) {
+        TType::Type($Role, $this->GenericArg('K'));
+        TType::Type($From, $this->GenericArg('K'));
         TType::Bool($Directly);
 
         $mPath = $this->FRoles[$Role]->Value;
@@ -843,7 +884,6 @@ class TRuntimeStorage extends TObject implements IStorage {
             $mPair->Key = new TResource($ResourceId);
         }
         return $mPair->Key;
-
     }
 
     /**
@@ -860,6 +900,118 @@ class TRuntimeStorage extends TObject implements IStorage {
         }
         return $mPair->Key;
     }
+
+    /**
+     * @param R $ResourceKey
+     * @param \FrameworkDSW\Acl\IResource $Resource
+     */
+    public function UpdateResource($ResourceKey, $Resource) {
+        TType::Type($ResourceKey, $this->GenericArg('R'));
+        TType::Object($Resource, IResource::class);
+
+        /** @var TPair $mResourcePathPair */
+        $mResourcePathPair = $this->FResources[$ResourceKey];
+        if ($mResourcePathPair->Key !== $Resource) {
+            Framework::Free($mResourcePathPair->Key);
+            $mResourcePathPair->Key = new TResource($Resource->getResourceId());
+        }
+        if ($ResourceKey != $Resource->getResourceId()) {
+            $this->FResources->Delete($ResourceKey);
+            $this->FResources->Put($Resource->getResourceId(), $mResourcePathPair);
+
+            TMap::PrepareGeneric(['K' => [TPair::class => ['K' => Framework::String, 'V' => Framework::String]], 'V' => [TList::class => ['T' => [TPair::class => ['K' => Framework::String, 'V' => [TClass::class => ['T' => IAssertion::class]]]]]]]);
+            $mRules = new TMap();
+            /** @var TPair $mKey */
+            foreach ($this->FRules as $mKey => $mValue) {
+                if ($mKey->Key == $ResourceKey) {
+                    TList::PrepareGeneric(['T' => [TPair::class => ['K' => Framework::String, 'V' => [TClass::class => ['T' => IAssertion::class]]]]]);
+                    $mNewValue = new TList();
+                    $mNewValue->AddAll($mValue);
+                    $mRules->Put($mKey, $mNewValue);
+                }
+            }
+            foreach ($mRules as $mKey => $mValue) {
+                $this->FRules->Delete($mKey);
+            }
+            foreach ($mRules as $mKey => $mValue) {
+                $mKey->Key = $Resource->getResourceId();
+                $mRules->Put($mKey, $mValue);
+            }
+            Framework::Free($mRules);
+        }
+    }
+
+    /**
+     * @param K $RoleKey
+     * @param \FrameworkDSW\Acl\IRole $Role
+     */
+    public function UpdateRole($RoleKey, $Role) {
+        TType::Type($RoleKey, $this->GenericArg('K'));
+        TType::Object($Role, IRole::class);
+
+        /** @var TPair $mRolePathPair */
+        $mRolePathPair = $this->FRoles[$RoleKey];
+        if ($mRolePathPair->Key !== $Role) {
+            Framework::Free($mRolePathPair->Key);
+            $mRolePathPair->Key = new TRole($Role->getRoleId());
+        }
+        if ($RoleKey != $Role->getRoleId()) {
+            $this->FRoles->Delete($RoleKey);
+            $this->FRoles->Put($Role->getRoleId(), $mRolePathPair);
+
+            TMap::PrepareGeneric(['K' => [TPair::class => ['K' => Framework::String, 'V' => Framework::String]], 'V' => [TList::class => ['T' => [TPair::class => ['K' => Framework::String, 'V' => [TClass::class => ['T' => IAssertion::class]]]]]]]);
+            $mRules = new TMap();
+            /** @var TPair $mKey */
+            foreach ($this->FRules as $mKey => $mValue) {
+                if ($mKey->Value == $RoleKey) {
+                    TList::PrepareGeneric(['T' => [TPair::class => ['K' => Framework::String, 'V' => [TClass::class => ['T' => IAssertion::class]]]]]);
+                    $mNewValue = new TList();
+                    $mNewValue->AddAll($mValue);
+                    $mRules->Put($mKey, $mNewValue);
+                }
+            }
+            foreach ($mRules as $mKey => $mValue) {
+                $this->FRules->Delete($mKey);
+            }
+            foreach ($mRules as $mKey => $mValue) {
+                $mKey->Value = $Role->getRoleId();
+                $mRules->Put($mKey, $mValue);
+            }
+            Framework::Free($mRules);
+        }
+    }
+
+    /**
+     * @param string $ResourceId
+     * @return R
+     */
+    public function GetResourceKey($ResourceId) {
+        TType::String($ResourceId);
+        return $ResourceId;
+    }
+
+    /**
+     * @param string $RoleId
+     * @return K
+     */
+    public function GetRoleKey($RoleId) {
+        TType::String($RoleId);
+        return $RoleId;
+    }
+
+    /**
+     * @return R
+     */
+    public function getEmptyResourceKey() {
+        return '';
+    }
+
+    /**
+     * @return K
+     */
+    public function getEmptyRoleKey() {
+        return '';
+    }
 }
 
 /**
@@ -868,10 +1020,9 @@ class TRuntimeStorage extends TObject implements IStorage {
  * @author 许子健
  */
 class TAcl extends TObject {
-
     /**
      *
-     * @var \FrameworkDSW\Acl\IStorage
+     * @var \FrameworkDSW\Acl\IStorage <K: ?, R: ?>
      */
     private $FStorage = null;
     /**
@@ -886,11 +1037,11 @@ class TAcl extends TObject {
     /**
      * descHere
      *
-     * @param \FrameworkDSW\Acl\IStorage $Storage
+     * @param \FrameworkDSW\Acl\IStorage $Storage <K: ?, R: ?>
      */
     public function __construct($Storage = null) {
         parent::__construct();
-        TType::Object($Storage, IStorage::class);
+        TType::Object($Storage, [IStorage::class => ['K' => null, 'R' => null]]);
 
         $this->FStorage = $Storage;
         TMap::PrepareGeneric(['K' => Framework::String, 'V' => IResource::class]);
@@ -929,12 +1080,14 @@ class TAcl extends TObject {
             throw new EInvalidParameter(sprintf('Invalid resource ID: Empty ID is not allowed.'));
         }
 
-        $mParentId = '';
-        if ($Parent !== null) {
-            if ($this->FStorage->HasResource($mParentId)) {
+        if ($Parent === null) {
+            $mParentId = '';
+        }
+        else {
+            $mParentId = $Parent->getResourceId();
+            if (!$this->FStorage->HasResource($mParentId)) {
                 throw new ENoSuchParentResource(sprintf('No such parent resource: %s.', $Parent->getResourceId()));
             }
-            $mParentId = $Parent->getResourceId();
         }
         if ($this->FStorage->HasResource($mResourceId)) {
             throw new EResourceExisted(sprintf('Resource existed: %s.', $mResourceId));
@@ -958,13 +1111,15 @@ class TAcl extends TObject {
         TType::Object($Role, IRole::class);
         TType::Object($Parent, IRole::class);
 
-        $mRoleId   = $Role->getRoleId();
-        $mParentId = '';
-        if ($Parent !== null) {
+        $mRoleId = $Role->getRoleId();
+        if ($Parent === null) {
+            $mParentId = '';
+        }
+        else {
+            $mParentId = $Parent->getRoleId();
             if ($this->FStorage->HasRole($mParentId)) {
                 throw new ENoSuchParentRole(sprintf('No such parent role: %s.', $Parent->getRoleId()));
             }
-            $mParentId = $Parent->getRoleId();
         }
         if ($this->FStorage->HasRole($mRoleId)) {
             throw new ERoleExisted(sprintf('Role existed: %s.', $mRoleId));
@@ -987,7 +1142,7 @@ class TAcl extends TObject {
      * @throws \FrameworkDSW\System\EInvalidParameter
      * @return TAcl
      */
-    public function Allow($Role = null, $Resource = null, $Privilege = '', $Assertion = null, $Option = null) {
+    public function Allow($Role = null, $Resource = null, $Privilege = '', $Assertion = null, &$Option = null) {
         TType::Object($Role, IRole::class);
         TType::Object($Resource, IResource::class);
         TType::String($Privilege);
@@ -1000,15 +1155,15 @@ class TAcl extends TObject {
             throw new EInvalidParameter(sprintf('Invalid parameter: non-empty $Privilege and non-null $Assertion appeared at same time.'));
         }
 
-        $mResourceId = '';
+        $mResourceKey = $this->FStorage->getEmptyResourceKey();
         if ($Resource !== null) {
-            $mResourceId = $Resource->getResourceId();
+            $mResourceKey = $this->FStorage->GetResourceKey($Resource->getResourceId());
         }
         if ($Role === null) {
-            $mRoles = $this->FStorage->GetRoles();
+            $mRoles = $this->FStorage->GetRoles($this->FStorage->getEmptyRoleKey());
             /** @noinspection PhpUnusedLocalVariableInspection */
-            foreach ($mRoles as $mRoleId => &$mPath) {
-                $this->FStorage->Allow($mRoleId, $mResourceId, $Privilege, $Assertion);
+            foreach ($mRoles as $mRoleKey => &$mPath) {
+                $this->FStorage->Allow($mRoleKey, $mResourceKey, $Privilege, $Assertion, $Option);
             }
             Framework::Free($mRoles);
         }
@@ -1017,7 +1172,7 @@ class TAcl extends TObject {
             if (!$this->FStorage->HasRole($mRoleId)) {
                 throw new ENoSuchRole(sprintf('No such role: %s.', $mRoleId));
             }
-            $this->FStorage->Allow($mRoleId, $mResourceId, $Privilege, $Assertion, $Option);
+            $this->FStorage->Allow($this->FStorage->GetRoleKey($mRoleId), $mResourceKey, $Privilege, $Assertion, $Option);
         }
 
         return $this;
@@ -1046,15 +1201,15 @@ class TAcl extends TObject {
             throw new EInvalidParameter(sprintf('Invalid parameter: non-empty $Privilege and non-null $Assertion appeared at same time.'));
         }
 
-        $mResourceId = '';
-        if ($Resource === null) {
-            $mResourceId = $Resource->getResourceId();
+        $mResourceKey = $this->FStorage->getEmptyResourceKey();
+        if ($Resource !== null) {
+            $mResourceKey = $this->FStorage->GetResourceKey($Resource->getResourceId());
         }
         if ($Role === null) {
-            $mRoles = $this->FStorage->GetRoles();
+            $mRoles = $this->FStorage->GetRoles($this->FStorage->getEmptyRoleKey());
             /** @noinspection PhpUnusedLocalVariableInspection */
-            foreach ($mRoles as $mRoleId => &$mPath) {
-                $this->FStorage->Deny($mRoleId, $mResourceId, $Privilege, $Assertion);
+            foreach ($mRoles as $mRoleKey => &$mPath) {
+                $this->FStorage->Deny($mRoleKey, $mResourceKey, $Privilege, $Assertion);
             }
             Framework::Free($mRoles);
         }
@@ -1063,7 +1218,7 @@ class TAcl extends TObject {
             if (!$this->FStorage->HasRole($mRoleId)) {
                 throw new ENoSuchRole(sprintf('No such role: %s.', $mRoleId));
             }
-            $this->FStorage->Deny($mRoleId, $mResourceId, $Privilege, $Assertion);
+            $this->FStorage->Deny($this->FStorage->GetRoleKey($mRoleId), $mResourceKey, $Privilege, $Assertion);
         }
 
         return $this;
@@ -1095,7 +1250,7 @@ class TAcl extends TObject {
      * @throws ENoSuchResource
      * @return \FrameworkDSW\Containers\IMap <K: \FrameworkDSW\Acl\IResource, V: \FrameworkDSW\Containers\IList<T: \FrameworkDSW\Acl\IResource>>
      */
-    public function GetResources($Resource = null, $Options = null) {
+    public function GetResources($Resource = null, &$Options = null) {
         TType::Object($Resource, IResource::class);
 
         $mResourceId = '';
@@ -1105,12 +1260,12 @@ class TAcl extends TObject {
                 throw new ENoSuchResource(sprintf('No such resource: %s.', $mResourceId));
             }
         }
-        $mRaw = $this->FStorage->GetResources($mResourceId, $Options);
+        $mRaw = $this->FStorage->GetResources($this->FStorage->GetResourceKey($mResourceId), $Options);
         TMap::PrepareGeneric(['K' => IResource::class, 'V' => [IList::class => ['T' => IResource::class]]]);
         $mResult = new TMap(true);
         foreach ($mRaw as $mRawResource => $mRawPath) {
             TList::PrepareGeneric(['T' => TResource::class]);
-            $mPath = new TList(count($mRawPath), true);
+            $mPath = new TList(count($mRawPath));
             foreach ($mRawPath as $mRawPathElement) {
                 $mPath->Add($this->DoGetResource($mRawPathElement));
             }
@@ -1130,7 +1285,7 @@ class TAcl extends TObject {
      * @throws ENoSuchResource
      * @throws \FrameworkDSW\Utilities\EInvalidStringCasting
      */
-    public function GetResourcesById($ResourceId = '', $Options = null) {
+    public function GetResourcesById($ResourceId = '', &$Options = null) {
         TType::String($ResourceId);
 
         if ($ResourceId == '') {
@@ -1167,7 +1322,7 @@ class TAcl extends TObject {
      * @throws ENoSuchRole
      * @return \FrameworkDSW\Containers\IMap <K: \FrameworkDSW\Acl\IRole, V: IList<T: \FrameworkDSW\Acl\IRole>>
      */
-    public function GetRoles($Role = null, $Options = null) {
+    public function GetRoles($Role = null, &$Options = null) {
         TType::Object($Role, IResource::class);
 
         $mRoleId = '';
@@ -1177,12 +1332,12 @@ class TAcl extends TObject {
                 throw new ENoSuchRole(sprintf('No such role: %s.', $mRoleId));
             }
         }
-        $mRaw = $this->FStorage->GetRoles($mRoleId, $Options);
+        $mRaw = $this->FStorage->GetRoles($this->FStorage->GetRoleKey($mRoleId), $Options);
         TMap::PrepareGeneric(['K' => IRole::class, 'V' => [IList::class => ['T' => IRole::class]]]);
         $mResult = new TMap(true);
         foreach ($mRaw as $mRawRole => $mRawPath) {
             TList::PrepareGeneric(['T' => TResource::class]);
-            $mPath = new TList(count($mRawPath), true);
+            $mPath = new TList(count($mRawPath));
             foreach ($mRawPath as $mRawPathElement) {
                 $mPath->Add($this->DoGetRole($mRawPathElement));
             }
@@ -1200,7 +1355,7 @@ class TAcl extends TObject {
      * @param mixed $Options
      * @return \FrameworkDSW\Containers\IMap <K: \FrameworkDSW\Acl\IRole, V: \FrameworkDSW\Containers\IList<T: \FrameworkDSW\Acl\IRole>>
      */
-    public function GetRolesById($RoleId = '', $Options = null) {
+    public function GetRolesById($RoleId = '', &$Options = null) {
         TType::String($RoleId);
 
         if ($RoleId == '') {
@@ -1259,17 +1414,20 @@ class TAcl extends TObject {
             throw new EInvalidParameter(sprintf('Invalid parameter: non-empty $Privilege and non-null $Assertion appeared at same time.'));
         }
 
-        $mResourceId = '';
-        if ($Resource !== null) {
+        if ($Resource === null) {
+            $mResourceKey = $this->FStorage->getEmptyResourceKey();
+        }
+        else {
             $mResourceId = $Resource->getResourceId();
             if (!$this->FStorage->HasResource($mResourceId)) {
                 throw new ENoSuchResource(sprintf('No such resource: %s.', $mResourceId));
             }
+            $mResourceKey = $this->FStorage->GetResourceKey($mResourceId);
         }
         if ($Role === null) {
-            $mRoles = $this->FStorage->GetRoles();
-            foreach ($mRoles as $mRoleId) {
-                if (!$this->FStorage->IsAllowed($mRoleId, $mResourceId, $Privilege, $Assertion)) {
+            $mRoles = $this->FStorage->GetRoles($this->FStorage->getEmptyRoleKey());
+            foreach ($mRoles as $mRoleKey) {
+                if (!$this->FStorage->IsAllowed($mRoleKey, $mResourceKey, $Privilege, $Assertion)) {
                     Framework::Free($mRoles);
 
                     return false;
@@ -1280,12 +1438,7 @@ class TAcl extends TObject {
             return true;
         }
         else {
-            $mRoleId = $Role->getRoleId();
-            if (!$this->FStorage->HasRole($mRoleId)) {
-                throw new ENoSuchRole(sprintf('No such role: %s.', $mRoleId));
-            }
-
-            return $this->FStorage->IsAllowed($mRoleId, $mResourceId, $Privilege, $Assertion);
+            return $this->FStorage->IsAllowed($this->FStorage->GetRoleKey($Role->getRoleId()), $mResourceKey, $Privilege, $Assertion);
         }
     }
 
@@ -1300,13 +1453,13 @@ class TAcl extends TObject {
         TType::Object($Resource, IResource::class);
 
         if ($Resource === null) {
-            $this->FStorage->RemoveResource();
+            $this->FStorage->RemoveResource($this->FStorage->getEmptyResourceKey());
             $this->FResources->Clear();
         }
         else {
             $mResourceId = $Resource->getResourceId();
             if ($this->FStorage->HasResource($mResourceId)) {
-                $this->FStorage->RemoveResource($mResourceId);
+                $this->FStorage->RemoveResource($this->FStorage->GetResourceKey($mResourceId));
                 if ($this->FResources->ContainsKey($mResourceId)) {
                     $this->FResources->Delete($mResourceId);
                 }
@@ -1330,12 +1483,12 @@ class TAcl extends TObject {
         TType::Object($Role, IRole::class);
 
         if ($Role === null) {
-            $this->FStorage->RemoveRole();
+            $this->FStorage->RemoveRole($this->FStorage->getEmptyRoleKey());
         }
         else {
             $mRoleId = $Role->getRoleId();
             if ($this->FStorage->HasRole($mRoleId)) {
-                $this->FStorage->RemoveRole($mRoleId);
+                $this->FStorage->RemoveRole($this->FStorage->GetRoleKey($mRoleId));
                 if ($this->FRoles->ContainsKey($mRoleId)) {
                     $this->FRoles->Delete($mRoleId);
                 }
@@ -1371,7 +1524,7 @@ class TAcl extends TObject {
             }
         }
 
-        return $this->FStorage->ResourceInheritsFrom($mResourceId, $mFromId, $Directly);
+        return $this->FStorage->ResourceInheritsFrom($this->FStorage->GetResourceKey($mResourceId), $this->FStorage->GetResourceKey($mFromId), $Directly);
     }
 
     /**
@@ -1383,7 +1536,7 @@ class TAcl extends TObject {
      * @throws ENoSuchParentRole
      * @return boolean
      */
-    public function RoleInheritsFrom($Role, $From = null, $Directly = false) {
+    public function KeyRoleInheritsFrom($Role, $From = null, $Directly = false) {
         TType::Object($Role, IRole::class);
         TType::Object($From, IRole::class);
         TType::Bool($Directly);
@@ -1397,7 +1550,7 @@ class TAcl extends TObject {
             }
         }
 
-        return $this->FStorage->ResourceInheritsFrom($mRoleId, $mFromId, $Directly);
+        return $this->FStorage->RoleInheritsFrom($this->FStorage->GetRoleKey($mRoleId), $this->FStorage->GetRoleKey($mFromId), $Directly);
     }
 
     /**
@@ -1417,6 +1570,67 @@ class TAcl extends TObject {
             $this->FResources->Put($ResourceId, $mResult);
         }
         return $mResult;
+    }
+
+    /**
+     * @param string $ResourceId
+     * @param \FrameworkDSW\Acl\IResource $Resource
+     * @throws \FrameworkDSW\Acl\ENoSuchResource
+     * @throws \FrameworkDSW\Acl\EResourceExisted
+     * @throws \FrameworkDSW\Utilities\EInvalidObjectCasting
+     * @throws \FrameworkDSW\Utilities\EInvalidStringCasting
+     */
+    public function UpdateResource($ResourceId, $Resource) {
+        TType::String($ResourceId);
+        TType::Object($Resource, IResource::class);
+
+        if (!$this->FStorage->HasResource($ResourceId)) {
+            throw new ENoSuchResource(sprintf('No such resource: %s.', $ResourceId));
+        }
+        if ($ResourceId != $Resource->getResourceId() && $this->FStorage->HasResource($Resource->getResourceId())) {
+            throw new EResourceExisted(sprintf('Resource existed: %s.', $ResourceId));
+        }
+
+        $this->FStorage->UpdateResource($this->FStorage->GetResourceKey($ResourceId), $Resource);
+        try {
+            if ($this->FResources[$ResourceId] !== $Resource) {
+                $this->FResources->Delete($ResourceId);
+                Framework::Free($Resource);
+            }
+        }
+        catch (ENoSuchKey $Ex) {
+            //do nothing.
+        }
+    }
+
+    /**
+     * @param string $RoleId
+     * @param \FrameworkDSW\Acl\IRole $Role
+     * @throws \FrameworkDSW\Acl\ENoSuchRole
+     * @throws \FrameworkDSW\Acl\ERoleExisted
+     * @throws \FrameworkDSW\Utilities\EInvalidObjectCasting
+     * @throws \FrameworkDSW\Utilities\EInvalidStringCasting
+     */
+    public function UpdateRole($RoleId, $Role) {
+        TType::String($RoleId);
+        TType::Object($Role, IRole::class);
+
+        if (!$this->FStorage->HasRole($RoleId)) {
+            throw new ENoSuchRole(sprintf('No such role: %s.', $RoleId));
+        }
+        if ($RoleId != $Role->getRoleId() && $this->FStorage->HasRole($Role->getRoleId())) {
+            throw new ERoleExisted(sprintf('Role existed: %s.', $RoleId));
+        }
+        $this->FStorage->UpdateRole($this->FStorage->GetRoleKey($RoleId), $Role);
+        try {
+            if ($this->FRoles[$RoleId] !== $Role) {
+                $this->FRoles->Delete($RoleId);
+                Framework::Free($Role);
+            }
+        }
+        catch (ENoSuchKey $Ex) {
+            //do nothing.
+        }
     }
 
     /**
