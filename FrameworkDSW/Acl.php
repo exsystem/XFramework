@@ -54,6 +54,22 @@ class ERoleExisted extends EAclException {
 }
 
 /**
+ * \FrameworkDSW\Acl\EMembershipExisted
+ *
+ * @author 许子健
+ */
+class EMembershipExisted extends EAclException {
+}
+
+/**
+ * \FrameworkDSW\Acl\ENoSuchMembership
+ *
+ * @author 许子健
+ */
+class ENoSuchMembership extends EAclException {
+}
+
+/**
  * \FrameworkDSW\Acl\ENoSuchParentRole
  *
  * @author 许子健
@@ -109,6 +125,7 @@ interface IResource extends IInterface {
 
 /**
  * \FrameworkDSW\Acl\IAssertion
+ * params <K: ?, R: ?, M: ?>
  *
  * @author 许子健
  */
@@ -117,7 +134,7 @@ interface IAssertion extends IInterface {
     /**
      * descHere
      *
-     * @param \FrameworkDSW\Acl\TAcl $Acl
+     * @param \FrameworkDSW\Acl\TAcl $Acl <K: K, R: R, M: M>
      * @param \FrameworkDSW\Acl\IRole $Role
      * @param \FrameworkDSW\Acl\IResource $Resource
      * @param string $Privilege
@@ -128,7 +145,7 @@ interface IAssertion extends IInterface {
 
 /**
  * \FrameworkDSW\Acl\IStorage
- * params <K: ?, R: ?>
+ * params <K: ?, R: ?, M: ?>
  *
  * @author 许子健
  */
@@ -156,7 +173,7 @@ interface IStorage extends IInterface {
      * @param K $Role
      * @param R $Resource
      * @param string $Privilege
-     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion>
+     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion<K: K, R: R, M: M>>
      * @param mixed $Option
      */
     public function Allow($Role, $Resource, $Privilege = '', $Assertion = null, &$Option = null);
@@ -167,7 +184,7 @@ interface IStorage extends IInterface {
      * @param K $Role
      * @param R $Resource
      * @param string $Privilege
-     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion>
+     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion<K: K, R: R, M: M>>
      */
     public function Deny($Role, $Resource, $Privilege = '', $Assertion = null);
 
@@ -235,10 +252,10 @@ interface IStorage extends IInterface {
      * @param K $Role
      * @param R $Resource
      * @param string $Privilege
-     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion>
+     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion<K: K, R: R, M: M>>
      * @return boolean
      */
-    public function IsAllowed($Role, $Resource, $Privilege = '', $Assertion = null);
+    public function IsRoleAllowed($Role, $Resource, $Privilege = '', $Assertion = null);
 
     /**
      * descHere
@@ -295,6 +312,48 @@ interface IStorage extends IInterface {
      * @return K
      */
     public function getEmptyRoleKey();
+
+    /**
+     * @return M
+     */
+    public function getEmptyMemberKey();
+
+    /**
+     * @param M $Member
+     * @param K $Role
+     */
+    public function AddMembership($Member, $Role);
+
+    /**
+     * @param M $Member
+     * @param K $Role
+     */
+    public function RemoveMembership($Member, $Role);
+
+    /**
+     * @param M $Member
+     * @param K $Role
+     * @return boolean
+     */
+    public function IsMembership($Member, $Role);
+
+    /**
+     * @param K $Role
+     * @param mixed $Options
+     * @return M[]
+     */
+    public function GetMembers($Role, &$Options = null);
+
+    /**
+     * descHere
+     *
+     * @param M $Member
+     * @param R $Resource
+     * @param string $Privilege
+     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion<K: K, R: R, M: M>>
+     * @return boolean
+     */
+    public function IsAllowed($Member, $Resource, $Privilege = '', $Assertion = null);
 }
 
 /**
@@ -370,7 +429,7 @@ class TResource extends TObject implements IResource {
 
 /**
  * \FrameworkDSW\Acl\TRuntimeStorage
- * extends \FrameworkDSW\Acl\IStorage<K: string, R: string>
+ * extends \FrameworkDSW\Acl\IStorage<K: string, R: string, M: string>
  *
  * @author 许子健
  */
@@ -388,16 +447,21 @@ class TRuntimeStorage extends TObject implements IStorage {
     private $FRoles = null;
     /**
      *
-     * @var \FrameworkDSW\Containers\TMap <K: \FrameworkDSW\Containers\TPair<K: string, V: string>, V: \FrameworkDSW\Containers\TList<T: \FrameworkDSW\Containers\TPair<K: string, V: \FrameworkDSW\Reflection\TClass<T: \FrameworkDSW\Acl\IAssertion>>>>
+     * @var \FrameworkDSW\Containers\TMap <K: \FrameworkDSW\Containers\TPair<K: string, V: string>, V: \FrameworkDSW\Containers\TList<T: \FrameworkDSW\Containers\TPair<K: string, V: \FrameworkDSW\Reflection\TClass<T: \FrameworkDSW\Acl\IAssertion<K: string, R: string, M: string>>>>>
      */
     private $FRules = null;
+
+    /**
+     * @var \FrameworkDSW\Containers\TMap <K: string, V: string[]>
+     */
+    private $FMembership = null;
 
     /**
      *
      * @param string $Role
      * @param string $Resource
      * @param string $Privilege
-     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion>
+     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion<K: string, R: string, M: string>>
      */
     private function DoAllow($Role, $Resource, $Privilege = '', $Assertion = null) {
         TPair::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String]);
@@ -435,7 +499,7 @@ class TRuntimeStorage extends TObject implements IStorage {
      * @param string $Role
      * @param string $Resource
      * @param string $Privilege
-     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion>
+     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion<K: string, R: string, M: string>>
      */
     private function DoDeny($Role, $Resource, $Privilege = '', $Assertion = null) {
         TPair::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String]);
@@ -459,7 +523,7 @@ class TRuntimeStorage extends TObject implements IStorage {
      * descHere
      */
     public function __construct() {
-        $this->PrepareMethodGeneric(['K' => Framework::String, 'R' => Framework::String]);
+        $this->PrepareMethodGeneric(['K' => Framework::String, 'R' => Framework::String, 'M' => Framework::String]);
         parent::__construct();
 
         TMap::PrepareGeneric(['K' => Framework::String, 'V' => [TPair::class => ['K' => IResource::class, 'V' => Framework::String . '[]']]]);
@@ -473,6 +537,8 @@ class TRuntimeStorage extends TObject implements IStorage {
                     'T' => [
                         TPair::class => ['K' => Framework::String, 'V' => [TClass::class => ['T' => IAssertion::class]]]]]]]);
         $this->FRules = new TMap();
+        TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String . '[]']);
+        $this->FMembership = new TMap();
     }
 
     /**
@@ -488,6 +554,7 @@ class TRuntimeStorage extends TObject implements IStorage {
         Framework::Free($this->FResources);
         Framework::Free($this->FRoles);
         Framework::Free($this->FRules);
+        Framework::Free($this->FMembership);
 
         parent::Destroy();
     }
@@ -542,13 +609,14 @@ class TRuntimeStorage extends TObject implements IStorage {
      * @param K $Role
      * @param R $Resource
      * @param string $Privilege
-     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion>
+     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion<K: string, R: string, M: string>>
      * @param mixed $Option
      */
     public function Allow($Role, $Resource, $Privilege = '', $Assertion = null, &$Option = null) {
         TType::Type($Role, $this->GenericArg('K'));
         TType::Type($Resource, $this->GenericArg('R'));
         TType::String($Privilege);
+        TType::Object($Assertion, [TClass::class => ['T' => [IAssertion::class => ['K' => Framework::String, 'R' => Framework::String, 'M' => Framework::String]]]]);
 
         if ($Role != '' && $Resource != '') {
             $this->DoAllow($Role, $Resource, $Privilege, $Assertion);
@@ -579,12 +647,13 @@ class TRuntimeStorage extends TObject implements IStorage {
      * @param K $Role
      * @param R $Resource
      * @param string $Privilege
-     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion>
+     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion<K: string, R: string, M: string>>
      */
     public function Deny($Role, $Resource, $Privilege = '', $Assertion = null) {
         TType::Type($Role, $this->GenericArg('K'));
         TType::Type($Resource, $this->GenericArg('R'));
         TType::String($Privilege);
+        TType::Object($Assertion, [TClass::class => ['T' => [IAssertion::class => ['K' => Framework::String, 'R' => Framework::String, 'M' => Framework::String]]]]);
 
         if ($Role != '' && $Resource != '') {
             $this->DoDeny($Role, $Resource, $Privilege, $Assertion);
@@ -648,12 +717,14 @@ class TRuntimeStorage extends TObject implements IStorage {
     public function GetRoles($Role, &$Options = null) {
         TType::Type($Role, $this->GenericArg('K'));
 
+        TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String . '[]']);
+        $mResult = new TMap();
         if ($Role == '') {
-            return $this->FRoles;
+            // \FrameworkDSW\Containers\TMap <K: string, V: \FrameworkDSW\Containers\TPair<K: \FrameworkDSW\Acl\IRole, V: string[]>>
+            //return $this->FRoles; --  type error. need to be corrected.
+            return null;
         }
         else {
-            TMap::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String]);
-            $mResult = new TMap();
             /** @var TPair $mPair */
             foreach ($this->FRoles as $mRole => $mPair) {
                 if (in_array($Role, $mPair->Value, true)) {
@@ -695,21 +766,21 @@ class TRuntimeStorage extends TObject implements IStorage {
      * @param K $Role
      * @param R $Resource
      * @param string $Privilege
-     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion>
+     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion<K: string, R: string, M: string>>
      * @return boolean
      */
-    public function IsAllowed($Role, $Resource, $Privilege = '', $Assertion = null) {
+    public function IsRoleAllowed($Role, $Resource, $Privilege = '', $Assertion = null) {
         TType::Type($Role, $this->GenericArg('K'));
         TType::Type($Resource, $this->GenericArg('R'));
         TType::String($Privilege);
-        TType::Object($Assertion, [TClass::class => ['T' => IAssertion::class]]);
+        TType::Object($Assertion, [TClass::class => ['T' => [IAssertion::class => ['K' => Framework::String, 'R' => Framework::String, 'M' => Framework::String]]]]);
 
         TPair::PrepareGeneric(['K' => Framework::String, 'V' => Framework::String]);
         $mResourceRolePair        = new TPair();
         $mResourceRolePair->Key   = $Resource;
         $mResourceRolePair->Value = $Role;
 
-        TPair::PrepareGeneric(['K' => Framework::String, 'V' => [TClass::class => ['T' => IAssertion::class]]]);
+        TPair::PrepareGeneric(['K' => Framework::String, 'V' => [TClass::class => ['T' => [IAssertion::class => ['K' => Framework::String, 'R' => Framework::String, 'M' => Framework::String]]]]]);
         $mPrivilegePair        = new TPair();
         $mPrivilegePair->Key   = $Privilege;
         $mPrivilegePair->Value = $Assertion;
@@ -1012,17 +1083,117 @@ class TRuntimeStorage extends TObject implements IStorage {
     public function getEmptyRoleKey() {
         return '';
     }
+
+    /**
+     * @return M
+     */
+    public function getEmptyMemberKey() {
+        return '';
+    }
+
+    /**
+     * @param M $Member
+     * @param K $Role
+     */
+    public function AddMembership($Member, $Role) {
+        TType::Type($Member, $this->GenericArg('M'));
+        TType::Type($Role, $this->GenericArg('K'));
+
+        if ($this->FMembership->ContainsKey($Member)) {
+            $this->FMembership[$Member][] = $Role;
+        }
+        else {
+            $this->FMembership->Put($Member, [$Role]);
+        }
+    }
+
+    /**
+     * @param M $Member
+     * @param K $Role
+     */
+    public function RemoveMembership($Member, $Role) {
+        TType::Type($Member, $this->GenericArg('M'));
+        TType::Type($Role, $this->GenericArg('K'));
+
+        if ($this->FMembership->ContainsKey($Member)) {
+            foreach ($this->FMembership[$Member] as $mKey => $mRole) {
+                if ($mRole == $Role) {
+                    array_splice($this->FMembership[$Member], $mKey, 1);
+                    return;
+                }
+            }
+        }
+    }
+
+    /**
+     * @param M $Member
+     * @param K $Role
+     * @return boolean
+     */
+    public function IsMembership($Member, $Role) {
+        TType::Type($Member, $this->GenericArg('M'));
+        TType::Type($Role, $this->GenericArg('K'));
+
+        if ($this->FMembership->ContainsKey($Member)) {
+            return in_array($Role, $this->FMembership[$Member], true);
+        }
+        else {
+            return false;
+        }
+    }
+
+    /**
+     * @param K $Role
+     * @param mixed $Options
+     * @return M[]
+     */
+    public function GetMembers($Role, &$Options = null) {
+        TType::Type($Role, $this->GenericArg('K'));
+
+        $mResult = [];
+        foreach ($this->FMembership as $mMember => $mRoles) {
+            if (in_array($Role, $mRoles, true)) {
+                $mResult[] = $mMember;
+            }
+        }
+        return $mResult;
+    }
+
+    /**
+     * descHere
+     *
+     * @param M $Member
+     * @param R $Resource
+     * @param string $Privilege
+     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion<K: string, R: string, M: string>>
+     * @return boolean
+     */
+    public function IsAllowed($Member, $Resource, $Privilege = '', $Assertion = null) {
+        TType::Type($Member, $this->GenericArg('M'));
+        TType::Type($Role, $this->GenericArg('R'));
+        TType::String($Privilege);
+        TType::Object($Assertion, [TClass::class => ['T' => [IAssertion::class => ['K' => Framework::String, 'R' => Framework::String, 'M' => Framework::String]]]]);
+
+        if ($this->FMembership->ContainsKey($Member)) {
+            foreach ($this->FMembership[$Member] as $mRole) {
+                if ($this->IsRoleAllowed($mRole, $Resource, $Privilege, $Assertion)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }
 
 /**
  * \FrameworkDSW\Acl\TAcl
- *
+ * param <K: ?, R: ?, M: ?>
  * @author 许子健
  */
 class TAcl extends TObject {
     /**
      *
-     * @var \FrameworkDSW\Acl\IStorage <K: ?, R: ?>
+     * @var \FrameworkDSW\Acl\IStorage <K: K, R: R, M: M>
      */
     private $FStorage = null;
     /**
@@ -1035,13 +1206,28 @@ class TAcl extends TObject {
     private $FRoles = null;
 
     /**
+     * @param \FrameworkDSW\Acl\IRole $Role
+     * @return string
+     * @throws \FrameworkDSW\Acl\ENoSuchRole
+     */
+    private function EnsureRoleExists($Role) {
+        $mRoleId = $Role->getRoleId();
+        if ($this->FStorage->HasRole($mRoleId)) {
+            return $mRoleId;
+        }
+        else {
+            throw new ENoSuchRole(sprintf('No such role: %s.', $mRoleId));
+        }
+    }
+
+    /**
      * descHere
      *
-     * @param \FrameworkDSW\Acl\IStorage $Storage <K: ?, R: ?>
+     * @param \FrameworkDSW\Acl\IStorage $Storage <K: K, R: R, M: M>
      */
     public function __construct($Storage = null) {
         parent::__construct();
-        TType::Object($Storage, [IStorage::class => ['K' => null, 'R' => null]]);
+        TType::Object($Storage, [IStorage::class => ['K' => $this->GenericArg('K'), 'R' => $this->GenericArg('R'), 'M' => $this->GenericArg('M')]]);
 
         $this->FStorage = $Storage;
         TMap::PrepareGeneric(['K' => Framework::String, 'V' => IResource::class]);
@@ -1064,7 +1250,7 @@ class TAcl extends TObject {
      *
      * @param \FrameworkDSW\Acl\IResource $Resource
      * @param \FrameworkDSW\Acl\IResource $Parent
-     * @return \FrameworkDSW\Acl\TAcl
+     * @return \FrameworkDSW\Acl\TAcl <K: K, R: R, M: M>
      * @throws \FrameworkDSW\Acl\ENoSuchParentResource
      * @throws \FrameworkDSW\Acl\EResourceExisted
      * @throws \FrameworkDSW\System\EInvalidParameter
@@ -1085,16 +1271,16 @@ class TAcl extends TObject {
         }
         else {
             $mParentId = $Parent->getResourceId();
-            if (!$this->FStorage->HasResource($mParentId)) {
-                throw new ENoSuchParentResource(sprintf('No such parent resource: %s.', $Parent->getResourceId()));
-            }
+//            if (!$this->FStorage->HasResource($mParentId)) {
+//                throw new ENoSuchParentResource(sprintf('No such parent resource: %s.', $Parent->getResourceId()));
+//            }
         }
         if ($this->FStorage->HasResource($mResourceId)) {
             throw new EResourceExisted(sprintf('Resource existed: %s.', $mResourceId));
         }
 
         $this->FStorage->AddResource($Resource, $mParentId);
-        $this->FResources->Put($Resource->getResourceId(), $Resource);
+        $this->FResources->Put($mResourceId, $Resource);
         return $this;
     }
 
@@ -1105,7 +1291,7 @@ class TAcl extends TObject {
      * @param \FrameworkDSW\Acl\IRole $Parent
      * @throws ERoleExisted
      * @throws ENoSuchParentRole
-     * @return \FrameworkDSW\Acl\TAcl
+     * @return \FrameworkDSW\Acl\TAcl <K: K, R: R, M: M>
      */
     public function AddRole($Role, $Parent = null) {
         TType::Object($Role, IRole::class);
@@ -1117,16 +1303,16 @@ class TAcl extends TObject {
         }
         else {
             $mParentId = $Parent->getRoleId();
-            if ($this->FStorage->HasRole($mParentId)) {
-                throw new ENoSuchParentRole(sprintf('No such parent role: %s.', $Parent->getRoleId()));
-            }
+//            if ($this->FStorage->HasRole($mParentId)) {
+//                throw new ENoSuchParentRole(sprintf('No such parent role: %s.', $Parent->getRoleId()));
+//            }
         }
         if ($this->FStorage->HasRole($mRoleId)) {
             throw new ERoleExisted(sprintf('Role existed: %s.', $mRoleId));
         }
 
         $this->FStorage->AddRole($Role, $mParentId);
-        $this->FRoles->Put($Role->getRoleId(), $Role);
+        $this->FRoles->Put($mRoleId, $Role);
         return $this;
     }
 
@@ -1136,17 +1322,17 @@ class TAcl extends TObject {
      * @param \FrameworkDSW\Acl\IRole $Role
      * @param \FrameworkDSW\Acl\IResource $Resource
      * @param string $Privilege
-     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion>
+     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion<K: K, R: R, M: M>>
      * @param mixed $Option
      * @throws ENoSuchRole
      * @throws \FrameworkDSW\System\EInvalidParameter
-     * @return TAcl
+     * @return \FrameworkDSW\Acl\TAcl <K: K, R: R, M: M>
      */
     public function Allow($Role = null, $Resource = null, $Privilege = '', $Assertion = null, &$Option = null) {
         TType::Object($Role, IRole::class);
         TType::Object($Resource, IResource::class);
         TType::String($Privilege);
-        TType::Object($Assertion, [TClass::class => ['T' => IAssertion::class]]);
+        TType::Object($Assertion, [TClass::class => ['T' => [IAssertion::class => ['K' => $this->GenericArg('K'), 'R' => $this->GenericArg('R'), 'M' => $this->GenericArg('M')]]]]);
 
         if ($Privilege == '' && $Assertion === null) {
             throw new EInvalidParameter(sprintf('Invalid parameter: empty $Privilege and null $Assertion appeared at same time.'));
@@ -1155,8 +1341,10 @@ class TAcl extends TObject {
             throw new EInvalidParameter(sprintf('Invalid parameter: non-empty $Privilege and non-null $Assertion appeared at same time.'));
         }
 
-        $mResourceKey = $this->FStorage->getEmptyResourceKey();
-        if ($Resource !== null) {
+        if ($Resource === null) {
+            $mResourceKey = $this->FStorage->getEmptyResourceKey();
+        }
+        else {
             $mResourceKey = $this->FStorage->GetResourceKey($Resource->getResourceId());
         }
         if ($Role === null) {
@@ -1184,15 +1372,16 @@ class TAcl extends TObject {
      * @param \FrameworkDSW\Acl\IRole $Role
      * @param \FrameworkDSW\Acl\IResource $Resource
      * @param string $Privilege
-     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion>
+     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion<K: K, R: R, M: M>>
      * @throws ENoSuchRole
      * @throws \FrameworkDSW\System\EInvalidParameter
-     * @return TAcl
+     * @return \FrameworkDSW\Acl\TAcl <K: K, R: R, M: M>
      */
     public function Deny($Role = null, $Resource = null, $Privilege = '', $Assertion = null) {
         TType::Object($Role, IRole::class);
         TType::Object($Resource, IResource::class);
         TType::String($Privilege);
+        TType::Object($Assertion, [TClass::class => ['T' => [IAssertion::class => ['K' => $this->GenericArg('K'), 'R' => $this->GenericArg('R'), 'M' => $this->GenericArg('M')]]]]);
 
         if ($Privilege == '' && $Assertion === null) {
             throw new EInvalidParameter(sprintf('Invalid parameter: empty $Privilege and null $Assertion appeared at same time.'));
@@ -1201,8 +1390,10 @@ class TAcl extends TObject {
             throw new EInvalidParameter(sprintf('Invalid parameter: non-empty $Privilege and non-null $Assertion appeared at same time.'));
         }
 
-        $mResourceKey = $this->FStorage->getEmptyResourceKey();
-        if ($Resource !== null) {
+        if ($Resource === null) {
+            $mResourceKey = $this->FStorage->getEmptyResourceKey();
+        }
+        else {
             $mResourceKey = $this->FStorage->GetResourceKey($Resource->getResourceId());
         }
         if ($Role === null) {
@@ -1253,8 +1444,10 @@ class TAcl extends TObject {
     public function GetResources($Resource = null, &$Options = null) {
         TType::Object($Resource, IResource::class);
 
-        $mResourceId = '';
-        if ($Resource !== null) {
+        if ($Resource === null) {
+            $mResourceId = '';
+        }
+        else {
             $mResourceId = $Resource->getResourceId();
             if (!$this->FStorage->HasResource($mResourceId)) {
                 throw new ENoSuchResource(sprintf('No such resource: %s.', $mResourceId));
@@ -1325,12 +1518,11 @@ class TAcl extends TObject {
     public function GetRoles($Role = null, &$Options = null) {
         TType::Object($Role, IResource::class);
 
-        $mRoleId = '';
-        if ($Role !== null) {
-            $mRoleId = $Role->getRoleId();
-            if (!$this->FStorage->HasRole($mRoleId)) {
-                throw new ENoSuchRole(sprintf('No such role: %s.', $mRoleId));
-            }
+        if ($Role === null) {
+            $mRoleId = '';
+        }
+        else {
+            $mRoleId = $this->EnsureRoleExists($Role);
         }
         $mRaw = $this->FStorage->GetRoles($this->FStorage->GetRoleKey($mRoleId), $Options);
         TMap::PrepareGeneric(['K' => IRole::class, 'V' => [IList::class => ['T' => IRole::class]]]);
@@ -1396,16 +1588,17 @@ class TAcl extends TObject {
      * @param \FrameworkDSW\Acl\IRole $Role
      * @param \FrameworkDSW\Acl\IResource $Resource
      * @param string $Privilege
-     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion>
+     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion<K: K, R: R, M: M>>
      * @throws ENoSuchResource
      * @throws ENoSuchRole
      * @throws \FrameworkDSW\System\EInvalidParameter
      * @return boolean
      */
-    public function IsAllowed($Role = null, $Resource = null, $Privilege = '', $Assertion = null) {
+    public function IsRoleAllowed($Role = null, $Resource = null, $Privilege = '', $Assertion = null) {
         TType::Object($Role, IRole::class);
         TType::Object($Resource, IResource::class);
         TType::String($Privilege);
+        TType::Object($Assertion, [TClass::class => ['T' => [IAssertion::class => ['K' => $this->GenericArg('K'), 'R' => $this->GenericArg('R'), 'M' => $this->GenericArg('M')]]]]);
 
         if ($Privilege == '' && $Assertion === null) {
             throw new EInvalidParameter(sprintf('Invalid parameter: empty $Privilege and null $Assertion appeared at same time.'));
@@ -1427,7 +1620,7 @@ class TAcl extends TObject {
         if ($Role === null) {
             $mRoles = $this->FStorage->GetRoles($this->FStorage->getEmptyRoleKey());
             foreach ($mRoles as $mRoleKey) {
-                if (!$this->FStorage->IsAllowed($mRoleKey, $mResourceKey, $Privilege, $Assertion)) {
+                if (!$this->FStorage->IsRoleAllowed($mRoleKey, $mResourceKey, $Privilege, $Assertion)) {
                     Framework::Free($mRoles);
 
                     return false;
@@ -1438,7 +1631,7 @@ class TAcl extends TObject {
             return true;
         }
         else {
-            return $this->FStorage->IsAllowed($this->FStorage->GetRoleKey($Role->getRoleId()), $mResourceKey, $Privilege, $Assertion);
+            return $this->FStorage->IsRoleAllowed($this->FStorage->GetRoleKey($Role->getRoleId()), $mResourceKey, $Privilege, $Assertion);
         }
     }
 
@@ -1447,7 +1640,7 @@ class TAcl extends TObject {
      *
      * @param \FrameworkDSW\Acl\IResource $Resource
      * @throws ENoSuchResource
-     * @return \FrameworkDSW\Acl\TAcl
+     * @return \FrameworkDSW\Acl\TAcl <K: K, R: R, M: M>
      */
     public function RemoveResource($Resource = null) {
         TType::Object($Resource, IResource::class);
@@ -1477,7 +1670,7 @@ class TAcl extends TObject {
      *
      * @param \FrameworkDSW\Acl\IRole $Role
      * @throws ENoSuchRole
-     * @return \FrameworkDSW\Acl\TAcl
+     * @return \FrameworkDSW\Acl\TAcl <K: K, R: R, M: M>
      */
     public function RemoveRole($Role = null) {
         TType::Object($Role, IRole::class);
@@ -1486,15 +1679,10 @@ class TAcl extends TObject {
             $this->FStorage->RemoveRole($this->FStorage->getEmptyRoleKey());
         }
         else {
-            $mRoleId = $Role->getRoleId();
-            if ($this->FStorage->HasRole($mRoleId)) {
-                $this->FStorage->RemoveRole($this->FStorage->GetRoleKey($mRoleId));
-                if ($this->FRoles->ContainsKey($mRoleId)) {
-                    $this->FRoles->Delete($mRoleId);
-                }
-            }
-            else {
-                throw new ENoSuchRole(sprintf('No such role: %s.', $mRoleId));
+            $mRoleId = $this->EnsureRoleExists($Role);
+            $this->FStorage->RemoveRole($this->FStorage->GetRoleKey($mRoleId));
+            if ($this->FRoles->ContainsKey($mRoleId)) {
+                $this->FRoles->Delete($mRoleId);
             }
         }
 
@@ -1536,12 +1724,12 @@ class TAcl extends TObject {
      * @throws ENoSuchParentRole
      * @return boolean
      */
-    public function KeyRoleInheritsFrom($Role, $From = null, $Directly = false) {
+    public function RoleInheritsFrom($Role, $From = null, $Directly = false) {
         TType::Object($Role, IRole::class);
         TType::Object($From, IRole::class);
         TType::Bool($Directly);
 
-        $mRoleId = $Role->getRoleId();
+        $mRoleId = $this->EnsureRoleExists($Role);
         $mFromId = '';
         if ($From !== null) {
             $mFromId = $From->getRoleId();
@@ -1579,6 +1767,7 @@ class TAcl extends TObject {
      * @throws \FrameworkDSW\Acl\EResourceExisted
      * @throws \FrameworkDSW\Utilities\EInvalidObjectCasting
      * @throws \FrameworkDSW\Utilities\EInvalidStringCasting
+     * @return \FrameworkDSW\Acl\TAcl <K: K, R: R, M: M>
      */
     public function UpdateResource($ResourceId, $Resource) {
         TType::String($ResourceId);
@@ -1601,6 +1790,9 @@ class TAcl extends TObject {
         catch (ENoSuchKey $Ex) {
             //do nothing.
         }
+        finally {
+            return $this;
+        }
     }
 
     /**
@@ -1610,6 +1802,7 @@ class TAcl extends TObject {
      * @throws \FrameworkDSW\Acl\ERoleExisted
      * @throws \FrameworkDSW\Utilities\EInvalidObjectCasting
      * @throws \FrameworkDSW\Utilities\EInvalidStringCasting
+     * @return \FrameworkDSW\Acl\TAcl <K: K, R: R, M: M>
      */
     public function UpdateRole($RoleId, $Role) {
         TType::String($RoleId);
@@ -1631,6 +1824,9 @@ class TAcl extends TObject {
         catch (ENoSuchKey $Ex) {
             //do nothing.
         }
+        finally {
+            return $this;
+        }
     }
 
     /**
@@ -1650,5 +1846,101 @@ class TAcl extends TObject {
             $this->FRoles->Put($RoleId, $mResult);
         }
         return $mResult;
+    }
+
+    /**
+     * @param M $Member
+     * @param \FrameworkDSW\Acl\IRole $Role
+     * @throws \FrameworkDSW\Acl\EMembershipExisted
+     * @throws \FrameworkDSW\Acl\ENoSuchRole
+     * @throws \FrameworkDSW\System\ENoSuchGenericArg
+     * @throws \FrameworkDSW\Utilities\EInvalidObjectCasting
+     * @return \FrameworkDSW\Acl\TAcl <K: K, R: R, M: M>
+     */
+    public function AddMembership($Member, $Role) {
+        TType::Type($Member, $this->GenericArg('M'));
+        TType::Object($Role, IRole::class);
+
+        $mRoleKey = $this->FStorage->GetRoleKey($this->EnsureRoleExists($Role));
+        if ($this->FStorage->IsMembership($Member, $mRoleKey)) {
+            throw new EMembershipExisted(sprintf('Membership existed.'));
+        }
+        $this->FStorage->AddMembership($Member, $mRoleKey);
+        return $this;
+    }
+
+    /**
+     * @param M $Member
+     * @param \FrameworkDSW\Acl\IRole $Role
+     * @throws \FrameworkDSW\Acl\ENoSuchMembership
+     * @throws \FrameworkDSW\Acl\ENoSuchRole
+     * @throws \FrameworkDSW\System\ENoSuchGenericArg
+     * @throws \FrameworkDSW\Utilities\EInvalidObjectCasting
+     * @return \FrameworkDSW\Acl\TAcl <K: K, R: R, M: M>
+     */
+    public function RemoveMembership($Member, $Role) {
+        TType::Type($Member, $this->GenericArg('M'));
+        TType::Object($Role, IRole::class);
+
+        $mRoleKey = $this->FStorage->GetRoleKey($this->EnsureRoleExists($Role));
+        if (!$this->FStorage->IsMembership($Member, $mRoleKey)) {
+            throw new ENoSuchMembership(sprintf('No such membership.'));
+        }
+        $this->FStorage->RemoveMembership($Member, $mRoleKey);
+        return $this;
+    }
+
+    /**
+     * @param M $Member
+     * @param \FrameworkDSW\Acl\IRole $Role
+     * @return boolean
+     * @throws \FrameworkDSW\Acl\ENoSuchRole
+     * @throws \FrameworkDSW\System\ENoSuchGenericArg
+     * @throws \FrameworkDSW\Utilities\EInvalidObjectCasting
+     */
+    public function IsMembership($Member, $Role) {
+        TType::Type($Member, $this->GenericArg('M'));
+        TType::Object($Role, IRole::class);
+
+        return $this->FStorage->IsMembership($Member, $this->FStorage->GetRoleKey($this->EnsureRoleExists($Role)));
+    }
+
+    /**
+     * @param \FrameworkDSW\Acl\IRole $Role
+     * @param mixed $Options
+     * @return M[]
+     */
+    public function GetMembers($Role, &$Options = null) {
+        TType::Object($Role, IRole::class);
+
+        return $this->FStorage->GetMembers($this->FStorage->GetRoleKey($this->EnsureRoleExists($Role)), $Options);
+    }
+
+    /**
+     * descHere
+     *
+     * @param M $Member
+     * @param \FrameworkDSW\Acl\IResource $Resource
+     * @param string $Privilege
+     * @param \FrameworkDSW\Reflection\TClass $Assertion <T: \FrameworkDSW\Acl\IAssertion<K: K, R: R, M: M>>
+     * @return boolean
+     * @throws \FrameworkDSW\Acl\ENoSuchResource
+     * @throws \FrameworkDSW\System\ENoSuchGenericArg
+     * @throws \FrameworkDSW\Utilities\EInvalidObjectCasting
+     * @throws \FrameworkDSW\Utilities\EInvalidStringCasting
+     */
+    public function IsAllowed($Member, $Resource, $Privilege = '', $Assertion = null) {
+        TType::Type($Member, $this->GenericArg('M'));
+        TType::Type($Resource, IResource::class);
+        TType::String($Privilege);
+        TType::Object($Assertion, [TClass::class => ['T' => [IAssertion::class => ['K' => $this->GenericArg('K'), 'R' => $this->GenericArg('R'), 'M' => $this->GenericArg('M')]]]]);
+
+        $mResourceId = $Resource->getResourceId();
+        if ($this->FStorage->HasResource($mResourceId)) {
+            return $this->FStorage->IsAllowed($Member, $this->FStorage->GetResourceKey($mResourceId), $Privilege, $Assertion);
+        }
+        else {
+            throw new ENoSuchResource(sprintf('No such resource: %s.', $mResourceId));
+        }
     }
 }

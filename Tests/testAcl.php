@@ -8,6 +8,7 @@ use FrameworkDSW\Acl\TRuntimeStorage;
 use FrameworkDSW\Framework\Framework;
 
 $storage = new TRuntimeStorage();
+TAcl::PrepareGeneric(['K' => $storage->GenericArg('K'), 'R' => $storage->GenericArg('R'), 'M' => Framework::String]);
 $acl = new TAcl($storage);
 for ($i = 0; $i < 100; ++$i) {
     $acl->AddResource(new TResource("res{$i}"));
@@ -26,7 +27,7 @@ for ($i = 0; $i < 100; ++$i) {
 }
 for ($i = 0; $i < 100; ++$i) {
     for ($j = 0; $j < 100; ++$j) {
-        if ($acl->IsAllowed($acl->GetRoleById("role{$i}"), $acl->GetResourceById("res{$j}"), '*')) {
+        if ($acl->IsRoleAllowed($acl->GetRoleById("role{$i}"), $acl->GetResourceById("res{$j}"), '*')) {
             $test["role{$i}res{$j}"] = false;
         }
     }
@@ -36,7 +37,9 @@ var_dump($test);
 Framework::Free($storage);
 Framework::Free($acl);
 
-$acl = new TAcl($storage = new TRuntimeStorage());
+$storage = new TRuntimeStorage();
+TAcl::PrepareGeneric(['K' => $storage->GenericArg('K'), 'R' => $storage->GenericArg('R'), 'M' => Framework::String]);
+$acl = new TAcl($storage);
 $acl->AddResource(new TResource('news'));
 $acl->AddResource(new TResource('news1'), $acl->GetResourceById('news'));
 $acl->AddResource(new TResource('posts'));
@@ -44,19 +47,19 @@ $acl->AddRole(new TRole('root'));
 $acl->AddRole(new TRole('user'));
 $acl->Allow($acl->GetRoleById('root'), null, '*');
 $acl->Allow($acl->GetRoleById('user'), new TResource('posts'), '*');
-if ($acl->IsAllowed($acl->GetRoleById('root'), $acl->GetResourceById('news'), '*')) {
+if ($acl->IsRoleAllowed($acl->GetRoleById('root'), $acl->GetResourceById('news'), '*')) {
     echo "news is allowed to root\n";
 }
-if ($acl->IsAllowed($acl->GetRoleById('root'), $acl->GetResourceById('posts'), '*')) {
+if ($acl->IsRoleAllowed($acl->GetRoleById('root'), $acl->GetResourceById('posts'), '*')) {
     echo "posts is allowed to root\n";
 }
-if ($acl->IsAllowed($acl->GetRoleById('user'), $acl->GetResourceById('news'), '*')) {
+if ($acl->IsRoleAllowed($acl->GetRoleById('user'), $acl->GetResourceById('news'), '*')) {
     echo "news is allowed to user\n";
 }
-if ($acl->IsAllowed($acl->GetRoleById('user'), $acl->GetResourceById('posts'), '*')) {
+if ($acl->IsRoleAllowed($acl->GetRoleById('user'), $acl->GetResourceById('posts'), '*')) {
     echo "posts is allowed to user\n";
 }
-if ($acl->IsAllowed($acl->GetRoleById('root'), $acl->GetResourceById('news1'), '*')) {
+if ($acl->IsRoleAllowed($acl->GetRoleById('root'), $acl->GetResourceById('news1'), '*')) {
     echo "news1 is allowed to root\n";
 }
 Framework::Free($storage);

@@ -392,7 +392,7 @@ class TControllerManager extends TObject implements IControllerManager {
             return false;
         }
         else {
-            return $this->FModelRegistration[$Action]->Contains($View);
+            return $this->FViewRegistration[$Action]->Contains($View);
         }
     }
 

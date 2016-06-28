@@ -450,7 +450,7 @@ abstract class TExpression extends TObject {
             $mExpressions->Add($mExpression);
         }
 
-        return new TBlockExpression($Expressions);
+        return new TBlockExpression($mExpressions);
     }
 
     /**
@@ -2312,13 +2312,13 @@ final class TMethodCallExpression extends TExpression {
      * descHere
      *
      * @param \FrameworkDSW\Linq\Expressions\TExpression $Object
-     * @param \FrameworkDSW\Containers\IList $Arguments <T: \FrameworkDSW\Linq\Expressions\TParameterExpression>
+     * @param \FrameworkDSW\Containers\IList $Arguments <T: \FrameworkDSW\Linq\Expressions\TExpression>
      * @return \FrameworkDSW\Linq\Expressions\TMethodCallExpression
      */
     public function Update($Object, $Arguments) {
         TType::Object($Object, TExpression::class);
         TType::Object($Arguments, [
-            IList::class => ['T' => TParameterExpression::class]]);
+            IList::class => ['T' => TExpression::class]]);
 
         return TExpression::Call($Object, $this->FMethod, $Arguments, $this->FType);
     }
