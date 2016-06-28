@@ -2,7 +2,7 @@
 /**
  * \FrameworkDSW\Containers
  * @author  许子健
- * @version $Id$
+ * @version $Id: Containers.php 100 2014-07-23 04:13:20Z exsystemchina@gmail.com $
  * @since   separate file since reversion 1
  */
 namespace FrameworkDSW\Containers;
@@ -213,7 +213,6 @@ interface ICollection extends IIteratorAggregate {
 
     /**
      *
-     * @return boolean
      */
     public function Clear();
 
@@ -329,7 +328,6 @@ interface IList extends ICollection {
      *
      * @param integer $Index
      * @param T $Element
-     * @return T
      */
     public function Set($Index, $Element);
 
@@ -861,6 +859,14 @@ abstract class TAbstractCollection extends TObject implements ICollection {
     }
 
     /**
+     * (non-PHPdoc)
+     *
+     * @param T $Element
+     * @see FrameworkDSW/AbstractCollection#Add($Element)
+     */
+    public abstract function Add($Element);
+
+    /**
      *
      * @param \FrameworkDSW\Containers\ICollection $Collection <T: T>
      */
@@ -943,6 +949,12 @@ abstract class TAbstractCollection extends TObject implements ICollection {
     public function IsEmpty() {
         return $this->Size() == 0;
     }
+
+    /**
+     *
+     * @return integer
+     */
+    public abstract function Size();
 
     /**
      *
@@ -1407,7 +1419,6 @@ abstract class TAbstractList extends TAbstractCollection implements IList, IArra
      *
      * @param integer $Index
      * @param T $Element
-     * @return T
      */
     public final function Set($Index, $Element) {
         TType::Int($Index);
@@ -1833,7 +1844,8 @@ abstract class TAbstractMap extends TAbstractCollection implements IMap {
      * @return \FrameworkDSW\Containers\ICollection <T: V>
      */
     protected function DoValues() {
-        $mItr    = $this->Iterator();
+        $mItr = $this->Iterator();
+        TList::PrepareGeneric(['T' => $this->GenericArg('V')]);
         $mResult = new TList($this->Size());
         while ($mItr->valid()) {
             $mResult->Add($mItr->current()->Value);
@@ -2641,10 +2653,7 @@ final class TLinkedList extends TAbstractList {
     protected function DoClear() {
         if ($this->FElementsOwned) {
             for ($mIndex = 0; $mIndex < $this->FSize; ++$mIndex) {
-                $this->FList[3 * $mIndex + self::CData]->Destroy();
-                $this->FList[3 * $mIndex + self::CData] = null;
-                // Framework::Free($this->FList[3 * $mIndex + self::CData]);
-                // //TODO: FIX ME!
+                Framework::Free($this->FList[3 * $mIndex + self::CData]);
             }
         }
 
@@ -2907,7 +2916,12 @@ class TMap extends TAbstractMap {
     private function HashKey($Key) {
         switch ($this->FKeyType) {
             case TMapKeyType::eObject() :
-                return spl_object_hash($Key);
+                if ($Key === null) {
+                    return '';
+                }
+                else {
+                    return spl_object_hash($Key);
+                }
                 break;
             case TMapKeyType::eFloat() :
                 return (string)$Key;
@@ -2966,7 +2980,7 @@ class TMap extends TAbstractMap {
                 $this->FKeyType = TMapKeyType::eBoolean();
                 break;
             default :
-                if (strrpos($mKClassType, ']', -1) !== false) {
+                if (strrpos($mKClassType, ']', -1) === false) {
                     $this->FKeyType = TMapKeyType::eObject();
                 }
                 else {

@@ -15,6 +15,7 @@ use FrameworkDSW\System\TObject;
 use FrameworkDSW\System\TString;
 use FrameworkDSW\Utilities\TType;
 use FrameworkDSW\View\Web\TWebPage;
+use FrameworkDSW\Web\TWebApplication;
 
 class TMyModel extends TObject {
     /**
@@ -64,10 +65,10 @@ class TMyController extends TObject {
         $this->FModel    = new TMyModel();
         $this->FView     = new TMyView();
         $this->FMainView = new TWebPage();
-        $this->FMainView->Config(null, 'Tests/main.php');
+        $this->FMainView->Config('Tests/main.php');
         $this->FMainView->setName('main');
         $this->FSubView = new TWebPage($this->FMainView);
-        $this->FSubView->Config(null, 'Tests/sub.php');
+        $this->FSubView->Config('Tests/sub.php');
         $this->FSubView->setName('sub');
     }
 

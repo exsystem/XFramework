@@ -18,14 +18,15 @@ use FrameworkDSW\Utilities\TType;
  *
  * @author 许子健
  */
-class EException extends \Exception {
-
+class EException extends \Exception implements IInterface {
     /**
+     * Get the object type, with generic information.
      *
-     * @return string
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
      */
-    final static function ClassType() {
-        return get_called_class();
+    public final function ObjectType() {
+        $mType = get_class($this);
+        return Framework::Type($mType);
     }
 
     /**
@@ -45,6 +46,239 @@ class EException extends \Exception {
      * ..
      */
     public function Destroy() {
+    }
+
+    /**
+     * Compare with another object.
+     *
+     * @param \FrameworkDSW\System\IInterface $Obj
+     * @return boolean
+     */
+    public function Equals($Obj) {
+        TType::Object($Obj);
+
+        return $this === $Obj;
+    }
+
+    /**
+     * Tell if the object supports the given interface.
+     *
+     * @param \FrameworkDSW\Reflection\TClass $AInterface <T: ?> The interface name to be tested.
+     * @return boolean True for supported, false for unsupported.
+     */
+    public function Supports($AInterface) {
+        TType::Object($AInterface, [TClass::class => ['T' => null]]);
+
+        return $AInterface->IsInterface() && $this->IsInstanceOf($AInterface);
+    }
+
+    /**
+     * Get the class type.
+     *
+     * @return \FrameworkDSW\Reflection\TClass <T: ?> The name of the class.
+     */
+    public static function ClassType() {
+        return Framework::Type(get_called_class());
+    }
+
+    /**
+     *
+     * @return \FrameworkDSW\Reflection\TClass <T: ?>
+     */
+    public function ObjectParentType() {
+        $mClass = get_parent_class($this);
+        if ($mClass == false) {
+            return null;
+        }
+
+        return Framework::Type($mClass);
+    }
+
+    /**
+     * Get the parent's class type.
+     *
+     * @return \FrameworkDSW\Reflection\TClass <T: ?> The name of the parent class.
+     * @see TObject::InheritsFrom()
+     */
+    public static function ClassParent() {
+        $mResult = get_parent_class(get_called_class());
+        if ($mResult == false) {
+            return null;
+        }
+
+        return Framework::Type($mResult);
+    }
+
+    /**
+     *
+     * @param \FrameworkDSW\Reflection\TClass $Type <T: ?>
+     * @return boolean
+     */
+    public function IsInstanceOf($Type) {
+        return $Type->IsInstance($this);
+    }
+
+    /**
+     * Tell if this class inherits from the given class.
+     *
+     * @param \FrameworkDSW\Reflection\TClass $AClass <T: ?> The given class.
+     * @return boolean If the object is inherited from
+     *         <var>$AClass</var>.
+     * @see TObject::ClassParent()
+     */
+    public static function InheritsFrom($AClass) {
+        TType::Object($AClass, [TClass::class => ['T' => null]]);
+
+        return is_subclass_of(get_called_class(), $AClass->getName());
+    }
+
+    /**
+     *
+     * @return array
+     */
+    public function GenericArgs() {
+        return null;
+    }
+
+    /**
+     *
+     * @param string $ArgName
+     * @return mixed
+     * @throws ENoSuchGenericArg
+     */
+    public function GenericArg($ArgName) {
+        throw new ENoSuchGenericArg(sprintf('No such generic arg: %s.', $ArgName), null, $ArgName);
+    }
+
+    /**
+     *
+     * @return array
+     */
+    public static function StaticGenericArgs() {
+        return null;
+    }
+
+    /**
+     *
+     * @param string $ArgName
+     * @return mixed
+     * @throws ENoSuchGenericArg
+     */
+    public static function StaticGenericArg($ArgName) {
+        throw new ENoSuchGenericArg(sprintf('No such generic arg: %s.', $ArgName), null, $ArgName);
+    }
+
+    /**
+     * Returns the source file path which defined the class.
+     *
+     * @return string The path of this class.
+     */
+    public static function DeclaredIn() {
+        $mInfo = new \ReflectionClass(get_called_class());
+
+        return $mInfo->getFileName();
+    }
+
+    /**
+     * Wake up the object.
+     * The method will be invoked when the Framework wants to wake up the
+     * object. Write your own code inside this method for a customized waking up
+     * in the derived class.
+     *
+     * @see TObject::Sleep()
+     * @see TObject::ClassSleep()
+     * @see Framework::Serialize()
+     * @see Framework::Unserialize()
+     */
+    public function WakeUp() {
+    }
+
+    /**
+     * Make the object to sleep.
+     * The method will be invoked when the Framework wants to make the object to
+     * sleep. Write your own code inside this method for a customized sleeping
+     * in the derived class.
+     *
+     * @see TObject::WakeUp()
+     * @see TObject::ClassSleep()
+     * @see Framework::Serialize()
+     * @see Framework::Unserialize()
+     */
+    public function Sleep() {
+    }
+
+    /**
+     * Class wake up method.
+     * Defines what to do after the class is waked up.
+     *
+     * @see TObject::ClassSleep()
+     * @see TObject::WakeUp()
+     * @see Framework::Serialize()
+     * @see Framework::Unserialize()
+     */
+    public static function ClassWakeUp() {
+    }
+
+    /**
+     * Class sleep method.
+     * Defines what to do before the class fall asleep.
+     *
+     * @return array
+     * @see TObject::ClassWakeUp()
+     * @see TObject::Sleep()
+     * @see Framework::Serialize()
+     * @see Framework::Unserialize()
+     */
+    public static function ClassSleep() {
+        return [];
+    }
+
+    /**
+     *
+     * @param array $Signal
+     * @param array $Slot
+     * @throws ERuntimeException
+     */
+    public static function Link($Signal, $Slot) {
+        throw new ERuntimeException(sprintf('Signal and slot are not supported on exceptions.'));
+    }
+
+    /**
+     *
+     * @param array $Signal
+     * @param array $Slot
+     * @throws ERuntimeException
+     */
+    public static function Unlink($Signal, $Slot) {
+        throw new ERuntimeException(sprintf('Signal and slot are not supported on exceptions.'));
+    }
+
+    /**
+     *
+     * @param array $Signal
+     * @param array $Param
+     * @throws ERuntimeException
+     */
+    public static function Dispatch($Signal, $Param) {
+        throw new ERuntimeException(sprintf('Signal and slot are not supported on exceptions.'));
+    }
+
+    /**
+     *
+     * @param array $Args
+     * @throws ERuntimeException
+     */
+    public static function PrepareGeneric($Args) {
+        throw new ERuntimeException(sprintf('Generics is not supported on exceptions.'));
+    }
+
+    /**
+     *
+     * @param array $Args
+     * @throws ERuntimeException
+     */
+    public function PrepareMethodGeneric($Args) {
+        throw new ERuntimeException(sprintf('Generics is not supported on exceptions.'));
     }
 }
 
@@ -746,6 +980,34 @@ class EConstructorInvocationNotAllowed extends EError {
 }
 
 /**
+ * Serialization exception.
+ * @author  许子健
+ */
+class ESerializationException extends EError {
+}
+
+/**
+ *
+ * @author  许子健
+ */
+class ESerializeResource extends ESerializationException {
+}
+
+/**
+ *
+ * @author  许子健
+ */
+class EBadSerializedData extends ESerializationException {
+}
+
+/**
+ *
+ * @author  许子健
+ */
+class EIllegalClass extends ESerializationException {
+}
+
+/**
  * IInterface
  * The ultimate base interface for all interfaces inside FrameworkDSW.
  *
@@ -1039,7 +1301,7 @@ class TObject implements IInterface {
             return null;
         }
         if (empty($this->FGenericArgs)) {
-            return $mClass;
+            return Framework::Type($mClass);
         }
 
         return Framework::Type([$mClass => $this->FGenericArgs]);
@@ -1097,7 +1359,7 @@ class TObject implements IInterface {
 
     /**
      *
-     * @param $ArgName string
+     * @param string $ArgName
      * @throws ENoSuchGenericArg
      * @return mixed
      */
@@ -1123,7 +1385,7 @@ class TObject implements IInterface {
 
     /**
      *
-     * @param $ArgName string
+     * @param string $ArgName
      * @throws ENoSuchGenericArg
      * @return mixed
      */
@@ -1202,8 +1464,8 @@ class TObject implements IInterface {
 
     /**
      *
-     * @param $Signal array
-     * @param $Slot array
+     * @param array $Signal
+     * @param array $Slot
      * @throws ELinkFailed
      */
     public final static function Link($Signal, $Slot) {
@@ -1250,8 +1512,8 @@ class TObject implements IInterface {
 
     /**
      *
-     * @param $Signal array
-     * @param $Slot array
+     * @param array $Signal
+     * @param array $Slot
      * @throws EUnlinkFailed
      */
     public final static function Unlink($Signal, $Slot) {
@@ -1304,8 +1566,8 @@ class TObject implements IInterface {
 
     /**
      *
-     * @param $Signal array
-     * @param $Param array
+     * @param array $Signal
+     * @param array $Param
      * @throws EDispatchFailed
      */
     public final static function Dispatch($Signal, $Param) {
@@ -1345,7 +1607,7 @@ class TObject implements IInterface {
 
     /**
      *
-     * @param $Args array
+     * @param array $Args
      */
     public final static function PrepareGeneric($Args) {
         /** @noinspection PhpUnusedParameterInspection */
@@ -1379,7 +1641,7 @@ class TObject implements IInterface {
 
     /**
      *
-     * @param $Args array
+     * @param array $Args
      * @throws EBadGenericArgsStructure
      */
     public final function PrepareMethodGeneric($Args) {
@@ -1884,15 +2146,17 @@ final class TDelegate {
      * @param string $Type
      * @throws ENoSuchType
      */
-    public final function __construct($Callback, $Type) {
-        try {
-            $mPrototype        = new \ReflectionMethod($Type, 'Invoke');
-            $this->FAtLeast    = $mPrototype->getNumberOfRequiredParameters();
-            $this->FNoMoreThan = $mPrototype->getNumberOfParameters();
-            $this->setDelegate($Callback);
-        }
-        catch (\ReflectionException $e) {
-            throw new ENoSuchType(sprintf('No such type: %s.', $Type), null, $Type);
+    public final function __construct($Callback = null, $Type = '') {
+        if ($Callback !== null) {
+            try {
+                $mPrototype        = new \ReflectionMethod($Type, 'Invoke');
+                $this->FAtLeast    = $mPrototype->getNumberOfRequiredParameters();
+                $this->FNoMoreThan = $mPrototype->getNumberOfParameters();
+                $this->setDelegate($Callback);
+            }
+            catch (\ReflectionException $e) {
+                throw new ENoSuchType(sprintf('No such type: %s.', $Type), null, $Type);
+            }
         }
     }
 
@@ -1901,7 +2165,9 @@ final class TDelegate {
      * @return mixed
      */
     public final function __invoke() {
-        return call_user_func_array($this->FDelegate, func_get_args());
+        if ($this->FDelegate !== null) {
+            return call_user_func_array($this->FDelegate, func_get_args());
+        }
     }
 
     /**

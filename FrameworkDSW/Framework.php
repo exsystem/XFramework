@@ -7,43 +7,14 @@
  */
 namespace FrameworkDSW\Framework;
 
-require_once 'FrameworkDSW/System.php';
+use FrameworkDSW\CoreClasses\TApplication;
 use FrameworkDSW\Reflection\TClass;
-use FrameworkDSW\System\EError;
 use FrameworkDSW\System\ENoSuchType;
 use FrameworkDSW\System\ERuntimeException;
-use FrameworkDSW\System\IInterface;
+use FrameworkDSW\System\ESerializeResource;
 use FrameworkDSW\System\TDelegate;
 use FrameworkDSW\System\TObject;
 use FrameworkDSW\Utilities\TType;
-
-/**
- * Serialization exception.
- * @author  许子健
- */
-class ESerializationException extends EError {
-}
-
-/**
- *
- * @author  许子健
- */
-class ESerializeResource extends ESerializationException {
-}
-
-/**
- *
- * @author  许子健
- */
-class EBadSerializedData extends ESerializationException {
-}
-
-/**
- *
- * @author  许子健
- */
-class EIllegalClass extends ESerializationException {
-}
 
 /**
  * \FrameworkDSW\Framework\Framework
@@ -51,7 +22,7 @@ class EIllegalClass extends ESerializationException {
  * The Framework implements some static methods for framework objects to use.
  * @author  许子健
  */
-class Framework extends TObject {
+class Framework {
     /**
      * @var string
      */
@@ -369,7 +340,7 @@ class Framework extends TObject {
             }
             /** @var string $Name */
             /** @noinspection PhpIncludeInspection */
-            require_once "FrameworkDSW/{$Name}.php";
+            require_once __DIR__ . "/{$Name}.php";
 
             return;
         }
@@ -420,6 +391,12 @@ class Framework extends TObject {
             return;
         }
 
+        $mObStatus = ob_get_status(true);
+        if (count($mObStatus) > 0 && $mObStatus[0]['chunk_size'] > 0) {
+            ob_end_clean();
+            ob_start();
+        }
+
         self::$FDeclaredClasses = get_declared_classes();
         self::$FStartAt         = count(self::$FDeclaredClasses);
 
@@ -448,28 +425,6 @@ class Framework extends TObject {
         $mDelegate               = new TDelegate($Callback, $Type);
         Framework::$FDelegates[] = $mDelegate;
         return $mDelegate;
-    }
-
-    /**
-     * @var \FrameworkDSW\CoreClasses\IApplication
-     */
-    private static $FApplication = null;
-
-    /**
-     * @param \FrameworkDSW\Reflection\TClass $ApplicationClass <T: ?> T: extends \FrameworkDSW\CoreClasses\IApplication
-     * @param \FrameworkDSW\System\IInterface[] $Parameters
-     */
-    public static function CreateApplication($ApplicationClass, $Parameters) {
-        TType::Object($ApplicationClass, [TClass::class => ['T' => null]]);
-        TType::Type($Parameters, IInterface::class . '[]');
-        Framework::$FApplication = $ApplicationClass->NewInstance($Parameters);
-    }
-
-    /**
-     * @return \FrameworkDSW\CoreClasses\IApplication
-     */
-    public static function Application() {
-        return Framework::$FApplication;
     }
 
     /**
@@ -588,22 +543,21 @@ class Framework extends TObject {
      */
     public static function HandleFatalError() {
         Framework::$FReservedMemory = '';
-        if (!class_exists('FrameworkDSW\\System\\ERuntimeException', false)) {
-            require_once __DIR__ . '/System.php';
-        }
         $mError = error_get_last();
         if (isset($mError['type']) && in_array($mError['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_CORE_WARNING, E_COMPILE_ERROR, E_COMPILE_WARNING])) {
+            if (!class_exists('FrameworkDSW\\System\\ERuntimeException', false)) {
+                require_once __DIR__ . '/System.php';
+            }
             $mException = new ERuntimeException($mError['message']);
             PHP_SAPI === 'cli' or error_log($mException);
-            if (Framework::Application() === null) {
+            if (TApplication::$FApplication === null) {
                 echo $mError['message'];
             }
             else {
-                Framework::Application()->getExceptionHandler()->HandleException($mException);
+                TApplication::$FApplication->getExceptionHandler()->HandleException($mException);
             }
             exit(1);
         }
-
     }
 }
 

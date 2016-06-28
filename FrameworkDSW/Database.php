@@ -12,8 +12,11 @@ use FrameworkDSW\Containers\IArrayAccess;
 use FrameworkDSW\Containers\IIterator;
 use FrameworkDSW\Containers\IMap;
 use FrameworkDSW\Containers\TLinkedList;
+use FrameworkDSW\Containers\TMap;
 use FrameworkDSW\Framework\Framework;
+use FrameworkDSW\Reflection\TClass;
 use FrameworkDSW\System\EException;
+use FrameworkDSW\System\EInvalidParameter;
 use FrameworkDSW\System\IInterface;
 use FrameworkDSW\System\TEnum;
 use FrameworkDSW\System\TObject;
@@ -230,6 +233,12 @@ interface IConnection extends IInterface {
      * @param \FrameworkDSW\Database\TTransactionIsolationLevel $Value
      */
     public function setTransactionIsolation($Value);
+
+    /**
+     * @param string $Identifier
+     * @return string
+     */
+    public function QuoteIdentifier($Identifier);
 }
 
 /**
@@ -570,6 +579,12 @@ interface IDatabaseMetaData extends IInterface {
      * descHere
      * @return string
      */
+    public function getCatalogSeparator();
+
+    /**
+     * descHere
+     * @return string
+     */
     public function getCatalogTerm();
 
     /**
@@ -609,12 +624,6 @@ interface IDatabaseMetaData extends IInterface {
      * @return \FrameworkDSW\Database\IResultSet
      */
     public function GetCrossReference($PrimaryCatalog, $PrimarySchema, $PrimaryTable, $ForeignCatalog, $ForeignSchema, $ForeignTable);
-
-    /**
-     * descHere
-     * @return \FrameworkDSW\Utilities\TVersion
-     */
-    public function getDatabaseVersion();
 
     /**
      * descHere
@@ -1968,6 +1977,25 @@ final class TTransactionIsolationLevel extends TEnum {
 }
 
 /**
+ * @package FrameworkDSW\Database
+ * @author 许子健
+ */
+class TBestRowIdentifierScope extends TEnum {
+    /**
+     * @var integer
+     */
+    const eTemporary = 0;
+    /**
+     * @var integer
+     */
+    const eTransaction = 1;
+    /**
+     * @var integer
+     */
+    const eSession = 2;
+}
+
+/**
  * \FrameworkDSW\Database\TSavepoint
  * @author 许子健
  */
@@ -2128,5 +2156,512 @@ class TDriverManager extends TObject {
      */
     public static function getDrivers() {
         return TDriverManager::$FDrivers;
+    }
+}
+
+/**
+ * Class TInMemoryResultSet
+ * @package FrameworkDSW\Database
+ */
+class TInMemoryResultSet extends TObject implements IResultSet {
+
+    /**
+     * @var \FrameworkDSW\Containers\TMap[] <K: string, V: mixed>
+     */
+    private $FData = [];
+
+    /**
+     * @var integer
+     */
+    private $FCurrentRowId = 0;
+    /**
+     * @var \FrameworkDSW\Containers\TMap <K: string, V: mixed>
+     */
+    private $FCurrentRow = null;
+    /**
+     * @var boolean
+     */
+    private $FValid = false;
+    /**
+     * @var \FrameworkDSW\Database\IRow
+     */
+    private $FRow = null;
+
+    /**
+     * @var \FrameworkDSW\Database\IStatement
+     */
+    private $FStatement = null;
+
+    /**
+     * @param $RowId
+     * @throws \FrameworkDSW\Database\EInvalidRowId
+     * @throws \FrameworkDSW\Utilities\EInvalidIntCasting
+     */
+    private function EnsureRowId($RowId) {
+        if ($RowId < -1 || $RowId >= count($this->FData)) {
+            throw new EInvalidRowId(sprintf('No such row: at index %s.', $RowId));
+        }
+    }
+
+    /**
+     *
+     * @param \FrameworkDSW\Database\IStatement $Statement
+     * @param \FrameworkDSW\Containers\TMap[] $Data <K: string, V: \FrameworkDSW\System\IInterface>
+     * @param \FrameworkDSW\Containers\TMap $Meta <K: string, V: \FrameworkDSW\Reflection\TClass<T: ?>>
+     * @throws EInvalidParameter
+     */
+    public function __construct($Statement, $Data, $Meta) {
+        parent::__construct();
+        TType::Object($Statement, IStatement::class);
+        TType::Type($Data, [TMap::class . '[]' => ['K' => Framework::String, 'V' => IInterface::class]]);
+        TType::Type($Meta, [TMap::class => ['K' => Framework::String, 'V' => [TClass::class => ['T' => null]]]]);
+
+        $this->FStatement = $Statement;
+        $this->FData      = $Data;
+        if (count($Data) > 0) {
+            $this->FCurrentRow = $this->FData[$this->FCurrentRowId];
+        }
+        $this->FRow = new TInMemoryRow($this, TConcurrencyType::eUpdatable(), $this->FCurrentRow, $Meta);
+    }
+
+    /**
+     *
+     */
+    public function Destroy() {
+        Framework::Free($this->FRow);
+        foreach ($this->FData as $mRow) {
+            Framework::Free($mRow);
+        }
+        parent::Destroy();
+    }
+
+    /**
+     * Remove
+     */
+    public function Remove() {
+        Framework::Free($this->FData[$this->FCurrentRowId]);
+        unset($this->FData[$this->FCurrentRowId]);
+        $this->FData = array_values($this->FData);
+        $this->Refresh();
+    }
+
+    /**
+     * (PHP 5 &gt;= 5.0.0)<br/>
+     * Return the current element
+     * @link http://php.net/manual/en/iterator.current.php
+     * @return \FrameworkDSW\Database\IRow
+     */
+    public function current() {
+        $this->FCurrentRow = $this->FData[$this->FCurrentRowId];
+        return $this->FRow;
+    }
+
+    /**
+     * (PHP 5 &gt;= 5.0.0)<br/>
+     * Move forward to next element
+     * @link http://php.net/manual/en/iterator.next.php
+     */
+    public function next() {
+        ++$this->FCurrentRowId;
+        if ($this->FCurrentRowId >= count($this->FData)) {
+            $this->FValid = false;
+        }
+    }
+
+    /**
+     * (PHP 5 &gt;= 5.0.0)<br/>
+     * Return the key of the current element
+     * @link http://php.net/manual/en/iterator.key.php
+     * @return integer
+     */
+    public function key() {
+        return $this->FCurrentRowId;
+    }
+
+    /**
+     * (PHP 5 &gt;= 5.0.0)<br/>
+     * Checks if current position is valid
+     * @link http://php.net/manual/en/iterator.valid.php
+     * @return boolean The return value will be casted to boolean and then evaluated.
+     * Returns true on success or false on failure.
+     */
+    public function valid() {
+        return $this->FValid;
+    }
+
+    /**
+     * (PHP 5 &gt;= 5.0.0)<br/>
+     * Rewind the Iterator to the first element
+     * @link http://php.net/manual/en/iterator.rewind.php
+     */
+    public function rewind() {
+        $this->FValid        = (count($this->FData) > 0);
+        $this->FCurrentRowId = 0;
+    }
+
+    /**
+     * (PHP 5 &gt;= 5.0.0)<br/>
+     * Whether a offset exists
+     * @link http://php.net/manual/en/arrayaccess.offsetexists.php
+     * @param integer $offset
+     * @return boolean
+     */
+    public function offsetExists($offset) {
+        TType::Int($offset);
+        return $offset >= 0 && $offset < count($this->FData);
+    }
+
+    /**
+     * (PHP 5 &gt;= 5.0.0)<br/>
+     * Offset to retrieve
+     * @link http://php.net/manual/en/arrayaccess.offsetget.php
+     * @param integer $offset
+     * @return \FrameworkDSW\Database\IRow Can return all value types.
+     * @throws \FrameworkDSW\Database\EInvalidRowId
+     * @throws \FrameworkDSW\Utilities\EInvalidIntCasting
+     */
+    public function offsetGet($offset) {
+        TType::Int($offset);
+
+        $this->FetchTo($offset);
+        return $this->FRow;
+    }
+
+    /**
+     * (PHP 5 &gt;= 5.0.0)<br/>
+     * Offset to set
+     * @link http://php.net/manual/en/arrayaccess.offsetset.php
+     * @param integer $offset
+     * @param \FrameworkDSW\Database\IRow $value
+     */
+    public function offsetSet($offset, $value) {
+        TType::Int($offset);
+        TType::Object($value, IRow::class);
+        $this->FetchTo($offset);
+        foreach ($value as $mColumn => $mValue) {
+            $this->FData[$offset][$mColumn] = $mValue;
+        }
+    }
+
+    /**
+     * @param integer $offset
+     */
+    public function offsetUnset($offset) {
+        TType::Int($offset);
+        $this->FetchTo($offset);
+        $this->FRow->Delete();
+    }
+
+    /**
+     * descHere
+     * @param integer $RowId
+     * @return \FrameworkDSW\Database\IRow
+     */
+    public function FetchAbsolute($RowId) {
+        TType::Int($RowId);
+        $this->FetchTo($RowId);
+        return $this->FRow;
+    }
+
+    /**
+     * descHere
+     * @param integer $Offset
+     * @return \FrameworkDSW\Database\IRow
+     */
+    public function FetchRelative($Offset) {
+        TType::Int($Offset);
+        $this->FetchTo($this->FCurrentRowId + $Offset);
+        return $this->FRow;
+    }
+
+    /**
+     * descHere
+     * @return integer
+     */
+    public function getCount() {
+        return count($this->FData);
+    }
+
+    /**
+     * descHere
+     * @return string
+     * @throws EUnsupportedDbFeature
+     */
+    public function getCursorName() {
+        throw new EUnsupportedDbFeature(sprintf('Get cursor name is not supported.'));
+    }
+
+    /**
+     * descHere
+     * @return \FrameworkDSW\Database\TFetchDirection
+     * @throws EUnsupportedDbFeature
+     */
+    public function getFetchDirection() {
+        throw new EUnsupportedDbFeature(sprintf('Fetch direction is not supported.'));
+    }
+
+    /**
+     * descHere
+     * @return integer
+     * @throws EUnsupportedDbFeature
+     */
+    public function getFetchSize() {
+        throw new EUnsupportedDbFeature(sprintf('Fetch direction is not supported.'));
+    }
+
+    /**
+     * descHere
+     * @return \FrameworkDSW\Database\IRow
+     * @throws EUnsupportedDbFeature
+     */
+    public function getInsertRow() {
+        throw new EUnsupportedDbFeature(sprintf('Insert row is not supported.'));
+    }
+
+    /**
+     * descHere
+     * @return boolean
+     */
+    public function getIsEmpty() {
+        return count($this->FData) === 0;
+    }
+
+    /**
+     * descHere
+     * @return \FrameworkDSW\Database\IResultMetaData
+     */
+    public function getMetaData() {
+        // TODO: Implement getMetaData() method.
+    }
+
+    /**
+     *
+     * Enter description here ...
+     * @return \FrameworkDSW\Database\TResultSetType
+     */
+    public function getType() {
+        return TResultSetType::eScrollInsensitive();
+    }
+
+    /**
+     * descHere
+     * @return \FrameworkDSW\Database\IStatement
+     */
+    public function getStatement() {
+        return $this->FStatement;
+    }
+
+    /**
+     * descHere
+     * @param \FrameworkDSW\Database\TFetchDirection $Value
+     * @throws EUnsupportedDbFeature
+     */
+    public function setFetchDirection($Value) {
+        throw new EUnsupportedDbFeature(sprintf('Fetch direction is not supported.'));
+    }
+
+    /**
+     * descHere
+     * @param integer $Value
+     * @throws EUnsupportedDbFeature
+     */
+    public function setFetchSize($Value) {
+        throw new EUnsupportedDbFeature(sprintf('Fetch size is not supported.'));
+    }
+
+    /**
+     * descHere
+     */
+    public function Refresh() {
+        $this->FCurrentRowId = -1;
+    }
+
+    /**
+     * @param integer $offset
+     * @throws EInvalidRowId
+     */
+    private function FetchTo($offset) {
+        $this->EnsureRowId($offset);
+        $this->FCurrentRowId = $offset;
+        $this->FCurrentRow   = $this->FData[$offset];
+    }
+}
+
+/**
+ * Class TInMemoryRow
+ * @package FrameworkDSW\Database
+ */
+class TInMemoryRow extends TObject implements IRow {
+    /**
+     * @var \FrameworkDSW\Database\TInMemoryResultSet
+     */
+    private $FResultSet = null;
+    /**
+     * @var \FrameworkDSW\Database\TConcurrencyType
+     */
+    private $FConcurrencyType = null;
+    /**
+     * @var \FrameworkDSW\Containers\TMap <K: string, V: \FrameworkDSW\System\IInterface>
+     */
+    private $FCurrentRow = null;
+    /**
+     * @var \FrameworkDSW\Containers\TMap <K: string, V: \FrameworkDSW\Reflection\TClass<T: ?>>
+     */
+    private $FMeta = [];
+    /**
+     * @var boolean
+     */
+    private $FWasDeleted = false;
+    /**
+     * @var boolean
+     */
+    private $FWasUpdated = false;
+    /**
+     * @var \FrameworkDSW\Containers\TMap <K: string, V: \FrameworkDSW\System\IInterface>
+     */
+    private $FPendingUpdateRow = null;
+
+    /**
+     * @param \FrameworkDSW\Database\IResultSet $ResultSet
+     * @param \FrameworkDSW\Database\TConcurrencyType $ConcurrencyType
+     * @param \FrameworkDSW\Containers\TMap $CurrentRow <K: string, V: \FrameworkDSW\System\IInterface>
+     * @param \FrameworkDSW\Containers\TMap $Meta <K: string, V: \FrameworkDSW\Reflection\TClass<T: ?>>
+     */
+    public function __construct($ResultSet, $ConcurrencyType, &$CurrentRow, $Meta) {
+        parent::__construct();
+        TType::Object($ResultSet, IResultSet::class);
+        TType::Object($ConcurrencyType, TConcurrencyType::class);
+        TType::Type($CurrentRow, [TMap::class => ['K' => Framework::String, 'V' => IInterface::class]]);
+        TType::Type($Meta, [TMap::class => ['K' => Framework::String, 'V' => [TClass::class => ['T' => null]]]]);
+
+        $this->FResultSet       = $ResultSet;
+        $this->FConcurrencyType = $ConcurrencyType;
+        $this->FCurrentRow      = &$CurrentRow;
+        $this->FMeta            = $Meta;
+    }
+
+    /**
+     *
+     */
+    public function Destroy() {
+        Framework::Free($this->FPendingUpdateRow);
+        Framework::Free($this->FMeta);
+        parent::Destroy();
+    }
+
+    /**
+     * @param string $offset
+     * @return boolean
+     */
+    public function offsetExists($offset) {
+        TType::String($offset);
+        return $this->FMeta->ContainsKey($offset);
+    }
+
+    /**
+     * @param string $offset
+     * @return \FrameworkDSW\System\IInterface
+     * @throws EInvalidColumnName
+     * @throws \FrameworkDSW\Utilities\EInvalidStringCasting
+     */
+    public function offsetGet($offset) {
+        TType::String($offset);
+        if (!$this->offsetExists($offset)) {
+            throw new EInvalidColumnName(sprintf('No such column: %s when getting value.', $offset));
+        }
+        return $this->FCurrentRow[$offset];
+    }
+
+    /**
+     * @param string $offset
+     * @param \FrameworkDSW\System\IInterface $value
+     * @throws EInvalidColumnName
+     * @throws \FrameworkDSW\Utilities\EInvalidStringCasting
+     */
+    public function offsetSet($offset, $value) {
+        TType::String($offset);
+        if (!$this->offsetExists($offset)) {
+            throw new EInvalidColumnName(sprintf('No such column: %s when setting value.', $offset));
+        }
+        if ($this->FPendingUpdateRow === null) {
+            TMap::PrepareGeneric(['K' => Framework::String, 'V' => IInterface::class]);
+            $this->FPendingUpdateRow = new TMap();
+        }
+        $this->FPendingUpdateRow[$offset] = $value;
+    }
+
+    /**
+     * @param string $offset
+     */
+    public function offsetUnset($offset) {
+        TType::String($offset);
+        $this->offsetSet($offset, null);
+    }
+
+    /**
+     * descHere
+     */
+    public function Delete() {
+        $this->FResultSet->Remove();
+        $this->FWasDeleted = true;
+    }
+
+    /**
+     * descHere
+     * @return \FrameworkDSW\Database\TConcurrencyType
+     */
+    public function getConcurrencyType() {
+        return $this->FConcurrencyType;
+    }
+
+    /**
+     * descHere
+     * @return \FrameworkDSW\Database\THoldability
+     */
+    public function getHoldability() {
+        return THoldability::eHoldCursorsOverCommit();
+    }
+
+    /**
+     * descHere
+     * @return \FrameworkDSW\Database\IResultSet
+     */
+    public function getResultSet() {
+        return $this->FResultSet;
+    }
+
+    /**
+     * descHere
+     * @return boolean
+     */
+    public function getWasDeleted() {
+        return $this->FWasDeleted;
+    }
+
+    /**
+     * descHere
+     * @return boolean
+     */
+    public function getWasUpdated() {
+        return $this->FWasUpdated;
+    }
+
+    /**
+     * descHere
+     */
+    public function UndoUpdates() {
+        Framework::Free($this->FPendingUpdateRow);
+    }
+
+    /**
+     * descHere
+     */
+    public function Update() {
+        if ($this->FPendingUpdateRow === null) {
+            throw new ENothingToUpdate(sprintf('Nothing changed.'));
+        }
+        $this->FCurrentRow->PutAll($this->FPendingUpdateRow);
+        Framework::Free($this->FPendingUpdateRow);
+        $this->FWasUpdated = true;
     }
 }

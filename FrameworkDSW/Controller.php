@@ -392,7 +392,7 @@ class TControllerManager extends TObject implements IControllerManager {
             return false;
         }
         else {
-            return $this->FModelRegistration[$Action]->Contains($View);
+            return $this->FViewRegistration[$Action]->Contains($View);
         }
     }
 
@@ -457,12 +457,12 @@ class TControllerManager extends TObject implements IControllerManager {
 
         /**@var TDelegate $ViewBinder */
         $mViews = $ViewBinder($Action);
-        try {
+        if ($this->FViewRegistration->ContainsKey($Action)) {
             foreach ($mViews as $mView) {
                 $this->FViewRegistration[$Action]->Add($mView);
             }
         }
-        catch (ENoSuchKey $Ex) {
+        else {
             TLinkedList::PrepareGeneric(['T' => IView::class]);
             /** @noinspection PhpParamsInspection */
             $this->FViewRegistration->Put($Action, new TLinkedList(false, $mViews));
@@ -502,7 +502,7 @@ class TControllerManager extends TObject implements IControllerManager {
             $this->FViewRegistration[$Action]->Remove($View);
         }
         catch (ENoSuchKey $Ex) {
-            throw new ENoSuchActionViewPair(sprintf('No such action view pair: action  is unregistered with the view.'), $Ex, $Action, $View);
+            throw new ENoSuchActionViewPair(sprintf('No such action view pair: action is unregistered with the view.'), $Ex, $Action, $View);
         }
     }
 

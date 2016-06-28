@@ -1,18 +1,20 @@
 <?php
-set_include_path(get_include_path() . ':/media/ExSystem-HD/Documents/ZendStudioWorkspace/FrameworkDSW'); //LINUX
-//set_include_path(get_include_path().';E:\\Documents\\ZendStudioWorkspace\\FrameworkDSW'); //WINDOWS
-//set_include_path(get_include_path() . ':/Volumes/ExSystem-HD/Documents/ZendStudioWorkspace/FrameworkDSW'); //MACOSX
+use FrameworkDSW\Containers\TMap;
+use FrameworkDSW\Database\EFetchNextResultSetFailed;
+use FrameworkDSW\Database\Mysql\TMysqlDriver;
+use FrameworkDSW\Database\TConcurrencyType;
+use FrameworkDSW\Database\TCurrentResultOption;
+use FrameworkDSW\Database\TResultSetType;
+use FrameworkDSW\System\TInteger;
 
-require_once 'FrameworkDSW/Database_Mysql.php';
+require_once 'FrameworkDSW/Framework.php';
 
 $mDriver = new TMysqlDriver();
-TMap::PrepareGeneric(array ('K' => 'string', 'V' => 'string'));
+TMap::PrepareGeneric(['K' => 'string', 'V' => 'string']);
 $mConfig = new TMap();
 $mConfig['Username'] = 'root';
 $mConfig['Password'] = '';
 $mConfig['ConnectTimeout'] = '2';
-$mConfig['Socket']='/Applications/XAMPP/xamppfiles/var/mysql/mysql.sock'; //MACOSX ONLY
-
 
 $mConn = $mDriver->Connect('MySQL://localhost/test', $mConfig);
 
@@ -33,15 +35,15 @@ $mConn->Execute($mDropProcedureCmd);
 $mConn->Execute($mCreateProcedureCmd);
 
 $mStmt = $mConn->PrepareCall(TResultSetType::eScrollInsensitive(), TConcurrencyType::eReadOnly());
-TPrimitiveParam::PrepareGeneric(array ('T' => 'integer'));
-$mStmt->BindParam('foo', new TPrimitiveParam(100));
+$mStmt->BindParam('foo', new TInteger(100));
 $mRs = $mStmt->Query('call test_multi_sets(:foo)');
 try {
     while (true) {
         $mRs = $mStmt->GetCurrentResult();
+        /** @var \FrameworkDSW\Database\IRow $mRow */
         foreach ($mRs as $mRow) {
             echo "\n";
-            echo $mRow['id']->getValue(); //memory leak
+            echo $mRow['id']->Unbox();
         }
         echo "\n";
         $mStmt->NextResult(TCurrentResultOption::eCloseAllResults());
@@ -50,7 +52,7 @@ try {
 catch (EFetchNextResultSetFailed $Ex) {
     echo "No more result sets!\n";
 }
-echo $mStmt->GetParam('foo')->getValue();
+echo $mStmt->GetParam('foo')->Unbox();
 Framework::Free($mRs);
 Framework::Free($mStmt);
 Framework::Free($mConn);
