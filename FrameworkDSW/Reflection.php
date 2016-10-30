@@ -1903,6 +1903,7 @@ final class TField extends TAbstractMember implements IMember {
      * @throws ENoSuchFieldMember
      */
     public function __construct($Class, $Name) {
+        parent::__construct();
         TType::Object($Class, [TClass::class => ['T' => null]]);
         TType::String($Name);
 

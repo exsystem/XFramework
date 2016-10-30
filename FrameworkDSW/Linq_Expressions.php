@@ -159,14 +159,14 @@ final class TExpressionType extends TEnum {
      * @var integer
      */
     const eLessThanOrEqual = 21;
-    const eListInit        = 22;
+    const eListInit = 22;
     /**
      * 成員調用，例如：“$a->b”。
      *
      * @var integer
      */
     const eMemberAccess = 23;
-    const eMemberInit   = 24;
+    const eMemberInit = 24;
     /**
      * 取餘運算符，例如：“$a % $b”。
      *
@@ -208,8 +208,8 @@ final class TExpressionType extends TEnum {
      *
      * @var integer
      */
-    const eNew            = 31;
-    const eNewArrayInit   = 32;
+    const eNew = 31;
+    const eNewArrayInit = 32;
     const eNewArrayBounds = 33;
     /**
      * 按位取反運算符，例如：“~$a”。
@@ -241,57 +241,57 @@ final class TExpressionType extends TEnum {
      * @var integer
      */
     const eParameter = 38;
-    const ePower     = 39;
-    const eQuote     = 40;
+    const ePower = 39;
+    const eQuote = 40;
     /**
      * 算術右移運算符，例如：“$a >> $b”。
      *
      * @var integer
      */
-    const eRightShift            = 41;
-    const eSubtract              = 42;
-    const eSubtractChecked       = 43;
-    const eTypeAs                = 44;
-    const eTypeIs                = 45;
-    const eAssign                = 46;
-    const eBlock                 = 47;
-    const eDebugInfo             = 48;
-    const eDecrement             = 49;
-    const eDynamic               = 50;
-    const eDefault               = 51;
-    const eExtension             = 52;
-    const eGoto                  = 53;
-    const eIncrement             = 54;
-    const eIndex                 = 55;
-    const eLabel                 = 56;
-    const eRuntimeVariables      = 57;
-    const eLoop                  = 58;
-    const eSwitch                = 59;
-    const eThrow                 = 60;
-    const eTry                   = 61;
-    const eUnbox                 = 62;
-    const eAddAssign             = 63;
-    const eAndAssign             = 64;
-    const eDivideAssign          = 65;
-    const eExclusiveOrAssign     = 66;
-    const eLeftShiftAssign       = 67;
-    const eModuloAssign          = 68;
-    const eMultiplyAssign        = 69;
-    const eOrAssign              = 70;
-    const ePowerAssign           = 71;
-    const eRightShiftAssign      = 72;
-    const eSubtractAssign        = 73;
-    const eAddAssignChecked      = 74;
+    const eRightShift = 41;
+    const eSubtract = 42;
+    const eSubtractChecked = 43;
+    const eTypeAs = 44;
+    const eTypeIs = 45;
+    const eAssign = 46;
+    const eBlock = 47;
+    const eDebugInfo = 48;
+    const eDecrement = 49;
+    const eDynamic = 50;
+    const eDefault = 51;
+    const eExtension = 52;
+    const eGoto = 53;
+    const eIncrement = 54;
+    const eIndex = 55;
+    const eLabel = 56;
+    const eRuntimeVariables = 57;
+    const eLoop = 58;
+    const eSwitch = 59;
+    const eThrow = 60;
+    const eTry = 61;
+    const eUnbox = 62;
+    const eAddAssign = 63;
+    const eAndAssign = 64;
+    const eDivideAssign = 65;
+    const eExclusiveOrAssign = 66;
+    const eLeftShiftAssign = 67;
+    const eModuloAssign = 68;
+    const eMultiplyAssign = 69;
+    const eOrAssign = 70;
+    const ePowerAssign = 71;
+    const eRightShiftAssign = 72;
+    const eSubtractAssign = 73;
+    const eAddAssignChecked = 74;
     const eMultiplyAssignChecked = 75;
     const eSubtractAssignChecked = 76;
-    const ePreIncrementAssign    = 77;
-    const ePreDecrementAssign    = 78;
-    const ePostIncrementAssign   = 79;
-    const ePostDecrementAssign   = 80;
-    const eTypeEqual             = 81;
-    const eOnesComplement        = 82;
-    const eIsTrue                = 83;
-    const eIsFalse               = 84;
+    const ePreIncrementAssign = 77;
+    const ePreDecrementAssign = 78;
+    const ePostIncrementAssign = 79;
+    const ePostDecrementAssign = 80;
+    const eTypeEqual = 81;
+    const eOnesComplement = 82;
+    const eIsTrue = 83;
+    const eIsFalse = 84;
 }
 
 /**
@@ -1296,9 +1296,9 @@ final class TUnaryExpression extends TExpression {
             case TExpressionType::eNegateChecked() :
             case TExpressionType::eUnaryPlus() :
                 $mOperandType = $Operand->getType();
-            if (($mOperandType->getName() != 'integer') || ($mOperandType->getName() != 'float')) {
-                throw new EInvalidParameter(sprintf('Invalid parameter: Operand type is neither integer nor float for Negate, NegateChecked or UnaryPlus unary expression.'));
-            }
+                if (($mOperandType->getName() != 'integer') || ($mOperandType->getName() != 'float')) {
+                    throw new EInvalidParameter(sprintf('Invalid parameter: Operand type is neither integer nor float for Negate, NegateChecked or UnaryPlus unary expression.'));
+                }
                 break;
             case TExpressionType::eNot() :
                 if ($mOperandType->getName() != 'boolean') {
@@ -1307,21 +1307,21 @@ final class TUnaryExpression extends TExpression {
                 break;
             case TExpressionType::eConvert() :
             case TExpressionType::eConvertChecked() :
-            if (!$mOperandType->IsPrimitive()) {
-                throw new EInvalidParameter(sprintf('Invalid parameter: Operand type is not primitive for Convert or ConvertChecked unary expression.'));
-            }
-            if (!$Type->IsPrimitive()) {
-                throw new EInvalidParameter(sprintf('Invalid parameter: Expression type is not primitive for Convert or ConvertChecked unary expression.'));
-            }
+                if (!$mOperandType->IsPrimitive()) {
+                    throw new EInvalidParameter(sprintf('Invalid parameter: Operand type is not primitive for Convert or ConvertChecked unary expression.'));
+                }
+                if (!$Type->IsPrimitive()) {
+                    throw new EInvalidParameter(sprintf('Invalid parameter: Expression type is not primitive for Convert or ConvertChecked unary expression.'));
+                }
                 break;
             case TExpressionType::eQuote() :
             case TExpressionType::eTypeAs() :
-            if ($mOperandType->IsPrimitive()) {
-                throw new EInvalidParameter(sprintf('Invalid parameter: Operand type is primitive for Quote or TypeAs unary expression.'));
-            }
-            if ($Type->IsPrimitive()) {
-                throw new EInvalidParameter(sprintf('Invalid parameter: Expression type is primitive for Quote or TypeAs unary expression.'));
-            }
+                if ($mOperandType->IsPrimitive()) {
+                    throw new EInvalidParameter(sprintf('Invalid parameter: Operand type is primitive for Quote or TypeAs unary expression.'));
+                }
+                if ($Type->IsPrimitive()) {
+                    throw new EInvalidParameter(sprintf('Invalid parameter: Expression type is primitive for Quote or TypeAs unary expression.'));
+                }
                 break;
         }
 
@@ -1872,7 +1872,7 @@ final class TConditionalExpression extends TExpression {
         $this->FTest     = $Test;
         $this->FIfTrue   = $IfTrue;
         $this->FIfFalse  = $IfFalse;
-        $this->FType = $Type;
+        $this->FType     = $Type;
     }
 
     /**

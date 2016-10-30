@@ -287,12 +287,13 @@ class TMysqlDataTypeMapper extends TObject {
 
         if (count(self::$FCastMappingToSqlTable) == 0) {
             self::$FCastMappingToSqlTable = [
-                'string' => ['FromPrimitive', null]
+                'string'  => ['FromPrimitive', null],
+                'boolean' => ['FromBoolean', null]
             ];
         }
 
         $mMethod = self::$FCastMappingToSqlTable[$Type][0];
-        self::PrepareMethodGeneric(self::$FCastMappingToSqlTable[$Type][1]);
+        self::PrepareGeneric(self::$FCastMappingToSqlTable[$Type][1]);
 
         return self::$mMethod($Value);
     }
@@ -337,6 +338,16 @@ class TMysqlDataTypeMapper extends TObject {
         TType::Object($Value, [IPrimitive::class => ['T' => null]]);
 
         return $Value->UnboxToString();
+    }
+
+    /**
+     * @param \FrameworkDSW\System\IPrimitive $Value <T: ?>
+     * @return integer
+     */
+    public static function FromBoolean($Value) {
+        TType::Object($Value, [IPrimitive::class => ['T' => null]]);
+
+        return ($Value->UnboxToBoolean() == true) ? 1 : 0;
     }
 }
 
@@ -1690,8 +1701,14 @@ EOD;
             $mParams    = [];
             $mParamsRef = [];
             foreach ($this->FRawParams as $mParam) {
-                $mTypes .= 's';
-                $mParams[] = TMysqlDataTypeMapper::CastToSqlValue('string', $this->FParams[$mParam]);
+                if ($this->FParams[$mParam] instanceof TBoolean) {
+                    $mTypes .= 'i';
+                    $mParams[] = TMysqlDataTypeMapper::CastToSqlValue('boolean', $this->FParams[$mParam]);
+                }
+                else {
+                    $mTypes .= 's';
+                    $mParams[] = TMysqlDataTypeMapper::CastToSqlValue('string', $this->FParams[$mParam]);
+                }
             }
             foreach ($mParams as $mIndex => &$mValue) {
                 $mParamsRef[] = &$mParams[$mIndex];
